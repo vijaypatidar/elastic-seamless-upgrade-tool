@@ -26,10 +26,16 @@ export class ElasticClient {
       return new Client({
         node: this.config.url,
         auth: this.getAuthDetail(),
+        tls: {
+          rejectUnauthorized: false, // Disables certificate validation
+        },
       });
     } else {
       return new Client({
         node: this.config.url,
+        tls: {
+          rejectUnauthorized: false, // Disables certificate validation
+        },
       });
     }
   }
