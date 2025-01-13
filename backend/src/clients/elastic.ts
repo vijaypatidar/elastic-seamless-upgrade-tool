@@ -5,7 +5,7 @@ import {
   BearerAuth,
 } from '@elastic/transport/lib/types';
 
-export interface ElacticClusterInfo {
+export interface ElasticClusterInfo {
   url: string;
   apiKey?: string;
   username?: string;
@@ -13,10 +13,10 @@ export interface ElacticClusterInfo {
   bearer?: string;
 }
 
-export class ElacticClient {
-  config: ElacticClusterInfo;
+export class ElasticClient {
+  config: ElasticClusterInfo;
 
-  constructor(config: ElacticClusterInfo) {
+  constructor(config: ElasticClusterInfo) {
     this.config = config;
   }
 

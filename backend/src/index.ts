@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
-import { ElacticClient } from './clients/elastic';
+import { ElasticClient } from './clients/elastic';
 
 const app = express();
 const PORT = 3000;
@@ -14,20 +14,20 @@ app.get('/health', (req: Request, res: Response) => {
   });
 });
 
-export interface ElacticClusterBaseRequest {
+export interface ElasticClusterBaseRequest {
   url: string;
   apiKey?: string;
   username?: string;
   password?: string;
   bearer?: string;
 }
-export interface ElacticClusterHealthRequest
-  extends ElacticClusterBaseRequest {}
+export interface ElasticClusterHealthRequest
+  extends ElasticClusterBaseRequest {}
 
 app.post('/api/elatic/health', async (req: Request, res: Response) => {
   try {
-    const body: ElacticClusterHealthRequest = req.body;
-    const client = new ElacticClient(body);
+    const body: ElasticClusterHealthRequest = req.body;
+    const client = new ElasticClient(body);
     const health = await client.getClusterhealth();
     res.send(health);
   } catch (err: any) {
