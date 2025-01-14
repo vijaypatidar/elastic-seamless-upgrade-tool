@@ -32,3 +32,9 @@
      ```bash
      npm start
      ```
+
+## Build docker image
+
+```shell
+docker build -t elastic-upgradation-backend .
+```
