@@ -11,8 +11,7 @@ export const healthCheck = async (req: Request, res: Response) => {
     const body: ElasticClusterBaseRequest = req.body;
     const client = new ElasticClient(body);
     const health = await client.getClusterhealth();
-    const h = await client.getClient();
-    console.log(await h.cluster.health());
+  
     res.send(health);
   } catch (err: any) {
     console.log(err);
