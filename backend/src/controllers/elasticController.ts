@@ -170,5 +170,7 @@ const createAnsibleInventory = async (nodes: ElasticNode[]) => {
     console.error('Error creating Ansible inventory:', error);
   }
 };
-export const performUpgrade = async (req: Request, res: Response) => {};
+export const performUpgrade = async (req: Request, res: Response) => {
+  
+};
 // export const getUpgradeDetails
