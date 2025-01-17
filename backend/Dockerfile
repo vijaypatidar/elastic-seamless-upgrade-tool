@@ -1,5 +1,5 @@
-# Stage 1: Build Stage
-FROM node:18.20.4 AS builder
+# Start with a Node.js base image
+FROM node:18-bullseye AS builder
 
 # Set the working directory in the container
 WORKDIR /app
@@ -17,7 +17,16 @@ COPY . .
 RUN npm run build
 
 # Stage 2: Production Stage
-FROM node:18-alpine
+FROM node:18-bullseye
+
+# Install dependencies and Ansible
+RUN apt-get update && \
+    apt-get install -y ansible && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Verify installations
+RUN node --version && npm --version && ansible --version
 
 # Set the working directory in the container
 WORKDIR /app
