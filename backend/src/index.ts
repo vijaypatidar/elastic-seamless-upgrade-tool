@@ -1,12 +1,11 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
-import elasticRouter from './routes/elasticRouter'
+import elasticRouter from './routes/elasticRouter';
 import swaggerJSDoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 
 import swaggerOptions from './swagger-config';
-import { getClusterDetails, getDepriciationInfo, getNodesInfo, healthCheck } from './controllers/elasticController';
-// import { generate } from './clients/geminiClient';
+import logger from './logger/logger';
 
 const app = express();
 const PORT = 3000;
@@ -35,16 +34,9 @@ export interface ElasticClusterHealthRequest
   extends ElasticClusterBaseRequest {}
 
 //routes
-app.use('/api/elastic',elasticRouter)
-
-// app.post('/api/elastic/health', healthCheck);
-// app.post('/api/elastic/cluster',getClusterDetails)
-// app.post('/api/elastic/nodes',getNodesInfo);
-// app.post('/api/elastic/depriciationInfo',getDepriciationInfo);
-
+app.use('/api/elastic', elasticRouter);
 
 app.listen(PORT, () => {
-  console.log(`Server is running at http://localhost:${PORT}`);
-  console.log(`Swagger docs available at http://localhost:${PORT}/api-docs`);
+  logger.info(`Server is running at http://localhost:${PORT}`);
+  logger.info(`Swagger docs available at http://localhost:${PORT}/api-docs`);
 });
-
