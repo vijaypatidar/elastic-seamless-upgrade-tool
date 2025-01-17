@@ -6,4 +6,5 @@ export interface ElasticNode {
     ip: string;
     roles: Array<any>;
     os: Object;
+    isMaster: Boolean
 }

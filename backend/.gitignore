@@ -3,3 +3,4 @@ dist/
 .env
 .gitignore
 ansible_inventory.ini
+*.pem

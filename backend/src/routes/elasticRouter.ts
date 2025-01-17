@@ -167,9 +167,6 @@ router.post('/nodes',getNodesInfo);
  *       500:
  *         description: Internal Server Error. Could not connect to the Elastic cluster or fetch deprecation warnings.
  */
-
-
-// For /api/elastic/cluster endpoint
 router.post('/depriciation',getDepriciationInfo)
     
 
