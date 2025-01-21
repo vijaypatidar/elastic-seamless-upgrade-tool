@@ -3,8 +3,11 @@ import { ElasticClusterBaseRequest, ElasticClusterHealthRequest } from '..';
 import { ElasticClient } from '../clients/elastic';
 import { Request, Response } from 'express';
 import { ElasticNode } from '../interfaces';
-import fs from 'fs';
+import fs from "fs";
+import { createAnsibleInventory, executeAnsiblePlaybook } from './ansibleController';
+import { CatMasterMasterRecord, CatMasterResponse } from '@elastic/elasticsearch/lib/api/types';
 import logger from '../logger/logger';
+// import { DateTime } from 'luxon';
 
 export const healthCheck = async (req: Request, res: Response) => {
   try {
@@ -114,7 +117,10 @@ export const getNodesInfo = async (req: Request, res: Response) => {
       filter_path:
         'nodes.*.name,nodes.*.roles,nodes.*.os.name,nodes.*.os.version,nodes.*.version,nodes.*.ip',
     });
-
+    const masterNode: any= await client.getClient().cat.master({
+      format: "json"
+    });
+    console.log('masterNode',masterNode);
     const elasticNodes: ElasticNode[] | null = Object.entries(
       response.nodes,
     ).map(([key, value]: any) => ({
@@ -124,47 +130,22 @@ export const getNodesInfo = async (req: Request, res: Response) => {
       version: value.version,
       roles: value.roles,
       os: value.os,
+      isMaster: (masterNode[0].id === key)
     }));
-
-    //Edit this info according to need
+      //Edit this info according to need
     // logger.info('Node details:', response);
-    createAnsibleInventory(elasticNodes);
-
-    res.send(elasticNodes);
+  //  createAnsibleInventory(elasticNodes, './HF-AWX-key.pem');
+  //  executeAnsiblePlaybook('ansible_inventory.ini','8.6.1','ansible/main',"elastic","B6T5WucTp=sJfbbPLErj")
+   res.send(elasticNodes);
+   
+    
   } catch (error) {
     logger.error('Error fetching node details:', error);
   }
 };
 
-const createAnsibleInventory = async (nodes: ElasticNode[]) => {
-  try {
-    const rolePriority = ['master', 'master_eligible', 'data', 'ml'];
 
-    // Initialize inventory groups based on the priority
-    const inventory: Record<string, string[]> = {};
-    rolePriority.forEach((role) => (inventory[role] = []));
-
-    // Iterate through nodes and assign to the highest-priority role
-    for (const node of nodes) {
-      for (const role of rolePriority) {
-        if (node.roles.includes(role)) {
-          inventory[role].push(node.ip); // Use node.name for inventory
-          break; // Stop once assigned to the highest-priority role
-        }
-      }
-    }
-
-    const ansibleInventory = Object.entries(inventory)
-      .filter(([, nodes]) => nodes.length > 0) // Include only non-empty groups
-      .map(([role, nodes]) => `[${role}]\n${nodes.join('\n')}`)
-      .join('\n\n');
-    logger.info(ansibleInventory);
-
-    fs.writeFileSync('ansible_inventory.ini', ansibleInventory);
-    logger.info('Ansible inventory created: ansible_inventory.ini');
-  } catch (error) {
-    logger.error('Error creating Ansible inventory:', error);
-  }
+export const performUpgrade = async (req: Request, res: Response) => {
+  
 };
-export const performUpgrade = async (req: Request, res: Response) => {};
 // export const getUpgradeDetails
