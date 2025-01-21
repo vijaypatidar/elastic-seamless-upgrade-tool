@@ -3,18 +3,18 @@ import { ElasticClusterBaseRequest, ElasticClusterHealthRequest } from '..';
 import { ElasticClient } from '../clients/elastic';
 import { Request, Response } from 'express';
 import { ElasticNode } from '../interfaces';
-import fs from "fs";
-// import { DateTime } from 'luxon';
+import fs from 'fs';
+import logger from '../logger/logger';
 
 export const healthCheck = async (req: Request, res: Response) => {
   try {
     const body: ElasticClusterBaseRequest = req.body;
     const client = new ElasticClient(body);
     const health = await client.getClusterhealth();
-  
+
     res.send(health);
   } catch (err: any) {
-    console.log(err);
+    logger.info(err);
     res.status(400).send({ message: err.message });
   }
 };
@@ -31,11 +31,10 @@ export const getClusterDetails = async (req: Request, res: Response) => {
       ...clusterDetails,
     });
   } catch (err: any) {
-    console.log(err);
+    logger.info(err);
     res.status(400).send({ message: err.message });
   }
 };
-// Luxon for handling date/time calculations
 
 async function verifySnapshotForAllRepositories(req: Request, res: Response) {
   try {
@@ -48,21 +47,21 @@ async function verifySnapshotForAllRepositories(req: Request, res: Response) {
     const repositories = Object.keys(repositoriesResponse.body);
 
     if (repositories.length === 0) {
-      console.log('No repositories found.');
+      logger.info('No repositories found.');
       return;
     }
 
     for (const repository of repositories) {
-      console.log(`Checking snapshots for repository: ${repository}`);
+      logger.info(`Checking snapshots for repository: ${repository}`);
       const snapshotResponse = await client.getClient().snapshot.get({
         repository,
         snapshot: '_all',
       });
-      console.log(snapshotResponse);
+      logger.info(snapshotResponse);
       const snapshots: any = snapshotResponse.snapshots;
 
       if (snapshots.length === 0) {
-        console.log(`No snapshots found in repository ${repository}.`);
+        logger.info(`No snapshots found in repository ${repository}.`);
         continue;
       }
 
@@ -80,13 +79,13 @@ async function verifySnapshotForAllRepositories(req: Request, res: Response) {
       //   const hoursDifference = (currentDate: any - snapshotDate)
 
       //   if (hoursDifference <= 24) {
-      //     console.log(`The latest snapshot in repository ${repository} was taken within the last 24 hours.`);
+      //     logger.info(`The latest snapshot in repository ${repository} was taken within the last 24 hours.`);
       //   } else {
-      //     console.log(`The latest snapshot in repository ${repository} was NOT taken within the last 24 hours.`);
+      //     logger.info(`The latest snapshot in repository ${repository} was NOT taken within the last 24 hours.`);
       //   }
     }
   } catch (error) {
-    console.error('Error checking snapshot details:', error);
+    logger.error('Error checking snapshot details:', error);
   }
 }
 
@@ -98,10 +97,10 @@ export const getDepriciationInfo = async (req: Request, res: Response) => {
     const upgradeInfo = await client
       .getClient()
       .migration.getFeatureUpgradeStatus();
-    console.log('upgrade Info', upgradeInfo);
+    logger.info('upgrade Info', upgradeInfo);
     res.send(depriciationInfo).status(201);
   } catch (err: any) {
-    console.log(err);
+    logger.info(err);
     res.status(400).send({ message: err.message });
   }
 };
@@ -128,13 +127,12 @@ export const getNodesInfo = async (req: Request, res: Response) => {
     }));
 
     //Edit this info according to need
-    // console.log('Node details:', response);
+    // logger.info('Node details:', response);
     createAnsibleInventory(elasticNodes);
-   
-    
+
     res.send(elasticNodes);
   } catch (error) {
-    console.error('Error fetching node details:', error);
+    logger.error('Error fetching node details:', error);
   }
 };
 
@@ -157,20 +155,16 @@ const createAnsibleInventory = async (nodes: ElasticNode[]) => {
     }
 
     const ansibleInventory = Object.entries(inventory)
-    .filter(([, nodes]) => nodes.length > 0) // Include only non-empty groups
-    .map(([role, nodes]) => `[${role}]\n${nodes.join("\n")}`)
-    .join("\n\n");
-    console.log(ansibleInventory);
+      .filter(([, nodes]) => nodes.length > 0) // Include only non-empty groups
+      .map(([role, nodes]) => `[${role}]\n${nodes.join('\n')}`)
+      .join('\n\n');
+    logger.info(ansibleInventory);
 
-    fs.writeFileSync("ansible_inventory.ini", ansibleInventory);
-    console.log("Ansible inventory created: ansible_inventory.ini");
-
-
+    fs.writeFileSync('ansible_inventory.ini', ansibleInventory);
+    logger.info('Ansible inventory created: ansible_inventory.ini');
   } catch (error) {
-    console.error('Error creating Ansible inventory:', error);
+    logger.error('Error creating Ansible inventory:', error);
   }
 };
-export const performUpgrade = async (req: Request, res: Response) => {
-  
-};
+export const performUpgrade = async (req: Request, res: Response) => {};
 // export const getUpgradeDetails
