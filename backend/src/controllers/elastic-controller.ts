@@ -1,9 +1,9 @@
 import { ElasticClusterBaseRequest } from '..';
-import { ElasticClient } from '../clients/elastic';
+import { ElasticClient } from '../clients/elastic.client';
 import { Request, Response } from 'express';
 import { ElasticNode } from '../interfaces';
 import logger from '../logger/logger';
-import { IClusterInfo } from '../models/cluster-info';
+import { IClusterInfo } from '../models/cluster-info.model';
 import { createOrUpdateClusterInfo } from '../services/cluster-info.service';
 
 export const healthCheck = async (req: Request, res: Response) => {

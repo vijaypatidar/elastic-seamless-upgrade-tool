@@ -5,7 +5,7 @@ import {
   getDepriciationInfo,
   getNodesInfo,
   healthCheck,
-} from '../controllers/elasticController';
+} from '../controllers/elastic-controller';
 
 const router = Router();
 

@@ -1,4 +1,4 @@
-import ClusterInfo, { IClusterInfo } from '../models/cluster-info';
+import ClusterInfo, { IClusterInfo } from '../models/cluster-info.model';
 
 export const createOrUpdateClusterInfo = async (
   clusterInfo: Partial<IClusterInfo>,
