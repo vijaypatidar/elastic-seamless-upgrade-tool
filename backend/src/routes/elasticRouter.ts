@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import {
+  addOrUpdateClusterDetail,
   getClusterDetails,
   getDepriciationInfo,
   getNodesInfo,
@@ -8,7 +9,7 @@ import {
 
 const router = Router();
 
-router.post('/health', healthCheck);
+router.get('/health', healthCheck);
 
 /**
  * @swagger
@@ -85,7 +86,7 @@ router.post('/health', healthCheck);
  *       500:
  *         description: Internal Server Error. Could not connect to the Elastic cluster or fetch nodes.
  */
-router.post('/nodes', getNodesInfo);
+router.get('/nodes', getNodesInfo);
 
 /**
  * @swagger
@@ -169,9 +170,9 @@ router.post('/nodes', getNodesInfo);
  *       500:
  *         description: Internal Server Error. Could not connect to the Elastic cluster or fetch deprecation warnings.
  */
-router.post('/depriciation',getDepriciationInfo)
-    
+router.post('/depriciation', getDepriciationInfo);
 
+router.post('/cluster/add', addOrUpdateClusterDetail);
 
 /**
  * @swagger
@@ -261,6 +262,6 @@ router.post('/depriciation',getDepriciationInfo)
  *       500:
  *         description: Internal Server Error. Could not connect to the Elastic cluster.
  */
-router.post('/cluster', getClusterDetails);
+router.get('/cluster', getClusterDetails);
 
 export default router;

@@ -4,6 +4,8 @@ import {
   ApiKeyAuth,
   BearerAuth,
 } from '@elastic/transport/lib/types';
+import { ElasticClusterBaseRequest } from '..';
+import { getClusterInfoById } from '../services/cluster-info.service';
 
 export interface ElasticClusterInfo {
   url: string;
@@ -63,5 +65,16 @@ export class ElasticClient {
       console.log(`Failed to get cluster health`, err);
       throw err;
     }
+  }
+
+  static async buildClient(clusterId: string = 'cluster-id') {
+    const cluterInfo = await getClusterInfoById(clusterId);
+    const body: ElasticClusterBaseRequest = {
+      url: cluterInfo.elastic?.url!!,
+      ssl: {},
+      username: cluterInfo.elastic?.username!!,
+      password: cluterInfo.elastic?.password!!,
+    };
+    return new ElasticClient(body);
   }
 }

@@ -1,20 +1,15 @@
-import { exec } from 'child_process';
-import { ElasticClusterBaseRequest, ElasticClusterHealthRequest } from '..';
+import { ElasticClusterBaseRequest } from '..';
 import { ElasticClient } from '../clients/elastic';
 import { Request, Response } from 'express';
 import { ElasticNode } from '../interfaces';
-import fs from "fs";
-import { createAnsibleInventory, executeAnsiblePlaybook } from './ansibleController';
-import { CatMasterMasterRecord, CatMasterResponse } from '@elastic/elasticsearch/lib/api/types';
 import logger from '../logger/logger';
-// import { DateTime } from 'luxon';
+import { IClusterInfo } from '../models/cluster-info';
+import { createOrUpdateClusterInfo } from '../services/cluster-info.service';
 
 export const healthCheck = async (req: Request, res: Response) => {
   try {
-    const body: ElasticClusterBaseRequest = req.body;
-    const client = new ElasticClient(body);
+    const client = await ElasticClient.buildClient();
     const health = await client.getClusterhealth();
-
     res.send(health);
   } catch (err: any) {
     logger.info(err);
@@ -24,11 +19,9 @@ export const healthCheck = async (req: Request, res: Response) => {
 
 export const getClusterDetails = async (req: Request, res: Response) => {
   try {
-    const body: ElasticClusterBaseRequest = req.body;
-    const client = new ElasticClient(body);
+    const client = await ElasticClient.buildClient();
     const clusterDetails = await client.getClient().info();
     const healtDetails = await client.getClient().cluster.health();
-
     res.send({
       ...healtDetails,
       ...clusterDetails,
@@ -39,11 +32,31 @@ export const getClusterDetails = async (req: Request, res: Response) => {
   }
 };
 
+export const addOrUpdateClusterDetail = async (req: Request, res: Response) => {
+  try {
+    const clusterId = 'cluster-id';
+    const body: ElasticClusterBaseRequest = req.body;
+    const clusterInfo: Partial<IClusterInfo> = {
+      elastic: {
+        url: body.url,
+        username: body.username,
+        password: body.password,
+        bearer: body.bearer,
+        apiKey: body.apiKey,
+      },
+      clusterId: clusterId,
+    };
+    await createOrUpdateClusterInfo(clusterInfo);
+    res.send({ ...clusterInfo });
+  } catch (err: any) {
+    logger.info(err);
+    res.status(400).send({ message: err.message });
+  }
+};
+
 async function verifySnapshotForAllRepositories(req: Request, res: Response) {
   try {
-    const body: ElasticClusterBaseRequest = req.body;
-    const client = new ElasticClient(body);
-
+    const client = await ElasticClient.buildClient();
     const repositoriesResponse = await client
       .getClient()
       .snapshot.getRepository({});
@@ -110,17 +123,15 @@ export const getDepriciationInfo = async (req: Request, res: Response) => {
 
 export const getNodesInfo = async (req: Request, res: Response) => {
   try {
-    const body: ElasticClusterBaseRequest = req.body;
-    const client = new ElasticClient(body);
-
+    const client = await ElasticClient.buildClient();
     const response: any = await client.getClient().nodes.info({
       filter_path:
         'nodes.*.name,nodes.*.roles,nodes.*.os.name,nodes.*.os.version,nodes.*.version,nodes.*.ip',
     });
-    const masterNode: any= await client.getClient().cat.master({
-      format: "json"
+    const masterNode: any = await client.getClient().cat.master({
+      format: 'json',
     });
-    console.log('masterNode',masterNode);
+    console.log('masterNode', masterNode);
     const elasticNodes: ElasticNode[] | null = Object.entries(
       response.nodes,
     ).map(([key, value]: any) => ({
@@ -130,22 +141,17 @@ export const getNodesInfo = async (req: Request, res: Response) => {
       version: value.version,
       roles: value.roles,
       os: value.os,
-      isMaster: (masterNode[0].id === key)
+      isMaster: masterNode[0].id === key,
     }));
-      //Edit this info according to need
+    //Edit this info according to need
     // logger.info('Node details:', response);
-  //  createAnsibleInventory(elasticNodes, './HF-AWX-key.pem');
-  //  executeAnsiblePlaybook('ansible_inventory.ini','8.6.1','ansible/main',"elastic","B6T5WucTp=sJfbbPLErj")
-   res.send(elasticNodes);
-   
-    
+    //  createAnsibleInventory(elasticNodes, './HF-AWX-key.pem');
+    //  executeAnsiblePlaybook('ansible_inventory.ini','8.6.1','ansible/main',"elastic","B6T5WucTp=sJfbbPLErj")
+    res.send(elasticNodes);
   } catch (error) {
     logger.error('Error fetching node details:', error);
   }
 };
 
-
-export const performUpgrade = async (req: Request, res: Response) => {
-  
-};
+export const performUpgrade = async (req: Request, res: Response) => {};
 // export const getUpgradeDetails
