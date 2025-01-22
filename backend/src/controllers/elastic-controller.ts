@@ -8,7 +8,8 @@ import { createOrUpdateClusterInfo } from '../services/cluster-info.service';
 
 export const healthCheck = async (req: Request, res: Response) => {
   try {
-    const client = await ElasticClient.buildClient();
+    const clusterId = req.params.clusterId;
+    const client = await ElasticClient.buildClient(clusterId);
     const health = await client.getClusterhealth();
     res.send(health);
   } catch (err: any) {
@@ -59,7 +60,8 @@ export const addOrUpdateClusterDetail = async (req: Request, res: Response) => {
 
 async function verifySnapshotForAllRepositories(req: Request, res: Response) {
   try {
-    const client = await ElasticClient.buildClient();
+    const clusterId = 'cluster-id';
+    const client = await ElasticClient.buildClient(clusterId);
     const repositoriesResponse = await client
       .getClient()
       .snapshot.getRepository({});
