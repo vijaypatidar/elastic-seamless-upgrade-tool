@@ -1,6 +1,6 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
-interface IElasticInfo {
+export interface IElasticInfo {
   url: string;
   apiKey?: string;
   username?: string;
@@ -8,10 +8,12 @@ interface IElasticInfo {
   bearer?: string;
 }
 
-export interface IClusterInfo extends Document {
+export interface IClusterInfo {
   clusterId: string;
   elastic: IElasticInfo;
 }
+
+export interface IClusterInfoDocument extends IClusterInfo, Document {}
 
 const ElasticInfoSchema: Schema<IElasticInfo> = new Schema<IElasticInfo>({
   url: { type: String, required: true },
@@ -21,16 +23,17 @@ const ElasticInfoSchema: Schema<IElasticInfo> = new Schema<IElasticInfo>({
   bearer: { type: String },
 });
 
-const ClusterInfoSchema: Schema<IClusterInfo> = new Schema<IClusterInfo>(
-  {
-    clusterId: { type: String, required: true },
-    elastic: { type: ElasticInfoSchema, required: true },
-  },
-  { timestamps: true },
-);
+const ClusterInfoSchema: Schema<IClusterInfoDocument> =
+  new Schema<IClusterInfoDocument>(
+    {
+      clusterId: { type: String, required: true },
+      elastic: { type: ElasticInfoSchema, required: true },
+    },
+    { timestamps: true },
+  );
 
 // Create the model
-const ClusterInfo = mongoose.model<IClusterInfo>(
+const ClusterInfo = mongoose.model<IClusterInfoDocument>(
   'ClusterInfo',
   ClusterInfoSchema,
 );

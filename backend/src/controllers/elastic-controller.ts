@@ -36,7 +36,7 @@ export const addOrUpdateClusterDetail = async (req: Request, res: Response) => {
   try {
     const clusterId = 'cluster-id';
     const body: ElasticClusterBaseRequest = req.body;
-    const clusterInfo: Partial<IClusterInfo> = {
+    const clusterInfo: IClusterInfo = {
       elastic: {
         url: body.url,
         username: body.username,
