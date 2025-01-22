@@ -136,7 +136,7 @@ router.get('/:clusterId/depriciations', getDepriciationInfo);
 
 /**
  * @swagger
- * /api/elastic/cluster/add:
+ * /api/elastic/clusters
  *   post:
  *     summary: Add or Update cluster info
  *     description: Create or update cluster information in the database, which will be utilized later by other endpoints.
@@ -171,11 +171,11 @@ router.get('/:clusterId/depriciations', getDepriciationInfo);
  *                  type: string
  *                  example: Cluster info updated
  */
-router.post('/', addOrUpdateClusterDetail);
+router.post('', addOrUpdateClusterDetail);
 
 /**
  * @swagger
- * /api/elastic/cluster:
+ * /api/elastic/clusters/{clusterId}/info
  *   get:
  *     summary: Get Elastic cluster details
  *     description: Retrieve details of an Elastic cluster by providing the connection details in the request body.
@@ -242,6 +242,6 @@ router.post('/', addOrUpdateClusterDetail);
  *       500:
  *         description: Internal Server Error. Could not connect to the Elastic cluster.
  */
-router.get('/cluster/:clusterId/info', getClusterDetails);
+router.get('/:clusterId/info', getClusterDetails);
 
 export default router;
