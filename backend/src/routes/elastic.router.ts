@@ -13,7 +13,7 @@ router.get('/health', healthCheck);
 
 /**
  * @swagger
- * /api/elastic/nodes:
+ * /api/elastic/clusters/{clusterId}/nodes:
  *   get:
  *     summary: Get Elastic node details
  *     description: Retrieve details of all nodes in the Elastic cluster, including their IDs, IPs, roles, and operating system information.
@@ -67,11 +67,11 @@ router.get('/health', healthCheck);
  *       500:
  *         description: Internal Server Error. Could not connect to the Elastic cluster or fetch nodes.
  */
-router.get('/nodes', getNodesInfo);
+router.get('/:clusterId/nodes', getNodesInfo);
 
 /**
  * @swagger
- * /api/elastic/depriciation:
+ * /api/elastic/clusters/{clusterId}/depriciations:
  *   get:
  *     summary: Retrieve Elastic deprecation settings
  *     description: Fetch details of deprecated settings and configurations in the Elastic cluster.
@@ -132,7 +132,7 @@ router.get('/nodes', getNodesInfo);
  *       500:
  *         description: Internal Server Error. Could not connect to the Elastic cluster or fetch deprecation warnings.
  */
-router.get('/depriciation', getDepriciationInfo);
+router.get('/:clusterId/depriciations', getDepriciationInfo);
 
 /**
  * @swagger
@@ -171,7 +171,7 @@ router.get('/depriciation', getDepriciationInfo);
  *                  type: string
  *                  example: Cluster info updated
  */
-router.post('/cluster/add', addOrUpdateClusterDetail);
+router.post('/', addOrUpdateClusterDetail);
 
 /**
  * @swagger
@@ -242,6 +242,6 @@ router.post('/cluster/add', addOrUpdateClusterDetail);
  *       500:
  *         description: Internal Server Error. Could not connect to the Elastic cluster.
  */
-router.get('/cluster', getClusterDetails);
+router.get('/cluster/:clusterId/info', getClusterDetails);
 
 export default router;

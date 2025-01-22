@@ -38,7 +38,7 @@ export interface ElasticClusterHealthRequest
   extends ElasticClusterBaseRequest {}
 
 //routes
-app.use('/api/elastic', elasticRouter);
+app.use('/api/elastic/clusters', elasticRouter);
 
 connectDB().then(() => {
   app.listen(PORT, async () => {
