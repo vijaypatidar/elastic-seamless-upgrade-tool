@@ -107,8 +107,7 @@ async function verifySnapshotForAllRepositories(req: Request, res: Response) {
 
 export const getDepriciationInfo = async (req: Request, res: Response) => {
   try {
-    const body: ElasticClusterBaseRequest = req.body;
-    const client = new ElasticClient(body);
+    const client = await ElasticClient.buildClient();
     const depriciationInfo = await client.getClient().migration.deprecations();
     const upgradeInfo = await client
       .getClient()

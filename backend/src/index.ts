@@ -6,7 +6,6 @@ import swaggerUi from 'swagger-ui-express';
 
 import swaggerOptions from './swagger-config';
 import logger from './logger/logger';
-import mongoose from 'mongoose';
 import { connectDB } from './databases/db';
 
 const app = express();

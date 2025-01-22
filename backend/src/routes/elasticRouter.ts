@@ -14,28 +14,9 @@ router.get('/health', healthCheck);
 /**
  * @swagger
  * /api/elastic/nodes:
- *   post:
+ *   get:
  *     summary: Get Elastic node details
  *     description: Retrieve details of all nodes in the Elastic cluster, including their IDs, IPs, roles, and operating system information.
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               url:
- *                 type: string
- *                 description: The URL of the Elastic cluster.
- *                 example: https://localhost:9200
- *               username:
- *                 type: string
- *                 description: Username for Elastic authentication.
- *                 example: elastic
- *               password:
- *                 type: string
- *                 description: Password for Elastic authentication.
- *                 example: upgrade
  *     responses:
  *       200:
  *         description: Successfully retrieved Elastic node details.
@@ -91,28 +72,9 @@ router.get('/nodes', getNodesInfo);
 /**
  * @swagger
  * /api/elastic/depriciation:
- *   post:
+ *   get:
  *     summary: Retrieve Elastic deprecation settings
  *     description: Fetch details of deprecated settings and configurations in the Elastic cluster.
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               url:
- *                 type: string
- *                 description: The URL of the Elastic cluster.
- *                 example: https://localhost:9200
- *               username:
- *                 type: string
- *                 description: Username for Elastic authentication.
- *                 example: elastic
- *               password:
- *                 type: string
- *                 description: Password for Elastic authentication.
- *                 example: upgrade
  *     responses:
  *       200:
  *         description: Successfully retrieved Elastic deprecation warnings.
@@ -170,35 +132,16 @@ router.get('/nodes', getNodesInfo);
  *       500:
  *         description: Internal Server Error. Could not connect to the Elastic cluster or fetch deprecation warnings.
  */
-router.post('/depriciation', getDepriciationInfo);
+router.get('/depriciation', getDepriciationInfo);
 
 router.post('/cluster/add', addOrUpdateClusterDetail);
 
 /**
  * @swagger
  * /api/elastic/cluster:
- *   post:
+ *   get:
  *     summary: Get Elastic cluster details
  *     description: Retrieve details of an Elastic cluster by providing the connection details in the request body.
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               url:
- *                 type: string
- *                 description: The URL of the Elastic cluster.
- *                 example: https://localhost:9200
- *               username:
- *                 type: string
- *                 description: Username for Elastic authentication.
- *                 example: elastic
- *               password:
- *                 type: string
- *                 description: Password for Elastic authentication.
- *                 example: upgrade
  *     responses:
  *       200:
  *         description: Successfully retrieved Elastic cluster details.
