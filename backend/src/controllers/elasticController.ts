@@ -46,8 +46,10 @@ export const addOrUpdateClusterDetail = async (req: Request, res: Response) => {
       },
       clusterId: clusterId,
     };
-    await createOrUpdateClusterInfo(clusterInfo);
-    res.send({ ...clusterInfo });
+    const result = await createOrUpdateClusterInfo(clusterInfo);
+    res.send({
+      message: result.isNew ? 'Cluster info saved' : 'Cluster info updated',
+    });
   } catch (err: any) {
     logger.info(err);
     res.status(400).send({ message: err.message });

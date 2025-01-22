@@ -134,6 +134,43 @@ router.get('/nodes', getNodesInfo);
  */
 router.get('/depriciation', getDepriciationInfo);
 
+/**
+ * @swagger
+ * /api/elastic/cluster/add:
+ *   post:
+ *     summary: Add or Update cluster info
+ *     description: Create or update cluster information in the database, which will be utilized later by other endpoints.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               url:
+ *                 type: string
+ *                 description: The URL of the Elastic cluster.
+ *                 example: https://localhost:9200
+ *               username:
+ *                 type: string
+ *                 description: Username for Elastic authentication.
+ *                 example: elastic
+ *               password:
+ *                 type: string
+ *                 description: Password for Elastic authentication.
+ *                 example: upgrade
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved Elastic cluster details.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                level:
+ *                  type: string
+ *                  example: Cluster info updated
+ */
 router.post('/cluster/add', addOrUpdateClusterDetail);
 
 /**
