@@ -1,11 +1,15 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express, { Request, Response } from 'express';
 import cors from 'cors';
-import elasticRouter from './routes/elasticRouter';
+import elasticRouter from './routes/elastic.router';
 import swaggerJSDoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 
 import swaggerOptions from './swagger-config';
 import logger from './logger/logger';
+import { connectDB } from './databases/db';
 
 const app = express();
 const PORT = 3000;
@@ -36,7 +40,9 @@ export interface ElasticClusterHealthRequest
 //routes
 app.use('/api/elastic', elasticRouter);
 
-app.listen(PORT, () => {
-  logger.info(`Server is running at http://localhost:${PORT}`);
-  logger.info(`Swagger docs available at http://localhost:${PORT}/api-docs`);
+connectDB().then(() => {
+  app.listen(PORT, async () => {
+    logger.info(`Server is running at http://localhost:${PORT}`);
+    logger.info(`Swagger docs available at http://localhost:${PORT}/api-docs`);
+  });
 });

@@ -1,40 +1,22 @@
 import { Router } from 'express';
 import {
+  addOrUpdateClusterDetail,
   getClusterDetails,
   getDepriciationInfo,
   getNodesInfo,
   healthCheck,
-} from '../controllers/elasticController';
+} from '../controllers/elastic-controller';
 
 const router = Router();
 
-router.post('/health', healthCheck);
+router.get('/health', healthCheck);
 
 /**
  * @swagger
  * /api/elastic/nodes:
- *   post:
+ *   get:
  *     summary: Get Elastic node details
  *     description: Retrieve details of all nodes in the Elastic cluster, including their IDs, IPs, roles, and operating system information.
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               url:
- *                 type: string
- *                 description: The URL of the Elastic cluster.
- *                 example: https://localhost:9200
- *               username:
- *                 type: string
- *                 description: Username for Elastic authentication.
- *                 example: elastic
- *               password:
- *                 type: string
- *                 description: Password for Elastic authentication.
- *                 example: upgrade
  *     responses:
  *       200:
  *         description: Successfully retrieved Elastic node details.
@@ -85,33 +67,14 @@ router.post('/health', healthCheck);
  *       500:
  *         description: Internal Server Error. Could not connect to the Elastic cluster or fetch nodes.
  */
-router.post('/nodes', getNodesInfo);
+router.get('/nodes', getNodesInfo);
 
 /**
  * @swagger
  * /api/elastic/depriciation:
- *   post:
+ *   get:
  *     summary: Retrieve Elastic deprecation settings
  *     description: Fetch details of deprecated settings and configurations in the Elastic cluster.
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               url:
- *                 type: string
- *                 description: The URL of the Elastic cluster.
- *                 example: https://localhost:9200
- *               username:
- *                 type: string
- *                 description: Username for Elastic authentication.
- *                 example: elastic
- *               password:
- *                 type: string
- *                 description: Password for Elastic authentication.
- *                 example: upgrade
  *     responses:
  *       200:
  *         description: Successfully retrieved Elastic deprecation warnings.
@@ -169,16 +132,14 @@ router.post('/nodes', getNodesInfo);
  *       500:
  *         description: Internal Server Error. Could not connect to the Elastic cluster or fetch deprecation warnings.
  */
-router.post('/depriciation',getDepriciationInfo)
-    
-
+router.get('/depriciation', getDepriciationInfo);
 
 /**
  * @swagger
- * /api/elastic/cluster:
+ * /api/elastic/cluster/add:
  *   post:
- *     summary: Get Elastic cluster details
- *     description: Retrieve details of an Elastic cluster by providing the connection details in the request body.
+ *     summary: Add or Update cluster info
+ *     description: Create or update cluster information in the database, which will be utilized later by other endpoints.
  *     requestBody:
  *       required: true
  *       content:
@@ -198,6 +159,26 @@ router.post('/depriciation',getDepriciationInfo)
  *                 type: string
  *                 description: Password for Elastic authentication.
  *                 example: upgrade
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved Elastic cluster details.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                level:
+ *                  type: string
+ *                  example: Cluster info updated
+ */
+router.post('/cluster/add', addOrUpdateClusterDetail);
+
+/**
+ * @swagger
+ * /api/elastic/cluster:
+ *   get:
+ *     summary: Get Elastic cluster details
+ *     description: Retrieve details of an Elastic cluster by providing the connection details in the request body.
  *     responses:
  *       200:
  *         description: Successfully retrieved Elastic cluster details.
@@ -261,6 +242,6 @@ router.post('/depriciation',getDepriciationInfo)
  *       500:
  *         description: Internal Server Error. Could not connect to the Elastic cluster.
  */
-router.post('/cluster', getClusterDetails);
+router.get('/cluster', getClusterDetails);
 
 export default router;
