@@ -149,8 +149,9 @@ export const getNodesInfo = async (req: Request, res: Response) => {
     //  createAnsibleInventory(elasticNodes, './HF-AWX-key.pem');
     //  executeAnsiblePlaybook('ansible_inventory.ini','8.6.1','ansible/main',"elastic","B6T5WucTp=sJfbbPLErj")
     res.send(elasticNodes);
-  } catch (error) {
+  } catch (error: any) {
     logger.error('Error fetching node details:', error);
+    res.status(400).send({ message: error.message });
   }
 };
 
