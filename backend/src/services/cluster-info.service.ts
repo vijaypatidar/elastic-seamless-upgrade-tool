@@ -6,17 +6,21 @@ import ClusterInfo, {
 export const createOrUpdateClusterInfo = async (
   clusterInfo: IClusterInfo,
 ): Promise<IClusterInfoDocument> => {
+  // TODO These needs to be updated when we want to support multiple clusters
+  const clusterId = 'cluster-id'; //clusterInfo.clusterId
   const data = await ClusterInfo.findOneAndUpdate(
-    { clusterId: clusterInfo.clusterId },
-    clusterInfo, // Data to update or create
+    { clusterId: clusterId },
+    { ...clusterInfo, clusterId: clusterId },
     { new: true, upsert: true, runValidators: true },
   );
   return data;
 };
 
 export const getClusterInfoById = async (
-  clusterId: string = 'cluster-id',
+  clusterId: string,
 ): Promise<IClusterInfo> => {
+  // TODO These needs to be updated when we want to support multiple clusters
+  clusterId = 'cluster-id';
   const clusterInfo = await ClusterInfo.findOne({
     clusterId: clusterId,
   });
