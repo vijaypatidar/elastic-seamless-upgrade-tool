@@ -19,7 +19,8 @@ export const healthCheck = async (req: Request, res: Response) => {
 
 export const getClusterDetails = async (req: Request, res: Response) => {
   try {
-    const client = await ElasticClient.buildClient();
+    const clusterId = req.params.clusterId;
+    const client = await ElasticClient.buildClient(clusterId);
     const clusterDetails = await client.getClient().info();
     const healtDetails = await client.getClient().cluster.health();
     res.send({
@@ -109,7 +110,8 @@ async function verifySnapshotForAllRepositories(req: Request, res: Response) {
 
 export const getDepriciationInfo = async (req: Request, res: Response) => {
   try {
-    const client = await ElasticClient.buildClient();
+    const clusterId = req.params.clusterId;
+    const client = await ElasticClient.buildClient(clusterId);
     const depriciationInfo = await client.getClient().migration.deprecations();
     const upgradeInfo = await client
       .getClient()
@@ -124,7 +126,8 @@ export const getDepriciationInfo = async (req: Request, res: Response) => {
 
 export const getNodesInfo = async (req: Request, res: Response) => {
   try {
-    const client = await ElasticClient.buildClient();
+    const clusterId = req.params.clusterId;
+    const client = await ElasticClient.buildClient(clusterId);
     const response: any = await client.getClient().nodes.info({
       filter_path:
         'nodes.*.name,nodes.*.roles,nodes.*.os.name,nodes.*.os.version,nodes.*.version,nodes.*.ip',
