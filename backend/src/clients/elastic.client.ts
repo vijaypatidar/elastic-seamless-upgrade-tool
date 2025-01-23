@@ -6,6 +6,12 @@ import {
 } from '@elastic/transport/lib/types';
 import { ElasticClusterBaseRequest } from '..';
 import { getClusterInfoById } from '../services/cluster-info.service';
+import logger from '../logger/logger';
+
+export interface ElastcSearchSnapshot {
+  timestamp: Date;
+  name: string;
+}
 
 export interface ElasticClusterInfo {
   url: string;
@@ -64,6 +70,61 @@ export class ElasticClient {
     } catch (err) {
       console.log(`Failed to get cluster health`, err);
       throw err;
+    }
+  }
+
+  async getValidSnapshots(): Promise<ElastcSearchSnapshot[]> {
+    try {
+      const client = this.getClient();
+      const repositoriesResponse = await client.snapshot.getRepository({});
+      const repositories = Object.keys(repositoriesResponse);
+      const validSnapshots: ElastcSearchSnapshot[] = [];
+
+      if (repositories.length === 0) {
+        logger.info('No repositories found.');
+        return [];
+      }
+
+      const now = Date.now();
+      const twentyFourHoursAgo = now - 24 * 60 * 60 * 1000; // Timestamp for 24 hours ago
+
+      for (const repository of repositories) {
+        logger.info(`Checking snapshots for repository: ${repository}`);
+        const snapshotResponse = await client.snapshot.get({
+          repository,
+          snapshot: '_all',
+        });
+        const snapshots = snapshotResponse.snapshots;
+
+        if (!snapshots || snapshots.length === 0) {
+          logger.info(`No snapshots found in repository ${repository}.`);
+          continue;
+        }
+
+        // Filter snapshots created within the last 24 hours
+        const recentSnapshots = snapshots
+          .filter((snapshot) => {
+            const snapshotTime = snapshot.start_time_in_millis || -1;
+            return snapshotTime >= twentyFourHoursAgo && snapshotTime <= now;
+          })
+          .map(
+            (snapshot) =>
+              ({
+                timestamp: new Date(snapshot.start_time_in_millis!!),
+                name: snapshot.snapshot,
+              }) as ElastcSearchSnapshot,
+          );
+
+        validSnapshots.push(...recentSnapshots);
+      }
+
+      if (validSnapshots.length === 0) {
+        logger.info('No valid snapshots found within the last 24 hours.');
+      }
+      return validSnapshots;
+    } catch (error) {
+      logger.error('Error checking snapshot details:', error);
+      throw error;
     }
   }
 
