@@ -6,6 +6,7 @@ import {
   getNodesInfo,
   healthCheck,
   getLogsStream,
+  getDeprecations,
 } from '../controllers/elastic-controller';
 
 const router = Router();
@@ -247,4 +248,5 @@ router.get('/:clusterId/info', getClusterDetails);
 
 router.get('/:clusterId/nodes/:nodeId/logs/stream', getLogsStream);
 
+router.get('/:clusterId/depriciations/kibana', getDeprecations);
 export default router;

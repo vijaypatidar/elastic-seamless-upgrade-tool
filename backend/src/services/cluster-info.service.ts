@@ -27,5 +27,6 @@ export const getClusterInfoById = async (
   return {
     clusterId,
     elastic: clusterInfo?.elastic!!,
+    kibana: clusterInfo?.kibana,
   };
 };
