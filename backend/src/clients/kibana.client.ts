@@ -22,7 +22,7 @@ export class KibanaClient {
     this.config = config;
   }
 
-  async getDeprecations() {
+  async getDeprecations(): Promise<DeprecationDetail[]> {
     try {
       const response = await axios.get(`${this.config.url}/api/deprecations/`, {
         headers: {
@@ -30,7 +30,7 @@ export class KibanaClient {
           'kbn-xsrf': 'true',
         },
       });
-      return response.data;
+      return response.data.deprecations as DeprecationDetail[];
     } catch (error: any) {
       console.error(
         'Error fetching deprecations:',
