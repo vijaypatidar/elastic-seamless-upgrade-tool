@@ -9,7 +9,7 @@ import { getClusterInfoById } from '../services/cluster-info.service';
 import logger from '../logger/logger';
 
 export interface ElastcSearchSnapshot {
-  timestamp: Date;
+  createdAt: Date;
   name: string;
 }
 
@@ -110,7 +110,7 @@ export class ElasticClient {
           .map(
             (snapshot) =>
               ({
-                timestamp: new Date(snapshot.start_time_in_millis!!),
+                createdAt: new Date(snapshot.start_time_in_millis!!),
                 name: snapshot.snapshot,
               }) as ElastcSearchSnapshot,
           );
