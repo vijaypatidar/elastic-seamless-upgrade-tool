@@ -6,6 +6,7 @@ import logger from '../logger/logger';
 import { IClusterInfo } from '../models/cluster-info.model';
 import { createOrUpdateClusterInfo } from '../services/cluster-info.service';
 import { addLogs, getLogs } from '../services/logs.service';
+import { getAllElasticNodes, syncNodeData } from '../services/elastic-node.service.';
 
 export const healthCheck = async (req: Request, res: Response) => {
   try {
@@ -53,6 +54,7 @@ export const addOrUpdateClusterDetail = async (req: Request, res: Response) => {
     res.send({
       message: result.isNew ? 'Cluster info saved' : 'Cluster info updated',
     });
+    await syncNodeData(clusterId);
   } catch (err: any) {
     logger.info(err);
     res.status(400).send({ message: err.message });
@@ -114,7 +116,7 @@ async function verifySnapshotForAllRepositories(req: Request, res: Response) {
 export const getDepriciationInfo = async (req: Request, res: Response) => {
   try {
     const clusterId = req.params.clusterId;
-    const client = await ElasticClient.buildClient(clusterId);
+    const client = await ElasticClient.buildClient('cluster-id');
     const depriciationInfo = await client.getClient().migration.deprecations();
     const upgradeInfo = await client
       .getClient()
@@ -130,30 +132,7 @@ export const getDepriciationInfo = async (req: Request, res: Response) => {
 export const getNodesInfo = async (req: Request, res: Response) => {
   try {
     const clusterId = req.params.clusterId;
-    const client = await ElasticClient.buildClient(clusterId);
-    const response: any = await client.getClient().nodes.info({
-      filter_path:
-        'nodes.*.name,nodes.*.roles,nodes.*.os.name,nodes.*.os.version,nodes.*.version,nodes.*.ip',
-    });
-    const masterNode: any = await client.getClient().cat.master({
-      format: 'json',
-    });
-    console.log('masterNode', masterNode);
-    const elasticNodes: ElasticNode[] | null = Object.entries(
-      response.nodes,
-    ).map(([key, value]: any) => ({
-      id: key,
-      ip: value.ip,
-      name: value.name,
-      version: value.version,
-      roles: value.roles,
-      os: value.os,
-      isMaster: masterNode[0].id === key,
-    }));
-    //Edit this info according to need
-    // logger.info('Node details:', response);
-    //  createAnsibleInventory(elasticNodes, './HF-AWX-key.pem');
-    //  executeAnsiblePlaybook('ansible_inventory.ini','8.6.1','ansible/main',"elastic","B6T5WucTp=sJfbbPLErj")
+    const elasticNodes = await getAllElasticNodes(clusterId);
     res.send(elasticNodes);
   } catch (error: any) {
     logger.error('Error fetching node details:', error);
