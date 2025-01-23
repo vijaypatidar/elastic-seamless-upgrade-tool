@@ -51,9 +51,6 @@ export class KibanaClient {
       const token = Buffer.from(`${username}:${password}`).toString('base64');
       return `Basic ${token}`;
     } else if (apiKey) {
-      if (!apiKey) {
-        throw new Error('API Key must be provided for API Key Authentication.');
-      }
       return `ApiKey ${apiKey}`;
     }
   }
