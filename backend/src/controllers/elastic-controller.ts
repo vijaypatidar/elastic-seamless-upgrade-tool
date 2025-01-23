@@ -186,7 +186,7 @@ export const getLogsStream = async (req: Request, res: Response) => {
 
     const logs = await getLogs(clusterId, nodeId, lastTimestamp);
     for (let log of logs) {
-      res.write(log.message);
+      res.write(`${log.message}\n`);
       lastTimestamp = log.timestamp;
     }
   }, 2000);
