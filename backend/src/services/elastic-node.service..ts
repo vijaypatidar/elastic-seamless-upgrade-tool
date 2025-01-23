@@ -1,4 +1,5 @@
 import { ElasticClient } from '../clients/elastic.client';
+import logger from '../logger/logger';
 import ElasticNode, {
   IElasticNode,
   IElasticNodeDocument,
@@ -58,13 +59,10 @@ export const syncNodeData = async (clusterId: string) => {
       const existingNode = await ElasticNode.findOne({ id: node.nodeId });
       if (!existingNode) {
         await ElasticNode.create(node);
-        console.log(`Node inserted: ${node.name}`);
-      } else {
-        console.log(`Node already exists: ${node.name}`);
-      }
+      } 
     }
   } catch (error) {
-    console.error('Error syncing nodes from Elasticsearch:', error);
+    logger.error('Error syncing nodes from Elasticsearch:', error);
     throw error;
   }
 };
@@ -81,7 +79,7 @@ export const updateNodeStatus = async (
     );
 
     if (!updatedNode) {
-      console.warn(`Node with id ${nodeId} not found.`);
+      logger.debug(`Node with id ${nodeId} not found.`);
       return null;
     }
 
