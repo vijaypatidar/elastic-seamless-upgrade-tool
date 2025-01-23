@@ -5,6 +5,7 @@ import {
   getDepriciationInfo,
   getNodesInfo,
   healthCheck,
+  getLogsStream,
 } from '../controllers/elastic-controller';
 
 const router = Router();
@@ -243,5 +244,7 @@ router.post('', addOrUpdateClusterDetail);
  *         description: Internal Server Error. Could not connect to the Elastic cluster.
  */
 router.get('/:clusterId/info', getClusterDetails);
+
+router.get('/:clusterId/nodes/:nodeId/logs/stream', getLogsStream);
 
 export default router;

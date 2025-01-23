@@ -5,6 +5,7 @@ import { ElasticNode } from '../interfaces';
 import logger from '../logger/logger';
 import { IClusterInfo } from '../models/cluster-info.model';
 import { createOrUpdateClusterInfo } from '../services/cluster-info.service';
+import { addLogs, getLogs } from '../services/logs.service';
 
 export const healthCheck = async (req: Request, res: Response) => {
   try {
@@ -162,3 +163,38 @@ export const getNodesInfo = async (req: Request, res: Response) => {
 
 export const performUpgrade = async (req: Request, res: Response) => {};
 // export const getUpgradeDetails
+
+export const getLogsStream = async (req: Request, res: Response) => {
+  const { clusterId, nodeId } = req.params;
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+
+  let lastTimestamp: Date | undefined = undefined;
+
+  const intervalId = setInterval(async () => {
+    // Uncomment this code block to create fack stream logs in db
+    // addLogs(
+    //   clusterId,
+    //   nodeId,
+    //   new Date(),
+    //   `data: ${JSON.stringify({
+    //     timestamp: new Date(),
+    //     message: 'Upgrade in progress',
+    //   })}`,
+    // );
+
+    const logs = await getLogs(clusterId, nodeId, lastTimestamp);
+    for (let log of logs) {
+      res.write(`${log.message}\n`);
+      lastTimestamp = log.timestamp;
+    }
+  }, 2000);
+
+  // Cleanup when the client disconnects
+  req.on('close', () => {
+    logger.debug('Client disconnected');
+    clearInterval(intervalId);
+    res.end();
+  });
+};
