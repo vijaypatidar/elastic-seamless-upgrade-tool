@@ -14,11 +14,11 @@ import {
   getKibanaDeprecation,
 } from '../services/cluster-info.service';
 import { addLogs, getLogs } from '../services/logs.service';
-import { KibanaClient } from '../clients/kibana.client';
 import {
   getAllElasticNodes,
   syncNodeData,
 } from '../services/elastic-node.service.';
+import cluster from 'cluster';
 
 export const healthCheck = async (req: Request, res: Response) => {
   try {
@@ -107,16 +107,20 @@ export const getUpgradeDetails = async (req: Request, res: Response) => {
   }
 };
 
-export const getDeprecationInfo = async (req: Request, res: Response) => {
+export const getElasticDeprecationInfo = async (
+  req: Request,
+  res: Response,
+) => {
   try {
     const clusterId = req.params.clusterId;
-    const client = await ElasticClient.buildClient('cluster-id');
-    const deprecationInfo = await client.getClient().migration.deprecations();
-    const upgradeInfo = await client
-      .getClient()
-      .migration.getFeatureUpgradeStatus();
-    logger.info('upgrade Info', upgradeInfo);
-    res.status(201).send(deprecationInfo);
+    const deprecations = (await getElasticsearchDeprecation(clusterId))
+      .deprecations;
+
+    // const upgradeInfo = await client
+    //   .getClient()
+    //   .migration.getFeatureUpgradeStatus();
+    // logger.info('upgrade Info', upgradeInfo);    //need to discuss what if feature upgrades are present
+    res.status(200).send(deprecations);
   } catch (err: any) {
     logger.info(err);
     res.status(400).send({ message: err.message });
@@ -171,11 +175,13 @@ export const getLogsStream = async (req: Request, res: Response) => {
   });
 };
 
-export const getDeprecations = async (req: Request, res: Response) => {
+export const getKibanaDeprecationsInfo = async (
+  req: Request,
+  res: Response,
+) => {
   try {
     const clusterId = req.params.clusterId;
-    const kibanaClient = await KibanaClient.buildClient(clusterId);
-    const deprecations = await kibanaClient.getDeprecations();
+    const deprecations = (await getKibanaDeprecation(clusterId)).deprecations;
     res.send(deprecations);
   } catch (error: any) {
     logger.error(error);
