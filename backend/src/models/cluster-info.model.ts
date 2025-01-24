@@ -43,7 +43,7 @@ const KibanaInfoSchema: Schema<IElasticInfo> = new Schema<IKibanaInfo>({
 const ClusterInfoSchema: Schema<IClusterInfoDocument> =
   new Schema<IClusterInfoDocument>(
     {
-      clusterId: { type: String, required: true },
+      clusterId: { type: String, required: true, unique: true },
       elastic: { type: ElasticInfoSchema, required: true },
       kibana: { type: KibanaInfoSchema, required: false },
     },
