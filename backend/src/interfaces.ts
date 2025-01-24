@@ -8,3 +8,14 @@ export interface ElasticNode {
     os: Object;
     isMaster: Boolean
 }
+
+export interface DeprecationCounts{
+    warning: Number;
+    critical: Number;
+}
+export interface DepricationSetting{
+    type: string;
+    issue: string;
+    issueDetails: string | undefined;
+    resolution: string;
+}

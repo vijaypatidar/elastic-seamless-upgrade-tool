@@ -1,12 +1,13 @@
 import { ElasticClusterBaseRequest } from '..';
 import { ElasticClient } from '../clients/elastic.client';
 import { Request, Response } from 'express';
-import { ElasticNode } from '../interfaces';
+import { DeprecationCounts, ElasticNode } from '../interfaces';
 import logger from '../logger/logger';
 import { IClusterInfo } from '../models/cluster-info.model';
-import { createOrUpdateClusterInfo } from '../services/cluster-info.service';
+import { createOrUpdateClusterInfo, getElasticsearchDeprecation, getKibanaDeprication } from '../services/cluster-info.service';
 import { addLogs, getLogs } from '../services/logs.service';
 import { getAllElasticNodes, syncNodeData } from '../services/elastic-node.service.';
+import { IElasticNode } from '../models/elastic-node.model';
 
 export const healthCheck = async (req: Request, res: Response) => {
   try {
@@ -27,9 +28,19 @@ export const getClusterDetails = async (req: Request, res: Response) => {
     const clusterDetails = await client.getClient().info();
     const healtDetails = await client.getClient().cluster.health();
     res.send({
-      ...healtDetails,
-      ...clusterDetails,
-    });
+      clusterName: clusterDetails.cluster_name,
+      clusterUUID: clusterDetails.cluster_uuid,
+      status: healtDetails.status,
+      version: clusterDetails.version.number,
+      timedOut: healtDetails.timed_out,
+      numberOfDataNodes: healtDetails.number_of_data_nodes,
+      numberOfNodes: healtDetails.number_of_nodes,
+      activePrimaryShards: healtDetails.active_primary_shards,
+      activeShards: healtDetails.unassigned_shards,
+      unassignedShards: healtDetails.unassigned_shards,
+      initializingShards: healtDetails.initializing_shards,
+      relocatingShards: healtDetails.relocating_shards
+    })
   } catch (err: any) {
     logger.info(err);
     res.status(400).send({ message: err.message });
@@ -61,7 +72,30 @@ export const addOrUpdateClusterDetail = async (req: Request, res: Response) => {
   }
 };
 
-async function verifySnapshotForAllRepositories(req: Request, res: Response) {
+export const getUpgradeDetails = async(req: Request, res: Response)=>{
+    try{
+      const clusterId = req.params.clusterId;
+      const isSnapShotTaken = await verifySnapshotForAllRepositories(clusterId);
+      const [esDepricationCount,_] = await getElasticsearchDeprecation(clusterId);
+      const [KibanaDepricationCount,__] = await getKibanaDeprication('http://localhost:5601')
+      
+
+      //verifying upgradability
+      const elasticNodes = (await getAllElasticNodes(clusterId)).filter((item)=>item.status !== 'completed');
+      const isESUpgraded = (elasticNodes.length === 0);
+
+      res.send({
+        isSnapShotTaken,
+        esDepricationCount,
+        KibanaDepricationCount,
+        isESUpgraded
+      })
+    }catch(error: any){
+      res.status(501).json({err: error.message})
+    }
+}
+
+async function verifySnapshotForAllRepositories(clusterId: string) {
   try {
     const clusterId = 'cluster-id';
     const client = await ElasticClient.buildClient(clusterId);
@@ -107,22 +141,23 @@ async function verifySnapshotForAllRepositories(req: Request, res: Response) {
       //   } else {
       //     logger.info(`The latest snapshot in repository ${repository} was NOT taken within the last 24 hours.`);
       //   }
+      return true;
     }
   } catch (error) {
     logger.error('Error checking snapshot details:', error);
   }
 }
 
-export const getDepriciationInfo = async (req: Request, res: Response) => {
+export const getDepricationInfo = async (req: Request, res: Response) => {
   try {
     const clusterId = req.params.clusterId;
     const client = await ElasticClient.buildClient('cluster-id');
-    const depriciationInfo = await client.getClient().migration.deprecations();
+    const depricationInfo = await client.getClient().migration.deprecations();
     const upgradeInfo = await client
       .getClient()
       .migration.getFeatureUpgradeStatus();
     logger.info('upgrade Info', upgradeInfo);
-    res.send(depriciationInfo).status(201);
+    res.send(depricationInfo).status(201);
   } catch (err: any) {
     logger.info(err);
     res.status(400).send({ message: err.message });
@@ -141,7 +176,6 @@ export const getNodesInfo = async (req: Request, res: Response) => {
 };
 
 export const performUpgrade = async (req: Request, res: Response) => {};
-// export const getUpgradeDetails
 
 export const getLogsStream = async (req: Request, res: Response) => {
   const { clusterId, nodeId } = req.params;
