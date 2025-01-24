@@ -2,12 +2,13 @@ import { Router } from 'express';
 import {
   addOrUpdateClusterDetail,
   getClusterDetails,
-  getDepriciationInfo,
+  getDeprecationInfo,
   getNodesInfo,
   healthCheck,
   getLogsStream,
   getDeprecations,
   getValidSnapshots,
+  getUpgradeDetails,
 } from '../controllers/elastic-controller';
 
 const router = Router();
@@ -74,7 +75,7 @@ router.get('/:clusterId/nodes', getNodesInfo);
 
 /**
  * @swagger
- * /api/elastic/clusters/{clusterId}/depriciations:
+ * /api/elastic/clusters/{clusterId}/deprecations:
  *   get:
  *     summary: Retrieve Elastic deprecation settings
  *     description: Fetch details of deprecated settings and configurations in the Elastic cluster.
@@ -135,7 +136,7 @@ router.get('/:clusterId/nodes', getNodesInfo);
  *       500:
  *         description: Internal Server Error. Could not connect to the Elastic cluster or fetch deprecation warnings.
  */
-router.get('/:clusterId/depriciations', getDepriciationInfo);
+router.get('/:clusterId/deprecations', getDeprecationInfo);
 
 router.get('/:clusterId/valid-snapshots', getValidSnapshots);
 
@@ -250,6 +251,8 @@ router.post('', addOrUpdateClusterDetail);
 router.get('/:clusterId/info', getClusterDetails);
 
 router.get('/:clusterId/nodes/:nodeId/logs/stream', getLogsStream);
+
+router.get('/:clusterId/upgrade_info', getUpgradeDetails);
 
 router.get('/:clusterId/depriciations/kibana', getDeprecations);
 export default router;
