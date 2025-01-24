@@ -13,7 +13,7 @@ import {
 
 const router = Router();
 
-router.get('/health', healthCheck);
+router.get('/:clusterId/health', healthCheck);
 
 router.get('/:clusterId/nodes', getNodesInfo);
 
