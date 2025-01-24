@@ -5,3 +5,4 @@ dist/
 ansible_inventory.ini
 *.pem
 logs
+uploads
