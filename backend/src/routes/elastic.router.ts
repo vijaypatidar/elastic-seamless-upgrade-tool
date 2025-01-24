@@ -2,11 +2,11 @@ import { Router } from 'express';
 import {
   addOrUpdateClusterDetail,
   getClusterDetails,
-  getDeprecationInfo,
+  getElasticDeprecationInfo,
   getNodesInfo,
   healthCheck,
   getLogsStream,
-  getDeprecations,
+  getKibanaDeprecationsInfo,
   getValidSnapshots,
   getUpgradeDetails,
 } from '../controllers/elastic-controller';
@@ -17,7 +17,10 @@ router.get('/health', healthCheck);
 
 router.get('/:clusterId/nodes', getNodesInfo);
 
-router.get('/:clusterId/deprecations', getDeprecationInfo);
+router.get(
+  '/:clusterId/deprecations/elastic-search',
+  getElasticDeprecationInfo,
+);
 
 router.get('/:clusterId/valid-snapshots', getValidSnapshots);
 
@@ -29,5 +32,6 @@ router.get('/:clusterId/nodes/:nodeId/logs/stream', getLogsStream);
 
 router.get('/:clusterId/upgrade_info', getUpgradeDetails);
 
-router.get('/:clusterId/depriciations/kibana', getDeprecations);
+router.get('/:clusterId/depriciations/kibana', getKibanaDeprecationsInfo);
+
 export default router;
