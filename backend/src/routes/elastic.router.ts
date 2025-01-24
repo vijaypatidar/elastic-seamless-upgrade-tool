@@ -7,6 +7,7 @@ import {
   healthCheck,
   getLogsStream,
   getDeprecations,
+  getValidSnapshots,
 } from '../controllers/elastic-controller';
 
 const router = Router();
@@ -135,6 +136,8 @@ router.get('/:clusterId/nodes', getNodesInfo);
  *         description: Internal Server Error. Could not connect to the Elastic cluster or fetch deprecation warnings.
  */
 router.get('/:clusterId/depriciations', getDepriciationInfo);
+
+router.get('/:clusterId/valid-snapshots', getValidSnapshots);
 
 /**
  * @swagger
