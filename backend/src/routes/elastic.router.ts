@@ -8,9 +8,14 @@ import {
   getLogsStream,
   getDeprecations,
   getValidSnapshots,
+  uploadCertificates,
 } from '../controllers/elastic-controller';
 
 const router = Router();
+
+import multer from 'multer';
+
+const upload = multer({ dest: 'uploads/' });
 
 router.get('/health', healthCheck);
 
@@ -252,4 +257,7 @@ router.get('/:clusterId/info', getClusterDetails);
 router.get('/:clusterId/nodes/:nodeId/logs/stream', getLogsStream);
 
 router.get('/:clusterId/depriciations/kibana', getDeprecations);
+
+router.post('/certificates/upload', upload.array('files'), uploadCertificates);
+
 export default router;

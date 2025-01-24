@@ -53,11 +53,14 @@ export const addOrUpdateClusterDetail = async (req: Request, res: Response) => {
       elastic: elastic,
       kibana: kibana,
       clusterId: clusterId,
+      certificateIds: req.body.certificateIds,
     };
     const result = await createOrUpdateClusterInfo(clusterInfo);
-    res.send({
-      message: result.isNew ? 'Cluster info saved' : 'Cluster info updated',
-    });
+    res
+      .send({
+        message: result.isNew ? 'Cluster info saved' : 'Cluster info updated',
+      })
+      .status(201);
     await syncNodeData(clusterId);
   } catch (err: any) {
     logger.info(err);
@@ -151,5 +154,16 @@ export const getValidSnapshots = async (req: Request, res: Response) => {
   } catch (error: any) {
     logger.error('Error fetching node details:', error);
     res.status(400).send({ message: error.message });
+  }
+};
+
+export const uploadCertificates = async (req: Request, res: Response) => {
+  try {
+    const files = req.files as Express.Multer.File[];
+    const fileIds = files.map((file: Express.Multer.File) => file.filename);
+    res.status(200).json({ certificateIds: fileIds });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to upload files' });
   }
 };
