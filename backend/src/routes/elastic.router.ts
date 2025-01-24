@@ -6,6 +6,8 @@ import {
   getNodesInfo,
   healthCheck,
   getLogsStream,
+  getDeprecations,
+  getValidSnapshots,
   getUpgradeDetails,
 } from '../controllers/elastic-controller';
 
@@ -136,6 +138,8 @@ router.get('/:clusterId/nodes', getNodesInfo);
  */
 router.get('/:clusterId/deprications', getDepricationInfo);
 
+router.get('/:clusterId/valid-snapshots', getValidSnapshots);
+
 /**
  * @swagger
  * /api/elastic/clusters:
@@ -248,6 +252,8 @@ router.get('/:clusterId/info', getClusterDetails);
 
 router.get('/:clusterId/nodes/:nodeId/logs/stream', getLogsStream);
 
-router.get('/:clusterId/upgrade_info',getUpgradeDetails);
+router.get('/:clusterId/upgrade_info', getUpgradeDetails);
 
+router.get('/:clusterId/upgrade_info', getUpgradeDetails);
+router.get('/:clusterId/depriciations/kibana', getDeprecations);
 export default router;

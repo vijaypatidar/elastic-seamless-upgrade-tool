@@ -3,11 +3,22 @@ import { ElasticClient } from '../clients/elastic.client';
 import { Request, Response } from 'express';
 import { DeprecationCounts, ElasticNode } from '../interfaces';
 import logger from '../logger/logger';
-import { IClusterInfo } from '../models/cluster-info.model';
-import { createOrUpdateClusterInfo, getElasticsearchDeprecation, getKibanaDeprication } from '../services/cluster-info.service';
+import {
+  IClusterInfo,
+  IElasticInfo,
+  IKibanaInfo,
+} from '../models/cluster-info.model';
+import {
+  createOrUpdateClusterInfo,
+  getElasticsearchDeprecation,
+  getKibanaDeprication,
+} from '../services/cluster-info.service';
 import { addLogs, getLogs } from '../services/logs.service';
-import { getAllElasticNodes, syncNodeData } from '../services/elastic-node.service.';
-import { IElasticNode } from '../models/elastic-node.model';
+import { KibanaClient } from '../clients/kibana.client';
+import {
+  getAllElasticNodes,
+  syncNodeData,
+} from '../services/elastic-node.service.';
 
 export const healthCheck = async (req: Request, res: Response) => {
   try {
@@ -39,8 +50,8 @@ export const getClusterDetails = async (req: Request, res: Response) => {
       activeShards: healtDetails.unassigned_shards,
       unassignedShards: healtDetails.unassigned_shards,
       initializingShards: healtDetails.initializing_shards,
-      relocatingShards: healtDetails.relocating_shards
-    })
+      relocatingShards: healtDetails.relocating_shards,
+    });
   } catch (err: any) {
     logger.info(err);
     res.status(400).send({ message: err.message });
@@ -50,15 +61,11 @@ export const getClusterDetails = async (req: Request, res: Response) => {
 export const addOrUpdateClusterDetail = async (req: Request, res: Response) => {
   try {
     const clusterId = 'cluster-id';
-    const body: ElasticClusterBaseRequest = req.body;
+    const elastic: IElasticInfo = req.body.elastic;
+    const kibana: IKibanaInfo = req.body.kibana;
     const clusterInfo: IClusterInfo = {
-      elastic: {
-        url: body.url,
-        username: body.username,
-        password: body.password,
-        bearer: body.bearer,
-        apiKey: body.apiKey,
-      },
+      elastic: elastic,
+      kibana: kibana,
       clusterId: clusterId,
     };
     const result = await createOrUpdateClusterInfo(clusterInfo);
@@ -72,81 +79,32 @@ export const addOrUpdateClusterDetail = async (req: Request, res: Response) => {
   }
 };
 
-export const getUpgradeDetails = async(req: Request, res: Response)=>{
-    try{
-      const clusterId = req.params.clusterId;
-      const isSnapShotTaken = await verifySnapshotForAllRepositories(clusterId);
-      const [esDepricationCount,_] = await getElasticsearchDeprecation(clusterId);
-      const [KibanaDepricationCount,__] = await getKibanaDeprication('http://localhost:5601')
-      
-
-      //verifying upgradability
-      const elasticNodes = (await getAllElasticNodes(clusterId)).filter((item)=>item.status !== 'completed');
-      const isESUpgraded = (elasticNodes.length === 0);
-
-      res.send({
-        isSnapShotTaken,
-        esDepricationCount,
-        KibanaDepricationCount,
-        isESUpgraded
-      })
-    }catch(error: any){
-      res.status(501).json({err: error.message})
-    }
-}
-
-async function verifySnapshotForAllRepositories(clusterId: string) {
+export const getUpgradeDetails = async (req: Request, res: Response) => {
   try {
-    const clusterId = 'cluster-id';
+    const clusterId = req.params.clusterId;
     const client = await ElasticClient.buildClient(clusterId);
-    const repositoriesResponse = await client
-      .getClient()
-      .snapshot.getRepository({});
-    const repositories = Object.keys(repositoriesResponse.body);
+    const isSnapShotTaken = (await client.getValidSnapshots()).length !== 0;
 
-    if (repositories.length === 0) {
-      logger.info('No repositories found.');
-      return;
-    }
+    const [esDepricationCount, _] =
+      await getElasticsearchDeprecation(clusterId);
+    const [KibanaDepricationCount, __] = await getKibanaDeprication(clusterId);
 
-    for (const repository of repositories) {
-      logger.info(`Checking snapshots for repository: ${repository}`);
-      const snapshotResponse = await client.getClient().snapshot.get({
-        repository,
-        snapshot: '_all',
-      });
-      logger.info(snapshotResponse);
-      const snapshots: any = snapshotResponse.snapshots;
+    //verifying upgradability
+    const elasticNodes = (await getAllElasticNodes(clusterId)).filter(
+      (item) => item.status !== 'completed',
+    );
+    const isESUpgraded = elasticNodes.length === 0;
 
-      if (snapshots.length === 0) {
-        logger.info(`No snapshots found in repository ${repository}.`);
-        continue;
-      }
-
-      const latestSnapshot = snapshots.sort((a: any, b: any) => {
-        return (
-          new Date(b.start_time_in_millis).getTime() -
-          new Date(a.start_time_in_millis).getTime()
-        );
-      })[0];
-
-      //   const snapshotTimestamp = latestSnapshot.start_time_in_millis;
-      //   const snapshotDate = new Date(snapshotTimestamp);
-      //   const currentDate =  new Date(Date.now())
-
-      //   const hoursDifference = (currentDate: any - snapshotDate)
-
-      //   if (hoursDifference <= 24) {
-      //     logger.info(`The latest snapshot in repository ${repository} was taken within the last 24 hours.`);
-      //   } else {
-      //     logger.info(`The latest snapshot in repository ${repository} was NOT taken within the last 24 hours.`);
-      //   }
-      return true;
-    }
-  } catch (error) {
-    logger.error('Error checking snapshot details:', error);
+    res.send({
+      isSnapShotTaken,
+      esDepricationCount,
+      KibanaDepricationCount,
+      isESUpgraded,
+    });
+  } catch (error: any) {
+    res.status(501).json({ err: error.message });
   }
-}
+};
 
 export const getDepricationInfo = async (req: Request, res: Response) => {
   try {
@@ -210,4 +168,28 @@ export const getLogsStream = async (req: Request, res: Response) => {
     clearInterval(intervalId);
     res.end();
   });
+};
+
+export const getDeprecations = async (req: Request, res: Response) => {
+  try {
+    const clusterId = req.params.clusterId;
+    const kibanaClient = await KibanaClient.buildClient(clusterId);
+    const deprecations = await kibanaClient.getDeprecations();
+    res.send(deprecations);
+  } catch (error: any) {
+    logger.error(error);
+    res.status(400).send({ message: error.message });
+  }
+};
+
+export const getValidSnapshots = async (req: Request, res: Response) => {
+  try {
+    const { clusterId } = req.params;
+    const client = await ElasticClient.buildClient(clusterId);
+    const snapshots = await client.getValidSnapshots();
+    res.send(snapshots);
+  } catch (error: any) {
+    logger.error('Error fetching node details:', error);
+    res.status(400).send({ message: error.message });
+  }
 };
