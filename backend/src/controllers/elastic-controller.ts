@@ -87,9 +87,8 @@ export const getUpgradeDetails = async (req: Request, res: Response) => {
 
     const esDeprecationCount = (await getElasticsearchDeprecation(clusterId))
       .counts;
-    const KibanaDeprecationCount = (
-      await getElasticsearchDeprecation(clusterId)
-    ).counts;
+    const KibanaDeprecationCount = (await getKibanaDeprecation(clusterId))
+      .counts;
 
     //verifying upgradability
     const elasticNodes = (await getAllElasticNodes(clusterId)).filter(
