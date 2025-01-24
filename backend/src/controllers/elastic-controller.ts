@@ -120,7 +120,7 @@ export const getElasticDeprecationInfo = async (
     //   .getClient()
     //   .migration.getFeatureUpgradeStatus();
     // logger.info('upgrade Info', upgradeInfo);    //need to discuss what if feature upgrades are present
-    res.status(201).send(deprecations);
+    res.status(200).send(deprecations);
   } catch (err: any) {
     logger.info(err);
     res.status(400).send({ message: err.message });

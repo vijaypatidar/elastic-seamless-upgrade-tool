@@ -1,63 +1,64 @@
-import { exec } from "child_process";
-import { ElasticNode } from "../interfaces";
-import {Playbook} from 'node-ansible'
-import fs from 'fs'
-import path from "path";
+import { exec } from 'child_process';
+import { ElasticNode } from '../interfaces';
+import { Playbook } from 'node-ansible';
+import fs from 'fs';
+import path from 'path';
 
-export const createAnsibleInventory = async (nodes: ElasticNode[],pathToKey: string) => {
-    try {
-        const roleGroups: Record<"elasticsearch_master" | "elasticsearch_data", string[]> = {
-            elasticsearch_master: [],
-            elasticsearch_data: [],
-          };
-  
-     
-      
-      for (const node of nodes) {
-        console.log(node);
-        if(node.isMaster === true){
-            roleGroups.elasticsearch_master.push(`${node.name} ansible_host=${node.ip}`)
-            continue;
-        }
-        if (node.roles.includes("data")) {
-          roleGroups.elasticsearch_data.push(`${node.name} ansible_host=${node.ip}`);
-        }
-      } 
-      ///Right now adding all master_eligible into master once the playbooks are updated to consider master eligible nodes this part of code must also be updated
-  
-      
-      const inventoryParts: string[] = [];
+export const createAnsibleInventory = async (
+  nodes: ElasticNode[],
+  pathToKey: string,
+) => {
+  try {
+    const roleGroups: Record<
+      'elasticsearch_master' | 'elasticsearch_data',
+      string[]
+    > = {
+      elasticsearch_master: [],
+      elasticsearch_data: [],
+    };
 
-      Object.entries(roleGroups).forEach(([group, hosts]) => {
-        if (hosts.length > 0) {
-          inventoryParts.push(`[${group}]\n${hosts.join("\n")}`);
-        }
-      });
-      
-     
-      inventoryParts.push(
-        `[elasticsearch:children]\n${Object.keys(roleGroups)
-          .filter((group) => ( group.length > 0 && group.startsWith("elasticsearch_")))
-          .join("\n")}`
-      );
-  
-      
+    for (const node of nodes) {
+      console.log(node);
+      if (node.isMaster === true) {
+        roleGroups.elasticsearch_master.push(
+          `${node.name} ansible_host=${node.ip}`,
+        );
+        continue;
+      }
+      if (node.roles.includes('data')) {
+        roleGroups.elasticsearch_data.push(
+          `${node.name} ansible_host=${node.ip}`,
+        );
+      }
+    }
+    ///Right now adding all master_eligible into master once the playbooks are updated to consider master eligible nodes this part of code must also be updated
+
+    const inventoryParts: string[] = [];
+
+    Object.entries(roleGroups).forEach(([group, hosts]) => {
+      if (hosts.length > 0) {
+        inventoryParts.push(`[${group}]\n${hosts.join('\n')}`);
+      }
+    });
+
+    inventoryParts.push(
+      `[elasticsearch:children]\n${Object.keys(roleGroups)
+        .filter(
+          (group) => group.length > 0 && group.startsWith('elasticsearch_'),
+        )
+        .join('\n')}`,
+    );
+
     //   inventoryParts.push(
     //     `[kibana:vars]\nansible_ssh_user=ubuntu\nansible_ssh_private_key_file=/SSH/File/Path/HF-EC2-key.pem`
     //   );
-      inventoryParts.push(
-        `[elasticsearch:vars]\nansible_ssh_user=ubuntu\nansible_ssh_private_key_file=${pathToKey}`
-      );
-  
-      const ansibleInventory = inventoryParts.join("\n\n");
-      fs.writeFileSync("ansible_inventory.ini", ansibleInventory);
-      console.log("Ansible inventory created: ansible_inventory.ini");
-
-
-    } catch (error) {
-      console.error("Error creating Ansible inventory:", error);
-    }
-  };
+    inventoryParts.push(
+      `[elasticsearch:vars]\nansible_ssh_user=ubuntu\nansible_ssh_private_key_file=${pathToKey}`,
+    );
+  } catch (error) {
+    console.error('Error creating Ansible inventory:', error);
+  }
+};
 
 /**
  * Executes an Ansible playbook using node-ansible.
@@ -72,7 +73,7 @@ export const executeAnsiblePlaybook = async (
   elkVersion: string,
   playbookName: string,
   username: string,
-  password: string
+  password: string,
 ): Promise<string> => {
   // Resolve absolute paths
   const inventoryFile = path.resolve(inventoryPath);
@@ -85,7 +86,7 @@ export const executeAnsiblePlaybook = async (
   playbook.inventory(inventoryFile);
 
   // Pass extra variables
-  playbook.variables({ elk_version: elkVersion, username: username,password });
+  playbook.variables({ elk_version: elkVersion, username: username, password });
 
   try {
     // Execute the playbook
@@ -94,14 +95,16 @@ export const executeAnsiblePlaybook = async (
 
     // Check for success and return logs
     if (result.code === 0) {
-      console.log("Ansible playbook executed successfully.");
+      console.log('Ansible playbook executed successfully.');
       return result.output; // Contains logs of execution
     } else {
-      console.error("Ansible playbook failed:", result.stderr);
-      throw new Error(`Playbook failed with exit code ${result.code}: ${result.stderr}`);
+      console.error('Ansible playbook failed:', result.stderr);
+      throw new Error(
+        `Playbook failed with exit code ${result.code}: ${result.stderr}`,
+      );
     }
   } catch (error) {
-    console.error("Error running Ansible playbook:", error);
+    console.error('Error running Ansible playbook:', error);
     throw new Error(`Error executing playbook: ${(error as Error).message}`);
   }
 };
