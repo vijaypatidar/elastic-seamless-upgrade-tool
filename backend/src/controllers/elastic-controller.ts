@@ -11,7 +11,7 @@ import {
 import {
   createOrUpdateClusterInfo,
   getElasticsearchDeprecation,
-  getKibanaDeprication,
+  getKibanaDeprecation,
 } from '../services/cluster-info.service';
 import { addLogs, getLogs } from '../services/logs.service';
 import { KibanaClient } from '../clients/kibana.client';
@@ -85,9 +85,11 @@ export const getUpgradeDetails = async (req: Request, res: Response) => {
     const client = await ElasticClient.buildClient(clusterId);
     const isSnapShotTaken = (await client.getValidSnapshots()).length !== 0;
 
-    const [esDepricationCount, _] =
-      await getElasticsearchDeprecation(clusterId);
-    const [KibanaDepricationCount, __] = await getKibanaDeprication(clusterId);
+    const esDeprecationCount = (await getElasticsearchDeprecation(clusterId))
+      .counts;
+    const KibanaDeprecationCount = (
+      await getElasticsearchDeprecation(clusterId)
+    ).deprecations;
 
     //verifying upgradability
     const elasticNodes = (await getAllElasticNodes(clusterId)).filter(
@@ -97,8 +99,8 @@ export const getUpgradeDetails = async (req: Request, res: Response) => {
 
     res.send({
       isSnapShotTaken,
-      esDepricationCount,
-      KibanaDepricationCount,
+      esDeprecationCount,
+      KibanaDeprecationCount,
       isESUpgraded,
     });
   } catch (error: any) {
@@ -106,16 +108,16 @@ export const getUpgradeDetails = async (req: Request, res: Response) => {
   }
 };
 
-export const getDepricationInfo = async (req: Request, res: Response) => {
+export const getDeprecationInfo = async (req: Request, res: Response) => {
   try {
     const clusterId = req.params.clusterId;
     const client = await ElasticClient.buildClient('cluster-id');
-    const depricationInfo = await client.getClient().migration.deprecations();
+    const deprecationInfo = await client.getClient().migration.deprecations();
     const upgradeInfo = await client
       .getClient()
       .migration.getFeatureUpgradeStatus();
     logger.info('upgrade Info', upgradeInfo);
-    res.send(depricationInfo).status(201);
+    res.status(201).send(deprecationInfo);
   } catch (err: any) {
     logger.info(err);
     res.status(400).send({ message: err.message });

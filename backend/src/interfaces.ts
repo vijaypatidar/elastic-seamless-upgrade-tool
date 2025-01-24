@@ -12,7 +12,7 @@ export interface DeprecationCounts {
   warning: Number;
   critical: Number;
 }
-export interface DepricationSetting {
+export interface DeprecationSetting {
   type: string;
   issue: string;
   issueDetails: string | undefined;

@@ -1,6 +1,6 @@
 import Migration from '@elastic/elasticsearch/lib/api/api/migration';
 import { ElasticClient } from '../clients/elastic.client';
-import { DeprecationCounts, DepricationSetting } from '../interfaces';
+import { DeprecationCounts, DeprecationSetting } from '../interfaces';
 import ClusterInfo, {
   IClusterInfo,
   IClusterInfoDocument,
@@ -41,21 +41,24 @@ export const getClusterInfoById = async (
 
 export const getElasticsearchDeprecation = async (
   clusterId: string,
-): Promise<[DeprecationCounts, DepricationSetting[]]> => {
+): Promise<{
+  counts: DeprecationCounts;
+  deprecations: DeprecationSetting[];
+}> => {
   try {
     const client = await ElasticClient.buildClient(clusterId);
     const data = await client.getClient().migration.deprecations();
 
     let criticalCount = 0;
     let warningCount = 0;
-    let deprications: DepricationSetting[] = [];
+    let deprecations: DeprecationSetting[] = [];
 
     if (data.cluster_settings) {
       data.cluster_settings.forEach(
         (item: MigrationDeprecationsDeprecation) => {
           if (item.level === 'critical') criticalCount++;
           if (item.level === 'warning') warningCount++;
-          deprications.push({
+          deprecations.push({
             issue: item.message,
             issueDetails: item.details,
             resolution: item.url,
@@ -68,7 +71,7 @@ export const getElasticsearchDeprecation = async (
       data.node_settings.forEach((item: MigrationDeprecationsDeprecation) => {
         if (item.level === 'critical') criticalCount++;
         if (item.level === 'warning') warningCount++;
-        deprications.push({
+        deprecations.push({
           issue: item.message,
           issueDetails: item.details,
           resolution: item.url,
@@ -82,7 +85,7 @@ export const getElasticsearchDeprecation = async (
         indexArray.forEach((item: MigrationDeprecationsDeprecation) => {
           if (item.level === 'critical') criticalCount++;
           if (item.level === 'warning') warningCount++;
-          deprications.push({
+          deprecations.push({
             issue: item.message,
             issueDetails: item.details,
             resolution: item.url,
@@ -91,7 +94,10 @@ export const getElasticsearchDeprecation = async (
         });
       });
     }
-    return [{ critical: criticalCount, warning: warningCount }, deprications];
+    return {
+      counts: { critical: criticalCount, warning: warningCount },
+      deprecations: deprecations,
+    };
   } catch (error) {
     console.error('Error fetching Elasticsearch deprecations:', error);
     throw error;
@@ -99,16 +105,19 @@ export const getElasticsearchDeprecation = async (
 };
 
 //upgrade after adding kibana client
-export const getKibanaDeprication = async (
+export const getKibanaDeprecation = async (
   clusterId: string,
-): Promise<[DeprecationCounts, DepricationSetting[]]> => {
+): Promise<{
+  counts: DeprecationCounts;
+  deprecations: DeprecationSetting[];
+}> => {
   try {
     const client = await KibanaClient.buildClient(clusterId);
     const data: DeprecationDetail[] = await client.getDeprecations();
 
     let criticalCount = 0;
     let warningCount = 0;
-    const deprications: DepricationSetting[] = data.map(
+    const deprecations: DeprecationSetting[] = data.map(
       (item: DeprecationDetail) => {
         if (item.level === 'critical') criticalCount++;
         if (item.level === 'warning') warningCount++;
@@ -121,7 +130,10 @@ export const getKibanaDeprication = async (
         };
       },
     );
-    return [{ critical: criticalCount, warning: warningCount }, deprications];
+    return {
+      counts: { critical: criticalCount, warning: warningCount },
+      deprecations: deprecations,
+    };
   } catch (error) {
     console.error('Error fetching kibana deprecations:', error);
     throw error;
