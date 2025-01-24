@@ -26,6 +26,7 @@ export const getElasticNodeById = async (
 };
 
 export const getAllElasticNodes = async (clusterId: string): Promise<IElasticNode[]> => {
+  await syncNodeData(clusterId)
   const elasticNodes = await ElasticNode.find({clusterId: clusterId});
   return elasticNodes
 };
@@ -54,9 +55,9 @@ export const syncNodeData = async (clusterId: string) => {
       isMaster: masterNode[0].id === key,
       status: 'available',
     }));
-
+   
     for (const node of elasticNodes) {
-      const existingNode = await ElasticNode.findOne({ id: node.nodeId });
+      const existingNode = await ElasticNode.findOne({ nodeId: node.nodeId });
       if (!existingNode) {
         await ElasticNode.create(node);
       } 

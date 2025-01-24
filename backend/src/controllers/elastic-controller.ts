@@ -1,20 +1,24 @@
 import { ElasticClusterBaseRequest } from '..';
 import { ElasticClient } from '../clients/elastic.client';
 import { Request, Response } from 'express';
-import { ElasticNode } from '../interfaces';
+import { DeprecationCounts, ElasticNode } from '../interfaces';
 import logger from '../logger/logger';
 import {
   IClusterInfo,
   IElasticInfo,
   IKibanaInfo,
 } from '../models/cluster-info.model';
-import { createOrUpdateClusterInfo } from '../services/cluster-info.service';
+import {
+  createOrUpdateClusterInfo,
+  getElasticsearchDeprecation,
+  getKibanaDeprecation,
+} from '../services/cluster-info.service';
 import { addLogs, getLogs } from '../services/logs.service';
-import { KibanaClient } from '../clients/kibana.client';
 import {
   getAllElasticNodes,
   syncNodeData,
 } from '../services/elastic-node.service.';
+import cluster from 'cluster';
 
 export const healthCheck = async (req: Request, res: Response) => {
   try {
@@ -35,8 +39,18 @@ export const getClusterDetails = async (req: Request, res: Response) => {
     const clusterDetails = await client.getClient().info();
     const healtDetails = await client.getClient().cluster.health();
     res.send({
-      ...healtDetails,
-      ...clusterDetails,
+      clusterName: clusterDetails.cluster_name,
+      clusterUUID: clusterDetails.cluster_uuid,
+      status: healtDetails.status,
+      version: clusterDetails.version.number,
+      timedOut: healtDetails.timed_out,
+      numberOfDataNodes: healtDetails.number_of_data_nodes,
+      numberOfNodes: healtDetails.number_of_nodes,
+      activePrimaryShards: healtDetails.active_primary_shards,
+      activeShards: healtDetails.unassigned_shards,
+      unassignedShards: healtDetails.unassigned_shards,
+      initializingShards: healtDetails.initializing_shards,
+      relocatingShards: healtDetails.relocating_shards,
     });
   } catch (err: any) {
     logger.info(err);
@@ -68,16 +82,48 @@ export const addOrUpdateClusterDetail = async (req: Request, res: Response) => {
   }
 };
 
-export const getDepriciationInfo = async (req: Request, res: Response) => {
+export const getUpgradeDetails = async (req: Request, res: Response) => {
   try {
     const clusterId = req.params.clusterId;
-    const client = await ElasticClient.buildClient('cluster-id');
-    const depriciationInfo = await client.getClient().migration.deprecations();
-    const upgradeInfo = await client
-      .getClient()
-      .migration.getFeatureUpgradeStatus();
-    logger.info('upgrade Info', upgradeInfo);
-    res.send(depriciationInfo).status(201);
+    const client = await ElasticClient.buildClient(clusterId);
+    const isSnapShotTaken = (await client.getValidSnapshots()).length !== 0;
+
+    const esDeprecationCount = (await getElasticsearchDeprecation(clusterId))
+      .counts;
+    const KibanaDeprecationCount = (await getKibanaDeprecation(clusterId))
+      .counts;
+
+    //verifying upgradability
+    const elasticNodes = (await getAllElasticNodes(clusterId)).filter(
+      (item) => item.status !== 'completed',
+    );
+    const isESUpgraded = elasticNodes.length === 0;
+
+    res.send({
+      isSnapShotTaken,
+      esDeprecationCount,
+      KibanaDeprecationCount,
+      isESUpgraded,
+    });
+  } catch (error: any) {
+    res.status(501).json({ err: error.message });
+  }
+};
+
+export const getElasticDeprecationInfo = async (
+  req: Request,
+  res: Response,
+) => {
+  try {
+    const clusterId = req.params.clusterId;
+    const deprecations = (await getElasticsearchDeprecation(clusterId))
+      .deprecations;
+
+    // const upgradeInfo = await client
+    //   .getClient()
+    //   .migration.getFeatureUpgradeStatus();
+    // logger.info('upgrade Info', upgradeInfo);    //need to discuss what if feature upgrades are present
+    res.status(200).send(deprecations);
   } catch (err: any) {
     logger.info(err);
     res.status(400).send({ message: err.message });
@@ -96,7 +142,6 @@ export const getNodesInfo = async (req: Request, res: Response) => {
 };
 
 export const performUpgrade = async (req: Request, res: Response) => {};
-// export const getUpgradeDetails
 
 export const getLogsStream = async (req: Request, res: Response) => {
   const { clusterId, nodeId } = req.params;
@@ -133,11 +178,13 @@ export const getLogsStream = async (req: Request, res: Response) => {
   });
 };
 
-export const getDeprecations = async (req: Request, res: Response) => {
+export const getKibanaDeprecationsInfo = async (
+  req: Request,
+  res: Response,
+) => {
   try {
     const clusterId = req.params.clusterId;
-    const kibanaClient = await KibanaClient.buildClient(clusterId);
-    const deprecations = await kibanaClient.getDeprecations();
+    const deprecations = (await getKibanaDeprecation(clusterId)).deprecations;
     res.send(deprecations);
   } catch (error: any) {
     logger.error(error);
