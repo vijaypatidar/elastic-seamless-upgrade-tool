@@ -6,6 +6,7 @@ import {
   getNodesInfo,
   healthCheck,
   getLogsStream,
+  getDeprecations,
   getValidSnapshots,
 } from '../controllers/elastic-controller';
 
@@ -250,4 +251,5 @@ router.get('/:clusterId/info', getClusterDetails);
 
 router.get('/:clusterId/nodes/:nodeId/logs/stream', getLogsStream);
 
+router.get('/:clusterId/depriciations/kibana', getDeprecations);
 export default router;

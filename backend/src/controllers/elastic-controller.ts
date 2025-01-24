@@ -3,10 +3,18 @@ import { ElasticClient } from '../clients/elastic.client';
 import { Request, Response } from 'express';
 import { ElasticNode } from '../interfaces';
 import logger from '../logger/logger';
-import { IClusterInfo } from '../models/cluster-info.model';
+import {
+  IClusterInfo,
+  IElasticInfo,
+  IKibanaInfo,
+} from '../models/cluster-info.model';
 import { createOrUpdateClusterInfo } from '../services/cluster-info.service';
 import { addLogs, getLogs } from '../services/logs.service';
-import { getAllElasticNodes, syncNodeData } from '../services/elastic-node.service.';
+import { KibanaClient } from '../clients/kibana.client';
+import {
+  getAllElasticNodes,
+  syncNodeData,
+} from '../services/elastic-node.service.';
 
 export const healthCheck = async (req: Request, res: Response) => {
   try {
@@ -39,15 +47,11 @@ export const getClusterDetails = async (req: Request, res: Response) => {
 export const addOrUpdateClusterDetail = async (req: Request, res: Response) => {
   try {
     const clusterId = 'cluster-id';
-    const body: ElasticClusterBaseRequest = req.body;
+    const elastic: IElasticInfo = req.body.elastic;
+    const kibana: IKibanaInfo = req.body.kibana;
     const clusterInfo: IClusterInfo = {
-      elastic: {
-        url: body.url,
-        username: body.username,
-        password: body.password,
-        bearer: body.bearer,
-        apiKey: body.apiKey,
-      },
+      elastic: elastic,
+      kibana: kibana,
       clusterId: clusterId,
     };
     const result = await createOrUpdateClusterInfo(clusterInfo);
@@ -124,6 +128,18 @@ export const getLogsStream = async (req: Request, res: Response) => {
     clearInterval(intervalId);
     res.end();
   });
+};
+
+export const getDeprecations = async (req: Request, res: Response) => {
+  try {
+    const clusterId = req.params.clusterId;
+    const kibanaClient = await KibanaClient.buildClient(clusterId);
+    const deprecations = await kibanaClient.getDeprecations();
+    res.send(deprecations);
+  } catch (error: any) {
+    logger.error(error);
+    res.status(400).send({ message: error.message });
+  }
 };
 
 export const getValidSnapshots = async (req: Request, res: Response) => {
