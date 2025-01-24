@@ -32,6 +32,6 @@ router.get('/:clusterId/nodes/:nodeId/logs/stream', getLogsStream);
 
 router.get('/:clusterId/upgrade_info', getUpgradeDetails);
 
-router.get('/:clusterId/depriciations/kibana', getKibanaDeprecationsInfo);
+router.get('/:clusterId/deprecations/kibana', getKibanaDeprecationsInfo);
 
 export default router;
