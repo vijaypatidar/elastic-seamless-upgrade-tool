@@ -68,6 +68,7 @@ export const addOrUpdateClusterDetail = async (req: Request, res: Response) => {
       kibana: kibana,
       clusterId: clusterId,
       certificateIds: req.body.certificateIds,
+      targetVersion: req.body.targetVersion,
     };
     const result = await createOrUpdateClusterInfo(clusterInfo);
     res
