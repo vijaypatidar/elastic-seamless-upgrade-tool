@@ -82,7 +82,7 @@ function Setup() {
 				})
 				.then((res) => {
 					console.log(res)
-					setStep(1)
+					SessionStorageHandler.setItem(StorageManager.SETUP_SET, 1)
 					LocalStorageHandler.setItem(StorageManager.CLUSTER_ID, "cluster-id")
 					navigate("/cluster-overview")
 				})
