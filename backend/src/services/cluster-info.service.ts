@@ -12,7 +12,7 @@ export const createOrUpdateClusterInfo = async (
 ): Promise<IClusterInfoDocument> => {
   // TODO These needs to be updated when we want to support multiple clusters
   const clusterId = 'cluster-id'; //clusterInfo.clusterId
-  const { elastic, kibana, certificateIds } = clusterInfo;
+  const { elastic, kibana, certificateIds, targetVersion } = clusterInfo;
   const data = await ClusterInfo.findOneAndUpdate(
     { clusterId: clusterId },
     {
@@ -20,6 +20,7 @@ export const createOrUpdateClusterInfo = async (
       kibana: kibana,
       certificateIds: certificateIds,
       clusterId: clusterId,
+      targetVersion: targetVersion,
     },
     { new: true, upsert: true, runValidators: true },
   );
