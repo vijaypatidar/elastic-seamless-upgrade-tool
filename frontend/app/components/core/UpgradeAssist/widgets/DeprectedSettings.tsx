@@ -3,8 +3,9 @@ import { Alarm } from "iconsax-react"
 import { FiAlertTriangle, FiArrowUpRight } from "react-icons/fi"
 import { OutlinedBorderButton } from "~/components/utilities/Buttons"
 import Issue from "./Issue"
+import { Link } from "react-router"
 
-function DeprectedSettings({ title, criticalValue, warningValue, isDisabled }: DeprecationSettingsType) {
+function DeprectedSettings({ title, criticalValue, warningValue, isDisabled, to }: DeprecationSettingsType) {
 	return (
 		<Box
 			className="flex p-px w-full rounded-[20px]"
@@ -36,6 +37,8 @@ function DeprectedSettings({ title, criticalValue, warningValue, isDisabled }: D
 				</Box>
 				<Box className="flex items-start">
 					<OutlinedBorderButton
+						component={Link}
+						to={to}
 						disabled={isDisabled}
 						borderRadius="50%"
 						sx={{ minWidth: "38px !important", minHeight: "38px !important", padding: "0px" }}

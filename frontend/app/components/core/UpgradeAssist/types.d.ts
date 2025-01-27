@@ -3,6 +3,7 @@ type DeprecationSettingsType = {
 	criticalValue: string | number
 	warningValue: string | number
 	isDisabled: boolean
+	to: string
 }
 
 type IssueType = {

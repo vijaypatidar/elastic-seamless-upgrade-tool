@@ -1,15 +1,16 @@
-import { Box, Typography } from "@mui/material"
-import { Camera, Flash } from "iconsax-react"
-import { OutlinedBorderButton } from "~/components/utilities/Buttons"
-import DeprectedSettings from "./widgets/DeprectedSettings"
-import { getGradientClass, getStepIndicatorData } from "~/lib/Utils"
-import LocalStorageHandler from "~/lib/LocalHanlder"
-import StorageManager from "~/constants/StorageManager"
-import axiosJSON from "~/apis/http"
-import { useQuery } from "@tanstack/react-query"
-import { toast } from "sonner"
 import { Skeleton } from "@heroui/react"
+import { Box, Typography } from "@mui/material"
+import { useQuery } from "@tanstack/react-query"
+import { Camera, Flash } from "iconsax-react"
 import { useState } from "react"
+import { Link } from "react-router"
+import { toast } from "sonner"
+import axiosJSON from "~/apis/http"
+import { OutlinedBorderButton } from "~/components/utilities/Buttons"
+import StorageManager from "~/constants/StorageManager"
+import LocalStorageHandler from "~/lib/LocalHanlder"
+import { getGradientClass, getStepIndicatorData } from "~/lib/Utils"
+import DeprectedSettings from "./widgets/DeprectedSettings"
 
 function UpgradeAssistant() {
 	const [stepStatus, setStepStatus] = useState<{
@@ -46,14 +47,12 @@ function UpgradeAssistant() {
 						? "COMPLETED"
 						: "PENDING"
 
-				if (step1 === "PENDING") {
-					setStepStatus({
-						"1": step1,
-						"2": step2,
-						"3": step3,
-						"4": step4,
-					})
-				}
+				setStepStatus({
+					"1": step1,
+					"2": step2,
+					"3": step3,
+					"4": step4,
+				})
 			})
 			.catch((err) => toast.error(err?.response?.data.err))
 		return response
@@ -215,15 +214,17 @@ function UpgradeAssistant() {
 								>
 									<DeprectedSettings
 										title="Elastic search"
-										criticalValue={1}
-										warningValue={1}
+										criticalValue={data?.esDeprecationCount.critical}
+										warningValue={data?.esDeprecationCount.warning}
 										isDisabled={step2Data?.isDisabled}
+										to="/elastic-deprecation-logs"
 									/>
 									<DeprectedSettings
 										title="Kibana"
-										criticalValue={1}
-										warningValue={1}
+										criticalValue={data?.KibanaDeprecationCount.critical}
+										warningValue={data?.KibanaDeprecationCount.warning}
 										isDisabled={step2Data?.isDisabled}
+										to="/kibana-deprecation-logs"
 									/>
 								</Box>
 							</Box>
@@ -287,7 +288,13 @@ function UpgradeAssistant() {
 										upgrading.
 									</Typography>
 								</Box>
-								<OutlinedBorderButton disabled={step3Data?.isDisabled} icon={Flash} filledIcon={Flash}>
+								<OutlinedBorderButton
+									component={Link}
+									to="/elastic-upgrade"
+									disabled={step3Data?.isDisabled}
+									icon={Flash}
+									filledIcon={Flash}
+								>
 									Upgrade
 								</OutlinedBorderButton>
 							</Box>
@@ -346,7 +353,13 @@ function UpgradeAssistant() {
 										upgrading.
 									</Typography>
 								</Box>
-								<OutlinedBorderButton disabled={step4Data?.isDisabled} icon={Flash} filledIcon={Flash}>
+								<OutlinedBorderButton
+									component={Link}
+									to="/kibana-upgrade"
+									disabled={step4Data?.isDisabled}
+									icon={Flash}
+									filledIcon={Flash}
+								>
 									Upgrade
 								</OutlinedBorderButton>
 							</Box>
