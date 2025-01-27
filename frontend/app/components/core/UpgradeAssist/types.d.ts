@@ -12,3 +12,13 @@ type IssueType = {
 	fontColor?: string
 	bgColor?: string
 }
+
+type StepDataType = {
+	boxBackground: string
+	background: string
+	textColor: string
+	stepValue: string | React.ReactElement
+	internalBackground: string
+	boxShadow: string
+	isDisabled: boolean
+}

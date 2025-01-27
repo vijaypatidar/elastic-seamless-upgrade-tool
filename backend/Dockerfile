@@ -8,13 +8,13 @@ WORKDIR /app
 COPY package*.json ./
 
 # Install dependencies
-RUN npm install
+RUN yarn
 
 # Copy the rest of the application code
 COPY . .
 
 # Compile TypeScript code into JavaScript
-RUN npm run build
+RUN yarn build
 
 # Stage 2: Production Stage
 FROM node:18-bullseye
@@ -26,7 +26,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Verify installations
-RUN node --version && npm --version && ansible --version
+RUN node --version && yarn --version && ansible --version
 
 # Set the working directory in the container
 WORKDIR /app
@@ -38,7 +38,7 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package*.json ./
 
 # Install only production dependencies
-RUN npm install --production
+RUN yarn --production
 
 # Expose the application port
 EXPOSE 3000

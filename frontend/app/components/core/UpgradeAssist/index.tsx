@@ -3,24 +3,88 @@ import { Camera, Flash } from "iconsax-react"
 import { OutlinedBorderButton } from "~/components/utilities/Buttons"
 import DeprectedSettings from "./widgets/DeprectedSettings"
 import { getGradientClass, getStepIndicatorData } from "~/lib/Utils"
-// after:bg-[#292929]
+import LocalStorageHandler from "~/lib/LocalHanlder"
+import StorageManager from "~/constants/StorageManager"
+import axiosJSON from "~/apis/http"
+import { useQuery } from "@tanstack/react-query"
+import { toast } from "sonner"
+import { Skeleton } from "@heroui/react"
+import { useState } from "react"
+
 function UpgradeAssistant() {
-	const stepStatus: { [Key: string]: "COMPLETED" | "INPROGRESS" | "PENDING" | "NOTVISITED" } = {
-		"1": "COMPLETED",
-		"2": "INPROGRESS",
-		"3": "PENDING",
-		"4": "NOTVISITED",
+	const [stepStatus, setStepStatus] = useState<{
+		[Key: string]: "COMPLETED" | "INPROGRESS" | "PENDING" | "NOTVISITED"
+	}>({ "1": "NOTVISITED", "2": "NOTVISITED", "3": "NOTVISITED", "4": "NOTVISITED" })
+
+	const getUpgradeInfo = async () => {
+		const clusterId = LocalStorageHandler.getItem(StorageManager.CLUSTER_ID) || "cluster-id"
+		let response: any = []
+		await axiosJSON
+			.get(`/api/elastic/clusters/${clusterId}/upgrade_info`)
+			.then((res) => {
+				console.log(res)
+				response = res.data
+				const step1 = response.isSnapShotTable ? "COMPLETED" : "PENDING"
+				const step2 =
+					step1 === "PENDING"
+						? "NOTVISITED"
+						: response.esDeprecationCount.critical + response.KibanaDeprecationCount.critical > 0
+						? "PENDING"
+						: response.esDeprecationCount.warning + response.KibanaDeprecationCount.warning > 0
+						? "INPROGRESS"
+						: "COMPLETED"
+				const step3 =
+					step2 === "PENDING" || step2 === "NOTVISITED"
+						? "NOTVISITED"
+						: response.isESUpgraded
+						? "COMPLETED"
+						: "PENDING"
+				const step4 =
+					step3 === "PENDING" || step3 === "NOTVISITED"
+						? "NOTVISITED"
+						: response.isESUpgraded
+						? "COMPLETED"
+						: "PENDING"
+
+				if (step1 === "PENDING") {
+					setStepStatus({
+						"1": step1,
+						"2": step2,
+						"3": step3,
+						"4": step4,
+					})
+				}
+			})
+			.catch((err) => toast.error(err?.response?.data.err))
+		return response
 	}
+
+	const { data, isLoading, refetch, isRefetching } = useQuery({ queryKey: ["cluster-info"], queryFn: getUpgradeInfo })
 
 	const step1Data = getStepIndicatorData("01", stepStatus["1"])
 	const step2Data = getStepIndicatorData("02", stepStatus["2"])
 	const step3Data = getStepIndicatorData("03", stepStatus["3"])
 	const step4Data = getStepIndicatorData("04", stepStatus["4"])
 
-	return (
+	return isLoading ? (
+		<Box className="flex flex-col gap-4 w-full">
+			<Skeleton className="w-full rounded-[20px]">
+				<Box height="88px" />
+			</Skeleton>
+			<Skeleton className="w-full rounded-[20px]">
+				<Box height="229.5px" />
+			</Skeleton>
+			<Skeleton className="w-full rounded-[20px]">
+				<Box height="108px" />
+			</Skeleton>
+			<Skeleton className="w-full rounded-[20px]">
+				<Box height="108px" />
+			</Skeleton>
+		</Box>
+	) : (
 		<ol className="flex flex-col gap-4 w-full overflow-auto h-[calc(var(--window-height)-214px)]">
 			<li
-				className={`relative flex-1 after:content-[''] after:w-[1px] after:h-full after:inline-block after:absolute after:-bottom-[60px] after:left-11 after:z-20 w-full ${getGradientClass(
+				className={`relative  after:content-[''] after:w-[1px] after:h-full after:inline-block after:absolute after:-bottom-[60px] after:left-11 after:z-20 w-full ${getGradientClass(
 					stepStatus["1"],
 					stepStatus["2"]
 				)}`}
@@ -73,7 +137,7 @@ function UpgradeAssistant() {
 										Make sure you have a current snapshot before making an changes.
 									</Typography>
 								</Box>
-								{stepStatus["01"] === "COMPLETED" ? (
+								{!(stepStatus["01"] === "COMPLETED") ? (
 									<OutlinedBorderButton
 										icon={Camera}
 										filledIcon={Camera}
@@ -88,7 +152,7 @@ function UpgradeAssistant() {
 				</Box>
 			</li>
 			<li
-				className={`relative flex-1 after:content-[''] after:w-[1px] after:h-full after:inline-block after:absolute after:-bottom-[60px] after:left-11 after:z-20 w-full ${getGradientClass(
+				className={`relative  after:content-[''] after:w-[1px] after:h-full after:inline-block after:absolute after:-bottom-[60px] after:left-11 after:z-20 w-full ${getGradientClass(
 					stepStatus["2"],
 					stepStatus["3"]
 				)}`}
@@ -168,7 +232,7 @@ function UpgradeAssistant() {
 				</Box>
 			</li>
 			<li
-				className={`relative flex-1 after:content-[''] after:w-[1px] after:h-full after:inline-block after:absolute after:-bottom-[60px] after:left-11 after:z-20 w-full ${getGradientClass(
+				className={`relative  after:content-[''] after:w-[1px] after:h-full after:inline-block after:absolute after:-bottom-[60px] after:left-11 after:z-20 w-full ${getGradientClass(
 					stepStatus["3"],
 					stepStatus["4"]
 				)}`}
@@ -231,7 +295,7 @@ function UpgradeAssistant() {
 					</Box>
 				</Box>
 			</li>
-			<li className="relative flex-1 w-full">
+			<li className="relative  w-full">
 				<Box className="flex items-center justify-center gap-8 w-full">
 					<Box
 						className="rounded-[20px] p-px w-full"

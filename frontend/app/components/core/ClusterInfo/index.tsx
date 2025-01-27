@@ -1,9 +1,13 @@
-import { Box, Button, Menu, MenuItem, Typography } from "@mui/material"
+import { Box, Menu, MenuItem, Typography } from "@mui/material"
+import { useQuery } from "@tanstack/react-query"
 import { ArrowDown2 } from "iconsax-react"
 import PopupState, { bindMenu, bindTrigger } from "material-ui-popup-state"
+import { toast } from "sonner"
+import axiosJSON from "~/apis/http"
 import { OutlinedBorderButton } from "~/components/utilities/Buttons"
+import StorageManager from "~/constants/StorageManager"
+import LocalStorageHandler from "~/lib/LocalHanlder"
 import DetailBox from "./widgets/DetailBox"
-import Toast from "~/components/utilities/Toast"
 
 const CLUSTER_STATUS_COLOR: { [key: string]: string } = {
 	deploying: "#E0B517",
@@ -40,6 +44,20 @@ const STYLES = {
 }
 
 function ClusterInfo() {
+	const getClusterInfo = async () => {
+		const clusterId = LocalStorageHandler.getItem(StorageManager.CLUSTER_ID) || "cluster-id"
+		let response: any = []
+		await axiosJSON
+			.get(`/api/elastic/clusters/${clusterId}/info`)
+			.then((res) => {
+				console.log(res)
+				response = res.data
+			})
+			.catch((err) => toast.error(err?.response?.data.err))
+		return response
+	}
+	const { data, isLoading, refetch, isRefetching } = useQuery({ queryKey: ["cluster-info"], queryFn: getClusterInfo })
+
 	return (
 		<Box
 			className="flex p-px rounded-2xl w-full h-[calc(var(--window-height)-190px)]"
@@ -93,15 +111,15 @@ function ClusterInfo() {
 				<Box className="flex flex-col gap-6 overflow-auto">
 					<Box className="flex flex-col sm:flex-row gap-6 sm:gap-16">
 						<Box className="flex flex-col gap-[24px] w-2/4">
-							<DetailBox title="Cluster name" description="testcluster" />
-							<DetailBox title="Cluster UUID" description="Csfjdskfjeuwibkjsndfjkdsnf" />
-							<DetailBox title="Infrastructure type" description="Placeholder" />
+							<DetailBox title="Cluster name" description={data?.clusterName} isLoading={isLoading} />
+							<DetailBox title="Cluster UUID" description={data?.clusterUUID} isLoading={isLoading} />
+							<DetailBox title="Infrastructure type" description="Placeholder" isLoading={isLoading} />
 						</Box>
 						<Box className="flex flex-col gap-[24px] w-1/2">
 							<DetailBox
 								title="Cluster status"
 								customDescription={
-									<Box className="flex flex-row items-center gap-2">
+									<Box className="flex flex-row items-center gap-2 h-[20px]">
 										<Box
 											component="span"
 											className="flex min-w-[6px] min-h-[6px] rounded-[2px]"
@@ -118,22 +136,47 @@ function ClusterInfo() {
 										</Typography>
 									</Box>
 								}
+								isLoading={isLoading}
 							/>
-							<DetailBox title="ES Version" description="8.12" />
-							<DetailBox title="Timed out" description="False" />
+							<DetailBox title="ES Version" description={data?.version} isLoading={isLoading} />
+							<DetailBox
+								title="Timed out"
+								description={data?.timeOut ? "True" : "False"}
+								isLoading={isLoading}
+							/>
 						</Box>
 					</Box>
 					<Box
 						className="grid col-auto grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-[14px] bg-[#161616] rounded-2xl"
 						padding="14px 16px"
 					>
-						<DetailBox title="Number of data nodes" description="1" />
-						<DetailBox title="Number of nodes" description="1" />
-						<DetailBox title="Active primary shards" description="1" />
-						<DetailBox title="Active shards" description="1" />
-						<DetailBox title="Relocating shards" description="0" />
-						<DetailBox title="Initializing shards" description="0" />
-						<DetailBox title="Unassigned shards" description="1" />
+						<DetailBox
+							title="Number of data nodes"
+							description={data?.numberOfDataNodes}
+							isLoading={isLoading}
+						/>
+						<DetailBox title="Number of nodes" description={data?.numberOfNodes} isLoading={isLoading} />
+						<DetailBox
+							title="Active primary shards"
+							description={data?.activePrimaryShards}
+							isLoading={isLoading}
+						/>
+						<DetailBox title="Active shards" description={data?.activeShards} isLoading={isLoading} />
+						<DetailBox
+							title="Relocating shards"
+							description={data?.relocatingShards}
+							isLoading={isLoading}
+						/>
+						<DetailBox
+							title="Initializing shards"
+							description={data?.initializingShards}
+							isLoading={isLoading}
+						/>
+						<DetailBox
+							title="Unassigned shards"
+							description={data?.unassignedShards}
+							isLoading={isLoading}
+						/>
 					</Box>
 				</Box>
 			</Box>

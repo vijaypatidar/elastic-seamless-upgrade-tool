@@ -117,8 +117,8 @@ export default function App() {
 							<Toaster
 								richColors
 								theme="dark"
-								position="bottom-center"
-								style={{ width: "calc(100% - 48px)" }}
+								position="top-right"
+								toastOptions={{ closeButton: true }}
 							/>
 						</LoadingBarContainer>
 					</ThemeProvider>

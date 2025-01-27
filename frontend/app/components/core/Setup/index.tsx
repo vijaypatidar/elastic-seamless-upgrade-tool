@@ -9,6 +9,8 @@ import SessionStorageHandler from "~/lib/SessionHandler"
 import { useNavigate } from "react-router"
 import { useMutation } from "@tanstack/react-query"
 import axiosJSON from "~/apis/http"
+import LocalStorageHandler from "~/lib/LocalHanlder"
+import { toast } from "sonner"
 
 function Setup() {
 	const navigate = useNavigate()
@@ -54,19 +56,37 @@ function Setup() {
 	}
 
 	const { mutate: HandleSubmit, isPending } = useMutation({
-		mutationFn: (values: CertiType) => {
-			console.log("infra type:", infraType)
-			console.log("cred:", creds)
-			console.log("cret:", values)
-			navigate("/cluster-overview")
-			return axiosJSON.post("", values)
-		},
-		onSuccess: (data) => {
-			console.log(data)
-			navigate("/cluster-overview")
-		},
-		onError: (err) => {
-			console.log(err)
+		mutationKey: ["add-cluster"],
+		mutationFn: async (values: CertiType) => {
+			let certIds: Array<string> = []
+			const formData = new FormData()
+			values.certFiles?.forEach((file) => {
+				formData.append("files", file, file.name)
+			})
+			if (values.certFiles?.length !== 0) {
+				await axiosJSON
+					.post("/api/elastic/clusters/certificates/upload", formData, {
+						maxBodyLength: Infinity,
+						headers: {
+							"Content-Type": "multipart/form-data",
+						},
+					})
+					.then((res) => (certIds = res.data.certificateIds))
+					.catch((err) => toast.error(err?.response?.data.err))
+			}
+			await axiosJSON
+				.post("/api/elastic/clusters", {
+					elastic: { url: creds.elasticUrl, username: creds.username, password: creds.password },
+					kibana: { url: creds.kibanaUrl, username: creds.username, password: creds.password },
+					certificateIds: certIds,
+				})
+				.then((res) => {
+					console.log(res)
+					setStep(1)
+					LocalStorageHandler.setItem(StorageManager.CLUSTER_ID, "cluster-id")
+					navigate("/cluster-overview")
+				})
+				.catch((err) => toast.error(err?.response?.data.err))
 		},
 	})
 
