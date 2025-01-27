@@ -1,14 +1,10 @@
-import Migration from '@elastic/elasticsearch/lib/api/api/migration';
 import { ElasticClient } from '../clients/elastic.client';
 import { DeprecationCounts, DeprecationSetting } from '../interfaces';
 import ClusterInfo, {
   IClusterInfo,
   IClusterInfoDocument,
 } from '../models/cluster-info.model';
-import {
-  MigrationDeprecationsDeprecation,
-  MigrationDeprecationsDeprecationLevel,
-} from '@elastic/elasticsearch/lib/api/types';
+import { MigrationDeprecationsDeprecation } from '@elastic/elasticsearch/lib/api/types';
 import { DeprecationDetail, KibanaClient } from '../clients/kibana.client';
 
 export const createOrUpdateClusterInfo = async (
