@@ -73,6 +73,7 @@ export const addOrUpdateClusterDetail = async (req: Request, res: Response) => {
     res
       .send({
         message: result.isNew ? 'Cluster info saved' : 'Cluster info updated',
+        clusterId: result.clusterId,
       })
       .status(201);
     await syncNodeData(clusterId);
