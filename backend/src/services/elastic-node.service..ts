@@ -12,7 +12,7 @@ export const createOrUpdateElasticNode = async (
   const data = await ElasticNode.findOneAndUpdate(
     { nodeId: nodeId },
     { ...elasticNode },
-    { new: true, upsert: true, runValidators: true }, 
+    { new: true, upsert: true, runValidators: true },
   );
   return data;
 };
@@ -25,10 +25,12 @@ export const getElasticNodeById = async (
   return elasticNode;
 };
 
-export const getAllElasticNodes = async (clusterId: string): Promise<IElasticNode[]> => {
-  await syncNodeData(clusterId)
-  const elasticNodes = await ElasticNode.find({clusterId: clusterId});
-  return elasticNodes
+export const getAllElasticNodes = async (
+  clusterId: string,
+): Promise<IElasticNode[]> => {
+  await syncNodeData(clusterId);
+  const elasticNodes = await ElasticNode.find({ clusterId: clusterId });
+  return elasticNodes;
 };
 
 export const syncNodeData = async (clusterId: string) => {
@@ -55,12 +57,17 @@ export const syncNodeData = async (clusterId: string) => {
       isMaster: masterNode[0].id === key,
       status: 'available',
     }));
-   
+
     for (const node of elasticNodes) {
       const existingNode = await ElasticNode.findOne({ nodeId: node.nodeId });
-      if (!existingNode) {
-        await ElasticNode.create(node);
-      } 
+      if (existingNode) {
+        node.status = existingNode.status;
+      }
+      //as status is not present in Elastic search whether updated or not.
+      await ElasticNode.findOneAndUpdate({ nodeId: node.nodeId }, node, {
+        new: true,
+        runValidators: true,
+      });
     }
   } catch (error) {
     logger.error('Error syncing nodes from Elasticsearch:', error);
@@ -90,3 +97,5 @@ export const updateNodeStatus = async (
     throw error;
   }
 };
+
+/// /upgrade (exec)

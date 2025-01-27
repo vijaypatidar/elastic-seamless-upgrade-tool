@@ -19,13 +19,24 @@ import {
   syncNodeData,
 } from '../services/elastic-node.service.';
 import cluster from 'cluster';
+import { runPlaybookWithLogging } from './ansible-controller';
 
 export const healthCheck = async (req: Request, res: Response) => {
   try {
-    const clusterId = req.params.clusterId;
-    const client = await ElasticClient.buildClient(clusterId);
-    const health = await client.getClusterhealth();
-    res.send(health);
+    // const clusterId = req.params.clusterId;
+    // const client = await ElasticClient.buildClient(clusterId);
+    // const health = await client.getClusterhealth();
+    // res.send(health);
+    runPlaybookWithLogging(
+      'ansible/main.yml',
+      'ansible_inventory.ini',
+      {
+        elk_version: '8.7.0',
+        username: 'elastic',
+        password: 'B6T5WucTp=sJfbbPLErj',
+      },
+      'gbZz8GaXRkiLcfTPOTnZog',
+    );
   } catch (err: any) {
     logger.info(err);
     res.status(400).send({ message: err.message });
