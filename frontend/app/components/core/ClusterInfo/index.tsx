@@ -1,6 +1,7 @@
 import { Box, Menu, MenuItem, Typography } from "@mui/material"
 import { useQuery } from "@tanstack/react-query"
 import { ArrowDown2 } from "iconsax-react"
+import _ from "lodash"
 import PopupState, { bindMenu, bindTrigger } from "material-ui-popup-state"
 import { toast } from "sonner"
 import axiosJSON from "~/apis/http"
@@ -113,7 +114,13 @@ function ClusterInfo() {
 						<Box className="flex flex-col gap-[24px] w-2/4">
 							<DetailBox title="Cluster name" description={data?.clusterName} isLoading={isLoading} />
 							<DetailBox title="Cluster UUID" description={data?.clusterUUID} isLoading={isLoading} />
-							<DetailBox title="Infrastructure type" description="Placeholder" isLoading={isLoading} />
+							<DetailBox
+								title="Infrastructure type"
+								description={_.capitalize(
+									LocalStorageHandler.getItem(StorageManager.INFRA_TYPE) ?? "placeholder"
+								)}
+								isLoading={isLoading}
+							/>
 						</Box>
 						<Box className="flex flex-col gap-[24px] w-1/2">
 							<DetailBox

@@ -10,7 +10,7 @@ import LocalStorageHandler from "~/lib/LocalHanlder"
 import SessionStorageHandler from "~/lib/SessionHandler"
 import Certificates from "./Certificates"
 import Credentials from "./Credentials"
-import Infrastructor from "./Infrastructor"
+import Infrastructure from "./Infrastructure"
 
 function Setup() {
 	const navigate = useNavigate()
@@ -24,7 +24,6 @@ function Setup() {
 		password: "",
 		apiKey: "",
 	})
-	// const [files, setFiles] = useState<{ certFiles?: File[]; jsonFiles?: File[] }>({})
 
 	useEffect(() => {
 		const st = SessionStorageHandler.getItem(StorageManager.SETUP_SET)
@@ -81,9 +80,9 @@ function Setup() {
 					certificateIds: certIds,
 				})
 				.then((res) => {
-					console.log(res)
+					LocalStorageHandler.setItem(StorageManager.INFRA_TYPE, infraType)
 					SessionStorageHandler.setItem(StorageManager.SETUP_SET, 1)
-					LocalStorageHandler.setItem(StorageManager.CLUSTER_ID, "cluster-id")
+					LocalStorageHandler.setItem(StorageManager.CLUSTER_ID, res.data.clusterId || "cluster-id")
 					navigate("/cluster-overview")
 				})
 				.catch((err) => toast.error(err?.response?.data.err))
@@ -93,7 +92,7 @@ function Setup() {
 	const getStepForm = useMemo(() => {
 		switch (step) {
 			case 1:
-				return <Infrastructor onSubmit={handleStepInfraSubmit} />
+				return <Infrastructure onSubmit={handleStepInfraSubmit} />
 			case 2:
 				return <Credentials backStep={handleBackStep} onSubmit={handleCredSubmit} />
 			case 3:

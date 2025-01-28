@@ -61,9 +61,8 @@ function UpcomingFeature({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChan
 							>
 								<Box
 									className="flex flex-col gap-6 rounded-2xl bg-[#0D0D0D] w-full h-full items-start"
-									padding="24px 32px"
 								>
-									<Box className="flex flex-row gap-5 items-center">
+									<Box className="flex flex-row gap-5 items-center" padding="24px 32px 0px 32px">
 										<Box
 											className="flex p-px rounded-[10px]"
 											sx={{
@@ -80,7 +79,7 @@ function UpcomingFeature({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChan
 											Upcoming Features
 										</Typography>
 									</Box>
-									<Box className="flex flex-col w-full gap-3">
+									<Box className="flex flex-col h-full w-full gap-3 overflow-auto" padding="0px 32px 24px 32px">
 										<Box className="grid col-auto grid-cols-2 gap-3 w-full">
 											<MajorFeature icon={AssetsManager.LOGSTASH} title="Logstash" />
 											<MajorFeature icon={AssetsManager.EL} title="Elastic Agent" />

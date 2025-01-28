@@ -8,7 +8,7 @@ export function meta({}: Route.MetaArgs) {
 
 function UpgradeAssist() {
 	return (
-		<Box className="flex w-full" padding="28px 24px">
+		<Box className="flex w-full" padding="28px 0px">
 			<UpgradeAssistant />
 		</Box>
 	)
