@@ -81,9 +81,9 @@ function Setup() {
 					certificateIds: certIds,
 				})
 				.then((res) => {
-					console.log(res)
+					LocalStorageHandler.setItem(StorageManager.INFRA_TYPE, infraType)
 					SessionStorageHandler.setItem(StorageManager.SETUP_SET, 1)
-					LocalStorageHandler.setItem(StorageManager.CLUSTER_ID, "cluster-id")
+					LocalStorageHandler.setItem(StorageManager.CLUSTER_ID, res.data.clusterId || "cluster-id")
 					navigate("/cluster-overview")
 				})
 				.catch((err) => toast.error(err?.response?.data.err))

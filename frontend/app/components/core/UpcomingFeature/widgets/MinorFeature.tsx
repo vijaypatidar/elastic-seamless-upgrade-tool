@@ -12,7 +12,7 @@ function MinorFeature({
 }) {
 	return (
 		<Box
-			className="flex rounded-2xl p-px w-full relative items-center justify-center"
+			className="flex rounded-2xl p-px w-full relative items-stretch justify-center"
 			boxShadow="0px 0px 15px 2px rgba(120, 80, 213, 0.03)"
 		>
 			<Box
@@ -23,7 +23,7 @@ function MinorFeature({
 					animation: "gradient-border-breath 8s ease infinite",
 				}}
 			/>
-			<Box className="flex flex-col gap-6 py-6 w-full px-[28px] rounded-2xl bg-[#0d0d0d] z-10">
+			<Box className="flex flex-col gap-6 py-6 w-full px-[28px] mb-[-1px] mt-[1px]  rounded-2xl bg-[#0d0d0d] z-10">
 				<Icon size="28px" color="#FFF" />
 				<Box className="flex flex-col gap-1">
 					<Typography color="#FFF" fontSize="16px" fontWeight="600" lineHeight="normal">

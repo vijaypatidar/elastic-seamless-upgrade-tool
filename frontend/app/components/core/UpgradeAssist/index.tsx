@@ -23,35 +23,66 @@ function UpgradeAssistant() {
 		await axiosJSON
 			.get(`/api/elastic/clusters/${clusterId}/upgrade_info`)
 			.then((res) => {
-				console.log(res)
 				response = res.data
-				const step1 = response.isSnapShotTable ? "COMPLETED" : "PENDING"
-				const step2 =
-					step1 === "PENDING"
+				console.log(response)
+				// const step1 = response.elastic.snapshot ? "COMPLETED" : "PENDING"
+				// const step2 =
+				// 	step1 === "PENDING"
+				// 		? "NOTVISITED"
+				// 		: response?.elastic.deprecations.critical + response?.kibana.deprecations.critical > 0
+				// 		? "PENDING"
+				// 		: response?.elastic.deprecations.warning + response?.kibana.deprecations.warning > 0
+				// 		? "INPROGRESS"
+				// 		: "COMPLETED"
+				// const step3 =
+				// 	step2 === "PENDING" || step2 === "NOTVISITED"
+				// 		? "NOTVISITED"
+				// 		: response.elastic?.isUpgradable
+				// 		? "COMPLETED"
+				// 		: "PENDING"
+				// const step4 =
+				// 	step3 === "PENDING" || step3 === "NOTVISITED"
+				// 		? "NOTVISITED"
+				// 		: response.kibana?.isUpgradable
+				// 		? "COMPLETED"
+				// 		: "PENDING"
+
+				const { elastic, kibana } = response ?? {}
+				const step1Status = elastic?.snapshot ? "COMPLETED" : "PENDING"
+
+				// Helper function to sum deprecations safely
+				const sumDeprecations = (type: string) =>
+					(elastic?.deprecations?.[type] ?? 1) + (kibana?.deprecations?.[type] ?? 1)
+
+				// Step 2 calculations
+				const criticalDeprecations = sumDeprecations("critical")
+				const warningDeprecations = sumDeprecations("warning")
+
+				const step2Status =
+					step1Status === "PENDING"
 						? "NOTVISITED"
-						: response.esDeprecationCount.critical + response.KibanaDeprecationCount.critical > 0
+						: criticalDeprecations > 0
 						? "PENDING"
-						: response.esDeprecationCount.warning + response.KibanaDeprecationCount.warning > 0
+						: warningDeprecations > 0
 						? "INPROGRESS"
 						: "COMPLETED"
-				const step3 =
-					step2 === "PENDING" || step2 === "NOTVISITED"
+
+				// Helper for subsequent steps
+				const getNextStepStatus = (prevStatus: string, isUpgradable: string) =>
+					prevStatus === "PENDING" || prevStatus === "NOTVISITED"
 						? "NOTVISITED"
-						: response.isESUpgraded
-						? "COMPLETED"
-						: "PENDING"
-				const step4 =
-					step3 === "PENDING" || step3 === "NOTVISITED"
-						? "NOTVISITED"
-						: response.isESUpgraded
+						: isUpgradable
 						? "COMPLETED"
 						: "PENDING"
 
+				const step3Status = getNextStepStatus(step2Status, elastic?.isUpgradable)
+				const step4Status = getNextStepStatus(step3Status, kibana?.isUpgradable)
+
 				setStepStatus({
-					"1": step1,
-					"2": step2,
-					"3": step3,
-					"4": step4,
+					"1": step1Status,
+					"2": step2Status,
+					"3": step3Status,
+					"4": step4Status,
 				})
 			})
 			.catch((err) => toast.error(err?.response?.data.err))
@@ -65,8 +96,8 @@ function UpgradeAssistant() {
 	const step3Data = getStepIndicatorData("03", stepStatus["3"])
 	const step4Data = getStepIndicatorData("04", stepStatus["4"])
 
-	return isLoading ? (
-		<Box className="flex flex-col gap-4 w-full">
+	return isLoading || isRefetching ? (
+		<Box className="flex flex-col gap-4 w-full px-6">
 			<Skeleton className="w-full rounded-[20px]">
 				<Box height="88px" />
 			</Skeleton>
@@ -81,7 +112,7 @@ function UpgradeAssistant() {
 			</Skeleton>
 		</Box>
 	) : (
-		<ol className="flex flex-col gap-4 w-full overflow-auto h-[calc(var(--window-height)-214px)]">
+		<ol className="flex flex-col gap-4 w-full overflow-auto h-[calc(var(--window-height)-214px)] px-6">
 			<li
 				className={`relative  after:content-[''] after:w-[1px] after:h-full after:inline-block after:absolute after:-bottom-[60px] after:left-11 after:z-20 w-full ${getGradientClass(
 					stepStatus["1"],
@@ -214,15 +245,15 @@ function UpgradeAssistant() {
 								>
 									<DeprectedSettings
 										title="Elastic search"
-										criticalValue={data?.esDeprecationCount.critical}
-										warningValue={data?.esDeprecationCount.warning}
+										criticalValue={data?.elastic.deprecations.critical ?? "NaN"}
+										warningValue={data?.elastic.deprecations.warning ?? "NaN"}
 										isDisabled={step2Data?.isDisabled}
 										to="/elastic-deprecation-logs"
 									/>
 									<DeprectedSettings
 										title="Kibana"
-										criticalValue={data?.KibanaDeprecationCount.critical}
-										warningValue={data?.KibanaDeprecationCount.warning}
+										criticalValue={data?.kibana.deprecations.critical ?? "NaN"}
+										warningValue={data?.kibana.deprecations.warning ?? "NaN"}
 										isDisabled={step2Data?.isDisabled}
 										to="/kibana-deprecation-logs"
 									/>
