@@ -1,6 +1,6 @@
 import { Box, CssBaseline, Typography } from "@mui/material"
 import Setup from "~/components/core/Setup"
-import type { Route } from "./+types/home"
+import type { Route } from "../+types/root"
 
 export function meta({}: Route.MetaArgs) {
 	return [{ title: "Hyperflex" }, { name: "description", content: "Welcome to Hyperflex" }]
