@@ -35,8 +35,6 @@ router.get('/:clusterId/info', getClusterDetails);
 
 router.get('/:clusterId/nodes/:nodeId/logs/stream', getLogsStream);
 
-// router.get('/:clusterId/depriciations/kibana', getDeprecations);
-
 router.post('/certificates/upload', upload.array('files'), uploadCertificates);
 
 router.get('/:clusterId/upgrade_info', getUpgradeDetails);

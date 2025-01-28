@@ -38,7 +38,7 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package*.json ./
 
 # Install only production dependencies
-RUN yarn --production
+RUN yarn install --production
 
 # Expose the application port
 EXPOSE 3000
