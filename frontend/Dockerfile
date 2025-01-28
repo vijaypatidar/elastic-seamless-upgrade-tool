@@ -1,20 +1,15 @@
-# Stage 1: Build Stage
-FROM node:18.20.4 AS builder
+FROM node:22-alpine AS builder
 
-# Set the working directory in the container
 WORKDIR /usr/src/app
 
-# Copy package.json and package-lock.json
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install
+RUN yarn 
 
-# Copy the rest of the application code
 COPY . .
 
-# Compile TypeScript code into JavaScript
-RUN npm run build
+RUN yarn build
+
 
 # Stage 2: Serve with Nginx
 FROM nginx:alpine
@@ -33,3 +28,27 @@ EXPOSE 3001
 
 # Start Nginx server
 CMD ["nginx", "-g", "daemon off;"]
+
+
+# FROM node:20-alpine AS development-dependencies-env
+# COPY . /app
+# WORKDIR /app
+# RUN npm ci
+
+# FROM node:20-alpine AS production-dependencies-env
+# COPY ./package.json package-lock.json /app/
+# WORKDIR /app
+# RUN npm ci --omit=dev
+
+# FROM node:20-alpine AS build-env
+# COPY . /app/
+# COPY --from=development-dependencies-env /app/node_modules /app/node_modules
+# WORKDIR /app
+# RUN npm run build
+
+# FROM node:20-alpine
+# COPY ./package.json package-lock.json /app/
+# COPY --from=production-dependencies-env /app/node_modules /app/node_modules
+# COPY --from=build-env /app/build /app/build
+# WORKDIR /app
+# CMD ["npm", "run", "start"]

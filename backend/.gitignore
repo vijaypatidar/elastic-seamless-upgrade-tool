@@ -7,3 +7,4 @@ ansible_inventory.ini
 logs
 uploads
 docker-compose/snapshots/test
+.DS_Store

@@ -1,0 +1,68 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+	@apply bg-white dark:bg-neutral-950;
+
+	@media (prefers-color-scheme: dark) {
+		color-scheme: dark;
+	}
+}
+
+.no-gradient::after {
+	background: #292929;
+}
+
+.green-yellow-gradient::after {
+	background: linear-gradient(180deg, #52d97f 0%, #edc038 100%);
+}
+
+.green-purple-gradient::after {
+	background: linear-gradient(180deg, #52d97f 0%, #875af5 100%);
+}
+
+.green-gradient::after {
+	background: linear-gradient(180deg, #52d97f 0%, #52d97f 100%);
+}
+
+.yellow-green-gradient::after {
+	background: linear-gradient(180deg, #edc038 0%, #52d97f 100%);
+}
+
+.yellow-gradient::after {
+	background: linear-gradient(180deg, #edc038 0%, #edc038 100%);
+}
+
+.yellow-purple-gradient::after {
+	background: linear-gradient(180deg, #edc038 0%, #875af5 100%);
+}
+
+@keyframes gradient-border-breath {
+	0% {
+		background: linear-gradient(135deg, #bbaddc 2.29%, #c9c0df 44.53%, #131315 97.18%, #131315 97.18%);
+		opacity: 1;
+	}
+
+	20% {
+		background: linear-gradient(135deg, #bbaddc 2.29%, #c9c0df 44.53%, #131315 97.18%, #131315 97.18%);
+		opacity: 0.75;
+	}
+	40% {
+		background: linear-gradient(135deg, #bbaddc 2.29%, #c9c0df 44.53%, #131315 97.18%, #131315 97.18%);
+		opacity: 0.5;
+	}
+	60% {
+		background: linear-gradient(135deg, #bbaddc 2.29%, #c9c0df 44.53%, #131315 97.18%, #131315 97.18%);
+		opacity: 0.25;
+	}
+	80% {
+		background: linear-gradient(135deg, #bbaddc 2.29%, #c9c0df 44.53%, #131315 97.18%, #131315 97.18%);
+		opacity: 0.5;
+	}
+	100% {
+		background: linear-gradient(135deg, #bbaddc 2.29%, #c9c0df 44.53%, #131315 97.18%, #131315 97.18%);
+		opacity: 0.75;
+	}
+}
