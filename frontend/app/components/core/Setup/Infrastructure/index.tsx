@@ -4,7 +4,7 @@ import { useState } from "react"
 import { ConatinedButton } from "~/components/utilities/Buttons"
 import SelectionTile from "./widgets/SelectionTile"
 
-function Infrastructor({ onSubmit }: { onSubmit: (value: string | number | null) => void }) {
+function Infrastructure({ onSubmit }: { onSubmit: (value: string | number | null) => void }) {
 	const [selected, setSelected] = useState<string | number | null>(null)
 
 	const handleSubmit = () => {
@@ -50,4 +50,4 @@ function Infrastructor({ onSubmit }: { onSubmit: (value: string | number | null)
 	)
 }
 
-export default Infrastructor
+export default Infrastructure
