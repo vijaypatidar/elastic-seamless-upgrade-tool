@@ -16,7 +16,9 @@ import {
 import { addLogs, getLogs } from '../services/logs.service';
 import {
   getAllElasticNodes,
+  getElasticNodeById,
   syncNodeData,
+  triggerNodeUpgrade,
 } from '../services/elastic-node.service.';
 import cluster from 'cluster';
 import { runPlaybookWithLogging } from './ansible-controller';
@@ -35,7 +37,7 @@ export const healthCheck = async (req: Request, res: Response) => {
         username: 'elastic',
         password: 'B6T5WucTp=sJfbbPLErj',
       },
-      'gbZz8GaXRkiLcfTPOTnZog',
+      'w-_r-9gySYC-FpzFOsfcog',
     );
   } catch (err: any) {
     logger.info(err);
@@ -145,14 +147,59 @@ export const getNodesInfo = async (req: Request, res: Response) => {
   try {
     const clusterId = req.params.clusterId;
     const elasticNodes = await getAllElasticNodes(clusterId);
-    res.send(elasticNodes);
+    const nodes = elasticNodes.map((node) => {
+      if (node.isMaster) {
+        return {
+          nodeId: node.nodeId,
+          clusterId: node.clusterId,
+          name: node.name,
+          version: node.version,
+          ip: node.ip,
+          roles: ['master'],
+          os: node.os,
+          isMaster: node.isMaster,
+          status: node.status,
+          progress: node.progress,
+        };
+      }
+      if (node.roles.includes('data')) {
+        return {
+          nodeId: node.nodeId,
+          clusterId: node.clusterId,
+          name: node.name,
+          version: node.version,
+          ip: node.ip,
+          roles: ['data'],
+          os: node.os,
+          isMaster: node.isMaster,
+          status: node.status,
+          progress: node.progress,
+        };
+      }
+    });
+    res.send(nodes);
   } catch (error: any) {
     logger.error('Error fetching node details:', error);
     res.status(400).send({ message: error.message });
   }
 };
 
-export const performUpgrade = async (req: Request, res: Response) => {};
+export const handleUpgrades = async (req: Request, res: Response) => {
+  const clusterId = req.params.clusterId;
+  const { nodes } = req.body;
+  try {
+    nodes.forEach((nodeId: string) => {
+      const triggered = triggerNodeUpgrade(nodeId);
+      if (!triggered) {
+        res.status(400).send({ message: 'Upgrade failed node not available' });
+      }
+    });
+    res.status(200).send({ message: 'Upgradation triggered' });
+  } catch (err: any) {
+    logger.error('Error performing upgrade:', err);
+    res.status(400).send({ message: err.message });
+  }
+};
 
 export const getLogsStream = async (req: Request, res: Response) => {
   const { clusterId, nodeId } = req.params;
@@ -223,5 +270,17 @@ export const uploadCertificates = async (req: Request, res: Response) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Failed to upload files' });
+  }
+};
+
+export const getNodeInfo = async (req: Request, res: Response) => {
+  const { clusterId, nodeId } = req.params;
+
+  try {
+    const data = await getElasticNodeById(nodeId);
+    res.send(data);
+  } catch (error: any) {
+    logger.error('Error fetching node details:', error);
+    res.status(400).send({ message: error.message });
   }
 };

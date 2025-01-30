@@ -6,10 +6,15 @@ import path from 'path';
 import logger from '../logger/logger';
 import { Readable } from 'stream';
 import { ExecResult } from '../types/node-ansible';
-import { updateNodeStatus } from '../services/elastic-node.service.';
+import {
+  updateNodeProgress,
+  updateNodeStatus,
+} from '../services/elastic-node.service.';
+import { taskProgressMap } from '../utils/tasks.info';
+import { IElasticNode } from '../models/elastic-node.model';
 
 export const createAnsibleInventory = async (
-  nodes: ElasticNode[],
+  nodes: IElasticNode[],
   pathToKey: string,
 ) => {
   try {
@@ -35,35 +40,45 @@ export const createAnsibleInventory = async (
         );
       }
     }
-    ///Right now adding all master_eligible into master once the playbooks are updated to consider master eligible nodes this part of code must also be updated
 
     const inventoryParts: string[] = [];
 
+    // Only add groups that have hosts
     Object.entries(roleGroups).forEach(([group, hosts]) => {
       if (hosts.length > 0) {
         inventoryParts.push(`[${group}]\n${hosts.join('\n')}`);
       }
     });
 
-    inventoryParts.push(
-      `[elasticsearch:children]\n${Object.keys(roleGroups)
-        .filter(
-          (group) => group.length > 0 && group.startsWith('elasticsearch_'),
-        )
-        .join('\n')}`,
-    );
+    // Only include non-empty groups in elasticsearch:children
+    const nonEmptyGroups = Object.entries(roleGroups)
+      .filter(([_, hosts]) => hosts.length > 0)
+      .map(([group]) => group);
 
-    //   inventoryParts.push(
-    //     `[kibana:vars]\nansible_ssh_user=ubuntu\nansible_ssh_private_key_file=/SSH/File/Path/HF-EC2-key.pem`
-    //   );
+    if (nonEmptyGroups.length > 0) {
+      inventoryParts.push(
+        `[elasticsearch:children]\n${nonEmptyGroups.join('\n')}`,
+      );
+    }
+
     inventoryParts.push(
       `[elasticsearch:vars]\nansible_ssh_user=ubuntu\nansible_ssh_private_key_file=${pathToKey}`,
     );
+
+    const inventoryContent = inventoryParts.join('\n\n');
+
+    await fs.promises.writeFile(
+      'ansible_inventory.ini',
+      inventoryContent,
+      'utf8',
+    );
+
+    return inventoryContent;
   } catch (error) {
     console.error('Error creating Ansible inventory:', error);
+    throw error;
   }
 };
-
 /**
  * Executes an Ansible playbook using node-ansible.
  *
@@ -87,23 +102,34 @@ export const runPlaybookWithLogging = async (
   try {
     logger.info(`Starting playbook for node: ${nodeId}`);
 
+    let currentProgress = 0;
+
     const extraVars = Object.entries(variables)
       .map(([key, value]) => `${key}=${value}`)
       .join(' ');
 
-    const command = `ansible-playbook -i ${inventoryPath} -e "${extraVars}" ${playbookPath}`; ////command
-
+    const command = `ansible-playbook -i ${inventoryPath} -e "${extraVars}" ${playbookPath} -vvv`; ////command
+    console.log('command', command);
     return new Promise<ExecResult>((resolve, reject) => {
       const childProcess = exec(command);
       updateNodeStatus(nodeId, 'upgrading');
+      updateNodeProgress(nodeId, 0);
       const stdout: string[] = [];
       const stderr: string[] = [];
 
       childProcess.stdout?.on('data', (data) => {
         const chunk = data.toString();
-
         stdout.push(chunk);
-        logger.info(`[${nodeId}] STDOUT: ${chunk}`);
+        // logger.info(`[${nodeId}] STDOUT: ${chunk}`);
+        const taskMatch = chunk.match(/TASK \[(.+?)\]/);
+        if (taskMatch && taskMatch.length >= 1) {
+          const taskName = taskMatch[1].trim();
+          console.log('taskNameith', taskName);
+          if (taskProgressMap[taskName] !== undefined) {
+            currentProgress = currentProgress + taskProgressMap[taskName];
+            updateNodeProgress(nodeId, currentProgress);
+          }
+        }
       });
 
       childProcess.stderr?.on('data', (data) => {
@@ -114,6 +140,7 @@ export const runPlaybookWithLogging = async (
       childProcess.on('close', (code) => {
         if (code === 0) {
           logger.info(`[${nodeId}] Playbook executed successfully.`);
+          updateNodeProgress(nodeId, 100);
           updateNodeStatus(nodeId, 'upgraded');
           resolve({
             code: 0,
@@ -136,6 +163,7 @@ export const runPlaybookWithLogging = async (
       });
       childProcess.on('error', (error) => {
         const errorMessage = `Error running playbook for node: ${nodeId}: ${error.message}`;
+        updateNodeStatus(nodeId, 'failed');
         logger.error(errorMessage);
         reject({
           code: 1,

@@ -10,6 +10,8 @@ import {
   getValidSnapshots,
   uploadCertificates,
   getUpgradeDetails,
+  handleUpgrades,
+  getNodeInfo,
 } from '../controllers/elastic-controller';
 
 const router = Router();
@@ -31,11 +33,13 @@ router.get('/:clusterId/valid-snapshots', getValidSnapshots);
 
 router.post('', addOrUpdateClusterDetail);
 
+router.get('/nodes/:nodeId', getNodeInfo);
+
+router.post('/:clusterId/nodes/upgrade', handleUpgrades);
+
 router.get('/:clusterId/info', getClusterDetails);
 
 router.get('/:clusterId/nodes/:nodeId/logs/stream', getLogsStream);
-
-router.get('/:clusterId/depriciations/kibana', getDeprecations);
 
 router.post('/certificates/upload', upload.array('files'), uploadCertificates);
 

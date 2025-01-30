@@ -1,4 +1,8 @@
 import { ElasticClient } from '../clients/elastic.client';
+import {
+  createAnsibleInventory,
+  runPlaybookWithLogging,
+} from '../controllers/ansible-controller';
 import logger from '../logger/logger';
 import ElasticNode, {
   IElasticNode,
@@ -20,7 +24,7 @@ export const createOrUpdateElasticNode = async (
 export const getElasticNodeById = async (
   nodeId: string,
 ): Promise<IElasticNode | null> => {
-  const elasticNode = await ElasticNode.findOne({ id: nodeId });
+  const elasticNode = await ElasticNode.findOne({ nodeId: nodeId });
   if (!elasticNode) return null;
   return elasticNode;
 };
@@ -43,7 +47,6 @@ export const syncNodeData = async (clusterId: string) => {
     const masterNode: any = await client.getClient().cat.master({
       format: 'json',
     });
-    console.log('masterNode', masterNode);
     const elasticNodes: IElasticNode[] | null = Object.entries(
       response.nodes,
     ).map(([key, value]: [string, any]) => ({
@@ -54,19 +57,20 @@ export const syncNodeData = async (clusterId: string) => {
       version: value.version,
       roles: value.roles,
       os: value.os,
+      progress: 0,
       isMaster: masterNode[0].id === key,
       status: 'available',
     }));
-
     for (const node of elasticNodes) {
       const existingNode = await ElasticNode.findOne({ nodeId: node.nodeId });
       if (existingNode) {
         node.status = existingNode.status;
+        node.progress = existingNode.progress;
       }
-      //as status is not present in Elastic search whether updated or not.
       await ElasticNode.findOneAndUpdate({ nodeId: node.nodeId }, node, {
         new: true,
         runValidators: true,
+        upsert: true,
       });
     }
   } catch (error) {
@@ -95,6 +99,50 @@ export const updateNodeStatus = async (
   } catch (error: any) {
     console.error(`Error updating status for node ${nodeId}: ${error.message}`);
     throw error;
+  }
+};
+
+export const updateNodeProgress = async (nodeId: string, progress: number) => {
+  try {
+    const updatedNode = await ElasticNode.findOneAndUpdate(
+      { nodeId },
+      { progress: progress },
+      { new: true, runValidators: true },
+    );
+
+    if (!updatedNode) {
+      logger.debug(`Node with id ${nodeId} not found.`);
+      return null;
+    }
+    return updatedNode;
+  } catch (error: any) {
+    console.error(`Error updating status for node ${nodeId}: ${error.message}`);
+    throw error;
+  }
+};
+
+export const triggerNodeUpgrade = async (nodeId: string) => {
+  try {
+    const node = await getElasticNodeById(nodeId);
+    if (!node) {
+      return false;
+    }
+    const pathToKey = './backend_key.pem'; //Should be stored in clusterInfo
+    await createAnsibleInventory([node], pathToKey);
+    runPlaybookWithLogging(
+      'ansible/main.yml',
+      'ansible_inventory.ini',
+      {
+        elk_version: '8.7.0',
+        username: 'elastic',
+        password: 'B6T5WucTp=sJfbbPLErj',
+      },
+      nodeId,
+    );
+    return new Promise((resolve, reject) => resolve(true));
+  } catch (error) {
+    logger.error(`Error performing upgrade for node with id ${nodeId}`);
+    return false;
   }
 };
 

@@ -9,6 +9,7 @@ export interface IElasticNode {
   roles: string[];
   os: Record<string, any>;
   isMaster: boolean;
+  progress: Number;
   status: 'available' | 'upgrading' | 'completed' | 'failed';
 }
 
@@ -25,6 +26,7 @@ const ElasticNodeSchema: Schema<IElasticNodeDocument> =
       roles: { type: [String], required: true },
       os: { type: Object, required: true },
       isMaster: { type: Boolean, required: true },
+      progress: { type: Number, required: false },
       status: {
         type: String,
         enum: ['available', 'upgrading', 'upgraded', 'failed'],
