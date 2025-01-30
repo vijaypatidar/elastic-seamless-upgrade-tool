@@ -6,3 +6,5 @@ ansible_inventory.ini
 *.pem
 logs
 uploads
+docker-compose/snapshots/test
+.DS_Store

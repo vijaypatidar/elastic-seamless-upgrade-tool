@@ -81,11 +81,13 @@ export const addOrUpdateClusterDetail = async (req: Request, res: Response) => {
       kibana: kibana,
       clusterId: clusterId,
       certificateIds: req.body.certificateIds,
+      targetVersion: req.body.targetVersion,
     };
     const result = await createOrUpdateClusterInfo(clusterInfo);
     res
       .send({
         message: result.isNew ? 'Cluster info saved' : 'Cluster info updated',
+        clusterId: result.clusterId,
       })
       .status(201);
     await syncNodeData(clusterId);
@@ -99,11 +101,11 @@ export const getUpgradeDetails = async (req: Request, res: Response) => {
   try {
     const clusterId = req.params.clusterId;
     const client = await ElasticClient.buildClient(clusterId);
-    const isSnapShotTaken = (await client.getValidSnapshots()).length !== 0;
+    const snapshots = await client.getValidSnapshots();
 
     const esDeprecationCount = (await getElasticsearchDeprecation(clusterId))
       .counts;
-    const KibanaDeprecationCount = (await getKibanaDeprecation(clusterId))
+    const kibanaDeprecationCount = (await getKibanaDeprecation(clusterId))
       .counts;
 
     //verifying upgradability
@@ -111,12 +113,15 @@ export const getUpgradeDetails = async (req: Request, res: Response) => {
       (item) => item.status !== 'completed',
     );
     const isESUpgraded = elasticNodes.length === 0;
-
     res.send({
-      isSnapShotTaken,
-      esDeprecationCount,
-      KibanaDeprecationCount,
-      isESUpgraded,
+      elastic: {
+        isUpgradable: isESUpgraded,
+        deprecations: { ...esDeprecationCount },
+        snapshot: snapshots.length > 0 ? snapshots[0] : null,
+      },
+      kibana: {
+        deprecations: { ...kibanaDeprecationCount },
+      },
     });
   } catch (error: any) {
     res.status(501).json({ err: error.message });

@@ -1,14 +1,10 @@
-import Migration from '@elastic/elasticsearch/lib/api/api/migration';
 import { ElasticClient } from '../clients/elastic.client';
 import { DeprecationCounts, DeprecationSetting } from '../interfaces';
 import ClusterInfo, {
   IClusterInfo,
   IClusterInfoDocument,
 } from '../models/cluster-info.model';
-import {
-  MigrationDeprecationsDeprecation,
-  MigrationDeprecationsDeprecationLevel,
-} from '@elastic/elasticsearch/lib/api/types';
+import { MigrationDeprecationsDeprecation } from '@elastic/elasticsearch/lib/api/types';
 import { DeprecationDetail, KibanaClient } from '../clients/kibana.client';
 
 export const createOrUpdateClusterInfo = async (
@@ -16,9 +12,16 @@ export const createOrUpdateClusterInfo = async (
 ): Promise<IClusterInfoDocument> => {
   // TODO These needs to be updated when we want to support multiple clusters
   const clusterId = 'cluster-id'; //clusterInfo.clusterId
+  const { elastic, kibana, certificateIds, targetVersion } = clusterInfo;
   const data = await ClusterInfo.findOneAndUpdate(
     { clusterId: clusterId },
-    { ...clusterInfo, clusterId: clusterId },
+    {
+      elastic: elastic,
+      kibana: kibana,
+      certificateIds: certificateIds,
+      clusterId: clusterId,
+      targetVersion: targetVersion,
+    },
     { new: true, upsert: true, runValidators: true },
   );
   return data;
