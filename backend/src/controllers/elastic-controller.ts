@@ -183,10 +183,13 @@ export const handleUpgrades = async (req: Request, res: Response) => {
   const clusterId = req.params.clusterId;
   const { nodes } = req.body;
   try {
-    nodes.forEach(async(nodeId: string) => {
-      const triggered = await triggerNodeUpgrade(nodeId);
+    nodes.forEach((nodeId: string) => {
+      const triggered = triggerNodeUpgrade(nodeId);
       if (!triggered) {
         res.status(400).send({ message: 'Upgrade failed node not available' });
+      }
+      else{
+        return;
       }
     });
     res.status(200).send({ message: 'Upgradation triggered' });
