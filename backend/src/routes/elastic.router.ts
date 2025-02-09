@@ -10,6 +10,8 @@ import {
   getValidSnapshots,
   uploadCertificates,
   getUpgradeDetails,
+  handleUpgrades,
+  getNodeInfo,
 } from '../controllers/elastic-controller';
 
 const router = Router();
@@ -30,6 +32,10 @@ router.get(
 router.get('/:clusterId/valid-snapshots', getValidSnapshots);
 
 router.post('', addOrUpdateClusterDetail);
+
+router.get('/nodes/:nodeId', getNodeInfo);
+
+router.post('/:clusterId/nodes/upgrade', handleUpgrades);
 
 router.get('/:clusterId/info', getClusterDetails);
 
