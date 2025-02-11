@@ -22,6 +22,8 @@ export interface IClusterInfo {
   kibana?: IKibanaInfo;
   certificateIds?: string[];
   targetVersion?: string;
+  infrastructureType?: string;
+  pathToKey?: string;
 }
 
 export interface IClusterInfoDocument extends IClusterInfo, Document {}
@@ -49,7 +51,9 @@ const ClusterInfoSchema: Schema<IClusterInfoDocument> =
       elastic: { type: ElasticInfoSchema, required: true },
       kibana: { type: KibanaInfoSchema, required: false },
       certificateIds: { type: Array<String>, required: false },
+      infrastructureType: {type: String,required: false},
       targetVersion: { type: String },
+      pathToKey: {type: String}
     },
     { timestamps: true },
   );

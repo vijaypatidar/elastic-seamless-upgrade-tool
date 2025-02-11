@@ -89,7 +89,8 @@ export class ElasticClient {
       const twentyFourHoursAgo = now - 24 * 60 * 60 * 1000; // Timestamp for 24 hours ago
 
       for (const repository of repositories) {
-        logger.info(`Checking snapshots for repository: ${repository}`);
+        try{
+          logger.info(`Checking snapshots for repository: ${repository}`);
         const snapshotResponse = await client.snapshot.get({
           repository,
           snapshot: '_all',
@@ -102,6 +103,7 @@ export class ElasticClient {
         }
 
         // Filter snapshots created within the last 24 hours
+        
         const recentSnapshots = snapshots
           .filter((snapshot) => {
             const snapshotTime = snapshot.start_time_in_millis || -1;
@@ -116,8 +118,11 @@ export class ElasticClient {
           );
 
         validSnapshots.push(...recentSnapshots);
+        }catch(repoError){
+          logger.error(`Error fetching snapshots for repository ${repository}:`, repoError);
+          continue;
+        }
       }
-
       if (validSnapshots.length === 0) {
         logger.info('No valid snapshots found within the last 24 hours.');
       }

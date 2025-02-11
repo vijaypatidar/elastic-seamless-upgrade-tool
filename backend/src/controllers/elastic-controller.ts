@@ -2,6 +2,7 @@ import { ElasticClusterBaseRequest } from '..';
 import { ElasticClient } from '../clients/elastic.client';
 import { Request, Response } from 'express';
 import { DeprecationCounts, ElasticNode } from '../interfaces';
+import fs from 'fs'
 import logger from '../logger/logger';
 import {
   IClusterInfo,
@@ -10,6 +11,7 @@ import {
 } from '../models/cluster-info.model';
 import {
   createOrUpdateClusterInfo,
+  getClusterInfoById,
   getElasticsearchDeprecation,
   getKibanaDeprecation,
 } from '../services/cluster-info.service';
@@ -22,6 +24,10 @@ import {
 } from '../services/elastic-node.service.';
 import cluster from 'cluster';
 import { runPlaybookWithLogging } from './ansible-controller';
+import { KibanaClient } from '../clients/kibana.client';
+import path from 'path';
+import {  getPossibleUpgrades } from '../utils/upgrade.versions';
+import { normalizeUrl } from '../utils/utlity.functions';
 
 export const healthCheck = async (req: Request, res: Response) => {
   try {
@@ -40,7 +46,11 @@ export const getClusterDetails = async (req: Request, res: Response) => {
     const clusterId = req.params.clusterId;
     const client = await ElasticClient.buildClient(clusterId);
     const clusterDetails = await client.getClient().info();
+    const clusterInfo = await getClusterInfoById(clusterId);
     const healtDetails = await client.getClient().cluster.health();
+    const currentVersion = clusterDetails.version.number;
+    const possibleUpgradeVersions = getPossibleUpgrades(currentVersion);
+
     res.send({
       clusterName: clusterDetails.cluster_name,
       clusterUUID: clusterDetails.cluster_uuid,
@@ -54,6 +64,9 @@ export const getClusterDetails = async (req: Request, res: Response) => {
       unassignedShards: healtDetails.unassigned_shards,
       initializingShards: healtDetails.initializing_shards,
       relocatingShards: healtDetails.relocating_shards,
+      infrastructureType: clusterInfo.infrastructureType,
+      targetVersion: clusterInfo.targetVersion,
+      possibleUpgradeVersions: possibleUpgradeVersions
     });
   } catch (err: any) {
     logger.info(err);
@@ -67,12 +80,20 @@ export const addOrUpdateClusterDetail = async (req: Request, res: Response) => {
     const elastic: IElasticInfo = req.body.elastic;
     const kibana: IKibanaInfo = req.body.kibana;
     const clusterInfo: IClusterInfo = {
-      elastic: elastic,
-      kibana: kibana,
+      elastic: {
+        ...elastic,
+        url: normalizeUrl(elastic.url)
+      },
+      kibana: {
+        ...kibana,
+        url: normalizeUrl(kibana.url)
+      },
       clusterId: clusterId,
       certificateIds: req.body.certificateIds,
       targetVersion: req.body.targetVersion,
+      infrastructureType: req.body.infrastructureType
     };
+
     const result = await createOrUpdateClusterInfo(clusterInfo);
     res
       .send({
@@ -91,6 +112,8 @@ export const getUpgradeDetails = async (req: Request, res: Response) => {
   try {
     const clusterId = req.params.clusterId;
     const client = await ElasticClient.buildClient(clusterId);
+    const clusterInfo = await getClusterInfoById(clusterId);
+    const kibanaUrl = clusterInfo.kibana?.url;
     const snapshots = await client.getValidSnapshots();
 
     const esDeprecationCount = (await getElasticsearchDeprecation(clusterId))
@@ -107,7 +130,10 @@ export const getUpgradeDetails = async (req: Request, res: Response) => {
       elastic: {
         isUpgradable: isESUpgraded,
         deprecations: { ...esDeprecationCount },
-        snapshot: snapshots.length > 0 ? snapshots[0] : null,
+        snapshot: {
+          snapshot: snapshots.length > 0 ? snapshots[0] : null,
+          creationPage: `${kibanaUrl}/app/management/data/snapshot_restore/snapshots`
+        }
       },
       kibana: {
         deprecations: { ...kibanaDeprecationCount },
@@ -184,7 +210,7 @@ export const handleUpgrades = async (req: Request, res: Response) => {
   const { nodes } = req.body;
   try {
     nodes.forEach((nodeId: string) => {
-      const triggered = triggerNodeUpgrade(nodeId);
+      const triggered = triggerNodeUpgrade(nodeId,clusterId);
       if (!triggered) {
         res.status(400).send({ message: 'Upgrade failed node not available' });
       }
@@ -282,3 +308,53 @@ export const getNodeInfo = async (req: Request, res: Response) => {
     res.status(400).send({ message: error.message });
   }
 };
+
+
+export const addOrUpdateTargetVersion = async (req: Request, res: Response) => {
+  const { clusterId } = req.params;
+  const { version } = req.body;
+  try {
+    const clusterInfo = await getClusterInfoById(clusterId);
+    await createOrUpdateClusterInfo({ ...clusterInfo, targetVersion: version });
+    res.status(201).send({
+      message: `Target version set succesfully`
+    })
+  }
+  catch (error: any) {
+    logger.error("Unable to add target version: ", error);
+    res.status(500).send({ message: error.message })
+  }
+
+}
+
+export const verfiySshKey = async (req: Request, res: Response) => {
+  const { pathToKey} = req.body;
+  try {
+
+    if (!pathToKey) {
+      res.status(400).send({ success: false, message: 'SSH key path is required.' });
+    }
+
+    const resolvedPath = path.resolve(pathToKey);
+
+    if (!fs.existsSync(resolvedPath)) {
+      res.status(400).json({ success: false, message: 'mentioned path to key, does not exist' });
+      return;
+    }
+
+    const fileContent = fs.readFileSync(resolvedPath, 'utf8');
+
+    if (!fileContent.startsWith('-----BEGIN ') || !fileContent.includes('PRIVATE KEY-----')) {
+      res.status(400).send({ success: false, message: 'Invalid SSH private key format.' });
+      return;
+    }
+
+    res.send({ success: true, message: 'SSH key is valid.' });
+    return;
+
+  } catch (error) {
+    console.error('Error verifying SSH key:', error);
+    res.status(500).json({ success: false, message: 'Error verifying ssh key please contact owner' });
+  }
+}
+

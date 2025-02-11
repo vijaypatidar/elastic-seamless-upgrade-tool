@@ -32,6 +32,8 @@ export const getClusterInfoById = async (clusterId: string): Promise<IClusterInf
 		clusterId,
 		elastic: clusterInfo?.elastic!!,
 		kibana: clusterInfo?.kibana,
+		targetVersion: clusterInfo?.targetVersion,
+		certificateIds: clusterInfo?.certificateIds,
 	}
 }
 

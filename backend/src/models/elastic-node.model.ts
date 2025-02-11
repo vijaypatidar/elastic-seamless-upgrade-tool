@@ -20,7 +20,7 @@ const ElasticNodeSchema: Schema<IElasticNodeDocument> =
     {
       nodeId: { type: String, required: true, unique: true },
       clusterId: { type: String, required: true },
-      name: { type: String, required: true },
+      name: { type: String, required: true,unique: true },
       version: { type: String, required: true },
       ip: { type: String, required: true },
       roles: { type: [String], required: true },
