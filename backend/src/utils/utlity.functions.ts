@@ -1,10 +1,13 @@
-export const normalizeUrl = (inputUrl: string): string=>{
+export const normalizeNodeUrl = (inputUrl: string): string=>{
     try {
         let trimmedUrl = inputUrl.trim(); // Remove leading & trailing spaces
         let urlObj = new URL(trimmedUrl);
-        urlObj.pathname = urlObj.pathname.replace(/\/+$/, ''); // Remove trailing slashes
-        return urlObj.toString();
+        let cleanUrl = urlObj.origin + urlObj.pathname.replace(/\/+$/, '') + urlObj.search + urlObj.hash;
+
+        return cleanUrl;
     } catch (error) {
         throw new Error('Invalid URL');
     }
 }
+
+

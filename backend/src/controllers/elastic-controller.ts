@@ -27,7 +27,7 @@ import { runPlaybookWithLogging } from './ansible-controller';
 import { KibanaClient } from '../clients/kibana.client';
 import path from 'path';
 import {  getPossibleUpgrades } from '../utils/upgrade.versions';
-import { normalizeUrl } from '../utils/utlity.functions';
+import { normalizeNodeUrl } from '../utils/utlity.functions';
 
 export const healthCheck = async (req: Request, res: Response) => {
   try {
@@ -82,11 +82,11 @@ export const addOrUpdateClusterDetail = async (req: Request, res: Response) => {
     const clusterInfo: IClusterInfo = {
       elastic: {
         ...elastic,
-        url: normalizeUrl(elastic.url)
+        url: normalizeNodeUrl(elastic.url)
       },
       kibana: {
         ...kibana,
-        url: normalizeUrl(kibana.url)
+        url: normalizeNodeUrl(kibana.url)
       },
       clusterId: clusterId,
       certificateIds: req.body.certificateIds,
