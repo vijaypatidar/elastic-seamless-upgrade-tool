@@ -11,6 +11,7 @@ import {
 } from '../models/cluster-info.model';
 import {
   createOrUpdateClusterInfo,
+  getAllClusters,
   getClusterInfoById,
   getElasticsearchDeprecation,
   getKibanaDeprecation,
@@ -24,7 +25,7 @@ import {
 } from '../services/elastic-node.service.';
 import cluster from 'cluster';
 import { runPlaybookWithLogging } from './ansible-controller';
-import { KibanaClient } from '../clients/kibana.client';
+import { KibanaClient} from '../clients/kibana.client';
 import path from 'path';
 import {  getPossibleUpgrades } from '../utils/upgrade.versions';
 import { normalizeNodeUrl } from '../utils/utlity.functions';
@@ -112,6 +113,7 @@ export const getUpgradeDetails = async (req: Request, res: Response) => {
   try {
     const clusterId = req.params.clusterId;
     const client = await ElasticClient.buildClient(clusterId);
+    const kibanaClient = await KibanaClient.buildClient(clusterId);
     const clusterInfo = await getClusterInfoById(clusterId);
     const kibanaUrl = clusterInfo.kibana?.url;
     const snapshots = await client.getValidSnapshots();
@@ -121,6 +123,9 @@ export const getUpgradeDetails = async (req: Request, res: Response) => {
     const kibanaDeprecationCount = (await getKibanaDeprecation(clusterId))
       .counts;
 
+    const kibanaVersion = await kibanaClient.getKibanaVersion();
+    
+    const isKibanaUpgraded = (kibanaVersion === clusterInfo.targetVersion) ? true : false
     //verifying upgradability
     const elasticNodes = (await getAllElasticNodes(clusterId)).filter(
       (item) => item.status !== 'completed',
@@ -128,7 +133,7 @@ export const getUpgradeDetails = async (req: Request, res: Response) => {
     const isESUpgraded = elasticNodes.length === 0;
     res.send({
       elastic: {
-        isUpgradable: isESUpgraded,
+        isUpgradable: !isESUpgraded,
         deprecations: { ...esDeprecationCount },
         snapshot: {
           snapshot: snapshots.length > 0 ? snapshots[0] : null,
@@ -136,6 +141,7 @@ export const getUpgradeDetails = async (req: Request, res: Response) => {
         }
       },
       kibana: {
+        isUpgradable: !isKibanaUpgraded,
         deprecations: { ...kibanaDeprecationCount },
       },
     });
@@ -357,4 +363,27 @@ export const verfiySshKey = async (req: Request, res: Response) => {
     res.status(500).json({ success: false, message: 'Error verifying ssh key please contact owner' });
   }
 }
+
+export const verfiyCluster = async(req: Request,res: Response)=>{
+
+  try{
+      const clusters = await getAllClusters();
+      if(clusters.length > 0){
+        res.send({
+          clusterAvailable: true
+        })
+      }
+      else{
+        res.send({
+          clusterAvailable: false
+        })
+      }
+  }
+  catch(error : any){
+    logger.error('Unable to fetch cluster availibility info',error.message)
+    res.status(501).send({
+      message: 'Unable to fetch cluster availibility info'
+    })
+  }
+} 
 

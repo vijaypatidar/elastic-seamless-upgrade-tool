@@ -24,6 +24,23 @@ export const createOrUpdateClusterInfo = async (clusterInfo: IClusterInfo): Prom
 	return data
 }
 
+export const getAllClusters = async (): Promise<IClusterInfo[]> => {
+	try {
+		const clusters = await ClusterInfo.find({})
+		return clusters.map((cluster) => ({
+			clusterId: cluster.clusterId,
+			elastic: cluster.elastic,
+			kibana: cluster.kibana,
+			targetVersion: cluster.targetVersion,
+			infrastructureType: cluster.infrastructureType,
+			certificateIds: cluster.certificateIds,
+			pathToKey: cluster.pathToKey,
+		}))
+	} catch (error) {
+		console.error("Error fetching cluster list:", error)
+		throw error
+	}
+}
 export const getClusterInfoById = async (clusterId: string): Promise<IClusterInfo> => {
 	// TODO These needs to be updated when we want to support multiple clusters
 	clusterId = "cluster-id"
@@ -137,3 +154,4 @@ export const getKibanaDeprecation = async (
 		throw error
 	}
 }
+
