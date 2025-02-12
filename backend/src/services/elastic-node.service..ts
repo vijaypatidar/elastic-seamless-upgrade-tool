@@ -129,7 +129,7 @@ export const triggerNodeUpgrade = async (nodeId: string,clusterId: string) => {
       return false;
     }
     const clusterInfo = await getClusterInfoById(clusterId);
-    const pathToKey = './backend_key.pem'; //Should be stored in clusterInfo
+    const pathToKey = clusterInfo.pathToKey ? clusterInfo.pathToKey : ''; //Should be stored in clusterInfo
     await createAnsibleInventory([node], pathToKey);
     if(!clusterInfo.targetVersion || !clusterInfo.elastic.username || !clusterInfo.elastic.password){
       return false;
