@@ -8,6 +8,7 @@ import ElasticNode, {
   IElasticNode,
   IElasticNodeDocument,
 } from '../models/elastic-node.model';
+import { getClusterInfoById } from './cluster-info.service';
 
 export const createOrUpdateElasticNode = async (
   elasticNode: IElasticNode,
@@ -121,21 +122,26 @@ export const updateNodeProgress = async (nodeId: string, progress: number) => {
   }
 };
 
-export const triggerNodeUpgrade = async (nodeId: string) => {
+export const triggerNodeUpgrade = async (nodeId: string,clusterId: string) => {
   try {
     const node = await getElasticNodeById(nodeId);
     if (!node) {
       return false;
     }
+    const clusterInfo = await getClusterInfoById(clusterId);
     const pathToKey = './backend_key.pem'; //Should be stored in clusterInfo
     await createAnsibleInventory([node], pathToKey);
+    if(!clusterInfo.targetVersion || !clusterInfo.elastic.username || !clusterInfo.elastic.password){
+      return false;
+    }
+
     runPlaybookWithLogging(
       'ansible/main.yml',
       'ansible_inventory.ini',
       {
-        elk_version: '8.7.0',
-        username: 'elastic',
-        password: 'B6T5WucTp=sJfbbPLErj',
+        elk_version: clusterInfo.targetVersion,
+        username: clusterInfo.elastic.username,
+        password: clusterInfo.elastic.password
       },
       nodeId,
     );

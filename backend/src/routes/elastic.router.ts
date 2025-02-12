@@ -12,6 +12,8 @@ import {
   getUpgradeDetails,
   handleUpgrades,
   getNodeInfo,
+  addOrUpdateTargetVersion,
+  verfiySshKey,
 } from '../controllers/elastic-controller';
 
 const router = Router();
@@ -19,6 +21,8 @@ const router = Router();
 import multer from 'multer';
 
 const upload = multer({ dest: 'uploads/' });
+
+router.post('/:clusterId/add-version',addOrUpdateTargetVersion);
 
 router.get('/:clusterId/health', healthCheck);
 
@@ -46,5 +50,7 @@ router.post('/certificates/upload', upload.array('files'), uploadCertificates);
 router.get('/:clusterId/upgrade_info', getUpgradeDetails);
 
 router.get('/:clusterId/deprecations/kibana', getKibanaDeprecationsInfo);
+
+router.post('/:clusterId/verify-ssh',verfiySshKey);
 
 export default router;
