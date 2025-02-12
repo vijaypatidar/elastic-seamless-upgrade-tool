@@ -53,4 +53,6 @@ router.get('/:clusterId/deprecations/kibana', getKibanaDeprecationsInfo);
 
 router.post('/:clusterId/verify-ssh',verfiySshKey);
 
+router.get('/clusters/check',)
+
 export default router;
