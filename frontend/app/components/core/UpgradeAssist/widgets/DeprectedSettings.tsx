@@ -5,7 +5,7 @@ import { OutlinedBorderButton } from "~/components/utilities/Buttons"
 import Issue from "./Issue"
 import { Link } from "react-router"
 
-function DeprectedSettings({ title, criticalValue, warningValue, isDisabled, to }: DeprecationSettingsType) {
+function DeprectedSettings({ title, criticalValue, warningValue, isDisabled, to }: TDeprecationSettings) {
 	return (
 		<Box
 			className="flex p-px w-full rounded-[20px]"

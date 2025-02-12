@@ -1,4 +1,4 @@
-type CredsType = {
+type TCreds = {
 	elasticUrl: string
 	kibanaUrl: string
 	authPref: string | null
@@ -7,4 +7,4 @@ type CredsType = {
 	apiKey?: string
 }
 
-type CertiType = { certFiles?: File[]; jsonFiles?: File[] }
+type TCerti = { certFiles?: File[]; jsonFiles?: File[] }

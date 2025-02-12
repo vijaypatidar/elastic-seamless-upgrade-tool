@@ -6,7 +6,7 @@ import Input from "~/components/utilities/Input"
 import validationSchema from "./validation/validation"
 import SelectionTile from "./widgets/SelectionTile"
 
-function Credentials({ backStep, onSubmit }: CredentialsCompType) {
+function Credentials({ backStep, onSubmit }: TCredentialsComp) {
 	const formik = useFormik({
 		initialValues: {
 			elasticUrl: "",

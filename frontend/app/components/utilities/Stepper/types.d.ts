@@ -1,4 +1,4 @@
-type StepperType = {
+type TStepper = {
 	color: string
 	borderRadius?: string
 	currentStep: number

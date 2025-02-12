@@ -1,11 +1,11 @@
-type DeprecationColumnType = Array<{
+type TDeprecationColumn = Array<{
 	key: string
 	label: string
 	align: "start" | "center" | "end" | undefined
 	width: number
 }>
 
-type DeprecationRowType = {
+type TDeprecationRow = {
 	key: string
 	status: string
 	issue: string
@@ -13,4 +13,4 @@ type DeprecationRowType = {
 	resolution: string | string[]
 }
 
-type DeprecationClusterType = { clusterType: "ELASTIC" | "KIBANA" }
+type TDeprecationCluster = { clusterType: "ELASTIC" | "KIBANA" }

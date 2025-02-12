@@ -73,7 +73,7 @@ const rows = [
 	},
 ]
 
-const columns: DeprecationColumnType = [
+const columns: TDeprecationColumn = [
 	{
 		key: "status",
 		label: "Status",
@@ -111,7 +111,7 @@ function DeprecationLogs({ clusterType }: { clusterType: "ELASTIC" | "KIBANA" })
 				}`
 			)
 			.then((res) => {
-				response = res.data?.map((item: any, index: number): DeprecationRowType => {
+				response = res.data?.map((item: any, index: number): TDeprecationRow => {
 					return {
 						key: String(index),
 						issue: item?.issue,
@@ -130,8 +130,8 @@ function DeprecationLogs({ clusterType }: { clusterType: "ELASTIC" | "KIBANA" })
 		queryFn: getLogs,
 	})
 
-	const renderCell = useCallback((row: DeprecationRowType, columnKey: Key) => {
-		const cellValue = row[columnKey as keyof DeprecationRowType]
+	const renderCell = useCallback((row: TDeprecationRow, columnKey: Key) => {
+		const cellValue = row[columnKey as keyof TDeprecationRow]
 
 		switch (columnKey) {
 			case "status":
@@ -260,7 +260,7 @@ function DeprecationLogs({ clusterType }: { clusterType: "ELASTIC" | "KIBANA" })
 							)}
 						</TableHeader>
 						<TableBody
-							items={data as DeprecationRowType[] || []}
+							items={data as TDeprecationRow[] || []}
 							isLoading={isLoading || isRefetching}
 							loadingContent={
 								<Spinner

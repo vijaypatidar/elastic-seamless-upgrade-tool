@@ -16,7 +16,7 @@ function Setup() {
 	const navigate = useNavigate()
 	const [step, setStep] = useState<number>(1)
 	const [infraType, setInfraType] = useState<string | number>("")
-	const [creds, setCreds] = useState<CredsType>({
+	const [creds, setCreds] = useState<TCreds>({
 		elasticUrl: "",
 		kibanaUrl: "",
 		authPref: null,
@@ -49,14 +49,14 @@ function Setup() {
 		}
 	}
 
-	const handleCredSubmit = (values: CredsType) => {
+	const handleCredSubmit = (values: TCreds) => {
 		setCreds(values)
 		handleNextStep()
 	}
 
 	const { mutate: HandleSubmit, isPending } = useMutation({
 		mutationKey: ["add-cluster"],
-		mutationFn: async (values: CertiType) => {
+		mutationFn: async (values: TCerti) => {
 			let certIds: Array<string> = []
 			const formData = new FormData()
 			values.certFiles?.forEach((file) => {

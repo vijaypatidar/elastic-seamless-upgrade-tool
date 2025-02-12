@@ -12,11 +12,28 @@ import LocalStorageHandler from "~/lib/LocalHanlder"
 import { getStepIndicatorData } from "~/lib/Utils"
 import DeprectedSettings from "./widgets/DeprectedSettings"
 import StepBox from "./widgets/StepBox"
+import { useDispatch } from "react-redux"
+import {
+	setDeprecationChangesAllowed,
+	setElasticNodeUpgradeAllowed,
+	setKibanaNodeUpgradeAllowed,
+} from "~/store/reducers/safeRoutes"
+import type { ActionCreatorWithPayload } from "@reduxjs/toolkit"
 
 function UpgradeAssistant() {
-	const [stepStatus, setStepStatus] = useState<{
-		[Key: string]: "COMPLETED" | "INPROGRESS" | "PENDING" | "NOTVISITED"
-	}>({ "1": "NOTVISITED", "2": "NOTVISITED", "3": "NOTVISITED", "4": "NOTVISITED" })
+	const dispatch = useDispatch()
+	const [stepStatus, setStepStatus] = useState<TStepStatus>({
+		"1": "NOTVISITED",
+		"2": "NOTVISITED",
+		"3": "NOTVISITED",
+		"4": "NOTVISITED",
+	})
+
+	const handleRoutingStates = (status: string, updateState: ActionCreatorWithPayload<boolean>) => {
+		if (status === "COMPLETED") {
+			dispatch(updateState(true))
+		}
+	}
 
 	const getUpgradeInfo = async () => {
 		const clusterId = LocalStorageHandler.getItem(StorageManager.CLUSTER_ID) || "cluster-id"
@@ -49,7 +66,7 @@ function UpgradeAssistant() {
 				// 		: "PENDING"
 
 				const { elastic, kibana } = response ?? {}
-				const step1Status = elastic?.snapshot ? "COMPLETED" : "PENDING"
+				const step1Status = elastic?.snapshot?.snapshot ? "COMPLETED" : "PENDING"
 
 				// Helper function to sum deprecations safely
 				const sumDeprecations = (type: string) =>
@@ -85,6 +102,10 @@ function UpgradeAssistant() {
 					"3": step3Status,
 					"4": step4Status,
 				})
+
+				handleRoutingStates(step2Status, setDeprecationChangesAllowed)
+				handleRoutingStates(step3Status, setElasticNodeUpgradeAllowed)
+				handleRoutingStates(step4Status, setKibanaNodeUpgradeAllowed)
 			})
 			.catch((err) => toast.error(err?.response?.data.err))
 		return response
@@ -140,9 +161,20 @@ function UpgradeAssistant() {
 						</Typography>
 					</Box>
 					{!(stepStatus["01"] === "COMPLETED") ? (
-						<OutlinedBorderButton icon={Camera} filledIcon={Camera} disabled={step1Data?.isDisabled}>
-							Create snapshot
-						</OutlinedBorderButton>
+						data?.elastic?.snapshot?.snapshot ? (
+							<>table</>
+						) : (
+							<OutlinedBorderButton
+								icon={Camera}
+								filledIcon={Camera}
+								disabled={step1Data?.isDisabled}
+								component={Link}
+								to={data?.elastic?.snapshot?.creationPage}
+								target="_blank"
+							>
+								Create snapshot
+							</OutlinedBorderButton>
+						)
 					) : null}
 				</Box>
 			</StepBox>

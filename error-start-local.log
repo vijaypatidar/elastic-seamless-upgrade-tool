@@ -1,0 +1,9 @@
+Error: docker compose up -d command failed!
+Start-local version: 0.6.0
+Docker engine: Docker version 20.10.6, build 370c289
+Docker compose: 2.0.0
+Distribution: macOS
+Version: 14.5
+-- Logs of service es-local-dev:
+-- Logs of service kibana-local-dev:
+-- Logs of service kibana_settings:

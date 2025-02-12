@@ -1,6 +1,6 @@
 import { Box, Typography } from "@mui/material"
 
-function Issue({ title, icon: Icon, value, fontColor = "#E87D65", bgColor = "rgba(206, 98, 75, 0.13)" }: IssueType) {
+function Issue({ title, icon: Icon, value, fontColor = "#E87D65", bgColor = "rgba(206, 98, 75, 0.13)" }: TIssue) {
 	return (
 		<Box
 			className="flex items-center justify-between gap-1 rounded-[32px] bg-[#121212] w-full"

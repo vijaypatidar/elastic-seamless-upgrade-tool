@@ -9,6 +9,8 @@ import { OutlinedBorderButton } from "~/components/utilities/Buttons"
 import StorageManager from "~/constants/StorageManager"
 import LocalStorageHandler from "~/lib/LocalHanlder"
 import DetailBox from "./widgets/DetailBox"
+import { OneLineSkeleton } from "~/components/utilities/Skeletons"
+import { Skeleton } from "@heroui/react"
 
 const CLUSTER_STATUS_COLOR: { [key: string]: string } = {
 	deploying: "#E0B517",
@@ -59,6 +61,8 @@ function ClusterInfo() {
 	}
 	const { data, isLoading, refetch, isRefetching } = useQuery({ queryKey: ["cluster-info"], queryFn: getClusterInfo })
 
+	const handleVersionSelect = async (ver: string) => {}
+
 	return (
 		<Box
 			className="flex p-px rounded-2xl w-full h-[calc(var(--window-height)-190px)]"
@@ -80,34 +84,48 @@ function ClusterInfo() {
 					>
 						Details
 					</Typography>
-					<PopupState variant="popover" popupId="demo-popup-menu">
-						{(popupState) => (
-							<Box className="relative">
-								<OutlinedBorderButton {...bindTrigger(popupState)}>
-									Update available <ArrowDown2 size="14px" color="#959595" />
-								</OutlinedBorderButton>
-								<Menu
-									{...bindMenu(popupState)}
-									transformOrigin={{
-										vertical: "top",
-										horizontal: "left",
-									}}
-									slotProps={{
-										root: STYLES.MENU_ROOT,
-										paper: STYLES.MENU_PAPER,
-									}}
-								>
-									{UPDATES.map((update, index) => {
-										return (
-											<MenuItem key={index} sx={STYLES.MENU_ITEMS}>
-												{update}
-											</MenuItem>
-										)
-									})}
-								</Menu>
-							</Box>
-						)}
-					</PopupState>
+					<OneLineSkeleton
+						className="rounded-[10px] max-w-[250px] w-[154px]"
+						show={isLoading}
+						component={
+							<PopupState variant="popover" popupId="demo-popup-menu">
+								{(popupState) => (
+									<Box className="relative">
+										<OutlinedBorderButton {...bindTrigger(popupState)} disabled={false}>
+											Update available <ArrowDown2 size="14px" color="#959595" />
+										</OutlinedBorderButton>
+										<Menu
+											{...bindMenu(popupState)}
+											transformOrigin={{
+												vertical: "top",
+												horizontal: "left",
+											}}
+											slotProps={{
+												root: STYLES.MENU_ROOT,
+												paper: STYLES.MENU_PAPER,
+											}}
+										>
+											{data?.possibleUpgradeVersions?.map((update: string, index: number) => {
+												return (
+													<MenuItem
+														key={index}
+														sx={STYLES.MENU_ITEMS}
+														onClick={() => {
+															popupState.close()
+															handleVersionSelect(update)
+														}}
+													>
+														{update}
+													</MenuItem>
+												)
+											})}
+										</Menu>
+									</Box>
+								)}
+							</PopupState>
+						}
+						height="36px"
+					/>
 				</Box>
 				<Box className="flex flex-col gap-6 overflow-auto">
 					<Box className="flex flex-col sm:flex-row gap-6 sm:gap-16">

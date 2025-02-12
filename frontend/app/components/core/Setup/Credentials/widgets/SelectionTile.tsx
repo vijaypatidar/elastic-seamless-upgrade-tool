@@ -1,7 +1,7 @@
 import { Box, Typography } from "@mui/material"
 import { Record, TickCircle } from "iconsax-react"
 
-function SelectionTile({ value, label, isSelected, onSelect }: SelectionTileType) {
+function SelectionTile({ value, label, isSelected, onSelect }: TSelectionTile) {
 	return (
 		<Box
 			className="flex rounded-2xl p-px w-full"

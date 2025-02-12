@@ -1,4 +1,4 @@
-type DeprecationSettingsType = {
+type TDeprecationSettings = {
 	title: string
 	criticalValue: string | number
 	warningValue: string | number
@@ -6,7 +6,7 @@ type DeprecationSettingsType = {
 	to: string
 }
 
-type IssueType = {
+type TIssue = {
 	title: string
 	icon: React.FunctionComponent<{ size?: string; color?: string }>
 	value: string | number
@@ -14,7 +14,7 @@ type IssueType = {
 	bgColor?: string
 }
 
-type StepDataType = {
+type TStepData = {
 	boxBackground: string
 	background: string
 	textColor: string
@@ -22,4 +22,8 @@ type StepDataType = {
 	internalBackground: string
 	boxShadow: string
 	isDisabled: boolean
+}
+
+type TStepStatus = {
+	[Key: string]: "COMPLETED" | "INPROGRESS" | "PENDING" | "NOTVISITED"
 }

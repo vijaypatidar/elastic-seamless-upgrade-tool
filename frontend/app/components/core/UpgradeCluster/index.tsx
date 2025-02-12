@@ -25,7 +25,7 @@ const UpgradeComplete: React.FC<UpgradeCompleteProps> = () => {
 }
 
 const rows: any = []
-const columns: UpgradeColumnType = [
+const columns: TUpgradeColumn = [
 	{
 		key: "node_name",
 		label: "Node name",
@@ -58,7 +58,7 @@ const columns: UpgradeColumnType = [
 	},
 ]
 
-function UpgradeCluster({ clusterType }: UpgradeClusterType) {
+function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 	const getNodeStatus = async (nodeId: string) => {
 		try {
 			const response = await axiosJSON.get(`/api/elastic/clusters/nodes/${nodeId}`)
@@ -122,8 +122,8 @@ function UpgradeCluster({ clusterType }: UpgradeClusterType) {
 	})
 
 	const renderCell = useCallback(
-		(row: UpgradeRowType, columnKey: Key) => {
-			const cellValue = row[columnKey as keyof UpgradeRowType]
+		(row: TUpgradeRow, columnKey: Key) => {
+			const cellValue = row[columnKey as keyof TUpgradeRow]
 
 			switch (columnKey) {
 				case "node_name":
@@ -195,7 +195,7 @@ function UpgradeCluster({ clusterType }: UpgradeClusterType) {
 							)}
 						</TableHeader>
 						<TableBody items={data}>
-							{(item: UpgradeRowType) => (
+							{(item: TUpgradeRow) => (
 								<TableRow key={item.key}>
 									{(columnKey) => <TableCell>{renderCell(item, columnKey)}</TableCell>}
 								</TableRow>

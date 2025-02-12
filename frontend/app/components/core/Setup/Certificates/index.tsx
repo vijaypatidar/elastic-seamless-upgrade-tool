@@ -6,7 +6,7 @@ import Files from "react-files"
 import { toast } from "sonner"
 import { ConatinedButton, OutlinedButton } from "~/components/utilities/Buttons"
 
-function Certificates({ backStep, onSubmit, isSubmitting }: CertificateCompType) {
+function Certificates({ backStep, onSubmit, isSubmitting }: TCertificateComp) {
 	const [certFiles, setCertFiles] = useState<File[]>([])
 	const [jsonFiles, setJsonFiles] = useState<File[]>([])
 

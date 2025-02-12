@@ -1,4 +1,4 @@
-type UpgradeRowType = {
+type TUpgradeRow = {
 	status: string
 	progress: number | undefined
 	key: string
@@ -8,11 +8,12 @@ type UpgradeRowType = {
 	version: string
 	action?: null
 }
-type UpgradeColumnType = Array<{
+
+type TUpgradeColumn = Array<{
 	key: string
 	label: string
 	align: "start" | "center" | "end" | undefined
 	width: number
 }>
 
-type UpgradeClusterType = { clusterType: "ELASTIC" | "KIBANA" }
+type TUpgradeCluster = { clusterType: "ELASTIC" | "KIBANA" }
