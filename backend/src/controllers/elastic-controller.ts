@@ -29,6 +29,7 @@ import { KibanaClient} from '../clients/kibana.client';
 import path from 'path';
 import {  getPossibleUpgrades } from '../utils/upgrade.versions';
 import { normalizeNodeUrl } from '../utils/utlity.functions';
+import { IElasticNode } from '../models/elastic-node.model';
 
 export const healthCheck = async (req: Request, res: Response) => {
   try {
@@ -52,6 +53,14 @@ export const getClusterDetails = async (req: Request, res: Response) => {
     const currentVersion = clusterDetails.version.number;
     const possibleUpgradeVersions = getPossibleUpgrades(currentVersion);
 
+    const nodes = await getAllElasticNodes(clusterId);
+    let underUpgradation = false;
+
+    nodes.forEach((node: IElasticNode)=>{
+      if(node.status !== 'available'){
+        underUpgradation = true;
+      }
+    })
     res.send({
       clusterName: clusterDetails.cluster_name,
       clusterUUID: clusterDetails.cluster_uuid,
@@ -67,7 +76,8 @@ export const getClusterDetails = async (req: Request, res: Response) => {
       relocatingShards: healtDetails.relocating_shards,
       infrastructureType: clusterInfo.infrastructureType,
       targetVersion: clusterInfo.targetVersion,
-      possibleUpgradeVersions: possibleUpgradeVersions
+      possibleUpgradeVersions: possibleUpgradeVersions,
+      underUpgradation: underUpgradation
     });
   } catch (err: any) {
     logger.info(err);
