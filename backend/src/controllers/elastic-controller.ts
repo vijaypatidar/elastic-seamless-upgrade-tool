@@ -79,6 +79,7 @@ export const getClusterDetails = async (req: Request, res: Response) => {
       possibleUpgradeVersions: possibleUpgradeVersions,
       underUpgradation: underUpgradation
     });
+    return;
   } catch (err: any) {
     logger.info(err);
     res.status(400).send({ message: err.message });
@@ -102,7 +103,8 @@ export const addOrUpdateClusterDetail = async (req: Request, res: Response) => {
       clusterId: clusterId,
       certificateIds: req.body.certificateIds,
       targetVersion: req.body.targetVersion,
-      infrastructureType: req.body.infrastructureType
+      infrastructureType: req.body.infrastructureType,
+      pathToKey: req.body.pathToKey
     };
 
     const result = await createOrUpdateClusterInfo(clusterInfo);
@@ -143,7 +145,7 @@ export const getUpgradeDetails = async (req: Request, res: Response) => {
     const isESUpgraded = elasticNodes.length === 0;
     res.send({
       elastic: {
-        isUpgradable: !isESUpgraded,
+        isUpgradable: isESUpgraded,
         deprecations: { ...esDeprecationCount },
         snapshot: {
           snapshot: snapshots.length > 0 ? snapshots[0] : null,
@@ -151,7 +153,7 @@ export const getUpgradeDetails = async (req: Request, res: Response) => {
         }
       },
       kibana: {
-        isUpgradable: !isKibanaUpgraded,
+        isUpgradable: isKibanaUpgraded,
         deprecations: { ...kibanaDeprecationCount },
       },
     });
