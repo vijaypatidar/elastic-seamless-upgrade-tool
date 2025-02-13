@@ -39,6 +39,15 @@ export class KibanaClient {
       throw error;
     }
   }
+  async getKibanaVersion(): Promise<string | undefined>{
+    const response = await axios.get(`${this.config.url}/api/status`, {
+      headers: {
+        Authorization: this.getAuthDetail(),
+        'kbn-xsrf': 'true',
+      },
+    });
+    return response.data?.version?.number;
+  }
 
   getAuthDetail(): string | undefined {
     const { username, password, apiKey } = this.config;

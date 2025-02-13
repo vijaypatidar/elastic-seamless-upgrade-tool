@@ -11,6 +11,7 @@ import {
 } from '../models/cluster-info.model';
 import {
   createOrUpdateClusterInfo,
+  getAllClusters,
   getClusterInfoById,
   getElasticsearchDeprecation,
   getKibanaDeprecation,
@@ -24,10 +25,11 @@ import {
 } from '../services/elastic-node.service.';
 import cluster from 'cluster';
 import { runPlaybookWithLogging } from './ansible-controller';
-import { KibanaClient } from '../clients/kibana.client';
+import { KibanaClient} from '../clients/kibana.client';
 import path from 'path';
 import {  getPossibleUpgrades } from '../utils/upgrade.versions';
 import { normalizeNodeUrl } from '../utils/utlity.functions';
+import { IElasticNode } from '../models/elastic-node.model';
 
 export const healthCheck = async (req: Request, res: Response) => {
   try {
@@ -51,6 +53,14 @@ export const getClusterDetails = async (req: Request, res: Response) => {
     const currentVersion = clusterDetails.version.number;
     const possibleUpgradeVersions = getPossibleUpgrades(currentVersion);
 
+    const nodes = await getAllElasticNodes(clusterId);
+    let underUpgradation = false;
+
+    nodes.forEach((node: IElasticNode)=>{
+      if(node.status !== 'available'){
+        underUpgradation = true;
+      }
+    })
     res.send({
       clusterName: clusterDetails.cluster_name,
       clusterUUID: clusterDetails.cluster_uuid,
@@ -66,8 +76,10 @@ export const getClusterDetails = async (req: Request, res: Response) => {
       relocatingShards: healtDetails.relocating_shards,
       infrastructureType: clusterInfo.infrastructureType,
       targetVersion: clusterInfo.targetVersion,
-      possibleUpgradeVersions: possibleUpgradeVersions
+      possibleUpgradeVersions: possibleUpgradeVersions,
+      underUpgradation: underUpgradation
     });
+    return;
   } catch (err: any) {
     logger.info(err);
     res.status(400).send({ message: err.message });
@@ -91,7 +103,8 @@ export const addOrUpdateClusterDetail = async (req: Request, res: Response) => {
       clusterId: clusterId,
       certificateIds: req.body.certificateIds,
       targetVersion: req.body.targetVersion,
-      infrastructureType: req.body.infrastructureType
+      infrastructureType: req.body.infrastructureType,
+      pathToKey: req.body.pathToKey
     };
 
     const result = await createOrUpdateClusterInfo(clusterInfo);
@@ -112,6 +125,7 @@ export const getUpgradeDetails = async (req: Request, res: Response) => {
   try {
     const clusterId = req.params.clusterId;
     const client = await ElasticClient.buildClient(clusterId);
+    const kibanaClient = await KibanaClient.buildClient(clusterId);
     const clusterInfo = await getClusterInfoById(clusterId);
     const kibanaUrl = clusterInfo.kibana?.url;
     const snapshots = await client.getValidSnapshots();
@@ -121,6 +135,9 @@ export const getUpgradeDetails = async (req: Request, res: Response) => {
     const kibanaDeprecationCount = (await getKibanaDeprecation(clusterId))
       .counts;
 
+    const kibanaVersion = await kibanaClient.getKibanaVersion();
+    
+    const isKibanaUpgraded = (kibanaVersion === clusterInfo.targetVersion) ? true : false
     //verifying upgradability
     const elasticNodes = (await getAllElasticNodes(clusterId)).filter(
       (item) => item.status !== 'completed',
@@ -136,6 +153,7 @@ export const getUpgradeDetails = async (req: Request, res: Response) => {
         }
       },
       kibana: {
+        isUpgradable: isKibanaUpgraded,
         deprecations: { ...kibanaDeprecationCount },
       },
     });
@@ -357,4 +375,27 @@ export const verfiySshKey = async (req: Request, res: Response) => {
     res.status(500).json({ success: false, message: 'Error verifying ssh key please contact owner' });
   }
 }
+
+export const verfiyCluster = async(req: Request,res: Response)=>{
+
+  try{
+      const clusters = await getAllClusters();
+      if(clusters.length > 0){
+        res.send({
+          clusterAvailable: true
+        })
+      }
+      else{
+        res.send({
+          clusterAvailable: false
+        })
+      }
+  }
+  catch(error : any){
+    logger.error('Unable to fetch cluster availibility info',error.message)
+    res.status(501).send({
+      message: 'Unable to fetch cluster availibility info'
+    })
+  }
+} 
 
