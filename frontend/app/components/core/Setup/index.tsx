@@ -23,6 +23,8 @@ function Setup() {
 		username: "",
 		password: "",
 		apiKey: "",
+		pathToSSH: "",
+		kibanaClusters: [],
 	})
 
 	useEffect(() => {

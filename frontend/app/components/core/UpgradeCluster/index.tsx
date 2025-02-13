@@ -1,4 +1,4 @@
-import { getKeyValue, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from "@heroui/react"
+import { getKeyValue, Spinner, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from "@heroui/react"
 import { Box, LinearProgress, Typography } from "@mui/material"
 import { Flash } from "iconsax-react"
 import { useQuery } from "@tanstack/react-query"
@@ -194,7 +194,7 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 								</TableColumn>
 							)}
 						</TableHeader>
-						<TableBody items={data}>
+						<TableBody items={data} isLoading={isLoading} loadingContent={<Spinner color="secondary" />}>
 							{(item: TUpgradeRow) => (
 								<TableRow key={item.key}>
 									{(columnKey) => <TableCell>{renderCell(item, columnKey)}</TableCell>}

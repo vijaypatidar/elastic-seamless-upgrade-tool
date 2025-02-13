@@ -6,18 +6,16 @@ import PopupState, { bindMenu, bindTrigger } from "material-ui-popup-state"
 import { toast } from "sonner"
 import axiosJSON from "~/apis/http"
 import { OutlinedBorderButton } from "~/components/utilities/Buttons"
+import { OneLineSkeleton } from "~/components/utilities/Skeletons"
 import StorageManager from "~/constants/StorageManager"
 import LocalStorageHandler from "~/lib/LocalHanlder"
 import DetailBox from "./widgets/DetailBox"
-import { OneLineSkeleton } from "~/components/utilities/Skeletons"
-import { Skeleton } from "@heroui/react"
 
 const CLUSTER_STATUS_COLOR: { [key: string]: string } = {
 	deploying: "#E0B517",
 	deployed: "green",
 	down: "gray",
 }
-const UPDATES = ["8.16", "8.19", "9.10"]
 
 const STYLES = {
 	MENU_ITEMS: {
@@ -91,7 +89,7 @@ function ClusterInfo() {
 							<PopupState variant="popover" popupId="demo-popup-menu">
 								{(popupState) => (
 									<Box className="relative">
-										<OutlinedBorderButton {...bindTrigger(popupState)} disabled={false}>
+										<OutlinedBorderButton {...bindTrigger(popupState)} disabled={data?.underUpgradation}>
 											Update available <ArrowDown2 size="14px" color="#959595" />
 										</OutlinedBorderButton>
 										<Menu

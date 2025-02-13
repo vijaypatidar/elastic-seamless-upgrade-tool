@@ -29,8 +29,12 @@ function UpgradeAssistant() {
 		"4": "NOTVISITED",
 	})
 
-	const handleRoutingStates = (status: string, updateState: ActionCreatorWithPayload<boolean>) => {
-		if (status === "COMPLETED") {
+	const handleRoutingStates = (
+		status: string,
+		updateState: ActionCreatorWithPayload<boolean>,
+		stateToCheck: string[] = ["PENDING", "INPROGRESS"]
+	) => {
+		if (stateToCheck.some((state) => state === status)) {
 			dispatch(updateState(true))
 		}
 	}
@@ -42,28 +46,6 @@ function UpgradeAssistant() {
 			.get(`/api/elastic/clusters/${clusterId}/upgrade_info`)
 			.then((res) => {
 				response = res.data
-				console.log(response)
-				// const step1 = response.elastic.snapshot ? "COMPLETED" : "PENDING"
-				// const step2 =
-				// 	step1 === "PENDING"
-				// 		? "NOTVISITED"
-				// 		: response?.elastic.deprecations.critical + response?.kibana.deprecations.critical > 0
-				// 		? "PENDING"
-				// 		: response?.elastic.deprecations.warning + response?.kibana.deprecations.warning > 0
-				// 		? "INPROGRESS"
-				// 		: "COMPLETED"
-				// const step3 =
-				// 	step2 === "PENDING" || step2 === "NOTVISITED"
-				// 		? "NOTVISITED"
-				// 		: response.elastic?.isUpgradable
-				// 		? "COMPLETED"
-				// 		: "PENDING"
-				// const step4 =
-				// 	step3 === "PENDING" || step3 === "NOTVISITED"
-				// 		? "NOTVISITED"
-				// 		: response.kibana?.isUpgradable
-				// 		? "COMPLETED"
-				// 		: "PENDING"
 
 				const { elastic, kibana } = response ?? {}
 				const step1Status = elastic?.snapshot?.snapshot ? "COMPLETED" : "PENDING"
@@ -103,6 +85,10 @@ function UpgradeAssistant() {
 					"4": step4Status,
 				})
 
+				// if(step1Status === "COMPLETED"){
+				// 	Toast({varient: "SUCCESS", msg:"done"})
+				// }
+
 				handleRoutingStates(step2Status, setDeprecationChangesAllowed)
 				handleRoutingStates(step3Status, setElasticNodeUpgradeAllowed)
 				handleRoutingStates(step4Status, setKibanaNodeUpgradeAllowed)
@@ -134,7 +120,7 @@ function UpgradeAssistant() {
 			</Skeleton>
 		</Box>
 	) : (
-		<ol className="flex flex-col gap-4 w-full overflow-auto h-[calc(var(--window-height)-214px)] px-6">
+		<ol className="relative flex flex-col gap-4 w-full overflow-auto h-[calc(var(--window-height)-214px)] px-6">
 			<StepBox
 				currentStepStatus={stepStatus["1"]}
 				nextStepStatus={stepStatus["2"]}
@@ -162,7 +148,9 @@ function UpgradeAssistant() {
 					</Box>
 					{!(stepStatus["01"] === "COMPLETED") ? (
 						data?.elastic?.snapshot?.snapshot ? (
-							<>table</>
+							<Typography>
+								12:389
+							</Typography>
 						) : (
 							<OutlinedBorderButton
 								icon={Camera}
@@ -297,6 +285,32 @@ function UpgradeAssistant() {
 					</OutlinedBorderButton>
 				</Box>
 			</StepBox>
+			{stepStatus["4"] === "COMPLETED" ? (
+				<Box className="absolute bottom-0 z-50 w-[calc(100%-3rem)]">
+					<Box
+						className="flex p-[0.4px] w-full rounded-[14px]"
+						sx={{ background: "linear-gradient(175deg, #27A56A 0%, #C0DFCF 30%, #131514 100%)" }}
+					>
+						<Box className="flex items-center w-full bg-[#010101] flex-row gap-6 py-[14px] px-[26px] rounded-[14px]">
+							<Box
+								className="flex p-px rounded-lg"
+								sx={{
+									background:
+										"linear-gradient(135deg, #27A56A 2.29%, #C0DFCF 44.53%, #131315 97.18%, #131315 97.18%)",
+									boxShadow: "0px 0px 12px 1px rgba(70, 233, 146, 0.41)",
+								}}
+							>
+								<Box className="flex items-center rounded-lg justify-center min-w-[30px] min-h-[30px] bg-[#101010]">
+									<Flash size="20px" color="#FFF" variant="Bold" />
+								</Box>
+							</Box>
+							<Typography color="#FFF" fontSize="16px" fontWeight="600" lineHeight="normal">
+								Upgrade successful!
+							</Typography>
+						</Box>
+					</Box>
+				</Box>
+			) : null}
 		</ol>
 	)
 }

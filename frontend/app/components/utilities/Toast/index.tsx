@@ -41,9 +41,15 @@ function Toast({ varient, msg }: { varient: "ERROR" | "SUCCESS" | "WARNING"; msg
 			</Box>
 		</Box>,
 		{
-			closeButton: true,
+			duration: 1000000,
+			closeButton: false,
 			unstyled: true,
 			className: "w-full",
+			position: "bottom-center",
+			style: {
+				width :"100%"
+			}
+
 		}
 	)
 }
