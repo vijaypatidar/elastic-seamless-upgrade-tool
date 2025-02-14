@@ -146,7 +146,7 @@ export const getUpgradeDetails = async (req: Request, res: Response) => {
     const isESUpgraded = elasticNodes.length === 0;
     res.send({
       elastic: {
-      isUpgradable: isESUpgraded,
+      isUpgradable: !isESUpgraded,
       deprecations: { ...esDeprecationCount },
       snapshot: {
         snapshot: snapshots.length > 0 ? snapshots[0] : null,
@@ -154,7 +154,7 @@ export const getUpgradeDetails = async (req: Request, res: Response) => {
       }
       },
       kibana: {
-      isUpgradable: isKibanaUpgraded,
+      isUpgradable: !isKibanaUpgraded,
       deprecations: { ...kibanaDeprecationCount },
       },
     });
