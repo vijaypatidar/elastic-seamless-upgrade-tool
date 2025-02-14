@@ -90,7 +90,7 @@ function ClusterInfo() {
 								{(popupState) => (
 									<Box className="relative">
 										<OutlinedBorderButton {...bindTrigger(popupState)} disabled={data?.underUpgradation}>
-											Update available <ArrowDown2 size="14px" color="#959595" />
+											Upgrade available <ArrowDown2 size="14px" color="#959595" />
 										</OutlinedBorderButton>
 										<Menu
 											{...bindMenu(popupState)}

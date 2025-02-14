@@ -92,6 +92,7 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 
 		return response
 	}
+
 	const performUpgrade = async (nodeId: string) => {
 		const clusterId = LocalStorageHandler.getItem(StorageManager.CLUSTER_ID) || "cluster-id"
 		console.log("triggered")
@@ -108,6 +109,7 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 				console.error(error)
 			})
 	}
+	
 	const { data, isLoading, refetch, isRefetching } = useQuery({
 		queryKey: ["nodes-info"],
 		queryFn: getNodesInfo,

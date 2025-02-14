@@ -1,7 +1,7 @@
-import { Skeleton } from "@heroui/react"
+import { Skeleton, Tooltip } from "@heroui/react"
 import { Box, Typography } from "@mui/material"
 import { useQuery } from "@tanstack/react-query"
-import { Camera, Flash } from "iconsax-react"
+import { Camera, Flash, InfoCircle } from "iconsax-react"
 import { useState } from "react"
 import { Link } from "react-router"
 import { toast } from "sonner"
@@ -22,6 +22,7 @@ import type { ActionCreatorWithPayload } from "@reduxjs/toolkit"
 
 function UpgradeAssistant() {
 	const dispatch = useDispatch()
+
 	const [stepStatus, setStepStatus] = useState<TStepStatus>({
 		"1": "NOTVISITED",
 		"2": "NOTVISITED",
@@ -104,22 +105,26 @@ function UpgradeAssistant() {
 	const step3Data = getStepIndicatorData("03", stepStatus["3"])
 	const step4Data = getStepIndicatorData("04", stepStatus["4"])
 
-	return isLoading || isRefetching ? (
-		<Box className="flex flex-col gap-4 w-full px-6">
-			<Skeleton className="w-full rounded-[20px]">
-				<Box height="88px" />
-			</Skeleton>
-			<Skeleton className="w-full rounded-[20px]">
-				<Box height="229.5px" />
-			</Skeleton>
-			<Skeleton className="w-full rounded-[20px]">
-				<Box height="108px" />
-			</Skeleton>
-			<Skeleton className="w-full rounded-[20px]">
-				<Box height="108px" />
-			</Skeleton>
-		</Box>
-	) : (
+	if (isLoading || isRefetching) {
+		return (
+			<Box className="flex flex-col gap-4 w-full px-6">
+				<Skeleton className="w-full rounded-[20px]">
+					<Box height="88px" />
+				</Skeleton>
+				<Skeleton className="w-full rounded-[20px]">
+					<Box height="229.5px" />
+				</Skeleton>
+				<Skeleton className="w-full rounded-[20px]">
+					<Box height="108px" />
+				</Skeleton>
+				<Skeleton className="w-full rounded-[20px]">
+					<Box height="108px" />
+				</Skeleton>
+			</Box>
+		)
+	}
+
+	return (
 		<ol className="relative flex flex-col gap-4 w-full overflow-auto h-[calc(var(--window-height)-214px)] px-6">
 			<StepBox
 				currentStepStatus={stepStatus["1"]}
@@ -148,9 +153,21 @@ function UpgradeAssistant() {
 					</Box>
 					{!(stepStatus["01"] === "COMPLETED") ? (
 						data?.elastic?.snapshot?.snapshot ? (
-							<Typography>
-								12:389
-							</Typography>
+							<Box className="flex flex-row gap-[6px] items-center">
+								<Tooltip
+									content={"You have to take snapshot again after the time ends."}
+									closeDelay={0}
+									color="foreground"
+									size="sm"
+									radius="sm"
+									placement="left"
+								>
+									<InfoCircle size="14px" color="#6E6E6E" />
+								</Tooltip>
+								<Typography fontSize="14px" fontWeight="400" lineHeight="18px" color="#6E6E6E">
+									12:389
+								</Typography>
+							</Box>
 						) : (
 							<OutlinedBorderButton
 								icon={Camera}
@@ -197,15 +214,15 @@ function UpgradeAssistant() {
 					<Box className="flex flex-row gap-8 flex-grow w-full" flexWrap={{ xs: "wrap", md: "nowrap" }}>
 						<DeprectedSettings
 							title="Elastic search"
-							criticalValue={data?.elastic.deprecations.critical ?? "NaN"}
-							warningValue={data?.elastic.deprecations.warning ?? "NaN"}
+							criticalValue={data?.elastic?.deprecations.critical ?? "NaN"}
+							warningValue={data?.elastic?.deprecations.warning ?? "NaN"}
 							isDisabled={step2Data?.isDisabled}
 							to="/elastic/deprecation-logs"
 						/>
 						<DeprectedSettings
 							title="Kibana"
-							criticalValue={data?.kibana.deprecations.critical ?? "NaN"}
-							warningValue={data?.kibana.deprecations.warning ?? "NaN"}
+							criticalValue={data?.kibana?.deprecations.critical ?? "NaN"}
+							warningValue={data?.kibana?.deprecations.warning ?? "NaN"}
 							isDisabled={step2Data?.isDisabled}
 							to="/kibana/deprecation-logs"
 						/>

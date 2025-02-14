@@ -32,7 +32,7 @@ export const links: Route.LinksFunction = () => [
 
 export function HydrateFallback() {
 	return (
-		<Box className="flex items-center justify-center h-screen scale-x-[-1]">
+		<Box className="flex items-center justify-center h-screen scale-x-[-1] bg-[#0a0a0a]">
 			<img src={AssetsManager.ANIMATED_LOADER} width="64px" height="64px" />
 		</Box>
 	)

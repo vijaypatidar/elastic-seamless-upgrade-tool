@@ -8,7 +8,6 @@ import { ConatinedButton, OutlinedButton } from "~/components/utilities/Buttons"
 
 function Certificates({ backStep, onSubmit, isSubmitting }: TCertificateComp) {
 	const [certFiles, setCertFiles] = useState<File[]>([])
-	const [jsonFiles, setJsonFiles] = useState<File[]>([])
 
 	const handleChange = (fn: React.Dispatch<React.SetStateAction<File[]>>, files: File[]) => {
 		fn((prevFiles: any) => [...prevFiles, ...files])
@@ -23,7 +22,7 @@ function Certificates({ backStep, onSubmit, isSubmitting }: TCertificateComp) {
 	}
 
 	const handleSubmit = () => {
-		onSubmit({ certFiles: certFiles, jsonFiles: jsonFiles })
+		onSubmit({ certFiles: certFiles })
 	}
 
 	return (

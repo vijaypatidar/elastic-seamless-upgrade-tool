@@ -12,7 +12,7 @@ import {
 import { Box, Typography } from "@mui/material"
 import { useQuery } from "@tanstack/react-query"
 import { Alarm, SearchNormal1 } from "iconsax-react"
-import { useCallback, type Key } from "react"
+import { useCallback, useState, type Key } from "react"
 import { FiAlertTriangle } from "react-icons/fi"
 import { toast } from "sonner"
 import axiosJSON from "~/apis/http"
@@ -101,6 +101,8 @@ const columns: TDeprecationColumn = [
 ]
 
 function DeprecationLogs({ clusterType }: { clusterType: "ELASTIC" | "KIBANA" }) {
+	const [search, setSearch] = useState<string>("")
+
 	const getLogs = async () => {
 		const clusterId = LocalStorageHandler.getItem(StorageManager.CLUSTER_ID) || "cluster-id"
 		let response: any = []
@@ -180,6 +182,22 @@ function DeprecationLogs({ clusterType }: { clusterType: "ELASTIC" | "KIBANA" })
 		}
 	}, [])
 
+	const filteredData =
+		data?.filter((item: TDeprecationRow) => {
+			const searchL = search.toLowerCase()
+			let resCheck = false
+			if (typeof item.resolution === "object") {
+				resCheck = item.resolution?.some((res) => res.toLowerCase().includes(searchL))
+			} else {
+				resCheck = item.resolution.includes(searchL)
+			}
+			return (
+				item.issue.toLowerCase().includes(searchL) ||
+				item.issue_details.toLowerCase().includes(searchL) ||
+				resCheck
+			)
+		}) || []
+
 	return (
 		<Box className="flex rounded-2xl p-px w-full" sx={{ background: "radial-gradient(#6E687C, #1D1D1D)" }}>
 			<Box className="flex flex-col gap-4 py-4 px-6 w-full rounded-2xl bg-[#0d0d0d]">
@@ -191,7 +209,7 @@ function DeprecationLogs({ clusterType }: { clusterType: "ELASTIC" | "KIBANA" })
 						lineHeight="normal"
 						letterSpacing="0.18px"
 					>
-						{clusterType ==="ELASTIC" ? "Elasticserach" : "Kibana"} deprecated logs
+						{clusterType === "ELASTIC" ? "Elasticserach" : "Kibana"} deprecated logs
 					</Typography>
 					<Typography
 						maxWidth="737px"
@@ -216,7 +234,14 @@ function DeprecationLogs({ clusterType }: { clusterType: "ELASTIC" | "KIBANA" })
 								fontWeight="500"
 								lineHeight="normal"
 							>
-								<Box className="min-h-2 min-w-2 w-min h-min rounded-[2px] bg-[#E87D65]" /> Critical: 1
+								<Box className="min-h-2 min-w-2 w-min h-min rounded-[2px] bg-[#E87D65]" /> Critical:{" "}
+								{isLoading ? (
+									<Skeleton className="rounded-sm">
+										<Box height="16px" width="10px" />
+									</Skeleton>
+								) : (
+									data?.filter((item: TDeprecationRow) => item.status === "CRITICAL").length
+								)}
 							</Typography>
 							<Typography
 								className="flex flex-row items-center gap-2"
@@ -225,7 +250,14 @@ function DeprecationLogs({ clusterType }: { clusterType: "ELASTIC" | "KIBANA" })
 								fontWeight="500"
 								lineHeight="normal"
 							>
-								<Box className="min-h-2 min-w-2 w-min h-min rounded-[2px] bg-[#E0B517]" /> Warning: 1
+								<Box className="min-h-2 min-w-2 w-min h-min rounded-[2px] bg-[#E0B517]" /> Warning:{" "}
+								{isLoading ? (
+									<Skeleton className="rounded-sm">
+										<Box height="16px" width="10px" />
+									</Skeleton>
+								) : (
+									data?.filter((item: TDeprecationRow) => item.status === "WARNING").length
+								)}
 							</Typography>
 						</Box>
 						<Box className="flex max-w-[264px] w-full">
@@ -237,6 +269,8 @@ function DeprecationLogs({ clusterType }: { clusterType: "ELASTIC" | "KIBANA" })
 								type="text"
 								placeholder="Search"
 								startContent={<SearchNormal1 size="14px" color="#6A6A6A" />}
+								value={search}
+								onChange={(e) => setSearch(e.target.value)}
 							/>
 						</Box>
 					</Box>
@@ -260,7 +294,7 @@ function DeprecationLogs({ clusterType }: { clusterType: "ELASTIC" | "KIBANA" })
 							)}
 						</TableHeader>
 						<TableBody
-							items={data as TDeprecationRow[] || []}
+							items={(filteredData as TDeprecationRow[]) || []}
 							isLoading={isLoading || isRefetching}
 							loadingContent={
 								<Spinner
