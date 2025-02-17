@@ -51,7 +51,7 @@ const ClusterInfoSchema: Schema<IClusterInfoDocument> =
       elastic: { type: ElasticInfoSchema, required: true },
       kibana: { type: KibanaInfoSchema, required: false },
       certificateIds: { type: Array<String>, required: false },
-      infrastructureType: {type: String,required: false},
+      infrastructureType: {type: String,required: true},
       targetVersion: { type: String },
       pathToKey: {type: String}
     },

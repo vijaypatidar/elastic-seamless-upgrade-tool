@@ -92,6 +92,15 @@ export const addOrUpdateClusterDetail = async (req: Request, res: Response) => {
     const clusterId = 'cluster-id';
     const elastic: IElasticInfo = req.body.elastic;
     const kibana: IKibanaInfo = req.body.kibana;
+
+    const sshKey = req.body.key;
+    const sanitizedKey = sshKey.replace(/\r?\n|\r/g, "");
+    const formattedKey = `-----BEGIN RSA PRIVATE KEY-----\n${sanitizedKey}\n-----END RSA PRIVATE KEY-----`;
+
+    const keyPath = path.join(__dirname, "..","..", "SSH_key.pem");
+    fs.writeFileSync(keyPath, formattedKey, { encoding: "utf8" });
+    fs.chmodSync(keyPath, 0o600);
+    fs.writeFileSync(keyPath, formattedKey);
     const clusterInfo: IClusterInfo = {
       elastic: {
         ...elastic,
@@ -105,7 +114,7 @@ export const addOrUpdateClusterDetail = async (req: Request, res: Response) => {
       certificateIds: req.body.certificateIds,
       targetVersion: req.body.targetVersion,
       infrastructureType: req.body.infrastructureType,
-      pathToKey: req.body.pathToKey
+      pathToKey: keyPath
     };
 
     const result = await createOrUpdateClusterInfo(clusterInfo);
@@ -143,10 +152,12 @@ export const getUpgradeDetails = async (req: Request, res: Response) => {
     const elasticNodes = (await getAllElasticNodes(clusterId)).filter(
       (item) => item.status !== 'upgraded',
     );
+
     const isESUpgraded = elasticNodes.length === 0;
+
     res.send({
       elastic: {
-      isUpgradable: !isESUpgraded,
+      isUpgradable: (isESUpgraded) ? !isESUpgraded : null,
       deprecations: { ...esDeprecationCount },
       snapshot: {
         snapshot: snapshots.length > 0 ? snapshots[0] : null,
@@ -154,7 +165,7 @@ export const getUpgradeDetails = async (req: Request, res: Response) => {
       }
       },
       kibana: {
-      isUpgradable: !isKibanaUpgraded,
+      isUpgradable: (isKibanaUpgraded) ? !isKibanaUpgraded : null,
       deprecations: { ...kibanaDeprecationCount },
       },
     });
@@ -222,8 +233,8 @@ export const getNodesInfo = async (req: Request, res: Response) => {
       if (roles.includes("master-eligible")) return 2;
       if (roles.includes("master")) return 3;
       return 4;
-    };
-    // nodes.sort((a: IElasticNode, b: IElasticNode) => rolePriority(a.roles) - rolePriority(b.roles));
+    }
+    nodes.sort((a, b) => rolePriority(a?.roles ?? []) - rolePriority(b?.roles ?? []));
     res.send(nodes);
   } catch (error: any) {
     logger.error('Error fetching node details:', error);
@@ -384,27 +395,38 @@ export const verfiySshKey = async (req: Request, res: Response) => {
   }
 }
 
-export const verfiyCluster = async(req: Request,res: Response)=>{
-
-  try{
-      const clusters = await getAllClusters();
-      if(clusters.length > 0){
-        res.send({
-          clusterAvailable: true,
-          clusterData: clusters[0] ? clusters[0] : null
-        })
-      }
-      else{
-        res.send({
-          clusterAvailable: false
-        })
-      }
-  }
-  catch(error : any){
-    logger.error('Unable to fetch cluster availibility info',error.message)
-    res.status(501).send({
-      message: 'Unable to fetch cluster availibility info'
-    })
-  }
+export const verfiyCluster = async (req: Request, res: Response) => {
+	try {
+		const clusters = await getAllClusters()
+		if (clusters.length > 0) {
+			res.send({
+				clusterAvailable: true,
+				clusterData: clusters[0]
+					? {
+							elastic: {
+								...clusters[0].elastic,
+							},
+							kibana: {
+								...clusters[0].kibana,
+							},
+							clusterId: clusters[0].clusterId,
+							certificateIds: clusters[0].certificateIds,
+							targetVersion: clusters[0].targetVersion,
+							infrastructureType: clusters[0].infrastructureType,
+							pathToKey: clusters[0].pathToKey,
+						}
+					: null,
+			})
+		} else {
+			res.send({
+				clusterAvailable: false,
+			})
+		}
+	} catch (error: any) {
+		logger.error("Unable to fetch cluster availibility info", error.message)
+		res.status(501).send({
+			message: "Unable to fetch cluster availibility info",
+		})
+	}
 } 
 
