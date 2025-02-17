@@ -19,9 +19,13 @@ import {
 	setKibanaNodeUpgradeAllowed,
 } from "~/store/reducers/safeRoutes"
 import type { ActionCreatorWithPayload } from "@reduxjs/toolkit"
+import useTimer from "~/lib/hooks/useTimer"
+import moment from "moment"
 
 function UpgradeAssistant() {
 	const dispatch = useDispatch()
+	const [timestamp, setTimestamp] = useState<number | null>(null)
+	const { formattedTime, isExpired, reset } = useTimer(timestamp)
 
 	const [stepStatus, setStepStatus] = useState<TStepStatus>({
 		"1": "NOTVISITED",
@@ -47,7 +51,8 @@ function UpgradeAssistant() {
 			.get(`/api/elastic/clusters/${clusterId}/upgrade_info`)
 			.then((res) => {
 				response = res.data
-
+				setTimestamp(moment.utc(response?.snapshot?.snapshot.createdAt).local().unix())
+				reset()
 				const { elastic, kibana } = response ?? {}
 				const step1Status = elastic?.snapshot?.snapshot ? "COMPLETED" : "PENDING"
 
@@ -69,12 +74,12 @@ function UpgradeAssistant() {
 						: "COMPLETED"
 
 				// Helper for subsequent steps
-				const getNextStepStatus = (prevStatus: string, isUpgradable: string) =>
+				const getNextStepStatus = (prevStatus: string, isUpgradable: boolean) =>
 					prevStatus === "PENDING" || prevStatus === "NOTVISITED"
 						? "NOTVISITED"
 						: isUpgradable
-						? "COMPLETED"
-						: "PENDING"
+						? "PENDING"
+						: "COMPLETED"
 
 				const step3Status = getNextStepStatus(step2Status, elastic?.isUpgradable)
 				const step4Status = getNextStepStatus(step3Status, kibana?.isUpgradable)
@@ -165,7 +170,7 @@ function UpgradeAssistant() {
 									<InfoCircle size="14px" color="#6E6E6E" />
 								</Tooltip>
 								<Typography fontSize="14px" fontWeight="400" lineHeight="18px" color="#6E6E6E">
-									12:389
+									{formattedTime}
 								</Typography>
 							</Box>
 						) : (
@@ -303,7 +308,7 @@ function UpgradeAssistant() {
 				</Box>
 			</StepBox>
 			{stepStatus["4"] === "COMPLETED" ? (
-				<Box className="absolute bottom-0 z-50 w-[calc(100%-3rem)]">
+				<Box className="sticky bottom-0 z-50">
 					<Box
 						className="flex p-[0.4px] w-full rounded-[14px]"
 						sx={{ background: "linear-gradient(175deg, #27A56A 0%, #C0DFCF 30%, #131514 100%)" }}

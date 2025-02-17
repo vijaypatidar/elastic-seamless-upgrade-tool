@@ -1,12 +1,7 @@
-import { useDisclosure } from "@heroui/react"
 import { Box, Typography } from "@mui/material"
-import { ArrowRight2, Convertshape2, Edit, Edit2, Magicpen, Share } from "iconsax-react"
+import { ArrowRight2, Convertshape2, Share } from "iconsax-react"
 import { Link, Outlet, useLocation } from "react-router"
 import { toast } from "sonner"
-import EditCluster from "~/components/core/EditCluster"
-import UpcomingFeature from "~/components/core/UpcomingFeature"
-import { OutlinedBorderButton } from "~/components/utilities/Buttons"
-import AssetsManager from "~/constants/AssetsManager"
 import { cn } from "~/lib/Utils"
 
 const PATH_META_DATA: { [key: string]: { label: string; pos: number } } = {
@@ -19,8 +14,6 @@ const CENTER_ARROW_COMPLETE_GRADIENT = "linear-gradient(90deg, #52D97F 30%, #52D
 
 function ConfigLayout() {
 	const { pathname } = useLocation()
-	const { isOpen, onOpen, onOpenChange } = useDisclosure()
-	const { isOpen: isEditOpen, onOpen: onEditOpen, onOpenChange: onEditOpenChange } = useDisclosure()
 
 	const GradientBox = ({
 		to,
@@ -112,42 +105,7 @@ function ConfigLayout() {
 	}
 
 	return (
-		<Box className="flex flex-col w-full bg-[#0A0A0A]" height="var(--window-height)">
-			<Box
-				className="flex flex-row gap-2 justify-between bg-[#0A0A0A]"
-				padding="16px 32px 10px 40px"
-				zIndex={isOpen || isEditOpen ? "99999" : "0"}
-			>
-				<img src={AssetsManager.LOGO_PLUS_NAMED} width="161.6px" height="36px" />
-				<Box className="flex flex-row gap-[6px] items-center">
-					<OutlinedBorderButton
-						icon={Edit2}
-						filledIcon={Edit2}
-						iconProps={{ variant: "Bold" }}
-						sx={{ ":hover": { color: "#C3B7F5 !important" } }}
-						gradient="linear-gradient(135deg, #6627FF 2.29%, #C9C0DF 44.53%, #151413 97.18%, #151413 97.18%)"
-						boxShadow="0px 0px 19px 2px rgba(102, 39, 255, 0.41)"
-						borderRadius="50px"
-						onClick={onEditOpen}
-					>
-						Edit cluster
-					</OutlinedBorderButton>
-					<OutlinedBorderButton
-						icon={Magicpen}
-						filledIcon={Magicpen}
-						iconProps={{ variant: "Bold" }}
-						sx={{ ":hover": { color: "#F5BE3D !important" } }}
-						gradient="linear-gradient(135deg,#E0B517 2.29%, #DFD8C0 44.53%, #151413 97.18%, #151413 97.18%)"
-						boxShadow="0px 0px 19px 2px rgba(234, 180, 63, 0.41)"
-						borderRadius="50px"
-						onClick={onOpen}
-					>
-						Upcoming features
-					</OutlinedBorderButton>
-				</Box>
-			</Box>
-			<EditCluster isOpen={isEditOpen} onOpenChange={onEditOpenChange} />
-			<UpcomingFeature isOpen={isOpen} onOpenChange={onOpenChange} />
+		<>
 			<Box className="flex relative bg-[#0A0A0A]" padding="0px 24px">
 				<GradientBox
 					to="/cluster-overview"
@@ -185,7 +143,7 @@ function ConfigLayout() {
 				/>
 			</Box>
 			<Outlet />
-		</Box>
+		</>
 	)
 }
 

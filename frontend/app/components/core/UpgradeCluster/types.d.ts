@@ -7,6 +7,7 @@ type TUpgradeRow = {
 	os: string
 	version: string
 	action?: null
+	isMaster: boolean
 }
 
 type TUpgradeColumn = Array<{

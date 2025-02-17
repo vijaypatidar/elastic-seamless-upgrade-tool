@@ -1,6 +1,7 @@
 import { useDisclosure } from "@heroui/react"
 import { Box } from "@mui/material"
 import { Edit2, Magicpen } from "iconsax-react"
+import { useMemo, useState } from "react"
 import { Outlet } from "react-router"
 import EditCluster from "~/components/core/EditCluster"
 import UpcomingFeature from "~/components/core/UpcomingFeature"
@@ -10,13 +11,24 @@ import AssetsManager from "~/constants/AssetsManager"
 function Common() {
 	const { isOpen, onOpen, onOpenChange } = useDisclosure()
 	const { isOpen: isEditOpen, onOpen: onEditOpen, onOpenChange: onEditOpenChange } = useDisclosure()
+	const [headerIndexChange, setHeaderIndexChange] = useState<boolean>(false)
+
+	useMemo(() => {
+		const timeout = !(isOpen || isEditOpen) ? 150 : 0
+		const changeState = () => {
+			setHeaderIndexChange(isOpen || isEditOpen)
+		}
+		setTimeout(() => {
+			changeState()
+		}, timeout)
+	}, [isOpen, isEditOpen])
 
 	return (
 		<Box className="flex flex-col w-full pb-4 bg-[#0A0A0A]" height="var(--window-height)">
 			<Box
 				className="flex flex-row gap-2 justify-between bg-[#0A0A0A]"
 				padding="16px 32px 10px 40px"
-				zIndex={isOpen || isEditOpen ? "99999" : "0"}
+				zIndex={headerIndexChange ? "99999" : "0"}
 			>
 				<img src={AssetsManager.LOGO_PLUS_NAMED} width="161.6px" height="36px" />
 				<Box className="flex flex-row gap-[6px] items-center">

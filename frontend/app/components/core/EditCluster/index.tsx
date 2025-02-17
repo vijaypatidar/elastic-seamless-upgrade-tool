@@ -1,7 +1,7 @@
 import { Drawer, DrawerBody, DrawerContent } from "@heroui/react"
 import { Box, IconButton, Typography } from "@mui/material"
 import { useFormik } from "formik"
-import { Add, ArrowLeft, DocumentText1, DocumentUpload, Magicpen, Trash } from "iconsax-react"
+import { Add, ArrowLeft, DocumentText1, DocumentUpload, Edit2, Trash } from "iconsax-react"
 import _ from "lodash"
 import { useState } from "react"
 import { toast } from "sonner"
@@ -114,7 +114,7 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 												}}
 											>
 												<Box className="flex rounded-[10px] items-center justify-center min-h-[42px] min-w-[42px] bg-[#0D0D0D]">
-													<Magicpen size="20px" color="#FFF" variant="Bold" />
+													<Edit2 size="20px" color="#FFF" variant="Bold" />
 												</Box>
 											</Box>
 

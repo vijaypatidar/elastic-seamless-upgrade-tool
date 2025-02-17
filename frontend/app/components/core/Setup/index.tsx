@@ -80,11 +80,14 @@ function Setup() {
 					elastic: { url: creds.elasticUrl, username: creds.username, password: creds.password },
 					kibana: { url: creds.kibanaUrl, username: creds.username, password: creds.password },
 					certificateIds: certIds,
+					infrastructureType: infraType,
+					pathToKey: creds.pathToSSH,
+					kibanaClusterInfo: creds.kibanaClusters,
 				})
 				.then((res) => {
 					LocalStorageHandler.setItem(StorageManager.INFRA_TYPE, infraType)
 					SessionStorageHandler.setItem(StorageManager.SETUP_SET, 1)
-					LocalStorageHandler.setItem(StorageManager.CLUSTER_ID, res.data.clusterId || "cluster-id")
+					LocalStorageHandler.setItem(StorageManager.CLUSTER_ID, res?.data?.clusterId || "cluster-id")
 					navigate("/cluster-overview")
 				})
 				.catch((err) => toast.error(err?.response?.data.err))

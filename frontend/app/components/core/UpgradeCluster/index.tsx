@@ -86,6 +86,7 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 					version: item.version,
 					status: item.status,
 					progress: item.progress,
+					isMaster: item.isMaster,
 				}))
 			})
 			.catch((err) => toast.error(err?.response?.data.err))
@@ -109,7 +110,7 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 				console.error(error)
 			})
 	}
-	
+
 	const { data, isLoading, refetch, isRefetching } = useQuery({
 		queryKey: ["nodes-info"],
 		queryFn: getNodesInfo,
@@ -147,6 +148,7 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 										}}
 										icon={Flash}
 										filledIcon={Flash}
+										// isDisabled={row?.isMaster && }
 									>
 										Upgrade
 									</OutlinedBorderButton>

@@ -12,9 +12,9 @@ import LocalStorageHandler from "~/lib/LocalHanlder"
 import DetailBox from "./widgets/DetailBox"
 
 const CLUSTER_STATUS_COLOR: { [key: string]: string } = {
-	deploying: "#E0B517",
-	deployed: "green",
-	down: "gray",
+	yellow: "#E0B517",
+	green: "#52D97F",
+	red: "#E87D65",
 }
 
 const STYLES = {
@@ -89,7 +89,10 @@ function ClusterInfo() {
 							<PopupState variant="popover" popupId="demo-popup-menu">
 								{(popupState) => (
 									<Box className="relative">
-										<OutlinedBorderButton {...bindTrigger(popupState)} disabled={data?.underUpgradation}>
+										<OutlinedBorderButton
+											{...bindTrigger(popupState)}
+											disabled={data?.underUpgradation}
+										>
 											Upgrade available <ArrowDown2 size="14px" color="#959595" />
 										</OutlinedBorderButton>
 										<Menu
@@ -146,16 +149,17 @@ function ClusterInfo() {
 										<Box
 											component="span"
 											className="flex min-w-[6px] min-h-[6px] rounded-[2px]"
-											sx={{ background: CLUSTER_STATUS_COLOR["deploying"] }}
+											sx={{ background: CLUSTER_STATUS_COLOR[data?.status] }}
 										/>
 										<Typography
-											color={CLUSTER_STATUS_COLOR["deploying"]}
+											color={CLUSTER_STATUS_COLOR[data?.status]}
 											fontFamily="Inter"
 											fontSize="12px"
 											fontWeight="500"
 											lineHeight="normal"
+											textTransform="capitalize"
 										>
-											Yellow
+											{data?.status}
 										</Typography>
 									</Box>
 								}
