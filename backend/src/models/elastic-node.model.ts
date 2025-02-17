@@ -10,7 +10,7 @@ export interface IElasticNode {
   os: Record<string, any>;
   isMaster: boolean;
   progress: Number;
-  status: 'available' | 'upgrading' | 'completed' | 'failed';
+  status: 'available' | 'upgrading' | 'upgraded' | 'failed';
 }
 
 export interface IElasticNodeDocument extends IElasticNode, Document {}

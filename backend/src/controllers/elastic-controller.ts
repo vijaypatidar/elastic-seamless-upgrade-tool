@@ -49,7 +49,7 @@ export const getClusterDetails = async (req: Request, res: Response) => {
     const client = await ElasticClient.buildClient(clusterId);
     const clusterDetails = await client.getClient().info();
     const clusterInfo = await getClusterInfoById(clusterId);
-    const healtDetails = await client.getClient().cluster.health();
+    const healthDetails = await client.getClient().cluster.health();
     const currentVersion = clusterDetails.version.number;
     const possibleUpgradeVersions = getPossibleUpgrades(currentVersion);
 
@@ -62,23 +62,24 @@ export const getClusterDetails = async (req: Request, res: Response) => {
       }
     })
     res.send({
-      clusterName: clusterDetails.cluster_name,
-      clusterUUID: clusterDetails.cluster_uuid,
-      status: healtDetails.status,
-      version: clusterDetails.version.number,
-      timedOut: healtDetails.timed_out,
-      numberOfDataNodes: healtDetails.number_of_data_nodes,
-      numberOfNodes: healtDetails.number_of_nodes,
-      activePrimaryShards: healtDetails.active_primary_shards,
-      activeShards: healtDetails.unassigned_shards,
-      unassignedShards: healtDetails.unassigned_shards,
-      initializingShards: healtDetails.initializing_shards,
-      relocatingShards: healtDetails.relocating_shards,
-      infrastructureType: clusterInfo.infrastructureType,
-      targetVersion: clusterInfo.targetVersion,
-      possibleUpgradeVersions: possibleUpgradeVersions,
+      clusterName: clusterDetails?.cluster_name ?? null,
+      clusterUUID: clusterDetails?.cluster_uuid ?? null,
+      status: healthDetails?.status ?? null,
+      version: currentVersion,
+      timedOut: healthDetails?.timed_out ?? null,
+      numberOfDataNodes: healthDetails?.number_of_data_nodes ?? null,
+      numberOfNodes: healthDetails?.number_of_nodes ?? null,
+      activePrimaryShards: healthDetails?.active_primary_shards ?? null,
+      activeShards: healthDetails?.active_shards ?? null,
+      unassignedShards: healthDetails?.unassigned_shards ?? null,
+      initializingShards: healthDetails?.initializing_shards ?? null,
+      relocatingShards: healthDetails?.relocating_shards ?? null,
+      infrastructureType: clusterInfo?.infrastructureType ?? null,
+      targetVersion: clusterInfo?.targetVersion ?? null,
+      possibleUpgradeVersions: possibleUpgradeVersions ?? null,
       underUpgradation: underUpgradation
     });
+
     return;
   } catch (err: any) {
     logger.info(err);
@@ -140,21 +141,21 @@ export const getUpgradeDetails = async (req: Request, res: Response) => {
     const isKibanaUpgraded = (kibanaVersion === clusterInfo.targetVersion) ? true : false
     //verifying upgradability
     const elasticNodes = (await getAllElasticNodes(clusterId)).filter(
-      (item) => item.status !== 'completed',
+      (item) => item.status !== 'upgraded',
     );
     const isESUpgraded = elasticNodes.length === 0;
     res.send({
       elastic: {
-        isUpgradable: isESUpgraded,
-        deprecations: { ...esDeprecationCount },
-        snapshot: {
-          snapshot: snapshots.length > 0 ? snapshots[0] : null,
-          creationPage: `${kibanaUrl}/app/management/data/snapshot_restore/snapshots`
-        }
+      isUpgradable: !isESUpgraded,
+      deprecations: { ...esDeprecationCount },
+      snapshot: {
+        snapshot: snapshots.length > 0 ? snapshots[0] : null,
+        creationPage: kibanaUrl ? `${kibanaUrl}/app/management/data/snapshot_restore/snapshots` : null
+      }
       },
       kibana: {
-        isUpgradable: isKibanaUpgraded,
-        deprecations: { ...kibanaDeprecationCount },
+      isUpgradable: !isKibanaUpgraded,
+      deprecations: { ...kibanaDeprecationCount },
       },
     });
   } catch (error: any) {
@@ -186,7 +187,7 @@ export const getNodesInfo = async (req: Request, res: Response) => {
   try {
     const clusterId = req.params.clusterId;
     const elasticNodes = await getAllElasticNodes(clusterId);
-    const nodes = elasticNodes.map((node) => {
+    let nodes = elasticNodes.map((node) => {
       if (node.isMaster) {
         return {
           nodeId: node.nodeId,
@@ -216,6 +217,13 @@ export const getNodesInfo = async (req: Request, res: Response) => {
         };
       }
     });
+    const rolePriority = (roles: string[]) => {
+      if (roles.includes("data")) return 1;
+      if (roles.includes("master-eligible")) return 2;
+      if (roles.includes("master")) return 3;
+      return 4;
+    };
+    // nodes.sort((a: IElasticNode, b: IElasticNode) => rolePriority(a.roles) - rolePriority(b.roles));
     res.send(nodes);
   } catch (error: any) {
     logger.error('Error fetching node details:', error);
@@ -382,7 +390,8 @@ export const verfiyCluster = async(req: Request,res: Response)=>{
       const clusters = await getAllClusters();
       if(clusters.length > 0){
         res.send({
-          clusterAvailable: true
+          clusterAvailable: true,
+          clusterData: clusters[0] ? clusters[0] : null
         })
       }
       else{
