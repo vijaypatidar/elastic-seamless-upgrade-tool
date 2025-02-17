@@ -30,6 +30,7 @@ import path from 'path';
 import {  getPossibleUpgrades } from '../utils/upgrade.versions';
 import { normalizeNodeUrl } from '../utils/utlity.functions';
 import { IElasticNode } from '../models/elastic-node.model';
+import { url } from 'inspector';
 
 export const healthCheck = async (req: Request, res: Response) => {
   try {
@@ -404,16 +405,22 @@ export const verfiyCluster = async (req: Request, res: Response) => {
 				clusterData: clusters[0]
 					? {
 							elastic: {
-								...clusters[0].elastic,
+                 url: clusters[0].elastic.url ?? null,
+                 username: clusters[0].elastic.username ?? null,
+                 password: clusters[0].elastic.password ?? null,
+                 apiKey : clusters[0].elastic.apiKey ?? null
 							},
-							kibana: {
-								...clusters[0].kibana,
-							},
-							clusterId: clusters[0].clusterId,
-							certificateIds: clusters[0].certificateIds,
-							targetVersion: clusters[0].targetVersion,
-							infrastructureType: clusters[0].infrastructureType,
-							pathToKey: clusters[0].pathToKey,
+							kibana: clusters[0].kibana ? {
+								url: clusters[0].kibana.url ?? null,
+                username: clusters[0].kibana.username ?? null,
+                password: clusters[0].kibana.password ?? null,
+                apiKey : clusters[0].kibana.apiKey ?? null
+							} : null,
+							clusterId: clusters[0].clusterId ?? null,
+							certificateIds: clusters[0].certificateIds ?? null,
+							targetVersion: clusters[0].targetVersion ?? null,
+							infrastructureType: clusters[0].infrastructureType ?? null,
+							pathToKey: clusters[0].pathToKey ?? null,
 						}
 					: null,
 			})

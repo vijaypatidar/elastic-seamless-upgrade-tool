@@ -3,6 +3,7 @@ import {
   createAnsibleInventory,
   runPlaybookWithLogging,
 } from '../controllers/ansible-controller';
+import { getNodeInfo } from '../controllers/elastic-controller';
 import logger from '../logger/logger';
 import ElasticNode, {
   IElasticNode,
@@ -85,6 +86,10 @@ export const updateNodeStatus = async (
   newStatus: string,
 ): Promise<IElasticNodeDocument | null> => {
   try {
+
+    if(newStatus === 'upgraded'){
+      
+    }
     const updatedNode = await ElasticNode.findOneAndUpdate(
       { nodeId },
       { status: newStatus },
@@ -151,5 +156,10 @@ export const triggerNodeUpgrade = async (nodeId: string,clusterId: string) => {
     return false;
   }
 };
+
+const isNodeUpdated = async(nodeId: string)=>{
+    const node = await getElasticNodeById(nodeId);  
+
+}
 
 /// /upgrade (exec)
