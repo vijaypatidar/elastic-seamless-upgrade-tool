@@ -98,10 +98,6 @@ export const updateNodeStatus = async (
   newStatus: string,
 ): Promise<IElasticNodeDocument | null> => {
   try {
-
-    if(newStatus === 'upgraded'){
-     
-    }
     const updatedNode = await ElasticNode.findOneAndUpdate(
       { nodeId },
       { status: newStatus },
