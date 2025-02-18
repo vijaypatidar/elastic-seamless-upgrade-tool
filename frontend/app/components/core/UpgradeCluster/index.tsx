@@ -20,9 +20,7 @@ const UPGRADE_ENUM = {
 			lineHeight="normal"
 		>
 			<Box className="size-[15px]">
-
-			
-			<TickCircle color="currentColor" size="15px" />
+				<TickCircle color="currentColor" size="15px" />
 			</Box>
 			Upgrade complete
 		</Typography>
@@ -35,13 +33,14 @@ const UPGRADE_ENUM = {
 			fontWeight="500"
 			lineHeight="normal"
 		>
-			<Box className="size-[15px] inline"><CloseCircle color="currentColor" size="15px" /></Box>
+			<Box className="size-[15px] inline">
+				<CloseCircle color="currentColor" size="15px" />
+			</Box>
 			Upgrade failed
 		</Typography>
 	),
 }
 
-const rows: any = []
 const columns: TUpgradeColumn = [
 	{
 		key: "node_name",
@@ -190,7 +189,7 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 					return cellValue
 			}
 		},
-		[rows]
+		[data, isPending]
 	)
 
 	return (
@@ -200,7 +199,7 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 					<Typography color="#FFF" fontSize="14px" fontWeight="600" lineHeight="22px">
 						Node Details
 					</Typography>
-					<OutlinedBorderButton icon={Flash} filledIcon={Flash}>
+					<OutlinedBorderButton icon={Flash} filledIcon={Flash} disabled>
 						Upgrade all
 					</OutlinedBorderButton>
 				</Box>

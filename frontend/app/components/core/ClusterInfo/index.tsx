@@ -125,7 +125,7 @@ function ClusterInfo({ refresh }: { refresh: boolean }) {
 											{...bindTrigger(popupState)}
 											disabled={data?.underUpgradation}
 										>
-											{data?.targetVersion ?? "Upgrade available"}{" "}
+											{isPending ? "Please wait..." : data?.targetVersion ?? "Upgrade available"}{" "}
 											<ArrowDown2 size="14px" color="#959595" />
 										</OutlinedBorderButton>
 										<Menu

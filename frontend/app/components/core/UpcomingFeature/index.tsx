@@ -1,6 +1,6 @@
 import { Drawer, DrawerBody, DrawerContent } from "@heroui/react"
 import { Box, Typography } from "@mui/material"
-import { ArrowLeft, DocumentText1, FormatSquare, Grid2, Magicpen, Radar2, SearchStatus } from "iconsax-react"
+import { ArrowLeft, DocumentText1, FormatSquare, Grid2, Heart, Magicpen, Radar2, SearchStatus } from "iconsax-react"
 import { OutlinedButton } from "~/components/utilities/Buttons"
 import AssetsManager from "~/constants/AssetsManager"
 import MajorFeature from "./widgets/MajorFeature"
@@ -93,27 +93,27 @@ function UpcomingFeature({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChan
 											<MinorFeature
 												icon={Radar2}
 												title="Metricbeat"
-												description="Lightweight shipper for logs and other data."
+												description="Lightweight shipper for metric data."
 											/>
 											<MinorFeature
 												icon={FormatSquare}
 												title="Packetbeat"
-												description="Lightweight shipper for logs and other data."
+												description="Lightweight shipper for network data."
 											/>
 											<MinorFeature
 												icon={SearchStatus}
-												title="auditbeat"
-												description="Lightweight shipper for logs and other data."
+												title="Auditbeat"
+												description="Lightweight shipper for audit data."
 											/>
 											<MinorFeature
-												icon={DocumentText1}
-												title="Logstash"
-												description="Lightweight shipper for logs and other data."
+												icon={Heart}
+												title="Heartbeat"
+												description="Lightweight shipper for uptime monitoring."
 											/>
 											<MinorFeature
 												icon={Grid2}
 												title="Winlogbeat"
-												description="Lightweight shipper for logs and other data."
+												description="Lightweight shipper for Windows event logs."
 											/>
 										</Box>
 									</Box>
