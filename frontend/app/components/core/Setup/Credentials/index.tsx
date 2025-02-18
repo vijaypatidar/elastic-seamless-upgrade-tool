@@ -9,20 +9,22 @@ import { cn } from "~/lib/Utils"
 import validationSchema from "./validation/validation"
 import SelectionTile from "./widgets/SelectionTile"
 
-function Credentials({ backStep, onSubmit }: TCredentialsComp) {
+const INITIAL_VALUES = {
+	elasticUrl: "",
+	kibanaUrl: "",
+	authPref: null,
+	username: "",
+	password: "",
+	apiKey: "",
+	pathToSSH: "",
+	kibanaClusters: [],
+}
+function Credentials({ initialValues: IV, backStep, onSubmit }: TCredentialsComp) {
 	const [showPassword, setShowPassword] = useState<boolean>(false)
+	const [initialValues, setInitialValues] = useState<TCreds>(_.cloneDeep(IV))
 
 	const formik = useFormik({
-		initialValues: {
-			elasticUrl: "",
-			kibanaUrl: "",
-			authPref: null,
-			username: "",
-			password: "",
-			apiKey: "",
-			pathToSSH: "",
-			kibanaClusters: [],
-		},
+		initialValues: initialValues,
 		validationSchema: validationSchema,
 		onSubmit: async (values) => {
 			onSubmit(values)
@@ -126,7 +128,7 @@ function Credentials({ backStep, onSubmit }: TCredentialsComp) {
 										fullWidth
 										id="password"
 										name="password"
-										type="text"
+										type={showPassword ? "text" : "password"}
 										placeholder="Enter password"
 										variant="outlined"
 										value={formik.values.password}
@@ -176,7 +178,7 @@ function Credentials({ backStep, onSubmit }: TCredentialsComp) {
 					<Box
 						className={cn("flex flex-row justify-between max-w-[515px]", {
 							"border border-dashed border-[#3D3B42] rounded-[10px] py-[11px] pl-[16px] pr-[12px]":
-								formik.values.kibanaClusters.length === 0,
+								formik.values?.kibanaClusters.length === 0,
 						})}
 					>
 						<Typography color="#ABA9B1" fontSize="14px" fontWeight="400" lineHeight="20px">
@@ -293,7 +295,7 @@ function Credentials({ backStep, onSubmit }: TCredentialsComp) {
 				<OutlinedButton onClick={backStep}>
 					<ArrowLeft size="20px" color="currentColor" /> Back
 				</OutlinedButton>
-				<ConatinedButton disabled={!formik.dirty || formik.isSubmitting} onClick={formik.handleSubmit}>
+				<ConatinedButton disabled={formik.isSubmitting} onClick={formik.handleSubmit}>
 					Continue <ArrowRight size="20px" color="currentColor" />
 				</ConatinedButton>
 			</Box>

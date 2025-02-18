@@ -21,6 +21,7 @@ const validationSchema = Yup.object().shape({
         is: (authPref: string) => authPref === "API_KEY",
         then: (schema) => schema.required("Please enter api key."),
     }),
+    pathToSSH: Yup.string().required("Please enter SSH key.")
 })
 
 export default validationSchema

@@ -34,6 +34,19 @@ const safeRoutesSlice = createSlice({
 			LocalStorageHandler.setItem(StorageManager.UPGRADE_ASSIST_ALLOWED, action.payload)
 			return { ...state, upgradeAssistAllowed: action.payload }
 		},
+		resetForEditCluster(state) {
+			LocalStorageHandler.setItem(StorageManager.DEPRECATION_PAGE_ALLOWED, false)
+			LocalStorageHandler.setItem(StorageManager.ELASTIC_NODE_UPGRADE_ALLOWED, false)
+			LocalStorageHandler.setItem(StorageManager.KIBANA_NODE_UPGRADE_ALLOWED, false)
+			LocalStorageHandler.setItem(StorageManager.UPGRADE_ASSIST_ALLOWED, false)
+			return {
+				...state,
+				deprecationChangesAllowed: false,
+				elasticNodeUpgradeAllowed: false,
+				kibanaNodeUpgradeAllowed: false,
+				upgradeAssistAllowed: false,
+			}
+		},
 		resetSafeRoutes(state) {
 			LocalStorageHandler.setItem(StorageManager.CLUSTER_ADDED, false)
 			LocalStorageHandler.setItem(StorageManager.DEPRECATION_PAGE_ALLOWED, false)
@@ -58,6 +71,7 @@ export const {
 	setElasticNodeUpgradeAllowed,
 	setKibanaNodeUpgradeAllowed,
 	setUpgradeAssistAllowed,
+	resetForEditCluster,
 	resetSafeRoutes,
 } = safeRoutesSlice.actions
 export default safeRoutesSlice.reducer

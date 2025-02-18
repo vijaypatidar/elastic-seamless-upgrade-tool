@@ -1,9 +1,11 @@
 import { combineReducers, configureStore } from "@reduxjs/toolkit"
 import { thunk } from "redux-thunk"
 import safeRoutesReducer from "./reducers/safeRoutes"
+import refreshReducer from "./reducers/refresh"
 
 const rootReducer = combineReducers({
 	safeRoutes: safeRoutesReducer,
+	refresh: refreshReducer
 })
 
 const store = configureStore({
