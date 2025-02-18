@@ -1,5 +1,6 @@
 import { Drawer, DrawerBody, DrawerContent } from "@heroui/react"
 import { Box, IconButton, InputAdornment, Typography } from "@mui/material"
+import { useMutation, useQuery } from "@tanstack/react-query"
 import { useFormik } from "formik"
 import { Add, ArrowLeft, DocumentText1, DocumentUpload, Edit2, Eye, EyeSlash, Trash } from "iconsax-react"
 import _ from "lodash"
@@ -9,15 +10,14 @@ import { ConatinedButton, OutlinedButton } from "~/components/utilities/Buttons"
 import Input from "~/components/utilities/Input"
 import { cn } from "~/lib/Utils"
 import SelectionTile from "../Setup/Credentials/widgets/SelectionTile"
-import { useMutation, useQuery } from "@tanstack/react-query"
 // @ts-ignore-block
 import Files from "react-files"
 import axiosJSON from "~/apis/http"
 import { OneLineSkeleton } from "~/components/utilities/Skeletons"
-import validationSchema from "./validation/validation"
-import LocalStorageHandler from "~/lib/LocalHanlder"
 import StorageManager from "~/constants/StorageManager"
+import LocalStorageHandler from "~/lib/LocalHanlder"
 import SessionStorageHandler from "~/lib/SessionHandler"
+import validationSchema from "./validation/validation"
 
 const STYLES = {
 	GO_BACK_BUTTON: {
@@ -44,6 +44,7 @@ const INITIAL_VALUES = {
 	apiKey: "",
 	pathToSSH: "",
 	kibanaClusters: [],
+	certFiles: [],
 }
 
 function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: () => void }) {
@@ -55,22 +56,28 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 		enableReinitialize: true,
 		validationSchema: validationSchema,
 		onSubmit: async (values) => {
+			console.log("Sdfs")
 			await HandleSubmit(values)
 		},
 	})
 
-	const [certFiles, setCertFiles] = useState<File[]>([])
-
-	const handleChange = (fn: React.Dispatch<React.SetStateAction<File[]>>, files: File[]) => {
-		fn((prevFiles: any) => [...prevFiles, ...files])
+	const handleChange = (fn: React.Dispatch<React.SetStateAction<(File | TExistingFile)[]>>, files: File[]) => {
+		fn([...formik.values.certFiles, ...files])
 	}
 
 	const handleError = (error: any, file: File) => {
 		toast.error(error.message)
 	}
 
-	const handleDelete = (fn: React.Dispatch<React.SetStateAction<File[]>>, file: File, index: number) => {
-		fn((prevFiles) => [...prevFiles.slice(0, index), ...prevFiles.slice(index + 1, prevFiles.length)])
+	const handleDelete = (
+		fn: React.Dispatch<React.SetStateAction<(File | TExistingFile)[]>>,
+		file: File | TExistingFile,
+		index: number
+	) => {
+		fn([
+			...formik.values.certFiles.slice(0, index),
+			...formik.values.certFiles.slice(index + 1, formik.values.certFiles.length),
+		])
 	}
 
 	// const handleSubmit = () => {
@@ -87,14 +94,22 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 					authPref: res?.data?.clusterData?.elastic?.username ? "U/P" : "API_KEY",
 					username: res?.data?.clusterData?.elastic?.username,
 					password: res?.data?.clusterData?.elastic?.password,
-					apiKey: null,
+					apiKey: "",
 					pathToSSH: res?.data?.clusterData?.pathToKey,
 					kibanaClusters: [],
-					// certFiles: res?.data?.clusterData?.certificateIds,
+					certFiles:
+						res?.data?.clusterData?.certificateIds?.map((certId: string) => ({
+							name: certId,
+							storedOnServer: true,
+						})) || [],
 				})
+
 				formik.resetForm()
 			})
-			.catch((err) => toast.error(err?.response?.data.err))
+			.catch((err) => {
+				console.log(err)
+				toast.error(err?.response?.data.err)
+			})
 
 		return null
 	}
@@ -110,10 +125,12 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 		mutationFn: async (values: any) => {
 			let certIds: Array<string> = []
 			const formData = new FormData()
-			certFiles?.forEach((file: File) => {
-				formData.append("files", file, file.name)
+			values.certFiles?.forEach((file: File | TExistingFile) => {
+				if (file instanceof File) {
+					formData.append("files", file, file.name)
+				}
 			})
-			if (certFiles?.length !== 0) {
+			if (values.certFiles?.filter((cert: File | TExistingFile) => cert instanceof File).length !== 0) {
 				await axiosJSON
 					.post("/api/elastic/clusters/certificates/upload", formData, {
 						maxBodyLength: Infinity,
@@ -128,9 +145,14 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 				.post("/api/elastic/clusters", {
 					elastic: { url: values.elasticUrl, username: values.username, password: values.password },
 					kibana: { url: values.kibanaUrl, username: values.username, password: values.password },
-					certificateIds: certIds,
+					certificateIds: [
+						...values.certFiles
+							?.filter((cert: File | TExistingFile) => !(cert instanceof File))
+							.map((cert: TExistingFile) => cert.name),
+						...certIds,
+					],
 					infrastructureType: "on-premise",
-					pathToKey: values.pathToSSH,
+					key: values.pathToSSH ?? "",
 					kibanaClusterInfo: values.kibanaClusters,
 				})
 				.then((res) => {
@@ -178,7 +200,11 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 								className="flex p-px rounded-2xl h-[calc(var(--window-height)-120px)]"
 								sx={{ background: "radial-gradient(#6E687C, #1D1D1D)" }}
 							>
-								<Box className="flex flex-col gap-6 rounded-2xl bg-[#0D0D0D] w-full h-full items-start">
+								<form
+									onSubmit={formik.handleSubmit}
+									onReset={formik.handleReset}
+									className="flex flex-col gap-6 rounded-2xl bg-[#0D0D0D] w-full h-full items-start"
+								>
 									<Box
 										padding="24px 32px 0px 32px"
 										className="flex flex-row gap-3 justify-between items-center w-full"
@@ -201,7 +227,7 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 												Edit cluster
 											</Typography>
 										</Box>
-										<ConatinedButton disabled={!formik.dirty || formik.isSubmitting}>
+										<ConatinedButton type="submit" disabled={!formik.dirty || formik.isSubmitting}>
 											{formik.isSubmitting ? "Updating" : "Update"}
 										</ConatinedButton>
 									</Box>
@@ -320,7 +346,10 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 														>
 															Credentials
 														</Typography>
-														<Box className="flex flex-col gap-[6px]">
+														<Box
+															className="flex flex-col gap-[6px]"
+															key={formik.values.authPref}
+														>
 															{formik.values.authPref === "U/P" ? (
 																<>
 																	<Input
@@ -568,6 +597,13 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 														multiline
 														minRows={8}
 														maxRows={8}
+														value={formik.values.pathToSSH}
+														onChange={formik.handleChange}
+														onBlur={formik.handleBlur}
+														error={
+															formik.touched.pathToSSH && Boolean(formik.errors.pathToSSH)
+														}
+														helperText={formik.touched.pathToSSH && formik.errors.pathToSSH}
 													/>
 												</Box>
 												<Box className="flex flex-col gap-[6px] max-w-[515px]">
@@ -581,7 +617,12 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 													</Typography>
 													<Files
 														className="files-dropzone"
-														onChange={(files: File[]) => handleChange(setCertFiles, files)}
+														onChange={(files: File[]) =>
+															handleChange(
+																(data) => formik.setFieldValue("certFiles", data),
+																files
+															)
+														}
 														onError={handleError}
 														accepts={[".crt"]}
 														multiple
@@ -646,7 +687,7 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 															},
 														}}
 													>
-														{certFiles.map((file, index) => {
+														{formik.values.certFiles.map((file, index) => {
 															return (
 																<Box
 																	key={index}
@@ -668,7 +709,16 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 																		onClick={() => {}}
 																		sx={{ padding: "8px", borderRadius: "6px" }}
 																		onClickCapture={() =>
-																			handleDelete(setCertFiles, file, index)
+																			handleDelete(
+																				(data) => {
+																					formik.setFieldValue(
+																						"certFiles",
+																						data
+																					)
+																				},
+																				file,
+																				index
+																			)
 																		}
 																	>
 																		<Trash color="#EC7070" size="14px" />
@@ -681,7 +731,7 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 											</Box>
 										</Box>
 									</Box>
-								</Box>
+								</form>
 							</Box>
 						</Box>
 					</DrawerBody>

@@ -281,6 +281,11 @@ function Credentials({ backStep, onSubmit }: TCredentialsComp) {
 						multiline
 						minRows={8}
 						maxRows={8}
+						value={formik.values.pathToSSH}
+						onChange={formik.handleChange}
+						onBlur={formik.handleBlur}
+						error={formik.touched.pathToSSH && Boolean(formik.errors.pathToSSH)}
+						helperText={formik.touched.pathToSSH && formik.errors.pathToSSH}
 					/>
 				</Box>
 			</Box>
