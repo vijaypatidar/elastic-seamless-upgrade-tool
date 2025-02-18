@@ -1,4 +1,4 @@
-type TCredentialsComp = { backStep: () => void; onSubmit: (values: TCreds) => void }
+type TCredentialsComp = { initialValues: TCreds; backStep: () => void; onSubmit: (values: TCreds) => void }
 type TSelectionTile = {
 	value: string
 	label: string

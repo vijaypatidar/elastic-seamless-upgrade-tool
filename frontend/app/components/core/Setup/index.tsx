@@ -103,7 +103,7 @@ function Setup() {
 			case 1:
 				return <Infrastructure onSubmit={handleStepInfraSubmit} />
 			case 2:
-				return <Credentials backStep={handleBackStep} onSubmit={handleCredSubmit} />
+				return <Credentials backStep={handleBackStep} onSubmit={handleCredSubmit} initialValues={creds} />
 			case 3:
 				return <Certificates backStep={handleBackStep} onSubmit={HandleSubmit} isSubmitting={isPending} />
 			default:
