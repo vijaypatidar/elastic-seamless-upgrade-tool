@@ -1,7 +1,7 @@
 import { Box, CssBaseline } from "@mui/material"
+import { useCallback } from "react"
 import { Outlet } from "react-router"
 import AssetsManager from "../constants/AssetsManager"
-import { useCallback, useMemo } from "react"
 
 function DataLayout() {
 	const getLogo = useCallback((position = "side") => {

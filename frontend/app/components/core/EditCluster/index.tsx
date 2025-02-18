@@ -1,7 +1,7 @@
 import { Drawer, DrawerBody, DrawerContent } from "@heroui/react"
-import { Box, IconButton, Typography } from "@mui/material"
+import { Box, IconButton, InputAdornment, Typography } from "@mui/material"
 import { useFormik } from "formik"
-import { Add, ArrowLeft, DocumentText1, DocumentUpload, Edit2, Trash } from "iconsax-react"
+import { Add, ArrowLeft, DocumentText1, DocumentUpload, Edit2, Eye, EyeSlash, Trash } from "iconsax-react"
 import _ from "lodash"
 import { useState } from "react"
 import { toast } from "sonner"
@@ -9,9 +9,15 @@ import { ConatinedButton, OutlinedButton } from "~/components/utilities/Buttons"
 import Input from "~/components/utilities/Input"
 import { cn } from "~/lib/Utils"
 import SelectionTile from "../Setup/Credentials/widgets/SelectionTile"
+import { useMutation, useQuery } from "@tanstack/react-query"
 // @ts-ignore-block
 import Files from "react-files"
+import axiosJSON from "~/apis/http"
+import { OneLineSkeleton } from "~/components/utilities/Skeletons"
 import validationSchema from "./validation/validation"
+import LocalStorageHandler from "~/lib/LocalHanlder"
+import StorageManager from "~/constants/StorageManager"
+import SessionStorageHandler from "~/lib/SessionHandler"
 
 const STYLES = {
 	GO_BACK_BUTTON: {
@@ -29,20 +35,28 @@ const STYLES = {
 	},
 }
 
+const INITIAL_VALUES = {
+	elasticUrl: "",
+	kibanaUrl: "",
+	authPref: null,
+	username: "",
+	password: "",
+	apiKey: "",
+	pathToSSH: "",
+	kibanaClusters: [],
+}
+
 function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: () => void }) {
+	const [initialValues, setInitialValues] = useState<TClusterValues>(INITIAL_VALUES)
+	const [showPassword, setShowPassword] = useState<boolean>(false)
+
 	const formik = useFormik({
-		initialValues: {
-			elasticUrl: "",
-			kibanaUrl: "",
-			authPref: null,
-			username: "",
-			password: "",
-			apiKey: "",
-			pathToSSH: "",
-			kibanaClusters: [],
-		},
+		initialValues: initialValues,
+		enableReinitialize: true,
 		validationSchema: validationSchema,
-		onSubmit: async (values) => {},
+		onSubmit: async (values) => {
+			await HandleSubmit(values)
+		},
 	})
 
 	const [certFiles, setCertFiles] = useState<File[]>([])
@@ -62,6 +76,71 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 	// const handleSubmit = () => {
 	// 	// onSubmit({ certFiles: certFiles, jsonFiles: jsonFiles })
 	// }
+
+	const getCluster = async () => {
+		await axiosJSON
+			.get("/api/elastic/clusters/verify")
+			.then((res) => {
+				setInitialValues({
+					elasticUrl: res?.data?.clusterData?.elastic?.url,
+					kibanaUrl: res?.data?.clusterData?.kibana?.url,
+					authPref: res?.data?.clusterData?.elastic?.username ? "U/P" : "API_KEY",
+					username: res?.data?.clusterData?.elastic?.username,
+					password: res?.data?.clusterData?.elastic?.password,
+					apiKey: null,
+					pathToSSH: res?.data?.clusterData?.pathToKey,
+					kibanaClusters: [],
+					// certFiles: res?.data?.clusterData?.certificateIds,
+				})
+				formik.resetForm()
+			})
+			.catch((err) => toast.error(err?.response?.data.err))
+
+		return null
+	}
+
+	const { isLoading, isRefetching, refetch } = useQuery({
+		queryKey: ["get-cluster-info"],
+		queryFn: getCluster,
+		staleTime: Infinity,
+	})
+
+	const { mutate: HandleSubmit, isPending } = useMutation({
+		mutationKey: ["add-cluster"],
+		mutationFn: async (values: any) => {
+			let certIds: Array<string> = []
+			const formData = new FormData()
+			certFiles?.forEach((file: File) => {
+				formData.append("files", file, file.name)
+			})
+			if (certFiles?.length !== 0) {
+				await axiosJSON
+					.post("/api/elastic/clusters/certificates/upload", formData, {
+						maxBodyLength: Infinity,
+						headers: {
+							"Content-Type": "multipart/form-data",
+						},
+					})
+					.then((res) => (certIds = res?.data?.certificateIds))
+					.catch((err) => toast.error(err?.response?.data.err))
+			}
+			await axiosJSON
+				.post("/api/elastic/clusters", {
+					elastic: { url: values.elasticUrl, username: values.username, password: values.password },
+					kibana: { url: values.kibanaUrl, username: values.username, password: values.password },
+					certificateIds: certIds,
+					infrastructureType: "on-premise",
+					pathToKey: values.pathToSSH,
+					kibanaClusterInfo: values.kibanaClusters,
+				})
+				.then((res) => {
+					LocalStorageHandler.setItem(StorageManager.INFRA_TYPE, "on-premise")
+					SessionStorageHandler.setItem(StorageManager.SETUP_SET, 1)
+					LocalStorageHandler.setItem(StorageManager.CLUSTER_ID, res?.data?.clusterId || "cluster-id")
+				})
+				.catch((err) => toast.error(err?.response?.data.err))
+		},
+	})
 
 	return (
 		<Drawer
@@ -142,23 +221,31 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 														URLs
 													</Typography>
 													<Box className="flex flex-col gap-2 w-full">
-														<Input
-															fullWidth
-															id="elasticUrl"
-															name="elasticUrl"
-															type="text"
-															placeholder="Enter Elastic URL"
-															variant="outlined"
-															value={formik.values.elasticUrl}
-															onChange={formik.handleChange}
-															onBlur={formik.handleBlur}
-															error={
-																formik.touched.elasticUrl &&
-																Boolean(formik.errors.elasticUrl)
+														<OneLineSkeleton
+															show={isLoading || isRefetching}
+															component={
+																<Input
+																	fullWidth
+																	id="elasticUrl"
+																	name="elasticUrl"
+																	type="text"
+																	placeholder="Enter Elastic URL"
+																	variant="outlined"
+																	value={formik.values.elasticUrl}
+																	onChange={formik.handleChange}
+																	onBlur={formik.handleBlur}
+																	error={
+																		formik.touched.elasticUrl &&
+																		Boolean(formik.errors.elasticUrl)
+																	}
+																	helperText={
+																		formik.touched.elasticUrl &&
+																		formik.errors.elasticUrl
+																	}
+																/>
 															}
-															helperText={
-																formik.touched.elasticUrl && formik.errors.elasticUrl
-															}
+															height="52px"
+															className="w-full rounded-[10px]"
 														/>
 														<Input
 															fullWidth
@@ -259,7 +346,7 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 																		fullWidth
 																		id="password"
 																		name="password"
-																		type="text"
+																		type={showPassword ? "text" : "password"}
 																		placeholder="Enter password"
 																		variant="outlined"
 																		value={formik.values.password}
@@ -273,6 +360,36 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 																			formik.touched.password &&
 																			formik.errors.password
 																		}
+																		InputProps={{
+																			endAdornment: (
+																				<InputAdornment position="end">
+																					<IconButton
+																						aria-label="toggle password visibility"
+																						onClick={() =>
+																							setShowPassword(
+																								!showPassword
+																							)
+																						}
+																						onMouseDown={(event) =>
+																							event.preventDefault()
+																						}
+																						edge="end"
+																					>
+																						{showPassword ? (
+																							<Eye
+																								size="18px"
+																								color="#FFF"
+																							/>
+																						) : (
+																							<EyeSlash
+																								size="18px"
+																								color="#FFF"
+																							/>
+																						)}
+																					</IconButton>
+																				</InputAdornment>
+																			),
+																		}}
 																	/>
 																</>
 															) : (

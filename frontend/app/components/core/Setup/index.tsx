@@ -72,7 +72,7 @@ function Setup() {
 							"Content-Type": "multipart/form-data",
 						},
 					})
-					.then((res) => (certIds = res.data.certificateIds))
+					.then((res) => (certIds = res?.data?.certificateIds))
 					.catch((err) => toast.error(err?.response?.data.err))
 			}
 			await axiosJSON

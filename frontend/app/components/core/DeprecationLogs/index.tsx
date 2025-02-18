@@ -130,6 +130,7 @@ function DeprecationLogs({ clusterType }: { clusterType: "ELASTIC" | "KIBANA" })
 	const { data, isLoading, isRefetching, refetch } = useQuery({
 		queryKey: ["get-deprecation-logs"],
 		queryFn: getLogs,
+		staleTime: Infinity,
 	})
 
 	const renderCell = useCallback((row: TDeprecationRow, columnKey: Key) => {

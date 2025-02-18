@@ -1,7 +1,8 @@
-import { Box, IconButton, Typography } from "@mui/material"
+import { Box, IconButton, InputAdornment, Typography } from "@mui/material"
 import { useFormik } from "formik"
-import { Add, ArrowLeft, ArrowRight, Trash } from "iconsax-react"
+import { Add, ArrowLeft, ArrowRight, Eye, EyeSlash, Trash } from "iconsax-react"
 import _ from "lodash"
+import { useState } from "react"
 import { ConatinedButton, OutlinedButton } from "~/components/utilities/Buttons"
 import Input from "~/components/utilities/Input"
 import { cn } from "~/lib/Utils"
@@ -9,6 +10,8 @@ import validationSchema from "./validation/validation"
 import SelectionTile from "./widgets/SelectionTile"
 
 function Credentials({ backStep, onSubmit }: TCredentialsComp) {
+	const [showPassword, setShowPassword] = useState<boolean>(false)
+
 	const formik = useFormik({
 		initialValues: {
 			elasticUrl: "",
@@ -131,6 +134,24 @@ function Credentials({ backStep, onSubmit }: TCredentialsComp) {
 										onBlur={formik.handleBlur}
 										error={formik.touched.password && Boolean(formik.errors.password)}
 										helperText={formik.touched.password && formik.errors.password}
+										InputProps={{
+											endAdornment: (
+												<InputAdornment position="end">
+													<IconButton
+														aria-label="toggle password visibility"
+														onClick={() => setShowPassword(!showPassword)}
+														onMouseDown={(event) => event.preventDefault()}
+														edge="end"
+													>
+														{showPassword ? (
+															<Eye size="18px" color="#FFF" />
+														) : (
+															<EyeSlash size="18px" color="#FFF" />
+														)}
+													</IconButton>
+												</InputAdornment>
+											),
+										}}
 									/>
 								</>
 							) : (
@@ -230,11 +251,14 @@ function Credentials({ backStep, onSubmit }: TCredentialsComp) {
 										/>
 									</Box>
 									<Box className="hidden delete-button group-hover:flex">
-										<IconButton sx={{ borderRadius: "8px", padding: "4px" }} onClick={() => {
-											let newOptions = [...formik.values.kibanaClusters]
-											newOptions = newOptions.filter((option, ind) => ind !== index)
-											formik.setFieldValue("kibanaClusters", _.cloneDeep(newOptions))
-										}}>
+										<IconButton
+											sx={{ borderRadius: "8px", padding: "4px" }}
+											onClick={() => {
+												let newOptions = [...formik.values.kibanaClusters]
+												newOptions = newOptions.filter((option, ind) => ind !== index)
+												formik.setFieldValue("kibanaClusters", _.cloneDeep(newOptions))
+											}}
+										>
 											<Trash size="20px" color="#E56852" />
 										</IconButton>
 									</Box>

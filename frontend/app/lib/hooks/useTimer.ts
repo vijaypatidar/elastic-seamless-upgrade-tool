@@ -1,66 +1,46 @@
-import { useState, useEffect, useCallback, useRef } from "react"
+import { useState, useEffect } from "react"
 
-interface TimerHook {
-	formattedTime: string
-	isExpired: boolean
-	remainingTime: number
-	reset: () => void
+interface CountdownTimer {
+	remainingTime: number | null
+	startTimer: (timestamp: number) => void
+	resetTimer: () => void
 }
 
-const useTimer = (startTimestamp: number | null, duration: number = 24 * 60 * 60 * 1000): TimerHook => {
-	const [remainingTime, setRemainingTime] = useState<number>(0)
-	const intervalRef = useRef<NodeJS.Timeout | null>(null)
-	const startRef = useRef<number | null>(startTimestamp)
+const useCountdownTimer = (): CountdownTimer => {
+	const [timestamp, setTimestamp] = useState<number | null>(null)
+	const [remainingTime, setRemainingTime] = useState<number | null>(null)
 
-	const calculateRemaining = useCallback(() => {
-		if (!startTimestamp) return 0
-		const endTime = startTimestamp + duration
-		return Math.max(0, endTime - Date.now())
-	}, [startTimestamp, duration])
+	// Function to start/update the timer
+	const startTimer = (newTimestamp: number) => {
+		setTimestamp(newTimestamp)
+	}
 
-	const formatTime = useCallback((ms: number): string => {
-		const totalSeconds = Math.floor(ms / 1000)
-		const hours = Math.floor(totalSeconds / 3600)
-		const minutes = Math.floor((totalSeconds % 3600) / 60)
-		const seconds = Math.floor(totalSeconds % 60)
-		return [hours, minutes, seconds].map((n) => String(n).padStart(2, "0")).join(":")
-	}, [])
-
-	const resetTimer = useCallback(() => {
-		setRemainingTime(calculateRemaining())
-	}, [calculateRemaining])
+	// Function to reset the timer
+	const resetTimer = () => {
+		setTimestamp(null)
+		setRemainingTime(null)
+	}
 
 	useEffect(() => {
-		// Clear existing interval if timestamp changes
-		if (startRef.current !== startTimestamp) {
-			startRef.current = startTimestamp
-			resetTimer()
+		if (!timestamp) return
+
+		const updateRemainingTime = () => {
+			const now = Date.now()
+			const targetTime = timestamp + 24 * 60 * 60 * 1000 // Add 24 hours
+			const timeLeft = Math.max(targetTime - now, 0)
+			setRemainingTime(timeLeft)
 		}
 
-		if (!startTimestamp) {
-			setRemainingTime(0)
-			return
-		}
+		// Initial calculation
+		updateRemainingTime()
 
-		intervalRef.current = setInterval(() => {
-			setRemainingTime((prev) => {
-				const newTime = calculateRemaining()
-				if (newTime <= 0) clearInterval(intervalRef.current!)
-				return newTime
-			})
-		}, 1000)
+		// Update every second
+		const interval = setInterval(updateRemainingTime, 1000)
 
-		return () => {
-			if (intervalRef.current) clearInterval(intervalRef.current)
-		}
-	}, [startTimestamp, duration, calculateRemaining, resetTimer])
+		return () => clearInterval(interval)
+	}, [timestamp])
 
-	return {
-		remainingTime,
-		formattedTime: formatTime(remainingTime),
-		isExpired: remainingTime <= 0,
-		reset: resetTimer,
-	}
+	return { remainingTime, startTimer, resetTimer }
 }
 
-export default useTimer
+export default useCountdownTimer

@@ -3,10 +3,11 @@ import { Box, ThemeProvider } from "@mui/material"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { useEffect, useRef, useState } from "react"
 import { Provider } from "react-redux"
-import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration, useNavigation } from "react-router"
+import { isRouteErrorResponse, Links, Meta, Scripts, ScrollRestoration, useNavigation } from "react-router"
 import LoadingBar, { LoadingBarContainer } from "react-top-loading-bar"
 import { Toaster } from "sonner"
 import type { Route } from "./+types/root"
+import MainApp from "./app"
 import AssetsManager from "./constants/AssetsManager"
 import store from "./store/store"
 import stylesheet from "./styles/app.css?url"
@@ -109,7 +110,7 @@ export default function App() {
 								height={1}
 								waitingTime={500}
 							/>
-							<Outlet />
+							<MainApp />
 							<Toaster
 								richColors
 								theme="light"

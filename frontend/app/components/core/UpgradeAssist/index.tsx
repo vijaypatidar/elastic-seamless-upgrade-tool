@@ -1,31 +1,42 @@
 import { Skeleton, Tooltip } from "@heroui/react"
 import { Box, Typography } from "@mui/material"
+import type { ActionCreatorWithPayload } from "@reduxjs/toolkit"
 import { useQuery } from "@tanstack/react-query"
 import { Camera, Flash, InfoCircle } from "iconsax-react"
+import moment from "moment"
 import { useState } from "react"
+import { useDispatch } from "react-redux"
 import { Link } from "react-router"
 import { toast } from "sonner"
 import axiosJSON from "~/apis/http"
 import { OutlinedBorderButton } from "~/components/utilities/Buttons"
 import StorageManager from "~/constants/StorageManager"
+import useCountdownTimer from "~/lib/hooks/useTimer"
 import LocalStorageHandler from "~/lib/LocalHanlder"
 import { getStepIndicatorData } from "~/lib/Utils"
-import DeprectedSettings from "./widgets/DeprectedSettings"
-import StepBox from "./widgets/StepBox"
-import { useDispatch } from "react-redux"
 import {
 	setDeprecationChangesAllowed,
 	setElasticNodeUpgradeAllowed,
 	setKibanaNodeUpgradeAllowed,
 } from "~/store/reducers/safeRoutes"
-import type { ActionCreatorWithPayload } from "@reduxjs/toolkit"
-import useTimer from "~/lib/hooks/useTimer"
-import moment from "moment"
+import DeprectedSettings from "./widgets/DeprectedSettings"
+import StepBox from "./widgets/StepBox"
 
 function UpgradeAssistant() {
 	const dispatch = useDispatch()
-	const [timestamp, setTimestamp] = useState<number | null>(null)
-	const { formattedTime, isExpired, reset } = useTimer(timestamp)
+	const { remainingTime, startTimer, resetTimer } = useCountdownTimer()
+
+	// Format remaining time in HH:MM:SS
+	const formatTime = (milliseconds: number | null): string => {
+		if (milliseconds === null) return "Not Started"
+
+		const totalSeconds = Math.floor(milliseconds / 1000)
+		const hours = Math.floor(totalSeconds / 3600)
+		const minutes = Math.floor((totalSeconds % 3600) / 60)
+		const seconds = totalSeconds % 60
+
+		return `${hours}h ${minutes}m ${seconds}s`
+	}
 
 	const [stepStatus, setStepStatus] = useState<TStepStatus>({
 		"1": "NOTVISITED",
@@ -51,8 +62,7 @@ function UpgradeAssistant() {
 			.get(`/api/elastic/clusters/${clusterId}/upgrade_info`)
 			.then((res) => {
 				response = res.data
-				setTimestamp(moment.utc(response?.snapshot?.snapshot.createdAt).local().unix())
-				reset()
+				startTimer(moment.utc(response?.elastic?.snapshot?.snapshot.createdAt).local().valueOf())
 				const { elastic, kibana } = response ?? {}
 				const step1Status = elastic?.snapshot?.snapshot ? "COMPLETED" : "PENDING"
 
@@ -103,7 +113,11 @@ function UpgradeAssistant() {
 		return response
 	}
 
-	const { data, isLoading, refetch, isRefetching } = useQuery({ queryKey: ["cluster-info"], queryFn: getUpgradeInfo })
+	const { data, isLoading, refetch, isRefetching } = useQuery({
+		queryKey: ["cluster-info"],
+		queryFn: getUpgradeInfo,
+		staleTime: Infinity,
+	})
 
 	const step1Data = getStepIndicatorData("01", stepStatus["1"])
 	const step2Data = getStepIndicatorData("02", stepStatus["2"])
@@ -169,8 +183,8 @@ function UpgradeAssistant() {
 								>
 									<InfoCircle size="14px" color="#6E6E6E" />
 								</Tooltip>
-								<Typography fontSize="14px" fontWeight="400" lineHeight="18px" color="#6E6E6E">
-									{formattedTime}
+								<Typography fontSize="14px" fontWeight="400" lineHeight="18px" color="#6E6E6E" minWidth="74px">
+									{formatTime(remainingTime)}
 								</Typography>
 							</Box>
 						) : (

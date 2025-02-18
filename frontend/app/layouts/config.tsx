@@ -1,5 +1,6 @@
 import { Box, Typography } from "@mui/material"
 import { ArrowRight2, Convertshape2, Share } from "iconsax-react"
+import { connect } from "react-redux"
 import { Link, Outlet, useLocation } from "react-router"
 import { toast } from "sonner"
 import { cn } from "~/lib/Utils"
@@ -12,7 +13,7 @@ const PATH_META_DATA: { [key: string]: { label: string; pos: number } } = {
 const CENTER_ARROW_MIDDLE_GRADIENT = "linear-gradient(90deg, #52D97F 30%, #6B46C5 99%)"
 const CENTER_ARROW_COMPLETE_GRADIENT = "linear-gradient(90deg, #52D97F 30%, #52D97F 99%)"
 
-function ConfigLayout() {
+function ConfigLayout({ upgradeAllowed }: { upgradeAllowed: boolean }) {
 	const { pathname } = useLocation()
 
 	const GradientBox = ({
@@ -138,7 +139,7 @@ function ConfigLayout() {
 					zIndex="z-0"
 					isActive={PATH_META_DATA[pathname].label === "UPGRADE_ASSISTANT"}
 					isCompleted={PATH_META_DATA[pathname].pos > 2}
-					isDisabled
+					isDisabled={!upgradeAllowed}
 					disabledClickEvent={() => toast.info("Please select update available to access the page.")}
 				/>
 			</Box>
@@ -147,4 +148,8 @@ function ConfigLayout() {
 	)
 }
 
-export default ConfigLayout
+const mapStateToProps = (state: any) => ({
+	upgradeAllowed: state.safeRoutes.upgradeAssistAllowed,
+})
+
+export default connect(mapStateToProps)(ConfigLayout)
