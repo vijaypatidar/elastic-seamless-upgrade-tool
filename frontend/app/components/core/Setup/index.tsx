@@ -11,8 +11,11 @@ import SessionStorageHandler from "~/lib/SessionHandler"
 import Certificates from "./Certificates"
 import Credentials from "./Credentials"
 import Infrastructure from "./Infrastructure"
+import { useDispatch } from "react-redux"
+import { setClusterAdded } from "~/store/reducers/safeRoutes"
 
 function Setup() {
+	const dispatch = useDispatch()
 	const navigate = useNavigate()
 	const [step, setStep] = useState<number>(1)
 	const [infraType, setInfraType] = useState<string | number>("")
@@ -81,10 +84,11 @@ function Setup() {
 					kibana: { url: creds.kibanaUrl, username: creds.username, password: creds.password },
 					certificateIds: certIds,
 					infrastructureType: infraType,
-					pathToKey: creds.pathToSSH,
+					key: creds.pathToSSH ?? "",
 					kibanaClusterInfo: creds.kibanaClusters,
 				})
 				.then((res) => {
+					dispatch(setClusterAdded(true))
 					LocalStorageHandler.setItem(StorageManager.INFRA_TYPE, infraType)
 					SessionStorageHandler.setItem(StorageManager.SETUP_SET, 1)
 					LocalStorageHandler.setItem(StorageManager.CLUSTER_ID, res?.data?.clusterId || "cluster-id")

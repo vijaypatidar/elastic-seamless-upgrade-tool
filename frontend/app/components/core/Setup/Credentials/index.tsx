@@ -126,7 +126,7 @@ function Credentials({ backStep, onSubmit }: TCredentialsComp) {
 										fullWidth
 										id="password"
 										name="password"
-										type="text"
+										type={showPassword ? "text": "password"}
 										placeholder="Enter password"
 										variant="outlined"
 										value={formik.values.password}

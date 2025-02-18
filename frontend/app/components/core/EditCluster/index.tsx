@@ -18,6 +18,10 @@ import StorageManager from "~/constants/StorageManager"
 import LocalStorageHandler from "~/lib/LocalHanlder"
 import SessionStorageHandler from "~/lib/SessionHandler"
 import validationSchema from "./validation/validation"
+import { useLocation, useNavigate } from "react-router"
+import { useDispatch } from "react-redux"
+import { resetForEditCluster } from "~/store/reducers/safeRoutes"
+import { refresh } from "~/store/reducers/refresh"
 
 const STYLES = {
 	GO_BACK_BUTTON: {
@@ -48,6 +52,8 @@ const INITIAL_VALUES = {
 }
 
 function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: () => void }) {
+	const { pathname } = useLocation()
+	const dispatch = useDispatch()
 	const [initialValues, setInitialValues] = useState<TClusterValues>(INITIAL_VALUES)
 	const [showPassword, setShowPassword] = useState<boolean>(false)
 
@@ -160,6 +166,12 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 					SessionStorageHandler.setItem(StorageManager.SETUP_SET, 1)
 					LocalStorageHandler.setItem(StorageManager.CLUSTER_ID, res?.data?.clusterId || "cluster-id")
 					refetch()
+					if (pathname === "/cluster-overview") {
+						dispatch(refresh())
+					}
+					onOpenChange()
+					dispatch(resetForEditCluster())
+
 				})
 				.catch((err) => toast.error(err?.response?.data.err))
 		},

@@ -10,9 +10,11 @@ import { OneLineSkeleton } from "~/components/utilities/Skeletons"
 import StorageManager from "~/constants/StorageManager"
 import LocalStorageHandler from "~/lib/LocalHanlder"
 import DetailBox from "./widgets/DetailBox"
-import { useDispatch } from "react-redux"
+import { connect, useDispatch } from "react-redux"
 import { setUpgradeAssistAllowed } from "~/store/reducers/safeRoutes"
 import { useNavigate } from "react-router"
+import { useEffect } from "react"
+import { refresh } from "~/store/reducers/refresh"
 
 const CLUSTER_STATUS_COLOR: { [key: string]: string } = {
 	yellow: "#E0B517",
@@ -47,7 +49,7 @@ const STYLES = {
 	},
 }
 
-function ClusterInfo() {
+function ClusterInfo({ refresh }: { refresh: boolean }) {
 	const navigate = useNavigate()
 	const dispatch = useDispatch()
 
@@ -60,7 +62,7 @@ function ClusterInfo() {
 				dispatch(setUpgradeAssistAllowed(res.data?.targetVersion ? true : false))
 				response = res.data
 			})
-			.catch((err) => toast.error(err?.response?.data.err))
+			.catch((err) => toast.error(err?.response?.data?.err))
 		return response
 	}
 
@@ -68,6 +70,7 @@ function ClusterInfo() {
 		queryKey: ["cluster-info"],
 		queryFn: getClusterInfo,
 		staleTime: Infinity,
+		enabled: false,
 	})
 
 	const handleVersionSelect = async (ver: string) => {
@@ -78,13 +81,17 @@ function ClusterInfo() {
 				dispatch(setUpgradeAssistAllowed(res.data?.targetVersion ? true : false))
 				navigate("/upgrade-assistant")
 			})
-			.catch((err) => toast.error(err?.response?.data.err))
+			.catch((err) => toast.error(err?.response?.data?.err))
 	}
 
 	const { mutate: HandleVersion, isPending } = useMutation({
 		mutationKey: ["version-select"],
 		mutationFn: handleVersionSelect,
 	})
+
+	useEffect(() => {
+		refetch()
+	}, [refresh])
 
 	return (
 		<Box
@@ -109,7 +116,7 @@ function ClusterInfo() {
 					</Typography>
 					<OneLineSkeleton
 						className="rounded-[10px] max-w-[250px] w-[154px]"
-						show={isLoading}
+						show={isLoading || isRefetching}
 						component={
 							<PopupState variant="popover" popupId="demo-popup-menu">
 								{(popupState) => (
@@ -139,7 +146,7 @@ function ClusterInfo() {
 														sx={STYLES.MENU_ITEMS}
 														onClick={() => {
 															popupState.close()
-															handleVersionSelect(update)
+															HandleVersion(update)
 														}}
 													>
 														{update}
@@ -157,8 +164,16 @@ function ClusterInfo() {
 				<Box className="flex flex-col gap-6 overflow-auto">
 					<Box className="flex flex-col sm:flex-row gap-6 sm:gap-16">
 						<Box className="flex flex-col gap-[24px] w-2/4">
-							<DetailBox title="Cluster name" description={data?.clusterName} isLoading={isLoading} />
-							<DetailBox title="Cluster UUID" description={data?.clusterUUID} isLoading={isLoading} />
+							<DetailBox
+								title="Cluster name"
+								description={data?.clusterName}
+								isLoading={isLoading || isRefetching}
+							/>
+							<DetailBox
+								title="Cluster UUID"
+								description={data?.clusterUUID}
+								isLoading={isLoading || isRefetching}
+							/>
 							<DetailBox
 								title="Infrastructure type"
 								description={_.capitalize(
@@ -166,7 +181,7 @@ function ClusterInfo() {
 										LocalStorageHandler.getItem(StorageManager.INFRA_TYPE) ??
 										"placeholder"
 								)}
-								isLoading={isLoading}
+								isLoading={isLoading || isRefetching}
 							/>
 						</Box>
 						<Box className="flex flex-col gap-[24px] w-1/2">
@@ -191,13 +206,17 @@ function ClusterInfo() {
 										</Typography>
 									</Box>
 								}
-								isLoading={isLoading}
+								isLoading={isLoading || isRefetching}
 							/>
-							<DetailBox title="ES Version" description={data?.version} isLoading={isLoading} />
+							<DetailBox
+								title="ES Version"
+								description={data?.version}
+								isLoading={isLoading || isRefetching}
+							/>
 							<DetailBox
 								title="Timed out"
 								description={data?.timeOut ? "True" : "False"}
-								isLoading={isLoading}
+								isLoading={isLoading || isRefetching}
 							/>
 						</Box>
 					</Box>
@@ -208,29 +227,37 @@ function ClusterInfo() {
 						<DetailBox
 							title="Number of data nodes"
 							description={data?.numberOfDataNodes}
-							isLoading={isLoading}
+							isLoading={isLoading || isRefetching}
 						/>
-						<DetailBox title="Number of nodes" description={data?.numberOfNodes} isLoading={isLoading} />
+						<DetailBox
+							title="Number of nodes"
+							description={data?.numberOfNodes}
+							isLoading={isLoading || isRefetching}
+						/>
 						<DetailBox
 							title="Active primary shards"
 							description={data?.activePrimaryShards}
-							isLoading={isLoading}
+							isLoading={isLoading || isRefetching}
 						/>
-						<DetailBox title="Active shards" description={data?.activeShards} isLoading={isLoading} />
+						<DetailBox
+							title="Active shards"
+							description={data?.activeShards}
+							isLoading={isLoading || isRefetching}
+						/>
 						<DetailBox
 							title="Relocating shards"
 							description={data?.relocatingShards}
-							isLoading={isLoading}
+							isLoading={isLoading || isRefetching}
 						/>
 						<DetailBox
 							title="Initializing shards"
 							description={data?.initializingShards}
-							isLoading={isLoading}
+							isLoading={isLoading || isRefetching}
 						/>
 						<DetailBox
 							title="Unassigned shards"
 							description={data?.unassignedShards}
-							isLoading={isLoading}
+							isLoading={isLoading || isRefetching}
 						/>
 					</Box>
 				</Box>
@@ -239,4 +266,8 @@ function ClusterInfo() {
 	)
 }
 
-export default ClusterInfo
+const mapStateToProps = (state: any) => ({
+	refresh: state.refresh.refresh,
+})
+
+export default connect(mapStateToProps)(ClusterInfo)
