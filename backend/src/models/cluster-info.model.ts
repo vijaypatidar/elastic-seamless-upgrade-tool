@@ -24,6 +24,7 @@ export interface IClusterInfo {
   targetVersion?: string;
   infrastructureType?: string;
   pathToKey?: string;
+  key?: string;
 }
 
 export interface IClusterInfoDocument extends IClusterInfo, Document {}
@@ -53,7 +54,8 @@ const ClusterInfoSchema: Schema<IClusterInfoDocument> =
       certificateIds: { type: Array<String>, required: false },
       infrastructureType: {type: String,required: true},
       targetVersion: { type: String },
-      pathToKey: {type: String}
+      pathToKey: {type: String},
+      key: {type: String}
     },
     { timestamps: true },
   );

@@ -94,6 +94,9 @@ export const addOrUpdateClusterDetail = async (req: Request, res: Response) => {
     const kibana: IKibanaInfo = req.body.kibana;
 
     const sshKey = req.body.key;
+    if (typeof sshKey !== "string" || !sshKey.trim()) {
+      throw new Error("Invalid SSH key: Key must be a non-empty string.");
+  }
     const sanitizedKey = sshKey.replace(/\r?\n|\r/g, "");
     const formattedKey = `-----BEGIN RSA PRIVATE KEY-----\n${sanitizedKey}\n-----END RSA PRIVATE KEY-----`;
 
@@ -114,7 +117,8 @@ export const addOrUpdateClusterDetail = async (req: Request, res: Response) => {
       certificateIds: req.body.certificateIds,
       targetVersion: req.body.targetVersion,
       infrastructureType: req.body.infrastructureType,
-      pathToKey: keyPath
+      pathToKey: keyPath,
+      key: sshKey
     };
 
     const result = await createOrUpdateClusterInfo(clusterInfo);
@@ -419,7 +423,7 @@ export const verfiyCluster = async (req: Request, res: Response) => {
 							certificateIds: clusters[0].certificateIds ?? null,
 							targetVersion: clusters[0].targetVersion ?? null,
 							infrastructureType: clusters[0].infrastructureType ?? null,
-							pathToKey: clusters[0].pathToKey ?? null,
+							pathToKey: clusters[0].key ?? null
 						}
 					: null,
 			})
