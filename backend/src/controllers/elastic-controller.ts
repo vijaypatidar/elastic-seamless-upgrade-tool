@@ -30,7 +30,6 @@ import path from 'path';
 import {  getPossibleUpgrades } from '../utils/upgrade.versions';
 import { normalizeNodeUrl } from '../utils/utlity.functions';
 import { IElasticNode } from '../models/elastic-node.model';
-import { url } from 'inspector';
 
 export const healthCheck = async (req: Request, res: Response) => {
   try {

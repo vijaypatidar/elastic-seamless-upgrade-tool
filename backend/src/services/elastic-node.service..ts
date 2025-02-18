@@ -1,3 +1,4 @@
+import { error } from 'console';
 import { ElasticClient } from '../clients/elastic.client';
 import {
   createAnsibleInventory,
@@ -34,14 +35,22 @@ export const getElasticNodeById = async (
 export const getAllElasticNodes = async (
   clusterId: string,
 ): Promise<IElasticNode[]> => {
-  await syncNodeData(clusterId);
-  const elasticNodes = await ElasticNode.find({ clusterId: clusterId });
-  return elasticNodes;
+  try{
+    await syncNodeData(clusterId);
+  }
+  catch(error){
+      logger.error("Unable to sync wit Elastic search instance! Maybe the connection is breaked")
+  }
+  finally{
+    const elasticNodes = await ElasticNode.find({ clusterId: clusterId });
+    return elasticNodes;
+  }
 };
 
 export const syncNodeData = async (clusterId: string) => {
   try {
     const client = await ElasticClient.buildClient(clusterId);
+    const clusterInfo = await getClusterInfoById(clusterId);
     const response: any = await client.getClient().nodes.info({
       filter_path:
         'nodes.*.name,nodes.*.roles,nodes.*.os.name,nodes.*.os.version,nodes.*.version,nodes.*.ip',
@@ -69,6 +78,10 @@ export const syncNodeData = async (clusterId: string) => {
         node.status = existingNode.status;
         node.progress = existingNode.progress;
       }
+      if(node.version === clusterInfo.targetVersion){
+        node.status = "upgraded";
+        node.progress = 100;
+      }
       await ElasticNode.findOneAndUpdate({ nodeId: node.nodeId }, node, {
         new: true,
         runValidators: true,
@@ -77,7 +90,6 @@ export const syncNodeData = async (clusterId: string) => {
     }
   } catch (error) {
     logger.error('Error syncing nodes from Elasticsearch:', error);
-    throw error;
   }
 };
 
@@ -88,7 +100,7 @@ export const updateNodeStatus = async (
   try {
 
     if(newStatus === 'upgraded'){
-      
+     
     }
     const updatedNode = await ElasticNode.findOneAndUpdate(
       { nodeId },
@@ -157,9 +169,5 @@ export const triggerNodeUpgrade = async (nodeId: string,clusterId: string) => {
   }
 };
 
-const isNodeUpdated = async(nodeId: string)=>{
-    const node = await getElasticNodeById(nodeId);  
-
-}
 
 /// /upgrade (exec)
