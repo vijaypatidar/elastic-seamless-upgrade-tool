@@ -58,7 +58,6 @@ function ConfigLayout({ upgradeAllowed }: { upgradeAllowed: boolean }) {
 					})}
 					onClick={disabledClickEvent}
 				/>
-
 				<Box
 					className={cn(`flex items-center p-px w-full cursor-pointer ${borderRadius} ${zIndex}`, {
 						"pointer-events-none": isDisabled,

@@ -1,4 +1,4 @@
-import { Drawer, DrawerBody, DrawerContent } from "@heroui/react"
+import { Drawer, DrawerBody, DrawerContent, Skeleton } from "@heroui/react"
 import { Box, IconButton, InputAdornment, Typography } from "@mui/material"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { useFormik } from "formik"
@@ -159,6 +159,7 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 					LocalStorageHandler.setItem(StorageManager.INFRA_TYPE, "on-premise")
 					SessionStorageHandler.setItem(StorageManager.SETUP_SET, 1)
 					LocalStorageHandler.setItem(StorageManager.CLUSTER_ID, res?.data?.clusterId || "cluster-id")
+					refetch()
 				})
 				.catch((err) => toast.error(err?.response?.data.err))
 		},
@@ -227,8 +228,11 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 												Edit cluster
 											</Typography>
 										</Box>
-										<ConatinedButton type="submit" disabled={!formik.dirty || formik.isSubmitting}>
-											{formik.isSubmitting ? "Updating" : "Update"}
+										<ConatinedButton
+											type="submit"
+											disabled={!formik.dirty || formik.isSubmitting || isPending}
+										>
+											{formik.isSubmitting || isPending ? "Updating" : "Update"}
 										</ConatinedButton>
 									</Box>
 									<Box
@@ -273,23 +277,31 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 															height="52px"
 															className="w-full rounded-[10px]"
 														/>
-														<Input
-															fullWidth
-															id="kibanaUrl"
-															name="kibanaUrl"
-															type="text"
-															placeholder="Enter Kibana URL"
-															variant="outlined"
-															value={formik.values.kibanaUrl}
-															onChange={formik.handleChange}
-															onBlur={formik.handleBlur}
-															error={
-																formik.touched.kibanaUrl &&
-																Boolean(formik.errors.kibanaUrl)
+														<OneLineSkeleton
+															show={isLoading || isRefetching}
+															component={
+																<Input
+																	fullWidth
+																	id="kibanaUrl"
+																	name="kibanaUrl"
+																	type="text"
+																	placeholder="Enter Kibana URL"
+																	variant="outlined"
+																	value={formik.values.kibanaUrl}
+																	onChange={formik.handleChange}
+																	onBlur={formik.handleBlur}
+																	error={
+																		formik.touched.kibanaUrl &&
+																		Boolean(formik.errors.kibanaUrl)
+																	}
+																	helperText={
+																		formik.touched.kibanaUrl &&
+																		formik.errors.kibanaUrl
+																	}
+																/>
 															}
-															helperText={
-																formik.touched.kibanaUrl && formik.errors.kibanaUrl
-															}
+															height="52px"
+															className="w-full rounded-[10px]"
 														/>
 													</Box>
 												</Box>
@@ -302,39 +314,52 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 													>
 														Authentication preference
 													</Typography>
-													<Box className="flex flex-col gap-[2px]">
-														<Box
-															className="flex flex-row gap-2 justify-between"
-															onBlur={() => formik.setFieldTouched("authPref", true)}
-														>
-															<SelectionTile
-																label="Username & password"
-																isSelected={formik.values.authPref === "U/P"}
-																value="U/P"
-																onSelect={(value: string | number) =>
-																	formik.setFieldValue("authPref", value)
-																}
-															/>
-															<SelectionTile
-																label="API Key"
-																isSelected={formik.values.authPref === "API_KEY"}
-																value="API_KEY"
-																onSelect={(value: string | number) =>
-																	formik.setFieldValue("authPref", value)
-																}
-															/>
-														</Box>
-														{formik.touched.authPref && Boolean(formik.errors.authPref) ? (
-															<Typography
-																fontSize="12px"
-																fontWeight={400}
-																lineHeight="20px"
-																color="#ef4444"
-															>
-																{formik.touched.authPref && formik.errors.authPref}
-															</Typography>
-														) : null}
-													</Box>
+													<OneLineSkeleton
+														show={isLoading || isRefetching}
+														component={
+															<Box className="flex flex-col gap-[2px] w-full">
+																<Box
+																	className="flex flex-row gap-2 justify-between"
+																	onBlur={() =>
+																		formik.setFieldTouched("authPref", true)
+																	}
+																>
+																	<SelectionTile
+																		label="Username & password"
+																		isSelected={formik.values.authPref === "U/P"}
+																		value="U/P"
+																		onSelect={(value: string | number) =>
+																			formik.setFieldValue("authPref", value)
+																		}
+																	/>
+																	<SelectionTile
+																		label="API Key"
+																		isSelected={
+																			formik.values.authPref === "API_KEY"
+																		}
+																		value="API_KEY"
+																		onSelect={(value: string | number) =>
+																			formik.setFieldValue("authPref", value)
+																		}
+																	/>
+																</Box>
+																{formik.touched.authPref &&
+																Boolean(formik.errors.authPref) ? (
+																	<Typography
+																		fontSize="12px"
+																		fontWeight={400}
+																		lineHeight="20px"
+																		color="#ef4444"
+																	>
+																		{formik.touched.authPref &&
+																			formik.errors.authPref}
+																	</Typography>
+																) : null}
+															</Box>
+														}
+														height="52px"
+														className="w-full rounded-[10px]"
+													/>
 												</Box>
 												{formik.values.authPref && (
 													<Box className="flex flex-col gap-[6px] max-w-[515px]">
@@ -352,92 +377,116 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 														>
 															{formik.values.authPref === "U/P" ? (
 																<>
-																	<Input
-																		fullWidth
-																		id="username"
-																		name="username"
-																		type="text"
-																		placeholder="Enter username"
-																		variant="outlined"
-																		value={formik.values.username}
-																		onChange={formik.handleChange}
-																		onBlur={formik.handleBlur}
-																		error={
-																			formik.touched.username &&
-																			Boolean(formik.errors.username)
-																		}
-																		helperText={
-																			formik.touched.username &&
-																			formik.errors.username
+																	<OneLineSkeleton
+																		show={isLoading || isRefetching}
+																		height="52px"
+																		className="w-full rounded-[10px]"
+																		component={
+																			<Input
+																				fullWidth
+																				id="username"
+																				name="username"
+																				type="text"
+																				placeholder="Enter username"
+																				variant="outlined"
+																				value={formik.values.username}
+																				onChange={formik.handleChange}
+																				onBlur={formik.handleBlur}
+																				error={
+																					formik.touched.username &&
+																					Boolean(formik.errors.username)
+																				}
+																				helperText={
+																					formik.touched.username &&
+																					formik.errors.username
+																				}
+																			/>
 																		}
 																	/>
-																	<Input
-																		fullWidth
-																		id="password"
-																		name="password"
-																		type={showPassword ? "text" : "password"}
-																		placeholder="Enter password"
-																		variant="outlined"
-																		value={formik.values.password}
-																		onChange={formik.handleChange}
-																		onBlur={formik.handleBlur}
-																		error={
-																			formik.touched.password &&
-																			Boolean(formik.errors.password)
+																	<OneLineSkeleton
+																		show={isLoading || isRefetching}
+																		height="52px"
+																		className="w-full rounded-[10px]"
+																		component={
+																			<Input
+																				fullWidth
+																				id="password"
+																				name="password"
+																				type={
+																					showPassword ? "text" : "password"
+																				}
+																				placeholder="Enter password"
+																				variant="outlined"
+																				value={formik.values.password}
+																				onChange={formik.handleChange}
+																				onBlur={formik.handleBlur}
+																				error={
+																					formik.touched.password &&
+																					Boolean(formik.errors.password)
+																				}
+																				helperText={
+																					formik.touched.password &&
+																					formik.errors.password
+																				}
+																				InputProps={{
+																					endAdornment: (
+																						<InputAdornment position="end">
+																							<IconButton
+																								aria-label="toggle password visibility"
+																								onClick={() =>
+																									setShowPassword(
+																										!showPassword
+																									)
+																								}
+																								onMouseDown={(event) =>
+																									event.preventDefault()
+																								}
+																								edge="end"
+																							>
+																								{showPassword ? (
+																									<Eye
+																										size="18px"
+																										color="#FFF"
+																									/>
+																								) : (
+																									<EyeSlash
+																										size="18px"
+																										color="#FFF"
+																									/>
+																								)}
+																							</IconButton>
+																						</InputAdornment>
+																					),
+																				}}
+																			/>
 																		}
-																		helperText={
-																			formik.touched.password &&
-																			formik.errors.password
-																		}
-																		InputProps={{
-																			endAdornment: (
-																				<InputAdornment position="end">
-																					<IconButton
-																						aria-label="toggle password visibility"
-																						onClick={() =>
-																							setShowPassword(
-																								!showPassword
-																							)
-																						}
-																						onMouseDown={(event) =>
-																							event.preventDefault()
-																						}
-																						edge="end"
-																					>
-																						{showPassword ? (
-																							<Eye
-																								size="18px"
-																								color="#FFF"
-																							/>
-																						) : (
-																							<EyeSlash
-																								size="18px"
-																								color="#FFF"
-																							/>
-																						)}
-																					</IconButton>
-																				</InputAdornment>
-																			),
-																		}}
 																	/>
 																</>
 															) : (
-																<Input
-																	fullWidth
-																	id="apiKey"
-																	name="apiKey"
-																	type="text"
-																	placeholder="Enter apiKey"
-																	variant="outlined"
-																	value={formik.values.apiKey}
-																	onChange={formik.handleChange}
-																	onBlur={formik.handleBlur}
-																	error={
-																		formik.touched.apiKey &&
-																		Boolean(formik.errors.apiKey)
-																	}
-																	helperText={
-																		formik.touched.apiKey && formik.errors.apiKey
+																<OneLineSkeleton
+																	show={isLoading || isRefetching}
+																	height="52px"
+																	className="w-full rounded-[10px]"
+																	component={
+																		<Input
+																			fullWidth
+																			id="apiKey"
+																			name="apiKey"
+																			type="text"
+																			placeholder="Enter apiKey"
+																			variant="outlined"
+																			value={formik.values.apiKey}
+																			onChange={formik.handleChange}
+																			onBlur={formik.handleBlur}
+																			error={
+																				formik.touched.apiKey &&
+																				Boolean(formik.errors.apiKey)
+																			}
+																			helperText={
+																				formik.touched.apiKey &&
+																				formik.errors.apiKey
+																			}
+																		/>
 																	}
 																/>
 															)}
@@ -587,23 +636,33 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 													>
 														Path to SSH key
 													</Typography>
-													<Input
-														fullWidth
-														id="pathToSSH"
-														name="pathToSSH"
-														type="text"
-														placeholder="Enter path to SSH key"
-														varient="outlined"
-														multiline
-														minRows={8}
-														maxRows={8}
-														value={formik.values.pathToSSH}
-														onChange={formik.handleChange}
-														onBlur={formik.handleBlur}
-														error={
-															formik.touched.pathToSSH && Boolean(formik.errors.pathToSSH)
+													<OneLineSkeleton
+														show={isLoading || isRefetching}
+														height="192px"
+														className="w-full rounded-[10px]"
+														component={
+															<Input
+																fullWidth
+																id="pathToSSH"
+																name="pathToSSH"
+																type="text"
+																placeholder="Enter path to SSH key"
+																varient="outlined"
+																multiline
+																minRows={8}
+																maxRows={8}
+																value={formik.values.pathToSSH}
+																onChange={formik.handleChange}
+																onBlur={formik.handleBlur}
+																error={
+																	formik.touched.pathToSSH &&
+																	Boolean(formik.errors.pathToSSH)
+																}
+																helperText={
+																	formik.touched.pathToSSH && formik.errors.pathToSSH
+																}
+															/>
 														}
-														helperText={formik.touched.pathToSSH && formik.errors.pathToSSH}
 													/>
 												</Box>
 												<Box className="flex flex-col gap-[6px] max-w-[515px]">
