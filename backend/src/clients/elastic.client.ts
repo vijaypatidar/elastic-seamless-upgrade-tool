@@ -7,6 +7,7 @@ import {
 import { ElasticClusterBaseRequest } from '..';
 import { getClusterInfoById } from '../services/cluster-info.service';
 import logger from '../logger/logger';
+import ClusterInfo from '../models/cluster-info.model';
 
 export interface ElastcSearchSnapshot {
   createdAt: Date;
@@ -138,6 +139,7 @@ export class ElasticClient {
     const body: ElasticClusterBaseRequest = {
       url: cluterInfo.elastic?.url!!,
       ssl: {},
+      apiKey: cluterInfo.elastic?.apiKey!!,
       username: cluterInfo.elastic?.username!!,
       password: cluterInfo.elastic?.password!!,
     };

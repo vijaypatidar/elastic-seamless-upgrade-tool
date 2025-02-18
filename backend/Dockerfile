@@ -23,7 +23,8 @@ FROM node:18-bullseye
 RUN apt-get update && \
     apt-get install -y ansible && \
     apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* && \
+    && apt-get install -y openssh-client
 
 # Verify installations
 RUN node --version && yarn --version && ansible --version
