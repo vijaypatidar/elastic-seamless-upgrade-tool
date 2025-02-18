@@ -39,7 +39,7 @@ export const healthCheck = async (req: Request, res: Response) => {
     res.send(health);
   } catch (err: any) {
     logger.info(err);
-    res.status(400).send({ message: err.message });
+    res.status(400).send({ err: err.message });
   }
 };
 
@@ -83,7 +83,7 @@ export const getClusterDetails = async (req: Request, res: Response) => {
     return;
   } catch (err: any) {
     logger.info(err);
-    res.status(400).send({ message: err.message });
+    res.status(400).send({ err: err.message });
   }
 };
 
@@ -131,7 +131,7 @@ export const addOrUpdateClusterDetail = async (req: Request, res: Response) => {
     await syncNodeData(clusterId);
   } catch (err: any) {
     logger.info(err);
-    res.status(400).send({ message: err.message });
+    res.status(400).send({ err: err.message });
   }
 };
 
@@ -169,7 +169,7 @@ export const getUpgradeDetails = async (req: Request, res: Response) => {
       }
       },
       kibana: {
-      isUpgradable: !(isKibanaUpgraded),
+      isUpgradable: !isKibanaUpgraded,
       deprecations: { ...kibanaDeprecationCount },
       },
     });
@@ -194,7 +194,7 @@ export const getElasticDeprecationInfo = async (
     res.status(200).send(deprecations);
   } catch (err: any) {
     logger.info(err);
-    res.status(400).send({ message: err.message });
+    res.status(400).send({ err: err.message });
   }
 };
 
@@ -242,7 +242,7 @@ export const getNodesInfo = async (req: Request, res: Response) => {
     res.send(nodes);
   } catch (error: any) {
     logger.error('Error fetching node details:', error);
-    res.status(400).send({ message: error.message });
+    res.status(400).send({ err: error.message });
   }
 };
 
@@ -253,16 +253,16 @@ export const handleUpgrades = async (req: Request, res: Response) => {
     nodes.forEach((nodeId: string) => {
       const triggered = triggerNodeUpgrade(nodeId,clusterId);
       if (!triggered) {
-        res.status(400).send({ message: 'Upgrade failed node not available' });
+        res.status(400).send({ err: 'Upgrade failed node not available' });
       }
       else{
         return;
       }
     });
-    res.status(200).send({ message: 'Upgradation triggered' });
+    res.status(200).send({ err: 'Upgradation triggered' });
   } catch (err: any) {
     logger.error('Error performing upgrade:', err);
-    res.status(400).send({ message: err.message });
+    res.status(400).send({ err: err.message });
   }
 };
 
@@ -311,7 +311,7 @@ export const getKibanaDeprecationsInfo = async (
     res.send(deprecations);
   } catch (error: any) {
     logger.error(error);
-    res.status(400).send({ message: error.message });
+    res.status(400).send({ err: error.message });
   }
 };
 
@@ -323,7 +323,7 @@ export const getValidSnapshots = async (req: Request, res: Response) => {
     res.send(snapshots);
   } catch (error: any) {
     logger.error('Error fetching node details:', error);
-    res.status(400).send({ message: error.message });
+    res.status(400).send({ err: error.message });
   }
 };
 
@@ -334,7 +334,7 @@ export const uploadCertificates = async (req: Request, res: Response) => {
     res.status(200).json({ certificateIds: fileIds });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Failed to upload files' });
+    res.status(500).json({ err: 'Failed to upload files' });
   }
 };
 
@@ -346,7 +346,7 @@ export const getNodeInfo = async (req: Request, res: Response) => {
     res.send(data);
   } catch (error: any) {
     logger.error('Error fetching node details:', error);
-    res.status(400).send({ message: error.message });
+    res.status(400).send({ err: error.message });
   }
 };
 
@@ -363,7 +363,7 @@ export const addOrUpdateTargetVersion = async (req: Request, res: Response) => {
   }
   catch (error: any) {
     logger.error("Unable to add target version: ", error);
-    res.status(500).send({ message: error.message })
+    res.status(500).send({ err: error.message })
   }
 
 }
@@ -373,20 +373,20 @@ export const verfiySshKey = async (req: Request, res: Response) => {
   try {
 
     if (!pathToKey) {
-      res.status(400).send({ success: false, message: 'SSH key path is required.' });
+      res.status(400).send({ success: false, err: 'SSH key path is required.' });
     }
 
     const resolvedPath = path.resolve(pathToKey);
 
     if (!fs.existsSync(resolvedPath)) {
-      res.status(400).json({ success: false, message: 'mentioned path to key, does not exist' });
+      res.status(400).json({ success: false, err: 'mentioned path to key, does not exist' });
       return;
     }
 
     const fileContent = fs.readFileSync(resolvedPath, 'utf8');
 
     if (!fileContent.startsWith('-----BEGIN ') || !fileContent.includes('PRIVATE KEY-----')) {
-      res.status(400).send({ success: false, message: 'Invalid SSH private key format.' });
+      res.status(400).send({ success: false, err: 'Invalid SSH private key format.' });
       return;
     }
 
@@ -395,7 +395,7 @@ export const verfiySshKey = async (req: Request, res: Response) => {
 
   } catch (error) {
     console.error('Error verifying SSH key:', error);
-    res.status(500).json({ success: false, message: 'Error verifying ssh key please contact owner' });
+    res.status(500).json({ success: false, err: 'Error verifying ssh key please contact owner' });
   }
 }
 
@@ -435,7 +435,7 @@ export const verfiyCluster = async (req: Request, res: Response) => {
 	} catch (error: any) {
 		logger.error("Unable to fetch cluster availibility info", error.message)
 		res.status(501).send({
-			message: "Unable to fetch cluster availibility info",
+			err : "Unable to fetch cluster availibility info",
 		})
 	}
 } 
