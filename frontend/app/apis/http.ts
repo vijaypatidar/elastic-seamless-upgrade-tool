@@ -8,6 +8,7 @@ let axiosJSON = axios.create({
 	headers: {
 		"Content-Type": "application/json",
 	},
+	timeout: 60000
 })
 
 let refreshPromise: any | null = null

@@ -1,6 +1,6 @@
 import { Box } from "@mui/material"
 
-function Stepper({ color, borderRadius = "8px", currentStep = 0, steps = 0 }: StepperType) {
+function Stepper({ color, borderRadius = "8px", currentStep = 0, steps = 0 }: TStepper) {
 	const totalStep = Math.max(steps, 0)
 	const filledBar = Math.max(currentStep, 0)
 

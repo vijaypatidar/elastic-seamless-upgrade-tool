@@ -2,6 +2,7 @@ import React from "react"
 import { LinearProgress, Box, Typography } from "@mui/material"
 import { styled } from "@mui/system"
 import { FaSyncAlt } from "react-icons/fa"
+import { Refresh2 } from "iconsax-react"
 
 type CustomProgressBarProps = {
 	progress: number
@@ -17,25 +18,27 @@ const StyledLinearProgress = styled(LinearProgress)(({ theme }) => ({
 	},
 }))
 
-const CustomProgressBar: React.FC<CustomProgressBarProps> = ({ progress }) => {
+const ProgressBar: React.FC<CustomProgressBarProps> = ({ progress }) => {
 	return (
-		<Box display="flex" flexDirection="column" gap={1}>
-			<Box display="flex" alignItems="center" justifyContent="space-between">
-				<Box display="flex" alignItems="center" gap={1}>
-					{/* <RefreshIcon style={{ color: 'gray' }} /> */}
-					<FaSyncAlt style={{ color: "gray" }} />
-					<Typography variant="body2" color="textSecondary">
-						Upgrading
-					</Typography>
-				</Box>
-				<Typography variant="body2" style={{ color: progress === 100 ? "#4caf50" : "#fbc02d" }}>
+		<Box className="flex flex-col gap-[6px] pt-[1.5px] max-w-[135px] w-full">
+			<Box className="flex flex-row items-center gap-2 justify-between">
+				<Typography fontSize="11px" color="#ADADAD" fontWeight="500" lineHeight="normal">
+					<Refresh2 size="10px" color="currentColor" />
+					Upgrading
+				</Typography>
+				<Typography
+					fontSize="11px"
+					fontWeight="500"
+					lineHeight="normal"
+					variant="body2"
+					style={{ color: progress === 100 ? "#4caf50" : "#fbc02d" }}
+				>
 					{progress}%
 				</Typography>
 			</Box>
-			{/* Progress Bar */}
 			<StyledLinearProgress variant="determinate" value={progress} />
 		</Box>
 	)
 }
 
-export default CustomProgressBar
+export default ProgressBar

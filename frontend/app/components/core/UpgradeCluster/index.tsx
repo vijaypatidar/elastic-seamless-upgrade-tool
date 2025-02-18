@@ -1,31 +1,48 @@
-import { getKeyValue, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from "@heroui/react"
-import { Box, LinearProgress, Typography } from "@mui/material"
-import { Flash } from "iconsax-react"
-import { useQuery } from "@tanstack/react-query"
-import { useCallback, useEffect, useState, type Key } from "react"
-import { OutlinedBorderButton } from "~/components/utilities/Buttons"
-import axiosJSON from "~/apis/http"
-import LocalStorageHandler from "~/lib/LocalHanlder"
+import { Spinner, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from "@heroui/react"
+import { Box, Typography } from "@mui/material"
+import { useMutation, useQuery } from "@tanstack/react-query"
+import { CloseCircle, Flash, TickCircle } from "iconsax-react"
+import { useCallback, type Key } from "react"
 import { toast } from "sonner"
-import CustomProgressBar from "~/components/utilities/Progress"
-import { FaCheckCircle } from "react-icons/fa"
+import axiosJSON from "~/apis/http"
+import { OutlinedBorderButton } from "~/components/utilities/Buttons"
 import StorageManager from "~/constants/StorageManager"
+import LocalStorageHandler from "~/lib/LocalHanlder"
+import ProgressBar from "./widgets/progress"
 
-type UpgradeCompleteProps = {}
+const UPGRADE_ENUM = {
+	completed: (
+		<Typography
+			className="inline-flex gap-[6px] items-center"
+			color="#52D97F"
+			fontSize="14px"
+			fontWeight="500"
+			lineHeight="normal"
+		>
+			<Box className="size-[15px]">
 
-const UpgradeComplete: React.FC<UpgradeCompleteProps> = () => {
-	return (
-		<Box display="flex" alignItems="center" gap={1}>
-			<FaCheckCircle style={{ color: "#4caf50", fontSize: "24px" }} />
-			<Typography variant="body1" style={{ color: "#4caf50", fontWeight: 500 }}>
-				Upgrade complete
-			</Typography>
-		</Box>
-	)
+			
+			<TickCircle color="currentColor" size="15px" />
+			</Box>
+			Upgrade complete
+		</Typography>
+	),
+	failed: (
+		<Typography
+			className="inline-flex gap-[6px] items-center"
+			color="#E87D65"
+			fontSize="14px"
+			fontWeight="500"
+			lineHeight="normal"
+		>
+			<Box className="size-[15px] inline"><CloseCircle color="currentColor" size="15px" /></Box>
+			Upgrade failed
+		</Typography>
+	),
 }
 
 const rows: any = []
-const columns: UpgradeColumnType = [
+const columns: TUpgradeColumn = [
 	{
 		key: "node_name",
 		label: "Node name",
@@ -58,7 +75,7 @@ const columns: UpgradeColumnType = [
 	},
 ]
 
-function UpgradeCluster({ clusterType }: UpgradeClusterType) {
+function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 	const getNodeStatus = async (nodeId: string) => {
 		try {
 			const response = await axiosJSON.get(`/api/elastic/clusters/nodes/${nodeId}`)
@@ -86,12 +103,18 @@ function UpgradeCluster({ clusterType }: UpgradeClusterType) {
 					version: item.version,
 					status: item.status,
 					progress: item.progress,
+					isMaster: item.isMaster,
+					disabled:
+						(item.isMaster &&
+							res.data.filter((i: any) => i.status === "upgraded" && !i.isMaster).length > 0) ||
+						res.data.some((i: any) => i.status === "upgrading"),
 				}))
 			})
 			.catch((err) => toast.error(err?.response?.data.err))
 
 		return response
 	}
+
 	const performUpgrade = async (nodeId: string) => {
 		const clusterId = LocalStorageHandler.getItem(StorageManager.CLUSTER_ID) || "cluster-id"
 		console.log("triggered")
@@ -99,19 +122,18 @@ function UpgradeCluster({ clusterType }: UpgradeClusterType) {
 			.post(`/api/elastic/clusters/${clusterId}/nodes/upgrade`, {
 				nodes: [nodeId],
 			})
-			.then(async (res) => {
-				await refetch()
+			.then((res) => {
+				refetch()
 				toast.success("Upgrade started")
 			})
 			.catch((error) => {
 				toast.error("Failed to start upgrade")
-				console.error(error)
 			})
 	}
+
 	const { data, isLoading, refetch, isRefetching } = useQuery({
 		queryKey: ["nodes-info"],
 		queryFn: getNodesInfo,
-		initialData: [],
 		refetchInterval: (data) => {
 			const nodes = data.state.data
 			const isUpgrading = nodes?.some((node: any) => node.status === "upgrading")
@@ -121,9 +143,14 @@ function UpgradeCluster({ clusterType }: UpgradeClusterType) {
 		staleTime: 0,
 	})
 
+	const { mutate: PerformUpgrade, isPending } = useMutation({
+		mutationKey: ["node-upgrade"],
+		mutationFn: performUpgrade,
+	})
+
 	const renderCell = useCallback(
-		(row: UpgradeRowType, columnKey: Key) => {
-			const cellValue = row[columnKey as keyof UpgradeRowType]
+		(row: TUpgradeRow, columnKey: Key) => {
+			const cellValue = row[columnKey as keyof TUpgradeRow]
 
 			switch (columnKey) {
 				case "node_name":
@@ -141,18 +168,21 @@ function UpgradeCluster({ clusterType }: UpgradeClusterType) {
 								<Box className="flex justify-end">
 									<OutlinedBorderButton
 										onClick={() => {
-											performUpgrade(row.key)
+											PerformUpgrade(row.key)
 										}}
 										icon={Flash}
 										filledIcon={Flash}
+										isDisabled={row?.disabled || isPending}
 									>
 										Upgrade
 									</OutlinedBorderButton>
 								</Box>
 							) : row.status === "upgrading" ? (
-								<CustomProgressBar progress={row.progress ? row.progress : 0} />
+								<ProgressBar progress={row.progress ? row.progress : 0} />
+							) : row.status === "upgraded" ? (
+								UPGRADE_ENUM["completed"]
 							) : (
-								<UpgradeComplete />
+								UPGRADE_ENUM["failed"]
 							)}
 						</>
 					)
@@ -194,8 +224,13 @@ function UpgradeCluster({ clusterType }: UpgradeClusterType) {
 								</TableColumn>
 							)}
 						</TableHeader>
-						<TableBody items={data}>
-							{(item: UpgradeRowType) => (
+						<TableBody
+							items={data || []}
+							isLoading={isLoading}
+							loadingContent={<Spinner color="secondary" />}
+							emptyContent="No nodes upgrades found."
+						>
+							{(item: TUpgradeRow) => (
 								<TableRow key={item.key}>
 									{(columnKey) => <TableCell>{renderCell(item, columnKey)}</TableCell>}
 								</TableRow>

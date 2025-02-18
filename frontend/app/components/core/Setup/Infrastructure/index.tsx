@@ -34,9 +34,9 @@ function Infrastructure({ onSubmit }: { onSubmit: (value: string | number | null
 					/>
 					<SelectionTile
 						Icon={Driver2}
-						label="On premises"
-						isSelected={selected === "on-premises"}
-						value="on-premises"
+						label="On premise"
+						isSelected={selected === "on-premise"}
+						value="on-premise"
 						onSelect={(value: string | number) => setSelected(value)}
 					/>
 				</Box>

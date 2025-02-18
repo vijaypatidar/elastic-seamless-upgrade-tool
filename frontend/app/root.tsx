@@ -1,16 +1,17 @@
 import { HeroUIProvider } from "@heroui/react"
 import { Box, ThemeProvider } from "@mui/material"
-import { useEffect, useRef, useState } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { useEffect, useRef, useState } from "react"
 import { Provider } from "react-redux"
-import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration, useNavigation } from "react-router"
+import { isRouteErrorResponse, Links, Meta, Scripts, ScrollRestoration, useNavigation } from "react-router"
+import LoadingBar, { LoadingBarContainer } from "react-top-loading-bar"
 import { Toaster } from "sonner"
 import type { Route } from "./+types/root"
+import MainApp from "./app"
+import AssetsManager from "./constants/AssetsManager"
 import store from "./store/store"
 import stylesheet from "./styles/app.css?url"
 import themes from "./themes"
-import LoadingBar, { LoadingBarContainer } from "react-top-loading-bar"
-import AssetsManager from "./constants/AssetsManager"
 
 export const links: Route.LinksFunction = () => [
 	{ rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -30,14 +31,15 @@ export const links: Route.LinksFunction = () => [
 	{ rel: "stylesheet", href: stylesheet },
 ]
 
+export function HydrateFallback() {
+	return (
+		<Box className="flex items-center justify-center h-screen scale-x-[-1] bg-[#0a0a0a]">
+			<img src={AssetsManager.ANIMATED_LOADER} width="64px" height="64px" />
+		</Box>
+	)
+}
+
 export function Layout({ children }: { children: React.ReactNode }) {
-	const navigation = useNavigation()
-	const [loader, setLoader] = useState(true)
-
-	useEffect(() => {
-		if (navigation.state !== "loading") setLoader(false)
-	}, [navigation.state])
-
 	return (
 		<html lang="en">
 			<head>
@@ -48,11 +50,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
 			</head>
 			<body>
 				{children}
-				{loader ? (
-					<Box className="flex items-center justify-center h-screen scale-x-[-1]">
-						<img src={AssetsManager.ANIMATED_LOADER} width="64px" height="64px" />
-					</Box>
-				) : null}
 				<ScrollRestoration />
 				<Scripts />
 			</body>
@@ -113,10 +110,10 @@ export default function App() {
 								height={1}
 								waitingTime={500}
 							/>
-							<Outlet />
+							<MainApp />
 							<Toaster
 								richColors
-								theme="dark"
+								theme="light"
 								position="top-right"
 								toastOptions={{ closeButton: true }}
 							/>

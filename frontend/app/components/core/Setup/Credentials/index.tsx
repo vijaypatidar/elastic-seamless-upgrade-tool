@@ -1,12 +1,17 @@
-import { Box, Typography } from "@mui/material"
+import { Box, IconButton, InputAdornment, Typography } from "@mui/material"
 import { useFormik } from "formik"
-import { ArrowLeft, ArrowRight } from "iconsax-react"
+import { Add, ArrowLeft, ArrowRight, Eye, EyeSlash, Trash } from "iconsax-react"
+import _ from "lodash"
+import { useState } from "react"
 import { ConatinedButton, OutlinedButton } from "~/components/utilities/Buttons"
 import Input from "~/components/utilities/Input"
+import { cn } from "~/lib/Utils"
 import validationSchema from "./validation/validation"
 import SelectionTile from "./widgets/SelectionTile"
 
-function Credentials({ backStep, onSubmit }: CredentialsCompType) {
+function Credentials({ backStep, onSubmit }: TCredentialsComp) {
+	const [showPassword, setShowPassword] = useState<boolean>(false)
+
 	const formik = useFormik({
 		initialValues: {
 			elasticUrl: "",
@@ -15,6 +20,8 @@ function Credentials({ backStep, onSubmit }: CredentialsCompType) {
 			username: "",
 			password: "",
 			apiKey: "",
+			pathToSSH: "",
+			kibanaClusters: [],
 		},
 		validationSchema: validationSchema,
 		onSubmit: async (values) => {
@@ -24,15 +31,15 @@ function Credentials({ backStep, onSubmit }: CredentialsCompType) {
 
 	return (
 		<Box
-			className="flex flex-col gap-3 justify-between"
+			className="flex flex-col gap-3 justify-between overflow-auto"
 			height={{
-				xs: "calc(var(--window-height) - 346px)",
-				sm: "calc(var(--window-height) - 280px)",
+				xs: "calc(var(--window-height) - 368px)",
+				sm: "calc(var(--window-height) - 346px)",
 				md: "calc(var(--window-height) - 280px)",
 			}}
 		>
-			<Box className="flex flex-col items-stretch gap-6 max-w-[515px] w-full">
-				<Box className="flex flex-col gap-[6px] w-full">
+			<Box className="flex flex-col items-stretch gap-6 max-w-[552px] w-full">
+				<Box className="flex flex-col gap-[6px] w-full max-w-[515px]">
 					<Typography color="#ABA9B1" fontSize="14px" fontWeight="400" lineHeight="20px">
 						URLs
 					</Typography>
@@ -65,7 +72,7 @@ function Credentials({ backStep, onSubmit }: CredentialsCompType) {
 						/>
 					</Box>
 				</Box>
-				<Box className="flex flex-col gap-[6px]">
+				<Box className="flex flex-col gap-[6px] max-w-[515px]">
 					<Typography color="#ABA9B1" fontSize="14px" fontWeight="400" lineHeight="20px">
 						Authentication preference
 					</Typography>
@@ -95,7 +102,7 @@ function Credentials({ backStep, onSubmit }: CredentialsCompType) {
 					</Box>
 				</Box>
 				{formik.values.authPref && (
-					<Box className="flex flex-col gap-[6px]">
+					<Box className="flex flex-col gap-[6px] max-w-[515px]">
 						<Typography color="#ABA9B1" fontSize="14px" fontWeight="400" lineHeight="20px">
 							Credentials
 						</Typography>
@@ -127,6 +134,24 @@ function Credentials({ backStep, onSubmit }: CredentialsCompType) {
 										onBlur={formik.handleBlur}
 										error={formik.touched.password && Boolean(formik.errors.password)}
 										helperText={formik.touched.password && formik.errors.password}
+										InputProps={{
+											endAdornment: (
+												<InputAdornment position="end">
+													<IconButton
+														aria-label="toggle password visibility"
+														onClick={() => setShowPassword(!showPassword)}
+														onMouseDown={(event) => event.preventDefault()}
+														edge="end"
+													>
+														{showPassword ? (
+															<Eye size="18px" color="#FFF" />
+														) : (
+															<EyeSlash size="18px" color="#FFF" />
+														)}
+													</IconButton>
+												</InputAdornment>
+											),
+										}}
 									/>
 								</>
 							) : (
@@ -147,6 +172,117 @@ function Credentials({ backStep, onSubmit }: CredentialsCompType) {
 						</Box>
 					</Box>
 				)}
+				<Box className="flex flex-col gap-[6px]">
+					<Box
+						className={cn("flex flex-row justify-between max-w-[515px]", {
+							"border border-dashed border-[#3D3B42] rounded-[10px] py-[11px] pl-[16px] pr-[12px]":
+								formik.values.kibanaClusters.length === 0,
+						})}
+					>
+						<Typography color="#ABA9B1" fontSize="14px" fontWeight="400" lineHeight="20px">
+							Kibana clusters
+						</Typography>
+						<Box>
+							<OutlinedButton
+								sx={{
+									gap: "4px",
+									fontSize: "12px",
+									fontWeight: "500",
+									lineHeight: "normal",
+									border: "none",
+									padding: "0px",
+									minHeight: "0px",
+									height: "fit-content",
+									":hover": { color: "#4CDB9D !important" },
+								}}
+								onClick={() => {
+									let option = formik.values.kibanaClusters
+									const newOptions = [...option, { name: "", ip: "" }]
+									formik.setFieldValue("kibanaClusters", _.cloneDeep(newOptions))
+								}}
+							>
+								<Add size="16px" color="currentColor" />
+								Add cluster
+							</OutlinedButton>
+						</Box>
+					</Box>
+					<Box className="flex flex-col gap-[6px] rounded-lg">
+						{_.map(formik.values.kibanaClusters, (cluster: { name: string; ip: string }, index: number) => {
+							return (
+								<Box className="flex flex-row gap-2 items-center group">
+									<Box className="flex flex-row gap-[6px] w-full max-w-[515px]">
+										<Input
+											fullWidth
+											id={`kibanaClusters.${index}`}
+											name={`kibanaClusters.${index}`}
+											type="text"
+											placeholder="Enter cluster name"
+											varient="outlined"
+											value={cluster.name}
+											onChange={(e: any) => {
+												let newOptions = [...formik.values.kibanaClusters]
+												// @ts-ignore
+												newOptions[index].name = e.target.value
+												formik.setFieldValue("kibanaClusters", _.cloneDeep(newOptions))
+											}}
+											error={
+												Boolean(formik.errors.kibanaClusters?.[index]) &&
+												formik.touched.kibanaClusters
+											}
+										/>
+										<Input
+											fullWidth
+											id={`kibanaClusters.${index}`}
+											name={`kibanaClusters.${index}`}
+											type="text"
+											placeholder="Enter cluster name"
+											varient="outlined"
+											value={cluster.ip}
+											onChange={(e: any) => {
+												let newOptions = [...formik.values.kibanaClusters]
+												// @ts-ignore
+												newOptions[index].ip = e.target.value
+												formik.setFieldValue("kibanaClusters", _.cloneDeep(newOptions))
+											}}
+											error={
+												Boolean(formik.errors.kibanaClusters?.[index]) &&
+												formik.touched.kibanaClusters
+											}
+										/>
+									</Box>
+									<Box className="hidden delete-button group-hover:flex">
+										<IconButton
+											sx={{ borderRadius: "8px", padding: "4px" }}
+											onClick={() => {
+												let newOptions = [...formik.values.kibanaClusters]
+												newOptions = newOptions.filter((option, ind) => ind !== index)
+												formik.setFieldValue("kibanaClusters", _.cloneDeep(newOptions))
+											}}
+										>
+											<Trash size="20px" color="#E56852" />
+										</IconButton>
+									</Box>
+								</Box>
+							)
+						})}
+					</Box>
+				</Box>
+				<Box className="flex flex-col gap-[6px] max-w-[515px]">
+					<Typography color="#ABA9B1" fontSize="14px" fontWeight="400" lineHeight="20px">
+						Path to SSH key
+					</Typography>
+					<Input
+						fullWidth
+						id="pathToSSH"
+						name="pathToSSH"
+						type="text"
+						placeholder="Enter path to SSH key"
+						varient="outlined"
+						multiline
+						minRows={8}
+						maxRows={8}
+					/>
+				</Box>
 			</Box>
 			<Box className="flex justify-end gap-2">
 				<OutlinedButton onClick={backStep}>

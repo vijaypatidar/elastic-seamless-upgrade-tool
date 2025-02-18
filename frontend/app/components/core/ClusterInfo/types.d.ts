@@ -1,4 +1,4 @@
-type DetailBoxType = {
+type TDetailBox = {
 	title: string
 	description?: string
 	customDescription?: React.ReactElement

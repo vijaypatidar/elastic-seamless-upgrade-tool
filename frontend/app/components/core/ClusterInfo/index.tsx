@@ -1,21 +1,24 @@
 import { Box, Menu, MenuItem, Typography } from "@mui/material"
-import { useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery } from "@tanstack/react-query"
 import { ArrowDown2 } from "iconsax-react"
 import _ from "lodash"
 import PopupState, { bindMenu, bindTrigger } from "material-ui-popup-state"
 import { toast } from "sonner"
 import axiosJSON from "~/apis/http"
 import { OutlinedBorderButton } from "~/components/utilities/Buttons"
+import { OneLineSkeleton } from "~/components/utilities/Skeletons"
 import StorageManager from "~/constants/StorageManager"
 import LocalStorageHandler from "~/lib/LocalHanlder"
 import DetailBox from "./widgets/DetailBox"
+import { useDispatch } from "react-redux"
+import { setUpgradeAssistAllowed } from "~/store/reducers/safeRoutes"
+import { useNavigate } from "react-router"
 
 const CLUSTER_STATUS_COLOR: { [key: string]: string } = {
-	deploying: "#E0B517",
-	deployed: "green",
-	down: "gray",
+	yellow: "#E0B517",
+	green: "#52D97F",
+	red: "#E87D65",
 }
-const UPDATES = ["8.16", "8.19", "9.10"]
 
 const STYLES = {
 	MENU_ITEMS: {
@@ -45,19 +48,43 @@ const STYLES = {
 }
 
 function ClusterInfo() {
+	const navigate = useNavigate()
+	const dispatch = useDispatch()
+
 	const getClusterInfo = async () => {
 		const clusterId = LocalStorageHandler.getItem(StorageManager.CLUSTER_ID) || "cluster-id"
 		let response: any = []
 		await axiosJSON
 			.get(`/api/elastic/clusters/${clusterId}/info`)
 			.then((res) => {
-				console.log(res)
+				dispatch(setUpgradeAssistAllowed(res.data?.targetVersion ? true : false))
 				response = res.data
 			})
 			.catch((err) => toast.error(err?.response?.data.err))
 		return response
 	}
-	const { data, isLoading, refetch, isRefetching } = useQuery({ queryKey: ["cluster-info"], queryFn: getClusterInfo })
+
+	const { data, isLoading, refetch, isRefetching } = useQuery({
+		queryKey: ["cluster-info"],
+		queryFn: getClusterInfo,
+		staleTime: Infinity,
+	})
+
+	const handleVersionSelect = async (ver: string) => {
+		const clusterId = LocalStorageHandler.getItem(StorageManager.CLUSTER_ID) || "cluster-id"
+		await axiosJSON
+			.post(`/api/elastic/clusters/${clusterId}/add-version`, { version: ver })
+			.then((res) => {
+				dispatch(setUpgradeAssistAllowed(res.data?.targetVersion ? true : false))
+				navigate("/upgrade-assistant")
+			})
+			.catch((err) => toast.error(err?.response?.data.err))
+	}
+
+	const { mutate: HandleVersion, isPending } = useMutation({
+		mutationKey: ["version-select"],
+		mutationFn: handleVersionSelect,
+	})
 
 	return (
 		<Box
@@ -80,34 +107,52 @@ function ClusterInfo() {
 					>
 						Details
 					</Typography>
-					<PopupState variant="popover" popupId="demo-popup-menu">
-						{(popupState) => (
-							<Box className="relative">
-								<OutlinedBorderButton {...bindTrigger(popupState)}>
-									Update available <ArrowDown2 size="14px" color="#959595" />
-								</OutlinedBorderButton>
-								<Menu
-									{...bindMenu(popupState)}
-									transformOrigin={{
-										vertical: "top",
-										horizontal: "left",
-									}}
-									slotProps={{
-										root: STYLES.MENU_ROOT,
-										paper: STYLES.MENU_PAPER,
-									}}
-								>
-									{UPDATES.map((update, index) => {
-										return (
-											<MenuItem key={index} sx={STYLES.MENU_ITEMS}>
-												{update}
-											</MenuItem>
-										)
-									})}
-								</Menu>
-							</Box>
-						)}
-					</PopupState>
+					<OneLineSkeleton
+						className="rounded-[10px] max-w-[250px] w-[154px]"
+						show={isLoading}
+						component={
+							<PopupState variant="popover" popupId="demo-popup-menu">
+								{(popupState) => (
+									<Box className="relative">
+										<OutlinedBorderButton
+											{...bindTrigger(popupState)}
+											disabled={data?.underUpgradation}
+										>
+											{data?.targetVersion ?? "Upgrade available"}{" "}
+											<ArrowDown2 size="14px" color="#959595" />
+										</OutlinedBorderButton>
+										<Menu
+											{...bindMenu(popupState)}
+											transformOrigin={{
+												vertical: "top",
+												horizontal: "left",
+											}}
+											slotProps={{
+												root: STYLES.MENU_ROOT,
+												paper: STYLES.MENU_PAPER,
+											}}
+										>
+											{data?.possibleUpgradeVersions?.map((update: string, index: number) => {
+												return (
+													<MenuItem
+														key={index}
+														sx={STYLES.MENU_ITEMS}
+														onClick={() => {
+															popupState.close()
+															handleVersionSelect(update)
+														}}
+													>
+														{update}
+													</MenuItem>
+												)
+											})}
+										</Menu>
+									</Box>
+								)}
+							</PopupState>
+						}
+						height="36px"
+					/>
 				</Box>
 				<Box className="flex flex-col gap-6 overflow-auto">
 					<Box className="flex flex-col sm:flex-row gap-6 sm:gap-16">
@@ -117,7 +162,9 @@ function ClusterInfo() {
 							<DetailBox
 								title="Infrastructure type"
 								description={_.capitalize(
-									LocalStorageHandler.getItem(StorageManager.INFRA_TYPE) ?? "placeholder"
+									data?.infrastructureType ??
+										LocalStorageHandler.getItem(StorageManager.INFRA_TYPE) ??
+										"placeholder"
 								)}
 								isLoading={isLoading}
 							/>
@@ -130,16 +177,17 @@ function ClusterInfo() {
 										<Box
 											component="span"
 											className="flex min-w-[6px] min-h-[6px] rounded-[2px]"
-											sx={{ background: CLUSTER_STATUS_COLOR["deploying"] }}
+											sx={{ background: CLUSTER_STATUS_COLOR[data?.status] }}
 										/>
 										<Typography
-											color={CLUSTER_STATUS_COLOR["deploying"]}
+											color={CLUSTER_STATUS_COLOR[data?.status]}
 											fontFamily="Inter"
 											fontSize="12px"
 											fontWeight="500"
 											lineHeight="normal"
+											textTransform="capitalize"
 										>
-											Yellow
+											{data?.status}
 										</Typography>
 									</Box>
 								}

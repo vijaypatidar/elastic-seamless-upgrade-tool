@@ -1,22 +1,59 @@
-import { Skeleton } from "@heroui/react"
+import { Skeleton, Tooltip } from "@heroui/react"
 import { Box, Typography } from "@mui/material"
+import type { ActionCreatorWithPayload } from "@reduxjs/toolkit"
 import { useQuery } from "@tanstack/react-query"
-import { Camera, Flash } from "iconsax-react"
+import { Camera, Flash, InfoCircle } from "iconsax-react"
+import moment from "moment"
 import { useState } from "react"
+import { useDispatch } from "react-redux"
 import { Link } from "react-router"
 import { toast } from "sonner"
 import axiosJSON from "~/apis/http"
 import { OutlinedBorderButton } from "~/components/utilities/Buttons"
 import StorageManager from "~/constants/StorageManager"
+import useCountdownTimer from "~/lib/hooks/useTimer"
 import LocalStorageHandler from "~/lib/LocalHanlder"
 import { getStepIndicatorData } from "~/lib/Utils"
+import {
+	setDeprecationChangesAllowed,
+	setElasticNodeUpgradeAllowed,
+	setKibanaNodeUpgradeAllowed,
+} from "~/store/reducers/safeRoutes"
 import DeprectedSettings from "./widgets/DeprectedSettings"
 import StepBox from "./widgets/StepBox"
 
 function UpgradeAssistant() {
-	const [stepStatus, setStepStatus] = useState<{
-		[Key: string]: "COMPLETED" | "INPROGRESS" | "PENDING" | "NOTVISITED"
-	}>({ "1": "NOTVISITED", "2": "NOTVISITED", "3": "NOTVISITED", "4": "NOTVISITED" })
+	const dispatch = useDispatch()
+	const { remainingTime, startTimer, resetTimer } = useCountdownTimer()
+
+	// Format remaining time in HH:MM:SS
+	const formatTime = (milliseconds: number | null): string => {
+		if (milliseconds === null) return "Not Started"
+
+		const totalSeconds = Math.floor(milliseconds / 1000)
+		const hours = Math.floor(totalSeconds / 3600)
+		const minutes = Math.floor((totalSeconds % 3600) / 60)
+		const seconds = totalSeconds % 60
+
+		return `${hours}h ${minutes}m ${seconds}s`
+	}
+
+	const [stepStatus, setStepStatus] = useState<TStepStatus>({
+		"1": "NOTVISITED",
+		"2": "NOTVISITED",
+		"3": "NOTVISITED",
+		"4": "NOTVISITED",
+	})
+
+	const handleRoutingStates = (
+		status: string,
+		updateState: ActionCreatorWithPayload<boolean>,
+		stateToCheck: string[] = ["PENDING", "INPROGRESS"]
+	) => {
+		if (stateToCheck.some((state) => state === status)) {
+			dispatch(updateState(true))
+		}
+	}
 
 	const getUpgradeInfo = async () => {
 		const clusterId = LocalStorageHandler.getItem(StorageManager.CLUSTER_ID) || "cluster-id"
@@ -25,31 +62,9 @@ function UpgradeAssistant() {
 			.get(`/api/elastic/clusters/${clusterId}/upgrade_info`)
 			.then((res) => {
 				response = res.data
-				console.log(response)
-				// const step1 = response.elastic.snapshot ? "COMPLETED" : "PENDING"
-				// const step2 =
-				// 	step1 === "PENDING"
-				// 		? "NOTVISITED"
-				// 		: response?.elastic.deprecations.critical + response?.kibana.deprecations.critical > 0
-				// 		? "PENDING"
-				// 		: response?.elastic.deprecations.warning + response?.kibana.deprecations.warning > 0
-				// 		? "INPROGRESS"
-				// 		: "COMPLETED"
-				// const step3 =
-				// 	step2 === "PENDING" || step2 === "NOTVISITED"
-				// 		? "NOTVISITED"
-				// 		: response.elastic?.isUpgradable
-				// 		? "COMPLETED"
-				// 		: "PENDING"
-				// const step4 =
-				// 	step3 === "PENDING" || step3 === "NOTVISITED"
-				// 		? "NOTVISITED"
-				// 		: response.kibana?.isUpgradable
-				// 		? "COMPLETED"
-				// 		: "PENDING"
-
+				startTimer(moment.utc(response?.elastic?.snapshot?.snapshot.createdAt).local().valueOf())
 				const { elastic, kibana } = response ?? {}
-				const step1Status = elastic?.snapshot ? "COMPLETED" : "PENDING"
+				const step1Status = elastic?.snapshot?.snapshot ? "COMPLETED" : "PENDING"
 
 				// Helper function to sum deprecations safely
 				const sumDeprecations = (type: string) =>
@@ -69,12 +84,12 @@ function UpgradeAssistant() {
 						: "COMPLETED"
 
 				// Helper for subsequent steps
-				const getNextStepStatus = (prevStatus: string, isUpgradable: string) =>
+				const getNextStepStatus = (prevStatus: string, isUpgradable: boolean) =>
 					prevStatus === "PENDING" || prevStatus === "NOTVISITED"
 						? "NOTVISITED"
 						: isUpgradable
-						? "COMPLETED"
-						: "PENDING"
+						? "PENDING"
+						: "COMPLETED"
 
 				const step3Status = getNextStepStatus(step2Status, elastic?.isUpgradable)
 				const step4Status = getNextStepStatus(step3Status, kibana?.isUpgradable)
@@ -85,35 +100,51 @@ function UpgradeAssistant() {
 					"3": step3Status,
 					"4": step4Status,
 				})
+
+				// if(step1Status === "COMPLETED"){
+				// 	Toast({varient: "SUCCESS", msg:"done"})
+				// }
+
+				handleRoutingStates(step2Status, setDeprecationChangesAllowed)
+				handleRoutingStates(step3Status, setElasticNodeUpgradeAllowed)
+				handleRoutingStates(step4Status, setKibanaNodeUpgradeAllowed)
 			})
 			.catch((err) => toast.error(err?.response?.data.err))
 		return response
 	}
 
-	const { data, isLoading, refetch, isRefetching } = useQuery({ queryKey: ["cluster-info"], queryFn: getUpgradeInfo })
+	const { data, isLoading, refetch, isRefetching } = useQuery({
+		queryKey: ["cluster-info"],
+		queryFn: getUpgradeInfo,
+		staleTime: Infinity,
+	})
 
 	const step1Data = getStepIndicatorData("01", stepStatus["1"])
 	const step2Data = getStepIndicatorData("02", stepStatus["2"])
 	const step3Data = getStepIndicatorData("03", stepStatus["3"])
 	const step4Data = getStepIndicatorData("04", stepStatus["4"])
 
-	return isLoading || isRefetching ? (
-		<Box className="flex flex-col gap-4 w-full px-6">
-			<Skeleton className="w-full rounded-[20px]">
-				<Box height="88px" />
-			</Skeleton>
-			<Skeleton className="w-full rounded-[20px]">
-				<Box height="229.5px" />
-			</Skeleton>
-			<Skeleton className="w-full rounded-[20px]">
-				<Box height="108px" />
-			</Skeleton>
-			<Skeleton className="w-full rounded-[20px]">
-				<Box height="108px" />
-			</Skeleton>
-		</Box>
-	) : (
-		<ol className="flex flex-col gap-4 w-full overflow-auto h-[calc(var(--window-height)-214px)] px-6">
+	if (isLoading || isRefetching) {
+		return (
+			<Box className="flex flex-col gap-4 w-full px-6">
+				<Skeleton className="w-full rounded-[20px]">
+					<Box height="88px" />
+				</Skeleton>
+				<Skeleton className="w-full rounded-[20px]">
+					<Box height="229.5px" />
+				</Skeleton>
+				<Skeleton className="w-full rounded-[20px]">
+					<Box height="108px" />
+				</Skeleton>
+				<Skeleton className="w-full rounded-[20px]">
+					<Box height="108px" />
+				</Skeleton>
+			</Box>
+		)
+	}
+
+	return (
+		<ol className="relative flex flex-col gap-4 w-full overflow-auto h-[calc(var(--window-height)-214px)] px-6">
 			<StepBox
 				currentStepStatus={stepStatus["1"]}
 				nextStepStatus={stepStatus["2"]}
@@ -140,9 +171,34 @@ function UpgradeAssistant() {
 						</Typography>
 					</Box>
 					{!(stepStatus["01"] === "COMPLETED") ? (
-						<OutlinedBorderButton icon={Camera} filledIcon={Camera} disabled={step1Data?.isDisabled}>
-							Create snapshot
-						</OutlinedBorderButton>
+						data?.elastic?.snapshot?.snapshot ? (
+							<Box className="flex flex-row gap-[6px] items-center">
+								<Tooltip
+									content={"You have to take snapshot again after the time ends."}
+									closeDelay={0}
+									color="foreground"
+									size="sm"
+									radius="sm"
+									placement="left"
+								>
+									<InfoCircle size="14px" color="#6E6E6E" />
+								</Tooltip>
+								<Typography fontSize="14px" fontWeight="400" lineHeight="18px" color="#6E6E6E" minWidth="74px">
+									{formatTime(remainingTime)}
+								</Typography>
+							</Box>
+						) : (
+							<OutlinedBorderButton
+								icon={Camera}
+								filledIcon={Camera}
+								disabled={step1Data?.isDisabled}
+								component={Link}
+								to={data?.elastic?.snapshot?.creationPage}
+								target="_blank"
+							>
+								Create snapshot
+							</OutlinedBorderButton>
+						)
 					) : null}
 				</Box>
 			</StepBox>
@@ -177,15 +233,15 @@ function UpgradeAssistant() {
 					<Box className="flex flex-row gap-8 flex-grow w-full" flexWrap={{ xs: "wrap", md: "nowrap" }}>
 						<DeprectedSettings
 							title="Elastic search"
-							criticalValue={data?.elastic.deprecations.critical ?? "NaN"}
-							warningValue={data?.elastic.deprecations.warning ?? "NaN"}
+							criticalValue={data?.elastic?.deprecations.critical ?? "NaN"}
+							warningValue={data?.elastic?.deprecations.warning ?? "NaN"}
 							isDisabled={step2Data?.isDisabled}
 							to="/elastic/deprecation-logs"
 						/>
 						<DeprectedSettings
 							title="Kibana"
-							criticalValue={data?.kibana.deprecations.critical ?? "NaN"}
-							warningValue={data?.kibana.deprecations.warning ?? "NaN"}
+							criticalValue={data?.kibana?.deprecations.critical ?? "NaN"}
+							warningValue={data?.kibana?.deprecations.warning ?? "NaN"}
 							isDisabled={step2Data?.isDisabled}
 							to="/kibana/deprecation-logs"
 						/>
@@ -265,6 +321,32 @@ function UpgradeAssistant() {
 					</OutlinedBorderButton>
 				</Box>
 			</StepBox>
+			{stepStatus["4"] === "COMPLETED" ? (
+				<Box className="sticky bottom-0 z-50">
+					<Box
+						className="flex p-[0.4px] w-full rounded-[14px]"
+						sx={{ background: "linear-gradient(175deg, #27A56A 0%, #C0DFCF 30%, #131514 100%)" }}
+					>
+						<Box className="flex items-center w-full bg-[#010101] flex-row gap-6 py-[14px] px-[26px] rounded-[14px]">
+							<Box
+								className="flex p-px rounded-lg"
+								sx={{
+									background:
+										"linear-gradient(135deg, #27A56A 2.29%, #C0DFCF 44.53%, #131315 97.18%, #131315 97.18%)",
+									boxShadow: "0px 0px 12px 1px rgba(70, 233, 146, 0.41)",
+								}}
+							>
+								<Box className="flex items-center rounded-lg justify-center min-w-[30px] min-h-[30px] bg-[#101010]">
+									<Flash size="20px" color="#FFF" variant="Bold" />
+								</Box>
+							</Box>
+							<Typography color="#FFF" fontSize="16px" fontWeight="600" lineHeight="normal">
+								Upgrade successful!
+							</Typography>
+						</Box>
+					</Box>
+				</Box>
+			) : null}
 		</ol>
 	)
 }

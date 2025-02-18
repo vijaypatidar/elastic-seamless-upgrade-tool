@@ -23,9 +23,9 @@ function Input(props: any) {
 					sx={{
 						backgroundColor: "#0A0A0A",
 						borderRadius: "10px",
-                        "& .MuiOutlinedInput-root": {
-                            borderRadius: "10px"
-                        },
+						"& .MuiOutlinedInput-root": {
+							borderRadius: "10px",
+						},
 						"& .MuiOutlinedInput-input": {
 							borderRadius: "10px",
 							padding: "16px 12px 16px 16px",
@@ -36,6 +36,9 @@ function Input(props: any) {
 							"::placeholder": {
 								color: "#696572",
 							},
+						},
+						"& .MuiInputBase-multiline": {
+							padding: "0px",
 						},
 						"& fieldset": {
 							border: "none",

@@ -1,11 +1,9 @@
-import { useDisclosure } from "@heroui/react"
 import { Box, Typography } from "@mui/material"
-import { ArrowRight2, Convertshape2, Magicpen, Share } from "iconsax-react"
-import { useState } from "react"
+import { ArrowRight2, Convertshape2, Share } from "iconsax-react"
+import { connect } from "react-redux"
 import { Link, Outlet, useLocation } from "react-router"
-import UpcomingFeature from "~/components/core/UpcomingFeature"
-import { OutlinedBorderButton } from "~/components/utilities/Buttons"
-import AssetsManager from "~/constants/AssetsManager"
+import { toast } from "sonner"
+import { cn } from "~/lib/Utils"
 
 const PATH_META_DATA: { [key: string]: { label: string; pos: number } } = {
 	"/cluster-overview": { label: "CLUSTER_OVERVIEW", pos: 1 },
@@ -15,9 +13,8 @@ const PATH_META_DATA: { [key: string]: { label: string; pos: number } } = {
 const CENTER_ARROW_MIDDLE_GRADIENT = "linear-gradient(90deg, #52D97F 30%, #6B46C5 99%)"
 const CENTER_ARROW_COMPLETE_GRADIENT = "linear-gradient(90deg, #52D97F 30%, #52D97F 99%)"
 
-function ConfigLayout() {
+function ConfigLayout({ upgradeAllowed }: { upgradeAllowed: boolean }) {
 	const { pathname } = useLocation()
-	const { isOpen, onOpen, onOpenChange } = useDisclosure()
 
 	const GradientBox = ({
 		to,
@@ -33,6 +30,8 @@ function ConfigLayout() {
 		title,
 		borderRadius = "rounded-l-[10px]",
 		zIndex = "1",
+		isDisabled = false,
+		disabledClickEvent = () => {},
 	}: {
 		to: string
 		boxShadow?: string
@@ -47,71 +46,68 @@ function ConfigLayout() {
 		title: string
 		borderRadius?: string
 		zIndex?: string
+		isDisabled?: boolean
+		disabledClickEvent?: () => void
 	}) => {
 		const Icon = icon
 		return (
-			<Box
-				className={`flex items-center p-px w-full cursor-pointer ${borderRadius} ${zIndex}`}
-				component={Link}
-				to={to}
-				sx={{
-					background: isActive ? boxActiveGradient : isCompleted ? boxCompletedGradient : "#292929",
-					boxShadow: isActive ? boxShadow : "none",
-					":hover": {
-						background: isCompleted ? boxCompletedGradient : boxActiveGradient,
-						boxShadow: isCompleted ? "none" : boxShadow,
-						"& #icon-container": {
-							background: `${isCompleted ? iconCompletedGradient : iconActiveGradient} !important`,
-						},
-					},
-				}}
-			>
+			<>
+				<span
+					className={cn("absolute top-0 bottom-0 right-0 left-0 cursor-pointer", {
+						"pointer-events-auto": isDisabled,
+					})}
+					onClick={disabledClickEvent}
+				/>
+
 				<Box
-					className={`flex items-center gap-[20px] bg-neutral-950 w-full ${borderRadius}`}
-					padding="23px 20px 23px 24px"
+					className={cn(`flex items-center p-px w-full cursor-pointer ${borderRadius} ${zIndex}`, {
+						"pointer-events-none": isDisabled,
+					})}
+					component={Link}
+					to={to}
+					sx={{
+						background: isActive ? boxActiveGradient : isCompleted ? boxCompletedGradient : "#292929",
+						boxShadow: isActive ? boxShadow : "none",
+						":hover": {
+							background: isCompleted ? boxCompletedGradient : boxActiveGradient,
+							boxShadow: isCompleted ? "none" : boxShadow,
+							"& #icon-container": {
+								background: `${isCompleted ? iconCompletedGradient : iconActiveGradient} !important`,
+							},
+						},
+					}}
 				>
 					<Box
-						id="icon-container"
-						className="flex rounded-[10px] p-px"
-						sx={{
-							background: isActive
-								? iconActiveGradient
-								: isCompleted
-								? iconCompletedGradient
-								: iconGradient,
-						}}
+						className={`flex items-center gap-[20px] bg-neutral-950 w-full ${borderRadius}`}
+						padding="23px 20px 23px 24px"
 					>
-						<Box className="flex items-center justify-center w-[44px] h-[44px] min-w-[44px] min-h-[43px] bg-neutral-950 rounded-[10px]">
-							<Icon size="20px" color="#FFF" />
+						<Box
+							id="icon-container"
+							className="flex rounded-[10px] p-px"
+							sx={{
+								background: isActive
+									? iconActiveGradient
+									: isCompleted
+									? iconCompletedGradient
+									: iconGradient,
+							}}
+						>
+							<Box className="flex items-center justify-center w-[44px] h-[44px] min-w-[44px] min-h-[43px] bg-neutral-950 rounded-[10px]">
+								<Icon size="20px" color="#FFF" />
+							</Box>
 						</Box>
+						<Typography color="#FFF" fontSize="20px" fontWeight="600" lineHeight="22px">
+							{title}
+						</Typography>
 					</Box>
-					<Typography color="#FFF" fontSize="20px" fontWeight="600" lineHeight="22px">
-						{title}
-					</Typography>
 				</Box>
-			</Box>
+			</>
 		)
 	}
 
 	return (
-		<Box className="flex flex-col w-full" height="var(--window-height)">
-			<Box className="flex flex-row gap-2 justify-between bg-[#0A0A0A]" padding="16px 32px 10px 40px" zIndex={isOpen ? "99999": "0"}>
-				<img src={AssetsManager.LOGO_PLUS_NAMED} width="161.6px" height="36px" />
-				<OutlinedBorderButton
-					icon={Magicpen}
-					filledIcon={Magicpen}
-					iconProps={{ variant: "Bold" }}
-					sx={{ ":hover": { color: "#F5BE3D !important" } }}
-					gradient="linear-gradient(135deg,#E0B517 2.29%, #DFD8C0 44.53%, #151413 97.18%, #151413 97.18%)"
-					boxShadow="0px 0px 19px 2px rgba(234, 180, 63, 0.41)"
-					borderRadius="50px"
-					onClick={onOpen}
-				>
-					Upcoming features
-				</OutlinedBorderButton>
-			</Box>
-			<UpcomingFeature isOpen={isOpen} onOpenChange={onOpenChange} />
-			<Box className="flex relative" padding="0px 24px">
+		<>
+			<Box className="flex relative bg-[#0A0A0A]" padding="0px 24px">
 				<GradientBox
 					to="/cluster-overview"
 					icon={Share}
@@ -143,11 +139,17 @@ function ConfigLayout() {
 					zIndex="z-0"
 					isActive={PATH_META_DATA[pathname].label === "UPGRADE_ASSISTANT"}
 					isCompleted={PATH_META_DATA[pathname].pos > 2}
+					isDisabled={!upgradeAllowed}
+					disabledClickEvent={() => toast.info("Please select update available to access the page.")}
 				/>
 			</Box>
 			<Outlet />
-		</Box>
+		</>
 	)
 }
 
-export default ConfigLayout
+const mapStateToProps = (state: any) => ({
+	upgradeAllowed: state.safeRoutes.upgradeAssistAllowed,
+})
+
+export default connect(mapStateToProps)(ConfigLayout)

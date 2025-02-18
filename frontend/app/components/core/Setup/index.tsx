@@ -16,13 +16,15 @@ function Setup() {
 	const navigate = useNavigate()
 	const [step, setStep] = useState<number>(1)
 	const [infraType, setInfraType] = useState<string | number>("")
-	const [creds, setCreds] = useState<CredsType>({
+	const [creds, setCreds] = useState<TCreds>({
 		elasticUrl: "",
 		kibanaUrl: "",
 		authPref: null,
 		username: "",
 		password: "",
 		apiKey: "",
+		pathToSSH: "",
+		kibanaClusters: [],
 	})
 
 	useEffect(() => {
@@ -49,14 +51,14 @@ function Setup() {
 		}
 	}
 
-	const handleCredSubmit = (values: CredsType) => {
+	const handleCredSubmit = (values: TCreds) => {
 		setCreds(values)
 		handleNextStep()
 	}
 
 	const { mutate: HandleSubmit, isPending } = useMutation({
 		mutationKey: ["add-cluster"],
-		mutationFn: async (values: CertiType) => {
+		mutationFn: async (values: TCerti) => {
 			let certIds: Array<string> = []
 			const formData = new FormData()
 			values.certFiles?.forEach((file) => {
@@ -70,7 +72,7 @@ function Setup() {
 							"Content-Type": "multipart/form-data",
 						},
 					})
-					.then((res) => (certIds = res.data.certificateIds))
+					.then((res) => (certIds = res?.data?.certificateIds))
 					.catch((err) => toast.error(err?.response?.data.err))
 			}
 			await axiosJSON
@@ -78,11 +80,14 @@ function Setup() {
 					elastic: { url: creds.elasticUrl, username: creds.username, password: creds.password },
 					kibana: { url: creds.kibanaUrl, username: creds.username, password: creds.password },
 					certificateIds: certIds,
+					infrastructureType: infraType,
+					pathToKey: creds.pathToSSH,
+					kibanaClusterInfo: creds.kibanaClusters,
 				})
 				.then((res) => {
 					LocalStorageHandler.setItem(StorageManager.INFRA_TYPE, infraType)
 					SessionStorageHandler.setItem(StorageManager.SETUP_SET, 1)
-					LocalStorageHandler.setItem(StorageManager.CLUSTER_ID, res.data.clusterId || "cluster-id")
+					LocalStorageHandler.setItem(StorageManager.CLUSTER_ID, res?.data?.clusterId || "cluster-id")
 					navigate("/cluster-overview")
 				})
 				.catch((err) => toast.error(err?.response?.data.err))

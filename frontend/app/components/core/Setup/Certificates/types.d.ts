@@ -1,5 +1,5 @@
-type CertificateCompType = {
+type TCertificateComp = {
 	backStep: () => void
-	onSubmit: (value: CertiType) => void
+	onSubmit: (value: TCerti) => void
 	isSubmitting: boolean
 }

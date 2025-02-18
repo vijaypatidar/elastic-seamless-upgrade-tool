@@ -81,7 +81,7 @@ export const getStepIndicatorData = (
 				stepValue: <FiCheck size="22px" color="currentColor" />,
 				internalBackground: "#52D97F",
 				boxShadow: "none",
-				isDisabled: false,
+				isDisabled: true,
 			}
 		case "INPROGRESS":
 			return {
