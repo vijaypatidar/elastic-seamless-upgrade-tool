@@ -92,7 +92,8 @@ function UpgradeAssistant() {
 						: "COMPLETED"
 
 				const step3Status = getNextStepStatus(step2Status, elastic?.isUpgradable)
-				const step4Status = getNextStepStatus(step3Status, kibana?.isUpgradable)
+				// const step4Status = getNextStepStatus(step3Status, kibana?.isUpgradable)
+				const step4Status = "NOTVISITED"
 
 				setStepStatus({
 					"1": step1Status,
