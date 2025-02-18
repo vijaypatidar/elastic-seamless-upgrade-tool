@@ -1,8 +1,10 @@
+import { error } from 'console';
 import { ElasticClient } from '../clients/elastic.client';
 import {
   createAnsibleInventory,
   runPlaybookWithLogging,
 } from '../controllers/ansible-controller';
+import { getNodeInfo } from '../controllers/elastic-controller';
 import logger from '../logger/logger';
 import ElasticNode, {
   IElasticNode,
@@ -33,14 +35,22 @@ export const getElasticNodeById = async (
 export const getAllElasticNodes = async (
   clusterId: string,
 ): Promise<IElasticNode[]> => {
-  await syncNodeData(clusterId);
-  const elasticNodes = await ElasticNode.find({ clusterId: clusterId });
-  return elasticNodes;
+  try{
+    await syncNodeData(clusterId);
+  }
+  catch(error){
+      logger.error("Unable to sync wit Elastic search instance! Maybe the connection is breaked")
+  }
+  finally{
+    const elasticNodes = await ElasticNode.find({ clusterId: clusterId });
+    return elasticNodes;
+  }
 };
 
 export const syncNodeData = async (clusterId: string) => {
   try {
     const client = await ElasticClient.buildClient(clusterId);
+    const clusterInfo = await getClusterInfoById(clusterId);
     const response: any = await client.getClient().nodes.info({
       filter_path:
         'nodes.*.name,nodes.*.roles,nodes.*.os.name,nodes.*.os.version,nodes.*.version,nodes.*.ip',
@@ -65,9 +75,16 @@ export const syncNodeData = async (clusterId: string) => {
     for (const node of elasticNodes) {
       const existingNode = await ElasticNode.findOne({ nodeId: node.nodeId });
       if (existingNode) {
-        node.status = existingNode.status;
-        node.progress = existingNode.progress;
+        if(existingNode.status !== 'upgraded'){
+          node.status = existingNode.status;
+          node.progress = existingNode.progress;
+        }
       }
+      if(node.version === clusterInfo.targetVersion){
+        node.status = "upgraded";
+        node.progress = 100;
+      }
+
       await ElasticNode.findOneAndUpdate({ nodeId: node.nodeId }, node, {
         new: true,
         runValidators: true,
@@ -76,7 +93,6 @@ export const syncNodeData = async (clusterId: string) => {
     }
   } catch (error) {
     logger.error('Error syncing nodes from Elasticsearch:', error);
-    throw error;
   }
 };
 
@@ -151,5 +167,6 @@ export const triggerNodeUpgrade = async (nodeId: string,clusterId: string) => {
     return false;
   }
 };
+
 
 /// /upgrade (exec)
