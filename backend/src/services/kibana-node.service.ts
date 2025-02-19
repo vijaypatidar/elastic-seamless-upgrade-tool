@@ -1,7 +1,7 @@
 import axios from 'axios';
 import KibanaNode, { IKibanaNode, IKibanaNodeDocument } from '../models/kibana-node.model';
 import logger from '../logger/logger';
-import { createAnsibleInventoryForKibana, runPlaybookWithLogging } from '../controllers/ansible-controller';
+import { createAnsibleInventoryForKibana, runPlaybookWithLogging, runPlaybookWithLoggingForKibana } from '../controllers/ansible-controller';
 import { getClusterInfoById } from './cluster-info.service';
 
 
@@ -181,7 +181,7 @@ export const updateKibanaNodeStatus = async (
         return false;
       }
   
-      runPlaybookWithLogging(
+      runPlaybookWithLoggingForKibana(
         'ansible/main.yml',
         'ansible_inventory.ini',
         {
