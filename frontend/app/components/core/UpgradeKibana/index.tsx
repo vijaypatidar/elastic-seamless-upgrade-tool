@@ -189,7 +189,7 @@ function UpgradeKibana({ clusterType }: TUpgradeKibana) {
 					return cellValue
 			}
 		},
-		[data, isPending]
+		[data, isPending, isRefetching]
 	)
 
 	return (
