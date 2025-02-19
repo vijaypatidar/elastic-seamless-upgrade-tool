@@ -166,11 +166,11 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 					SessionStorageHandler.setItem(StorageManager.SETUP_SET, 1)
 					LocalStorageHandler.setItem(StorageManager.CLUSTER_ID, res?.data?.clusterId || "cluster-id")
 					refetch()
+					dispatch(resetForEditCluster())
 					if (pathname === "/cluster-overview") {
 						dispatch(refresh())
 					}
 					onOpenChange()
-					dispatch(resetForEditCluster())
 
 				})
 				.catch((err) => toast.error(err?.response?.data.err))
