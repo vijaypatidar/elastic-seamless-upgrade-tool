@@ -13,6 +13,7 @@ import Credentials from "./Credentials"
 import Infrastructure from "./Infrastructure"
 import { useDispatch } from "react-redux"
 import { setClusterAdded } from "~/store/reducers/safeRoutes"
+import StringManager from "~/constants/StringManager"
 
 function Setup() {
 	const dispatch = useDispatch()
@@ -76,7 +77,7 @@ function Setup() {
 						},
 					})
 					.then((res) => (certIds = res?.data?.certificateIds))
-					.catch((err) => toast.error(err?.response?.data.err))
+					.catch((err) => toast.error(err?.response?.data.err ?? StringManager.GENERIC_ERROR))
 			}
 			await axiosJSON
 				.post("/api/elastic/clusters", {
@@ -94,7 +95,7 @@ function Setup() {
 					LocalStorageHandler.setItem(StorageManager.CLUSTER_ID, res?.data?.clusterId || "cluster-id")
 					navigate("/cluster-overview")
 				})
-				.catch((err) => toast.error(err?.response?.data.err))
+				.catch((err) => toast.error(err?.response?.data.err ?? StringManager.GENERIC_ERROR))
 		},
 	})
 

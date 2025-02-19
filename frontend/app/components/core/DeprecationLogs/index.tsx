@@ -17,6 +17,7 @@ import { FiAlertTriangle } from "react-icons/fi"
 import { toast } from "sonner"
 import axiosJSON from "~/apis/http"
 import StorageManager from "~/constants/StorageManager"
+import StringManager from "~/constants/StringManager"
 import LocalStorageHandler from "~/lib/LocalHanlder"
 
 const rows = [
@@ -123,7 +124,7 @@ function DeprecationLogs({ clusterType }: { clusterType: "ELASTIC" | "KIBANA" })
 					}
 				})
 			})
-			.catch((err) => toast.error(err?.response?.data.err))
+			.catch((err) => toast.error(err?.response?.data.err ?? StringManager.GENERIC_ERROR))
 		return response
 	}
 

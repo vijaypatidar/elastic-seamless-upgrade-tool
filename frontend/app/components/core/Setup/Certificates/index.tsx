@@ -5,6 +5,7 @@ import { useState } from "react"
 import Files from "react-files"
 import { toast } from "sonner"
 import { ConatinedButton, OutlinedButton } from "~/components/utilities/Buttons"
+import StringManager from "~/constants/StringManager"
 
 function Certificates({ backStep, onSubmit, isSubmitting }: TCertificateComp) {
 	const [certFiles, setCertFiles] = useState<File[]>([])
@@ -14,7 +15,7 @@ function Certificates({ backStep, onSubmit, isSubmitting }: TCertificateComp) {
 	}
 
 	const handleError = (error: any, file: File) => {
-		toast.error(error.message)
+		toast.error(error.message ?? StringManager.GENERIC_ERROR)
 	}
 
 	const handleDelete = (fn: React.Dispatch<React.SetStateAction<File[]>>, file: File, index: number) => {

@@ -19,7 +19,7 @@ const StyledLinearProgress = styled(LinearProgress)(({ theme }) => ({
 
 const ProgressBar: React.FC<CustomProgressBarProps> = ({ progress }) => {
 	return (
-		<Box className="flex flex-col gap-[6px] pt-[1.5px] max-w-[135px] w-full">
+		<Box className="flex flex-col gap-[6px] pt-[1.5px] w-full">
 			<Box className="flex flex-row items-center gap-2 justify-between">
 				<Typography
 					className="flex flex-row gap-[6px] items-center"
