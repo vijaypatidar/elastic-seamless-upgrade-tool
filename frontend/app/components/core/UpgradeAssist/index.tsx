@@ -62,7 +62,9 @@ function UpgradeAssistant() {
 			.get(`/api/elastic/clusters/${clusterId}/upgrade_info`)
 			.then((res) => {
 				response = res.data
-				startTimer(moment.utc(response?.elastic?.snapshot?.snapshot.createdAt).local().valueOf())
+				if(response?.elastic?.snapshot?.snapshot){
+					startTimer(moment.utc(response?.elastic?.snapshot?.snapshot.createdAt).local().valueOf())
+				}
 				const { elastic, kibana } = response ?? {}
 				const step1Status = elastic?.snapshot?.snapshot ? "COMPLETED" : "PENDING"
 
