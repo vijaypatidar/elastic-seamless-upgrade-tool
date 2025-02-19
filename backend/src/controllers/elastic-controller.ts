@@ -30,6 +30,7 @@ import path from 'path';
 import {  getPossibleUpgrades } from '../utils/upgrade.versions';
 import { normalizeNodeUrl } from '../utils/utlity.functions';
 import { IElasticNode } from '../models/elastic-node.model';
+import { createKibanaNodes, getKibanaNodes, triggerKibanaNodeUpgrade } from '../services/kibana-node.service';
 
 export const healthCheck = async (req: Request, res: Response) => {
   try {
@@ -92,7 +93,9 @@ export const addOrUpdateClusterDetail = async (req: Request, res: Response) => {
     const clusterId = 'cluster-id';
     const elastic: IElasticInfo = req.body.elastic;
     const kibana: IKibanaInfo = req.body.kibana;
+    const kibanaConfigs = req.body.kibanaConfigs;
 
+   
     const sshKey = req.body.key;
     if (typeof sshKey !== "string" || !sshKey.trim()) {
       throw new Error("Invalid SSH key: Key must be a non-empty string.");
@@ -118,10 +121,14 @@ export const addOrUpdateClusterDetail = async (req: Request, res: Response) => {
       targetVersion: req.body.targetVersion,
       infrastructureType: req.body.infrastructureType,
       pathToKey: keyPath,
-      key: sshKey
+      key: sshKey,
+      kibanaConfigs: kibanaConfigs
     };
 
     const result = await createOrUpdateClusterInfo(clusterInfo);
+    if(kibanaConfigs && kibanaConfigs.length && kibana.username && kibana.password){
+      await createKibanaNodes(kibanaConfigs,kibana.username,kibana.password,clusterId);
+    }
     res
       .send({
         message: result.isNew ? 'Cluster info saved' : 'Cluster info updated',
@@ -259,7 +266,7 @@ export const handleUpgrades = async (req: Request, res: Response) => {
         return;
       }
     });
-    res.status(200).send({ err: 'Upgradation triggered' });
+    res.status(200).send({ message: 'Upgradation triggered' });
   } catch (err: any) {
     logger.error('Error performing upgrade:', err);
     res.status(400).send({ err: err.message });
@@ -423,7 +430,8 @@ export const verfiyCluster = async (req: Request, res: Response) => {
 							certificateIds: clusters[0].certificateIds ?? null,
 							targetVersion: clusters[0].targetVersion ?? null,
 							infrastructureType: clusters[0].infrastructureType ?? null,
-							pathToKey: clusters[0].key ?? null
+							pathToKey: clusters[0].key ?? null,
+              kibanaConfigs: clusters[0].kibanaConfigs ? clusters[0].kibanaConfigs : []
 						}
 					: null,
 			})
@@ -439,4 +447,36 @@ export const verfiyCluster = async (req: Request, res: Response) => {
 		})
 	}
 } 
+
+export const getKibanaNodesInfo = async(req: Request, res: Response)=>{
+   try{
+    const clusterId = req.params.clusterId;
+    const kibanaNodes = await getKibanaNodes(clusterId);
+    res.send(kibanaNodes);
+   }
+   catch(error: any){
+    logger.error('Error fetching kibana node details:', error);
+    res.status(400).send({ err: error.message });
+   }
+}
+
+export const handleKibanaUpgrades = async (req: Request, res: Response) => {
+  const clusterId = req.params.clusterId;
+  const { nodes } = req.body;
+  try {
+    nodes.forEach((nodeId: string) => {
+      const triggered = triggerKibanaNodeUpgrade(nodeId,clusterId);
+      if (!triggered) {
+        res.status(400).send({ err: 'Upgrade failed node not available' });
+      }
+      else{
+        return;
+      }
+    });
+    res.status(200).send({ message: 'Upgradation triggered' });
+  } catch (err: any) {
+    logger.error('Error performing upgrade:', err);
+    res.status(400).send({ err: err.message });
+  }
+}
 

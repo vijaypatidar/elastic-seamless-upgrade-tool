@@ -7,7 +7,7 @@ import { DeprecationDetail, KibanaClient } from "../clients/kibana.client"
 export const createOrUpdateClusterInfo = async (clusterInfo: IClusterInfo): Promise<IClusterInfoDocument> => {
 	// TODO These needs to be updated when we want to support multiple clusters
 	const clusterId = "cluster-id" //clusterInfo.clusterId
-	const { elastic, kibana, certificateIds, targetVersion,infrastructureType, pathToKey, key} = clusterInfo
+	const { elastic, kibana, certificateIds, targetVersion,infrastructureType, pathToKey, key,kibanaConfigs} = clusterInfo
 	const data = await ClusterInfo.findOneAndUpdate(
 		{ clusterId: clusterId },
 		{
@@ -18,7 +18,8 @@ export const createOrUpdateClusterInfo = async (clusterInfo: IClusterInfo): Prom
 			targetVersion: targetVersion,
 			infrastructureType: infrastructureType,
 			pathToKey: pathToKey,
-			key: key
+			key: key,
+			kibanaConfigs: kibanaConfigs
 		},
 		{ new: true, upsert: true, runValidators: true }
 	)
@@ -36,7 +37,8 @@ export const getAllClusters = async (): Promise<IClusterInfo[]> => {
 			infrastructureType: cluster.infrastructureType,
 			certificateIds: cluster.certificateIds,
 			pathToKey: cluster.pathToKey,
-			key: cluster.key
+			key: cluster.key,
+			kibanaConfigs: cluster.kibanaConfigs
 		}))
 	} catch (error) {
 		console.error("Error fetching cluster list:", error)
@@ -58,6 +60,7 @@ export const getClusterInfoById = async (clusterId: string): Promise<IClusterInf
 		certificateIds: clusterInfo?.certificateIds,
 		pathToKey: clusterInfo?.pathToKey,
 		key: clusterInfo?.key,
+		kibanaConfigs: clusterInfo?.kibanaConfigs
 	}
 }
 
