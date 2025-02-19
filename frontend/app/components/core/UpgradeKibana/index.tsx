@@ -75,7 +75,7 @@ const columns: TUpgradeColumn = [
 	},
 ]
 
-function UpgradeCluster({ clusterType }: TUpgradeCluster) {
+function UpgradeKibana({ clusterType }: TUpgradeKibana) {
 	const getNodeStatus = async (nodeId: string) => {
 		try {
 			const response = await axiosJSON.get(`/api/elastic/clusters/nodes/${nodeId}`)
@@ -93,7 +93,7 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 		const clusterId = LocalStorageHandler.getItem(StorageManager.CLUSTER_ID) || "cluster-id"
 		let response: any = []
 		await axiosJSON
-			.get(`/api/elastic/clusters/${clusterId}/nodes`)
+			.get(`/api/elastic/clusters/${clusterId}/kibana-nodes`)
 			.then((res) => {
 				response = res.data.map((item: any) => ({
 					key: item.nodeId,
@@ -103,10 +103,10 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 					version: item.version,
 					status: item.status,
 					progress: item.progress,
-					isMaster: item.isMaster,
-					disabled: false
-						// (item.isMaster && res.data.filter((i: any) => i.status !== "upgraded" && i.isMaster).length > 0) ||
-						// res.data.some((i: any) => i.status === "upgrading"),
+					isMaster: false,
+					disabled: false,
+					// (item.isMaster && res.data.filter((i: any) => i.status !== "upgraded" && i.isMaster).length > 0) ||
+					// res.data.some((i: any) => i.status === "upgrading"),
 				}))
 			})
 			.catch((err) => toast.error(err?.response?.data.err ?? StringManager.GENERIC_ERROR))
@@ -118,7 +118,7 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 		const clusterId = LocalStorageHandler.getItem(StorageManager.CLUSTER_ID) || "cluster-id"
 		console.log("triggered")
 		await axiosJSON
-			.post(`/api/elastic/clusters/${clusterId}/nodes/upgrade`, {
+			.post(`/api/elastic/clusters/${clusterId}/nodes/upgrade-kibana`, {
 				nodes: [nodeId],
 			})
 			.then((res) => {
@@ -213,7 +213,7 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 							// table: "min-h-[400px] min-w-[600px]",
 							th: "text-[#9D90BB] text-xs bg-[#161616] first:rounded-l-xl last:rounded-r-xl",
 							td: "text-sm font-normal leading-normal border-b-[0.5px] border-solid border-[#1E1E1E]",
-							tr: "[&>th]:h-[42px] [&>td]:h-[60px]",
+							tr: "[&>th]:h-[42px] [&>td]:min-h-[60px]",
 						}}
 					>
 						<TableHeader columns={columns}>
@@ -242,4 +242,4 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 	)
 }
 
-export default UpgradeCluster
+export default UpgradeKibana

@@ -6,8 +6,13 @@ type TClusterValues = {
 	password: string
 	apiKey: string | null
 	pathToSSH: string
-	kibanaClusters: any[]
+	kibanaConfigs: TKibanaConfigs[]
 	certFiles: File[] | TExistingFile[]
+}
+
+type TKibanaConfigs = {
+	name: string
+	ip: string
 }
 
 type TExistingFile = {

@@ -187,7 +187,7 @@ function UpgradeAssistant() {
 								>
 									<InfoCircle size="14px" color="#6E6E6E" />
 								</Tooltip>
-								<Typography fontSize="14px" fontWeight="400" lineHeight="18px" color="#6E6E6E" minWidth="74px">
+								<Typography fontSize="14px" fontWeight="400" lineHeight="18px" color="#6E6E6E" minWidth="76px">
 									{formatTime(remainingTime)}
 								</Typography>
 							</Box>
