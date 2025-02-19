@@ -28,7 +28,7 @@ function Setup() {
 		password: "",
 		apiKey: "",
 		pathToSSH: "",
-		kibanaClusters: [],
+		kibanaConfigs: [],
 	})
 
 	useEffect(() => {
@@ -86,7 +86,7 @@ function Setup() {
 					certificateIds: certIds,
 					infrastructureType: infraType,
 					key: creds.pathToSSH ?? "",
-					kibanaClusterInfo: creds.kibanaClusters,
+					kibanaConfigs: creds.kibanaConfigs,
 				})
 				.then((res) => {
 					dispatch(setClusterAdded(true))
