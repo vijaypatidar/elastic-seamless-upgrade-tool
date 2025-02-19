@@ -189,7 +189,7 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 					return cellValue
 			}
 		},
-		[data, isPending]
+		[data, isPending, isRefetching]
 	)
 
 	return (
