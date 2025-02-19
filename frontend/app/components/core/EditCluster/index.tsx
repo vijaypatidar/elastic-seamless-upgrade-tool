@@ -4,7 +4,7 @@ import { useMutation, useQuery } from "@tanstack/react-query"
 import { useFormik } from "formik"
 import { Add, ArrowLeft, DocumentText1, DocumentUpload, Edit2, Eye, EyeSlash, Trash } from "iconsax-react"
 import _ from "lodash"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { toast } from "sonner"
 import { ConatinedButton, OutlinedButton } from "~/components/utilities/Buttons"
 import Input from "~/components/utilities/Input"
@@ -22,6 +22,7 @@ import { useLocation, useNavigate } from "react-router"
 import { useDispatch } from "react-redux"
 import { resetForEditCluster } from "~/store/reducers/safeRoutes"
 import { refresh } from "~/store/reducers/refresh"
+import StringManager from "~/constants/StringManager"
 
 const STYLES = {
 	GO_BACK_BUTTON: {
@@ -62,17 +63,20 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 		enableReinitialize: true,
 		validationSchema: validationSchema,
 		onSubmit: async (values) => {
-			console.log("Sdfs")
 			await HandleSubmit(values)
 		},
 	})
+
+	useEffect(() => {
+		if(isOpen) formik.resetForm()
+	}, [isOpen])
 
 	const handleChange = (fn: React.Dispatch<React.SetStateAction<(File | TExistingFile)[]>>, files: File[]) => {
 		fn([...formik.values.certFiles, ...files])
 	}
 
 	const handleError = (error: any, file: File) => {
-		toast.error(error.message)
+		toast.error(error.message ?? StringManager.GENERIC_ERROR)
 	}
 
 	const handleDelete = (
@@ -85,10 +89,6 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 			...formik.values.certFiles.slice(index + 1, formik.values.certFiles.length),
 		])
 	}
-
-	// const handleSubmit = () => {
-	// 	// onSubmit({ certFiles: certFiles, jsonFiles: jsonFiles })
-	// }
 
 	const getCluster = async () => {
 		await axiosJSON
@@ -114,7 +114,7 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 			})
 			.catch((err) => {
 				console.log(err)
-				toast.error(err?.response?.data.err)
+				toast.error(err?.response?.data.err ?? StringManager.GENERIC_ERROR)
 			})
 
 		return null
@@ -145,7 +145,7 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 						},
 					})
 					.then((res) => (certIds = res?.data?.certificateIds))
-					.catch((err) => toast.error(err?.response?.data.err))
+					.catch((err) => toast.error(err?.response?.data.err ?? StringManager.GENERIC_ERROR))
 			}
 			await axiosJSON
 				.post("/api/elastic/clusters", {
@@ -171,9 +171,8 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 						dispatch(refresh())
 					}
 					onOpenChange()
-
 				})
-				.catch((err) => toast.error(err?.response?.data.err))
+				.catch((err) => toast.error(err?.response?.data.err ?? StringManager.GENERIC_ERROR))
 		},
 	})
 
@@ -646,7 +645,7 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 														fontWeight="400"
 														lineHeight="20px"
 													>
-														Path to SSH key
+														SSH key
 													</Typography>
 													<OneLineSkeleton
 														show={isLoading || isRefetching}
@@ -658,7 +657,7 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 																id="pathToSSH"
 																name="pathToSSH"
 																type="text"
-																placeholder="Enter path to SSH key"
+																placeholder="Enter SSH key"
 																varient="outlined"
 																multiline
 																minRows={8}

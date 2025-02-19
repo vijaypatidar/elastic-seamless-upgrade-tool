@@ -271,14 +271,14 @@ function Credentials({ initialValues: IV, backStep, onSubmit }: TCredentialsComp
 				</Box>
 				<Box className="flex flex-col gap-[6px] max-w-[515px]">
 					<Typography color="#ABA9B1" fontSize="14px" fontWeight="400" lineHeight="20px">
-						Path to SSH key
+						SSH key
 					</Typography>
 					<Input
 						fullWidth
 						id="pathToSSH"
 						name="pathToSSH"
 						type="text"
-						placeholder="Enter path to SSH key"
+						placeholder="Enter SSH key"
 						varient="outlined"
 						multiline
 						minRows={8}

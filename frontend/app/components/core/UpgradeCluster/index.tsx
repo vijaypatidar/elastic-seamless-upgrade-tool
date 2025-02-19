@@ -9,6 +9,7 @@ import { OutlinedBorderButton } from "~/components/utilities/Buttons"
 import StorageManager from "~/constants/StorageManager"
 import LocalStorageHandler from "~/lib/LocalHanlder"
 import ProgressBar from "./widgets/progress"
+import StringManager from "~/constants/StringManager"
 
 const UPGRADE_ENUM = {
 	completed: (
@@ -103,13 +104,12 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 					status: item.status,
 					progress: item.progress,
 					isMaster: item.isMaster,
-					disabled:
-						(item.isMaster &&
-							res.data.filter((i: any) => i.status === "upgraded" && !i.isMaster).length > 0) ||
-						res.data.some((i: any) => i.status === "upgrading"),
+					disabled: false
+						// (item.isMaster && res.data.filter((i: any) => i.status !== "upgraded" && i.isMaster).length > 0) ||
+						// res.data.some((i: any) => i.status === "upgrading"),
 				}))
 			})
-			.catch((err) => toast.error(err?.response?.data.err))
+			.catch((err) => toast.error(err?.response?.data.err ?? StringManager.GENERIC_ERROR))
 
 		return response
 	}
@@ -171,7 +171,7 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 										}}
 										icon={Flash}
 										filledIcon={Flash}
-										isDisabled={row?.disabled || isPending}
+										disabled={row?.disabled || isPending}
 									>
 										Upgrade
 									</OutlinedBorderButton>

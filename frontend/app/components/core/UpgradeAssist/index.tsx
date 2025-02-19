@@ -21,6 +21,7 @@ import {
 } from "~/store/reducers/safeRoutes"
 import DeprectedSettings from "./widgets/DeprectedSettings"
 import StepBox from "./widgets/StepBox"
+import StringManager from "~/constants/StringManager"
 
 function UpgradeAssistant() {
 	const dispatch = useDispatch()
@@ -94,8 +95,8 @@ function UpgradeAssistant() {
 						: "COMPLETED"
 
 				const step3Status = getNextStepStatus(step2Status, elastic?.isUpgradable)
-				// const step4Status = getNextStepStatus(step3Status, kibana?.isUpgradable)
-				const step4Status = "NOTVISITED"
+				const step4Status = getNextStepStatus(step3Status, kibana?.isUpgradable)
+				// const step4Status = "NOTVISITED"
 
 				setStepStatus({
 					"1": step1Status,
@@ -112,7 +113,7 @@ function UpgradeAssistant() {
 				handleRoutingStates(step3Status, setElasticNodeUpgradeAllowed)
 				handleRoutingStates(step4Status, setKibanaNodeUpgradeAllowed)
 			})
-			.catch((err) => toast.error(err?.response?.data.err))
+			.catch((err) => toast.error(err?.response?.data.err ?? StringManager.GENERIC_ERROR))
 		return response
 	}
 

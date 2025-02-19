@@ -15,6 +15,7 @@ import { setUpgradeAssistAllowed } from "~/store/reducers/safeRoutes"
 import { useNavigate } from "react-router"
 import { useEffect } from "react"
 import { refresh } from "~/store/reducers/refresh"
+import StringManager from "~/constants/StringManager"
 
 const CLUSTER_STATUS_COLOR: { [key: string]: string } = {
 	yellow: "#E0B517",
@@ -62,11 +63,14 @@ function ClusterInfo({ refresh }: { refresh: boolean }) {
 				dispatch(setUpgradeAssistAllowed(res.data?.targetVersion ? true : false))
 				response = res.data
 			})
-			.catch((err) => toast.error(err?.response?.data?.err))
+			.catch((err) => {
+				toast.error(err?.response?.data?.err ?? StringManager.GENERIC_ERROR)
+				throw err
+			})
 		return response
 	}
 
-	const { data, isLoading, refetch, isRefetching } = useQuery({
+	const { data, isLoading, refetch, isRefetching, error } = useQuery({
 		queryKey: ["cluster-info"],
 		queryFn: getClusterInfo,
 		staleTime: Infinity,
@@ -81,7 +85,7 @@ function ClusterInfo({ refresh }: { refresh: boolean }) {
 				dispatch(setUpgradeAssistAllowed(res.data?.targetVersion ? true : false))
 				navigate("/upgrade-assistant")
 			})
-			.catch((err) => toast.error(err?.response?.data?.err))
+			.catch((err) => toast.error(err?.response?.data?.err ?? StringManager.GENERIC_ERROR))
 	}
 
 	const { mutate: HandleVersion, isPending } = useMutation({
@@ -166,21 +170,25 @@ function ClusterInfo({ refresh }: { refresh: boolean }) {
 						<Box className="flex flex-col gap-[24px] w-2/4">
 							<DetailBox
 								title="Cluster name"
-								description={data?.clusterName}
+								description={error ? "--" : data?.clusterName}
 								isLoading={isLoading || isRefetching}
 							/>
 							<DetailBox
 								title="Cluster UUID"
-								description={data?.clusterUUID}
+								description={error ? "--" : data?.clusterUUID}
 								isLoading={isLoading || isRefetching}
 							/>
 							<DetailBox
 								title="Infrastructure type"
-								description={_.capitalize(
-									data?.infrastructureType ??
-										LocalStorageHandler.getItem(StorageManager.INFRA_TYPE) ??
-										"placeholder"
-								)}
+								description={
+									error
+										? "--"
+										: _.capitalize(
+												data?.infrastructureType ??
+													LocalStorageHandler.getItem(StorageManager.INFRA_TYPE) ??
+													"placeholder"
+										  )
+								}
 								isLoading={isLoading || isRefetching}
 							/>
 						</Box>
@@ -192,17 +200,17 @@ function ClusterInfo({ refresh }: { refresh: boolean }) {
 										<Box
 											component="span"
 											className="flex min-w-[6px] min-h-[6px] rounded-[2px]"
-											sx={{ background: CLUSTER_STATUS_COLOR[data?.status] }}
+											sx={{ background: CLUSTER_STATUS_COLOR[error ? "red" : data?.status] }}
 										/>
 										<Typography
-											color={CLUSTER_STATUS_COLOR[data?.status]}
+											color={CLUSTER_STATUS_COLOR[error ? "red" : data?.status]}
 											fontFamily="Inter"
 											fontSize="12px"
 											fontWeight="500"
 											lineHeight="normal"
 											textTransform="capitalize"
 										>
-											{data?.status}
+											{error ? "red" : data?.status}
 										</Typography>
 									</Box>
 								}
@@ -210,7 +218,7 @@ function ClusterInfo({ refresh }: { refresh: boolean }) {
 							/>
 							<DetailBox
 								title="ES Version"
-								description={data?.version}
+								description={error ? "--" : data?.version}
 								isLoading={isLoading || isRefetching}
 							/>
 							<DetailBox
@@ -226,37 +234,37 @@ function ClusterInfo({ refresh }: { refresh: boolean }) {
 					>
 						<DetailBox
 							title="Number of data nodes"
-							description={data?.numberOfDataNodes}
+							description={error ? "--" : data?.numberOfDataNodes}
 							isLoading={isLoading || isRefetching}
 						/>
 						<DetailBox
 							title="Number of nodes"
-							description={data?.numberOfNodes}
+							description={error ? "--" : data?.numberOfNodes}
 							isLoading={isLoading || isRefetching}
 						/>
 						<DetailBox
 							title="Active primary shards"
-							description={data?.activePrimaryShards}
+							description={error ? "--" : data?.activePrimaryShards}
 							isLoading={isLoading || isRefetching}
 						/>
 						<DetailBox
 							title="Active shards"
-							description={data?.activeShards}
+							description={error ? "--" : data?.activeShards}
 							isLoading={isLoading || isRefetching}
 						/>
 						<DetailBox
 							title="Relocating shards"
-							description={data?.relocatingShards}
+							description={error ? "--" : data?.relocatingShards}
 							isLoading={isLoading || isRefetching}
 						/>
 						<DetailBox
 							title="Initializing shards"
-							description={data?.initializingShards}
+							description={error ? "--" : data?.initializingShards}
 							isLoading={isLoading || isRefetching}
 						/>
 						<DetailBox
 							title="Unassigned shards"
-							description={data?.unassignedShards}
+							description={error ? "--" : data?.unassignedShards}
 							isLoading={isLoading || isRefetching}
 						/>
 					</Box>
