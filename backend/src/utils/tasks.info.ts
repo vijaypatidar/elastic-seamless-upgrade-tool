@@ -15,3 +15,17 @@ export const taskProgressMap: Record<string, number> = {
   'Wait for cluster health to return to yellow or green': 5,
   'Wait for the node to recover': 5,
 };
+
+
+export const taskProgressMapKibana:  Record<string, number> = {
+  'Validate kibana Version': 5,
+  'Get kibana current version': 5,
+  'Pre-download kibana install package': 5,
+  "Validate ELK Version": 5,
+   "Update kibana": 5,
+   "Restart kibana": 20,
+   "Wait for kibana to start listening": 20,
+   "Wait for kibana to be ready": 20,
+   "Set Default Index": 10,
+   "Playbook executed successfully": 5
+}

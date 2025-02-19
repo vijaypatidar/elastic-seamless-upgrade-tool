@@ -15,6 +15,8 @@ import {
   addOrUpdateTargetVersion,
   verfiySshKey,
   verfiyCluster,
+  getKibanaNodesInfo,
+  handleKibanaUpgrades,
 } from '../controllers/elastic-controller';
 
 const router = Router();
@@ -28,6 +30,7 @@ router.post('/:clusterId/add-version',addOrUpdateTargetVersion);
 router.get('/:clusterId/health', healthCheck);
 
 router.get('/:clusterId/nodes', getNodesInfo);
+router.get('/:clusterId/kibana-nodes', getKibanaNodesInfo);
 
 router.get(
   '/:clusterId/deprecations/elastic-search',
@@ -42,6 +45,8 @@ router.get('/nodes/:nodeId', getNodeInfo);
 
 router.post('/:clusterId/nodes/upgrade', handleUpgrades);
 
+router.post('/:clusterId/nodes/upgrade-kibana', handleKibanaUpgrades);
+
 router.get('/:clusterId/info', getClusterDetails);
 
 router.get('/:clusterId/nodes/:nodeId/logs/stream', getLogsStream);
@@ -55,5 +60,7 @@ router.get('/:clusterId/deprecations/kibana', getKibanaDeprecationsInfo);
 router.post('/:clusterId/verify-ssh',verfiySshKey);
 
 router.get('/verify',verfiyCluster)
+
+
 
 export default router;
