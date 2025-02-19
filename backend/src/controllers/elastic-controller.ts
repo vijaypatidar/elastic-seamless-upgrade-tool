@@ -266,7 +266,7 @@ export const handleUpgrades = async (req: Request, res: Response) => {
         return;
       }
     });
-    res.status(200).send({ err: 'Upgradation triggered' });
+    res.status(200).send({ message: 'Upgradation triggered' });
   } catch (err: any) {
     logger.error('Error performing upgrade:', err);
     res.status(400).send({ err: err.message });
@@ -473,7 +473,7 @@ export const handleKibanaUpgrades = async (req: Request, res: Response) => {
         return;
       }
     });
-    res.status(200).send({ err: 'Upgradation triggered' });
+    res.status(200).send({ message: 'Upgradation triggered' });
   } catch (err: any) {
     logger.error('Error performing upgrade:', err);
     res.status(400).send({ err: err.message });
