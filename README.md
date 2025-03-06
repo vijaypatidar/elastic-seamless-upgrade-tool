@@ -63,7 +63,8 @@ Step by step UI walk thorugh
 
   Once you have completed with the details subimission our tool will fetch the cluster health and display you on cluster details page as shown
   You need to select the target version you wanted to upgrade your cluster to by clicking on upgrade available dropdown
-    ![cluster-details](https://i.postimg.cc/3xPbYC1z/Screenshot-2025-03-06-at-3-10-49-AM.png)
+  
+  ![cluster-details](https://i.postimg.cc/3xPbYC1z/Screenshot-2025-03-06-at-3-10-49-AM.png)
 
 ### 3. Upgrade assistant 
   1. Once selecting the target version you will be redirected to the upgrade assistant
@@ -77,11 +78,12 @@ Step by step UI walk thorugh
   4. Once second step is completed you can go to the node-upgrade page
 
 ### 4. Elasticsearch Node upgradation
-    1. You can view all the nodes and there state here at this page
-        ![node details](https://i.postimg.cc/x81Bx4pm/Screenshot-2025-03-06-at-6-46-12-PM.png)
+   1. You can view all the nodes and there state here at this page
+      
+       ![node details](https://i.postimg.cc/x81Bx4pm/Screenshot-2025-03-06-at-6-46-12-PM.png)
 
-    2. And can trigger the update of nodes one by one note that you need to follow the order 
-        first data then master eligible then master nodes to know why [click here](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/rolling-upgrades.html)
+   2. And can trigger the update of nodes one by one note that you need to follow the order 
+       first data then master eligible then master nodes to know why [click here](https://www.elastic.co/guide/en/elasticsearch/reference/7.17/rolling-upgrades.html)
 
 
 ## Troubleshooting
