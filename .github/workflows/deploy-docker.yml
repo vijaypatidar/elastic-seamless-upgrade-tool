@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - hpf-32-necessary-changes-for-release
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -16,13 +17,13 @@ jobs:
 
       - name: Build and push frontend image
         run: |
-          docker build -t srajan1202/seamless-upgrade-frontend:latest ./frontend
-          docker push srajan1202/seamless-upgrade-frontend:latest
+          docker build -t hyperflex/elastic-seamless-upgrade-frontend:latest ./frontend
+          docker push hyperflex/elastic-seamless-upgrade-frontend:latest
 
       - name: Build and push backend image
         run: |
-          docker build -t srajan1202/seamless-upgrade-backend:latest ./backend
-          docker push srajan1202/seamless-upgrade-backend:latest
+          docker build -t hyperflex/elastic-seamless-upgrade-backend:latest ./backend
+          docker push hyperflex/elastic-seamless-upgrade-backend:latest
         
       
       
