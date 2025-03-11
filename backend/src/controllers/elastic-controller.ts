@@ -127,7 +127,7 @@ export const addOrUpdateClusterDetail = async (req: Request, res: Response) => {
 
     const result = await createOrUpdateClusterInfo(clusterInfo);
     if(kibanaConfigs && kibanaConfigs.length && kibana.username && kibana.password){
-      await createKibanaNodes(kibanaConfigs,kibana.username,kibana.password,clusterId);
+      await createKibanaNodes(kibanaConfigs,clusterId);
     }
     res
       .send({

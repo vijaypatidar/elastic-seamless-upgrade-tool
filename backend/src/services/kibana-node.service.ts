@@ -3,6 +3,7 @@ import KibanaNode, { IKibanaNode, IKibanaNodeDocument } from '../models/kibana-n
 import logger from '../logger/logger';
 import { createAnsibleInventoryForKibana, runPlaybookWithLogging, runPlaybookWithLoggingForKibana } from '../controllers/ansible-controller';
 import { getClusterInfoById } from './cluster-info.service';
+import { IClusterInfo } from '../models/cluster-info.model';
 
 
 export interface KibanaConfig {
@@ -10,7 +11,7 @@ export interface KibanaConfig {
     ip: string;
   }
   
-const getKibanaNodeDetails = async (kibanaUrl: string, username: string, password: string): Promise<{ version: string, os: Record<string, any>, roles: string[] }> => {
+const getKibanaNodeDetails = async (kibanaUrl: string, username: string | undefined, password: string | undefined): Promise<{ version: string, os: Record<string, any>, roles: string[] }> => {
   try {
     // Get Kibana status and details from the /api/status endpoint
     const response = await axios.get(`${kibanaUrl}/api/status`, {
@@ -18,8 +19,8 @@ const getKibanaNodeDetails = async (kibanaUrl: string, username: string, passwor
         'kbn-xsrf': 'true',
       },
       auth: {
-        username,
-        password,
+        username: username || '',
+        password: password || '',
       },
     });
 
@@ -40,14 +41,13 @@ const getKibanaNodeDetails = async (kibanaUrl: string, username: string, passwor
   }
 };
 
-export const createKibanaNodes = async (kibanaConfigs: KibanaConfig[], username: string, password: string,clusterId: string): Promise<IKibanaNode[]> => {
-  const kibanaNodes: IKibanaNode[] = [];
+export const createKibanaNodes = async (kibanaConfigs: KibanaConfig[],clusterId: string): Promise<void> => {
 
+  const clusterInfo: IClusterInfo = await getClusterInfoById(clusterId);
+  KibanaNode.collection.deleteMany({clusterID: clusterId});
   for (const kibanaConfig of kibanaConfigs) {
     try {
-      const { version, os, roles } = await getKibanaNodeDetails(`http://${kibanaConfig.ip}:5601`, username, password);
-
-      
+      const { version, os, roles } = await getKibanaNodeDetails(`http://${kibanaConfig.ip}:5601`, clusterInfo.kibana?.username, clusterInfo.kibana?.password);
       const nodeId = `node-${kibanaConfig.ip}`; 
       const progress = 0;  
       const status: 'available' | 'upgrading' | 'upgraded' | 'failed' = 'available';  
@@ -62,8 +62,11 @@ export const createKibanaNodes = async (kibanaConfigs: KibanaConfig[], username:
         progress,
         status,
       };
+      if(clusterInfo.targetVersion === version){
+        kibanaNode.status = "upgraded";
+        kibanaNode.progress = 100;
 
-      kibanaNodes.push(kibanaNode);
+      }
       await KibanaNode.findOneAndUpdate({ nodeId: kibanaNode.nodeId }, kibanaNode, {
         new: true,
         runValidators: true,
@@ -74,8 +77,6 @@ export const createKibanaNodes = async (kibanaConfigs: KibanaConfig[], username:
       console.error(`Error processing Kibana node ${kibanaConfig.ip}:`, error);
     }
   }
-
-  return kibanaNodes;
 };
 
 
@@ -138,35 +139,6 @@ export const updateKibanaNodeStatus = async (
     return kibanaNode;
   };
 
-  export const triggerNodeUpgradeKibana = async (nodeId: string,clusterId: string) => {
-    try {
-      const node = await getKibanaNodeById(nodeId);
-      if (!node) {
-        return false;
-      }
-      const clusterInfo = await getClusterInfoById(clusterId);
-      const pathToKey = clusterInfo.pathToKey ? clusterInfo.pathToKey : ''; //Should be stored in clusterInfo
-      await createAnsibleInventoryForKibana([node], pathToKey);
-      if(!clusterInfo.targetVersion || !clusterInfo.elastic.username || !clusterInfo.elastic.password){
-        return false;
-      }
-  
-      runPlaybookWithLogging(
-        'ansible/main.yml',
-        'ansible_inventory.ini',
-        {
-          elk_version: clusterInfo.targetVersion,
-          username: clusterInfo.elastic.username,
-          password: clusterInfo.elastic.password
-        },
-        nodeId,
-      );
-      return new Promise((resolve, reject) => resolve(true));
-    } catch (error) {
-      logger.error(`Error performing upgrade for node with id ${nodeId}`);
-      return false;
-    }
-  };
 
   export const triggerKibanaNodeUpgrade = async (nodeId: string,clusterId: string) => {
     try {
@@ -189,6 +161,7 @@ export const updateKibanaNodeStatus = async (
           username: clusterInfo.elastic.username,
           password: clusterInfo.elastic.password
         },
+        clusterId,
         nodeId,
       );
       return new Promise((resolve, reject) => resolve(true));
@@ -198,6 +171,25 @@ export const updateKibanaNodeStatus = async (
     }
   };
   
+export const syncKibanaNodes = async(clusterId: string)=>{
+    try{
+        const kibanaNodes = await KibanaNode.find({clusterId: clusterId});
+        for(const kibanaNode of kibanaNodes){
+            const { version, os, roles } = await getKibanaNodeDetails(`http://${kibanaNode.ip}:5601`, "admin", "admin");
+            kibanaNode.version = version;
+            kibanaNode.os = os;
+            kibanaNode.roles = roles;
+            await KibanaNode.findOneAndUpdate({ nodeId: kibanaNode.nodeId }, kibanaNode, {
+              new: true,
+              runValidators: true,
+              upsert: true,
+            });
+        }
+    }
+    catch(error){
+        throw new Error("Unable to sync kibana nodes");
+    }
+  }
 
   
 

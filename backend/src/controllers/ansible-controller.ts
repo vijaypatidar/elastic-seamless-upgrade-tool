@@ -13,7 +13,7 @@ import {
 import { taskProgressMap, taskProgressMapKibana } from '../utils/tasks.info';
 import { IElasticNode } from '../models/elastic-node.model';
 import { IKibanaNode } from '../models/kibana-node.model';
-import {updateKibanaNodeProgress, updateKibanaNodeStatus} from "../services/kibana-node.service";
+import {syncKibanaNodes, updateKibanaNodeProgress, updateKibanaNodeStatus} from "../services/kibana-node.service";
 
 export const createAnsibleInventory = async (
   nodes: IElasticNode[],
@@ -236,6 +236,7 @@ export const runPlaybookWithLoggingForKibana = async (
     password: string;
     [key: string]: string; // To allow additional variables
   },
+  clusterId: string,
   nodeId: string,
 ): Promise<ExecResult> => {
   try {
@@ -276,10 +277,16 @@ export const runPlaybookWithLoggingForKibana = async (
         stderr.push(chunk);
         logger.error(`[${nodeId}] STDERR: ${chunk}`);
       });
-      childProcess.on('close', (code) => {
+      childProcess.on('close', async(code) => {
         if (code === 0) {
           logger.info(`[${nodeId}] Playbook executed successfully.`);
           updateKibanaNodeProgress(nodeId, 100);
+          try {
+            await syncKibanaNodes(clusterId); 
+            logger.info(`[${nodeId}] Kibana node data synced successfully.`);
+          } catch (syncError: any) {
+            logger.error(`[${nodeId}] Failed to sync Kibana node data: ${syncError.message}`);
+          }
           updateKibanaNodeStatus(nodeId, 'upgraded');
           resolve({
             code: 0,
