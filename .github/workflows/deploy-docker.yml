@@ -3,12 +3,7 @@ run-name: start-script-local deployment
 on:
   push:
     branches:
-      - hpf-32-necessary-changes-for-release
-      - hpf-33-start-script-pipeline
-  pull_request:
-    branches:
-      - hpf-32-necessary-changes-for-release
-      - hpf-33-start-script-pipeline
+      - main
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
