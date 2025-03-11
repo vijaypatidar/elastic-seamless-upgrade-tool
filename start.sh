@@ -16,7 +16,7 @@ services:
       - mongo-data:/data/db
 
   backend:
-    image: srajan1202/seamless-upgrade-backend:latest
+    image: hyperflex/elastic-seamless-upgrade-backend:latest
     container_name: backend
     environment:
       MONGO_URI: mongodb://admin:admin123@mongodb:27017/
@@ -26,7 +26,7 @@ services:
       - '3000:3000'
 
   frontend:
-    image: srajan1202/seamless-upgrade-frontend:latest
+    image: hyperflex/elastic-seamless-upgrade-frontend:latest
     container_name: frontend
     ports:
       - '8080:80'
