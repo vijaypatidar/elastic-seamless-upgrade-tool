@@ -48,7 +48,7 @@ const INITIAL_VALUES = {
 	password: "",
 	apiKey: "",
 	pathToSSH: "",
-	kibanaClusters: [],
+	kibanaConfigs: [],
 	certFiles: [],
 }
 
@@ -63,12 +63,12 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 		enableReinitialize: true,
 		validationSchema: validationSchema,
 		onSubmit: async (values) => {
-			await HandleSubmit(values)
+			HandleSubmit(values)
 		},
 	})
 
 	useEffect(() => {
-		if(isOpen) formik.resetForm()
+		if (isOpen) formik.resetForm()
 	}, [isOpen])
 
 	const handleChange = (fn: React.Dispatch<React.SetStateAction<(File | TExistingFile)[]>>, files: File[]) => {
@@ -102,7 +102,7 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 					password: res?.data?.clusterData?.elastic?.password,
 					apiKey: "",
 					pathToSSH: res?.data?.clusterData?.pathToKey,
-					kibanaClusters: [],
+					kibanaConfigs: res?.data?.clusterData?.kibanaConfigs,
 					certFiles:
 						res?.data?.clusterData?.certificateIds?.map((certId: string) => ({
 							name: certId,
@@ -159,7 +159,7 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 					],
 					infrastructureType: "on-premise",
 					key: values.pathToSSH ?? "",
-					kibanaClusterInfo: values.kibanaClusters,
+					kibanaConfigs: values.kibanaConfigs,
 				})
 				.then((res) => {
 					LocalStorageHandler.setItem(StorageManager.INFRA_TYPE, "on-premise")
@@ -508,7 +508,7 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 													<Box
 														className={cn("flex flex-row justify-between max-w-[515px]", {
 															"border border-dashed border-[#3D3B42] rounded-[10px] py-[11px] pl-[16px] pr-[12px]":
-																formik.values.kibanaClusters.length === 0,
+																formik.values.kibanaConfigs?.length === 0,
 														})}
 													>
 														<Typography
@@ -533,10 +533,10 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 																	":hover": { color: "#4CDB9D !important" },
 																}}
 																onClick={() => {
-																	let option = formik.values.kibanaClusters
+																	let option = formik.values.kibanaConfigs
 																	const newOptions = [...option, { name: "", ip: "" }]
 																	formik.setFieldValue(
-																		"kibanaClusters",
+																		"kibanaConfigs",
 																		_.cloneDeep(newOptions)
 																	)
 																}}
@@ -548,90 +548,110 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 													</Box>
 													<Box className="flex flex-col gap-[6px] rounded-lg">
 														{_.map(
-															formik.values.kibanaClusters,
+															formik.values.kibanaConfigs,
 															(cluster: { name: string; ip: string }, index: number) => {
 																return (
-																	<Box className="flex flex-row gap-2 items-center group">
-																		<Box className="flex flex-row gap-[6px] w-full max-w-[515px]">
-																			<Input
-																				fullWidth
-																				id={`kibanaClusters.${index}`}
-																				name={`kibanaClusters.${index}`}
-																				type="text"
-																				placeholder="Enter cluster name"
-																				varient="outlined"
-																				value={cluster.name}
-																				onChange={(e: any) => {
-																					let newOptions = [
-																						...formik.values.kibanaClusters,
-																					]
-																					// @ts-ignore
-																					newOptions[index].name =
-																						e.target.value
-																					formik.setFieldValue(
-																						"kibanaClusters",
-																						_.cloneDeep(newOptions)
-																					)
-																				}}
-																				error={
-																					Boolean(
-																						formik.errors.kibanaClusters?.[
-																							index
+																	<Box className="flex flex-col gap-[2px]">
+																		<Box className="flex flex-row gap-2 items-center group">
+																			<Box className="flex flex-row gap-[6px] w-full max-w-[515px]">
+																				<Input
+																					fullWidth
+																					id={`kibanaConfigs.${index}`}
+																					name={`kibanaConfigs.${index}`}
+																					type="text"
+																					placeholder="Enter cluster name"
+																					varient="outlined"
+																					value={cluster.name}
+																					onBlur={formik.handleBlur}
+																					onChange={(e: any) => {
+																						let newOptions = [
+																							...formik.values
+																								.kibanaConfigs,
 																						]
-																					) && formik.touched.kibanaClusters
-																				}
-																			/>
-																			<Input
-																				fullWidth
-																				id={`kibanaClusters.${index}`}
-																				name={`kibanaClusters.${index}`}
-																				type="text"
-																				placeholder="Enter cluster name"
-																				varient="outlined"
-																				value={cluster.ip}
-																				onChange={(e: any) => {
-																					let newOptions = [
-																						...formik.values.kibanaClusters,
-																					]
-																					// @ts-ignore
-																					newOptions[index].ip =
-																						e.target.value
-																					formik.setFieldValue(
-																						"kibanaClusters",
-																						_.cloneDeep(newOptions)
-																					)
-																				}}
-																				error={
-																					Boolean(
-																						formik.errors.kibanaClusters?.[
-																							index
+																						// @ts-ignore
+																						newOptions[index].name =
+																							e.target.value
+																						formik.setFieldValue(
+																							"kibanaConfigs",
+																							_.cloneDeep(newOptions)
+																						)
+																					}}
+																					error={
+																						Boolean(
+																							formik.errors
+																								.kibanaConfigs?.[index]
+																						) &&
+																						formik.touched.kibanaConfigs
+																					}
+																				/>
+																				<Input
+																					fullWidth
+																					id={`kibanaConfigs.${index}`}
+																					name={`kibanaConfigs.${index}`}
+																					type="text"
+																					placeholder="Enter cluster name"
+																					varient="outlined"
+																					value={cluster.ip}
+																					onBlur={formik.handleBlur}
+																					onChange={(e: any) => {
+																						let newOptions = [
+																							...formik.values
+																								.kibanaConfigs,
 																						]
-																					) && formik.touched.kibanaClusters
-																				}
-																			/>
+																						// @ts-ignore
+																						newOptions[index].ip =
+																							e.target.value
+																						formik.setFieldValue(
+																							"kibanaConfigs",
+																							_.cloneDeep(newOptions)
+																						)
+																					}}
+																					error={
+																						Boolean(
+																							formik.errors
+																								.kibanaConfigs?.[index]
+																						) &&
+																						formik.touched.kibanaConfigs
+																					}
+																				/>
+																			</Box>
+																			<Box className="hidden delete-button group-hover:flex">
+																				<IconButton
+																					sx={{
+																						borderRadius: "8px",
+																						padding: "4px",
+																					}}
+																					onClick={() => {
+																						let newOptions = [
+																							...formik.values
+																								.kibanaConfigs,
+																						]
+																						newOptions = newOptions.filter(
+																							(option, ind) =>
+																								ind !== index
+																						)
+																						formik.setFieldValue(
+																							"kibanaConfigs",
+																							_.cloneDeep(newOptions)
+																						)
+																					}}
+																				>
+																					<Trash
+																						size="20px"
+																						color="#E56852"
+																					/>
+																				</IconButton>
+																			</Box>
 																		</Box>
-																		<Box className="hidden delete-button group-hover:flex">
-																			<IconButton
-																				sx={{
-																					borderRadius: "8px",
-																					padding: "4px",
-																				}}
-																				onClick={() => {
-																					let newOptions = [
-																						...formik.values.kibanaClusters,
-																					]
-																					newOptions = newOptions.filter(
-																						(option, ind) => ind !== index
-																					)
-																					formik.setFieldValue(
-																						"kibanaClusters",
-																						_.cloneDeep(newOptions)
-																					)
-																				}}
-																			>
-																				<Trash size="20px" color="#E56852" />
-																			</IconButton>
-																		</Box>
+																		{formik.touched.kibanaConfigs &&
+																		formik.errors.kibanaConfigs?.[index] ? (
+																			<Typography fontSize="12px" fontWeight="400" color="#EF4444" lineHeight="20px">
+																				{formik.errors.kibanaConfigs?.[index]
+																					?.name ||
+																					formik.errors.kibanaConfigs?.[index]
+																						?.ip}
+																			</Typography>
+																		) : null}
 																	</Box>
 																)
 															}

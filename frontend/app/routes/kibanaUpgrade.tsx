@@ -1,7 +1,7 @@
 import { Box, Breadcrumbs, Typography } from "@mui/material"
 import { ArrowRight2, Convertshape2 } from "iconsax-react"
 import { Link } from "react-router"
-import UpgradeCluster from "~/components/core/UpgradeCluster"
+import UpgradeKibana from "~/components/core/UpgradeKibana"
 import type { Route } from "../+types/root"
 
 export function meta({}: Route.MetaArgs) {
@@ -32,7 +32,7 @@ function KibanaUpgrades() {
 					</Typography>
 				</Breadcrumbs>
 			</Box>
-			<UpgradeCluster clusterType="KIBANA" />
+			<UpgradeKibana clusterType="KIBANA" />
 		</Box>
 	)
 }

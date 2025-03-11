@@ -6,7 +6,8 @@ type TCreds = {
 	password?: string
 	apiKey?: string
 	pathToSSH?: string
-	kibanaClusters: { name: string; ip: string }[]
+	kibanaConfigs: TKibanaConfigs[]
 }
 
+type TKibanaConfigs = { name: string; ip: string }
 type TCerti = { certFiles?: File[]; jsonFiles?: File[] }

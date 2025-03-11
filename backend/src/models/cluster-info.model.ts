@@ -25,6 +25,7 @@ export interface IClusterInfo {
   infrastructureType?: string;
   pathToKey?: string;
   key?: string;
+  kibanaConfigs?: Object[] | undefined;
 }
 
 export interface IClusterInfoDocument extends IClusterInfo, Document {}
@@ -55,7 +56,8 @@ const ClusterInfoSchema: Schema<IClusterInfoDocument> =
       infrastructureType: {type: String,required: true},
       targetVersion: { type: String },
       pathToKey: {type: String},
-      key: {type: String}
+      key: {type: String},
+      kibanaConfigs: { type: [Object]}
     },
     { timestamps: true },
   );
