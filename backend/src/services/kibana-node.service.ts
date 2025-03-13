@@ -170,12 +170,13 @@ export const updateKibanaNodeStatus = async (
       return false;
     }
   };
-  
+
 export const syncKibanaNodes = async(clusterId: string)=>{
+  const clusterInfo: IClusterInfo = await getClusterInfoById(clusterId);
     try{
         const kibanaNodes = await KibanaNode.find({clusterId: clusterId});
         for(const kibanaNode of kibanaNodes){
-            const { version, os, roles } = await getKibanaNodeDetails(`http://${kibanaNode.ip}:5601`, "admin", "admin");
+            const { version, os, roles } = await getKibanaNodeDetails(`http://${kibanaNode.ip}:5601`, clusterInfo.kibana?.username, clusterInfo.kibana?.password);
             kibanaNode.version = version;
             kibanaNode.os = os;
             kibanaNode.roles = roles;
@@ -186,8 +187,8 @@ export const syncKibanaNodes = async(clusterId: string)=>{
             });
         }
     }
-    catch(error){
-        throw new Error("Unable to sync kibana nodes");
+    catch(error: any){
+        throw new Error(`Unable to sync kibana nodes ${error.message}`);  
     }
   }
 
