@@ -1,0 +1,29 @@
+name: Deploy start script local to gist
+run-name: start-script-local deployment
+on:
+  push:
+    branches:
+      - main
+      - hpf-32-necessary-changes-for-release
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Build and push frontend image
+        run: |
+          docker build -t hyperflex/elastic-seamless-upgrade-frontend:latest ./frontend
+          docker push hyperflex/elastic-seamless-upgrade-frontend:latest
+
+      - name: Build and push backend image
+        run: |
+          docker build -t hyperflex/elastic-seamless-upgrade-backend:latest ./backend
+          docker push hyperflex/elastic-seamless-upgrade-backend:latest
+        
+      
+      

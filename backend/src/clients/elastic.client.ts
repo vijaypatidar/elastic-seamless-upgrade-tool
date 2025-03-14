@@ -69,7 +69,7 @@ export class ElasticClient {
       const res = await this.getClient().cat.health();
       return res;
     } catch (err) {
-      console.log(`Failed to get cluster health`, err);
+      logger.error(`Failed to get cluster health`, err);
       throw err;
     }
   }
