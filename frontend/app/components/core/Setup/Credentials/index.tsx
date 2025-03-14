@@ -194,7 +194,7 @@ function Credentials({ initialValues: IV, backStep, onSubmit }: TCredentialsComp
 								}}
 							>
 								<Add size="16px" color="currentColor" />
-								Add cluster
+								Add Node
 							</OutlinedButton>
 						</Box>
 					</Box>
@@ -209,7 +209,7 @@ function Credentials({ initialValues: IV, backStep, onSubmit }: TCredentialsComp
 												id={`kibanaConfigs.${index}`}
 												name={`kibanaConfigs.${index}`}
 												type="text"
-												placeholder="Enter cluster name"
+												placeholder="Enter node name"
 												varient="outlined"
 												value={cluster.name}
 												onBlur={formik.handleBlur}
@@ -229,7 +229,7 @@ function Credentials({ initialValues: IV, backStep, onSubmit }: TCredentialsComp
 												id={`kibanaConfigs.${index}`}
 												name={`kibanaConfigs.${index}`}
 												type="text"
-												placeholder="Enter cluster name"
+												placeholder="Enter node IP"
 												varient="outlined"
 												value={cluster.ip}
 												onBlur={formik.handleBlur}
