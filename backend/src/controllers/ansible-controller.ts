@@ -64,7 +64,7 @@ export const createAnsibleInventory = async (
     }
 
     inventoryParts.push(
-      `[elasticsearch:vars]\nansible_ssh_user=ubuntu\nansible_ssh_private_key_file=${pathToKey}`,
+      `[elasticsearch:vars]\nansible_ssh_user=ubuntu\nansible_ssh_private_key_file=${pathToKey}\nansible_ssh_common_args='-o StrictHostKeyChecking=no'`,
     );
 
     const inventoryContent = inventoryParts.join('\n\n');
@@ -210,7 +210,7 @@ export const createAnsibleInventoryForKibana = async(
       }
     });
     inventoryParts.push(
-      `[kibana:vars]\nansible_ssh_user=ubuntu\nansible_ssh_private_key_file=${pathToKey}`
+      `[kibana:vars]\nansible_ssh_user=ubuntu\nansible_ssh_private_key_file=${pathToKey}\nansible_ssh_common_args='-o StrictHostKeyChecking=no'`
     );
     const inventoryContent = inventoryParts.join('\n\n');
   
