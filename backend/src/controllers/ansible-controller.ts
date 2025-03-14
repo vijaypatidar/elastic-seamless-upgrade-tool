@@ -29,7 +29,6 @@ export const createAnsibleInventory = async (
     };
     
     for (const node of nodes) {
-      console.log(node);
       if (node.isMaster === true) {
         roleGroups.elasticsearch_master.push(
           `${node.name} ansible_host=${node.ip}`,
@@ -111,7 +110,7 @@ export const runPlaybookWithLogging = async (
       .join(' ');
 
     const command = `ansible-playbook -i ${inventoryPath} -e "${extraVars}" ${playbookPath} -vvv`; ////command
-    console.log('command', command);
+    logger.info('running command', command);
     return new Promise<ExecResult>((resolve, reject) => {
       const childProcess = exec(command);
       updateNodeStatus(nodeId, 'upgrading');
@@ -122,11 +121,11 @@ export const runPlaybookWithLogging = async (
       childProcess.stdout?.on('data', (data) => {
         const chunk = data.toString();
         stdout.push(chunk);
-        // logger.info(`[${nodeId}] STDOUT: ${chunk}`);
+        logger.info(`[${nodeId}] STDOUT: ${chunk}`);
         const taskMatch = chunk.match(/TASK \[(.+?)\]/);
         if (taskMatch && taskMatch.length >= 1) {
           const taskName = taskMatch[1].trim();
-          console.log('taskNameith', taskName);
+          logger.info('Executing the task', taskName);
           if (taskProgressMap[taskName] !== undefined) {
             currentProgress = currentProgress + taskProgressMap[taskName];
             updateNodeProgress(nodeId, currentProgress);
@@ -200,7 +199,7 @@ export const createAnsibleInventoryForKibana = async(
     };
     const inventoryParts: string[] = [];
     for (const node of kibanaNodes) {
-      console.log(node);
+
       // Add the Kibana node to the kibana group
       roleGroups.kibana.push(`${node.name} ansible_host=${node.ip}`);
     }
@@ -249,7 +248,7 @@ export const runPlaybookWithLoggingForKibana = async (
       .join(' ');
 
     const command = `ansible-playbook -i ${inventoryPath} -e "${extraVars}" ${playbookPath} -vvv`; ////command
-    console.log('command', command);
+    logger.info('running command', command);
     return new Promise<ExecResult>((resolve, reject) => {
       const childProcess = exec(command);
       updateKibanaNodeStatus(nodeId, 'upgrading');
@@ -264,7 +263,7 @@ export const runPlaybookWithLoggingForKibana = async (
         const taskMatch = chunk.match(/TASK \[(.+?)\]/);
         if (taskMatch && taskMatch.length >= 1) {
           const taskName = taskMatch[1].trim();
-          console.log('taskNameith', taskName);
+          logger.info('Executing the task: ', taskName);
           if (taskProgressMapKibana[taskName] !== undefined) {
             currentProgress = currentProgress + taskProgressMapKibana[taskName];
             updateKibanaNodeProgress(nodeId, currentProgress);
