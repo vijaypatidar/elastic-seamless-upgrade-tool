@@ -97,43 +97,52 @@ export const syncNodeData = async (clusterId: string) => {
 };
 
 export const updateNodeStatus = async (
-  nodeId: string,
+  identifier: string,
   newStatus: string,
 ): Promise<IElasticNodeDocument | null> => {
   try {
+    // Check if the identifier matches a nodeId or a name
+    const query = await ElasticNode.exists({ nodeId: identifier })
+      ? { nodeId: identifier }
+      : { name: identifier };
+
     const updatedNode = await ElasticNode.findOneAndUpdate(
-      { nodeId },
+      query,
       { status: newStatus },
       { new: true, runValidators: true },
     );
 
     if (!updatedNode) {
-      logger.debug(`Node with id ${nodeId} not found.`);
+      logger.debug(`Node with identifier ${identifier} not found.`);
       return null;
     }
 
     return updatedNode;
   } catch (error: any) {
-    console.error(`Error updating status for node ${nodeId}: ${error.message}`);
+    console.error(`Error updating status for node ${identifier}: ${error.message}`);
     throw error;
   }
 };
 
-export const updateNodeProgress = async (nodeId: string, progress: number) => {
+export const updateNodeProgress = async (identifier: string, progress: number) => {
   try {
+    const query = identifier.includes('.') || identifier.includes(':')
+      ? { nodeId: identifier }
+      : { name: identifier };
+
     const updatedNode = await ElasticNode.findOneAndUpdate(
-      { nodeId },
+      query,
       { progress: progress },
       { new: true, runValidators: true },
     );
 
     if (!updatedNode) {
-      logger.debug(`Node with id ${nodeId} not found.`);
+      logger.debug(`Node with identifier ${identifier} not found.`);
       return null;
     }
     return updatedNode;
   } catch (error: any) {
-    console.error(`Error updating status for node ${nodeId}: ${error.message}`);
+    console.error(`Error updating progress for node ${identifier}: ${error.message}`);
     throw error;
   }
 };
@@ -145,7 +154,7 @@ export const triggerNodeUpgrade = async (nodeId: string,clusterId: string) => {
       return false;
     }
     const clusterInfo = await getClusterInfoById(clusterId);
-    const pathToKey = clusterInfo.pathToKey ? clusterInfo.pathToKey : ''; //Should be stored in clusterInfo
+    const pathToKey = clusterInfo.pathToKey ? clusterInfo.pathToKey : ''; 
     await createAnsibleInventory([node], pathToKey);
     if(!clusterInfo.targetVersion || !clusterInfo.elastic.username || !clusterInfo.elastic.password){
       return false;
@@ -158,8 +167,7 @@ export const triggerNodeUpgrade = async (nodeId: string,clusterId: string) => {
         elk_version: clusterInfo.targetVersion,
         username: clusterInfo.elastic.username,
         password: clusterInfo.elastic.password
-      },
-      nodeId,
+      }
     );
     return new Promise((resolve, reject) => resolve(true));
   } catch (error) {
@@ -167,6 +175,32 @@ export const triggerNodeUpgrade = async (nodeId: string,clusterId: string) => {
     return false;
   }
 };
+
+
+export const triggerUpgradeAll = async(nodes: IElasticNode[], clusterId: string) =>{
+      try{
+        const clusterInfo = await getClusterInfoById(clusterId);
+        const pathToKey = clusterInfo.pathToKey ? clusterInfo.pathToKey : ''; 
+        await createAnsibleInventory(nodes, pathToKey);
+        if(!clusterInfo.targetVersion || !clusterInfo.elastic.username || !clusterInfo.elastic.password){
+          return false;
+        }
+    
+        runPlaybookWithLogging(
+          'ansible/main.yml',
+          'ansible_inventory.ini',
+          {
+            elk_version: clusterInfo.targetVersion,
+            username: clusterInfo.elastic.username,
+            password: clusterInfo.elastic.password
+          }
+        );
+      }
+      catch (error: any) {
+        logger.error(`Error performing upgrade for nodes:  ${nodes} because of ${error.message}`);
+        throw new Error(`Error performing upgrade for nodes:  ${nodes}`);
+      }
+}
 
 
 /// /upgrade (exec)

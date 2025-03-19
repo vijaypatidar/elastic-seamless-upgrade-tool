@@ -24,7 +24,7 @@ import {
   triggerNodeUpgrade,
 } from '../services/elastic-node.service.';
 import cluster from 'cluster';
-import { runPlaybookWithLogging } from './ansible-controller';
+import { createAnsibleInventory, runPlaybookWithLogging } from './ansible-controller';
 import { KibanaClient} from '../clients/kibana.client';
 import path from 'path';
 import {  getPossibleUpgrades } from '../utils/upgrade.versions';
@@ -249,6 +249,17 @@ export const handleUpgrades = async (req: Request, res: Response) => {
   const clusterId = req.params.clusterId;
   const { nodes } = req.body;
   try {
+    let isUpgrading = false;
+    const allNodes = await getAllElasticNodes(clusterId);
+    allNodes.forEach((node) => {
+      if (node.status === 'upgrading') {
+        isUpgrading = true;
+      }
+    });
+    if (isUpgrading) {
+      res.status(400).send({ err: 'There is already a node Upgrade in progress first let it complete' });
+      return;
+    }  
     nodes.forEach((nodeId: string) => {
       const triggered = triggerNodeUpgrade(nodeId,clusterId);
       if (!triggered) {
@@ -338,8 +349,7 @@ export const uploadCertificates = async (req: Request, res: Response) => {
 };
 
 export const getNodeInfo = async (req: Request, res: Response) => {
-  const { clusterId, nodeId } = req.params;
-
+  const {  nodeId } = req.params;
   try {
     const data = await getElasticNodeById(nodeId);
     res.send(data);
@@ -474,17 +484,34 @@ export const handleKibanaUpgrades = async (req: Request, res: Response) => {
 
 export const hanldeUpgradeAll = async (req: Request, res: Response) => {
   const clusterId = req.params.clusterId;
-  const { nodes } = req.body;
+  const nodes = await getAllElasticNodes(clusterId);
+  let failedUpgrade = false;
+  let upgradingNode = false;
+  const nodesToBeUpgraded = nodes.filter((node) => {
+    if(node.status === 'available'){
+      return true;
+    }
+    else if(node.status === 'failed'){
+      failedUpgrade = true;
+      return false;
+    }
+    else if(node.status === 'upgrading'){
+      upgradingNode = true;
+      return false;
+    }
+    else{
+      return false;
+    }
+  });
+  if(failedUpgrade){
+    res.status(400).send({ err: "Cannot trigger upgrade all as there is failed node"});
+    return;
+  }
+  if(upgradingNode){
+    res.status(400).send({ err: "Cannot trigger upgrade all as there is failed node"});
+  }
   try {
-    nodes.forEach((nodeId: string) => {
-      const triggered = triggerNodeUpgrade(nodeId,clusterId);
-      if (!triggered) {
-        res.status(400).send({ err: 'Upgrade failed node not available' });
-      }
-      else{
-        return;
-      }
-    });
+    createAnsibleInventory(nodesToBeUpgraded, clusterId);
     res.status(200).send({ message: 'Upgradation triggered' });
   } catch (err: any) {
     logger.error('Error performing upgrade:', err);
