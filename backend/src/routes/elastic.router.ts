@@ -17,6 +17,7 @@ import {
   verfiyCluster,
   getKibanaNodesInfo,
   handleKibanaUpgrades,
+  handleUpgradeAll,
 } from '../controllers/elastic-controller';
 
 const router = Router();
@@ -44,6 +45,7 @@ router.post('', addOrUpdateClusterDetail);
 router.get('/nodes/:nodeId', getNodeInfo);
 
 router.post('/:clusterId/nodes/upgrade', handleUpgrades);
+router.post('/:clusterId/upgrade-all', handleUpgradeAll);
 
 router.post('/:clusterId/nodes/upgrade-kibana', handleKibanaUpgrades);
 

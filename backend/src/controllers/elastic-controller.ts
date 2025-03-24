@@ -24,6 +24,7 @@ import {
   getElasticNodeById,
   syncNodeData,
   triggerNodeUpgrade,
+  triggerUpgradeAll,
 } from '../services/elastic-node.service.';
 import cluster from 'cluster';
 import { createAnsibleInventory, runPlaybookWithLogging } from './ansible-controller';
@@ -214,6 +215,8 @@ export const getNodesInfo = async (req: Request, res: Response) => {
   try {
     const clusterId = req.params.clusterId;
     const elasticNodes = await getAllElasticNodes(clusterId);
+    const isDataNodeDisabled = elasticNodes.some((node) => node.status === "upgrading");
+    const isMasterDisabled = elasticNodes.some((node) => (node.roles.includes("data") && (node.status !== "upgraded"))) || isDataNodeDisabled;
     let nodes = elasticNodes.map((node) => {
       if (node.isMaster) {
         return {
@@ -227,6 +230,7 @@ export const getNodesInfo = async (req: Request, res: Response) => {
           isMaster: node.isMaster,
           status: node.status,
           progress: node.progress,
+          disabled: isMasterDisabled
         };
       }
       if (node.roles.includes('data')) {
@@ -241,6 +245,7 @@ export const getNodesInfo = async (req: Request, res: Response) => {
           isMaster: node.isMaster,
           status: node.status,
           progress: node.progress,
+          disabled: isDataNodeDisabled
         };
       }
     });
@@ -495,7 +500,7 @@ export const handleKibanaUpgrades = async (req: Request, res: Response) => {
   }
 }
 
-export const hanldeUpgradeAll = async (req: Request, res: Response) => {
+export const handleUpgradeAll = async (req: Request, res: Response) => {
   const clusterId = req.params.clusterId;
   const nodes = await getAllElasticNodes(clusterId);
   let failedUpgrade = false;
@@ -524,7 +529,7 @@ export const hanldeUpgradeAll = async (req: Request, res: Response) => {
     res.status(400).send({ err: "Cannot trigger upgrade all as there is failed node"});
   }
   try {
-    createAnsibleInventory(nodesToBeUpgraded, clusterId);
+    await triggerUpgradeAll(nodesToBeUpgraded,clusterId);
     res.status(200).send({ message: 'Upgradation triggered' });
   } catch (err: any) {
     logger.error('Error performing upgrade:', err);

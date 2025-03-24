@@ -104,7 +104,7 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 					status: item.status,
 					progress: item.progress,
 					isMaster: item.isMaster,
-					disabled: false
+					disabled: item.disabled ? item.disabled : false,
 						// (item.isMaster && res.data.filter((i: any) => i.status !== "upgraded" && i.isMaster).length > 0) ||
 						// res.data.some((i: any) => i.status === "upgrading"),
 				}))
@@ -129,7 +129,17 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 				toast.error("Failed to start upgrade")
 			})
 	}
-
+	const performUpgradeAll = async () => {
+		const clusterId = LocalStorageHandler.getItem(StorageManager.CLUSTER_ID) || "cluster-id"
+		await axiosJSON.post(`/api/elastic/clusters/${clusterId}/upgrade-all`).then((res) => {
+			refetch()
+			toast.success("Upgrade started")
+		}
+		).catch((error) => {	
+			toast.error("Failed to start upgrade")
+		}
+		)
+	}
 	const { data, isLoading, refetch, isRefetching } = useQuery({
 		queryKey: ["nodes-info"],
 		queryFn: getNodesInfo,
@@ -146,7 +156,6 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 		mutationKey: ["node-upgrade"],
 		mutationFn: performUpgrade,
 	})
-
 	const renderCell = useCallback(
 		(row: TUpgradeRow, columnKey: Key) => {
 			const cellValue = row[columnKey as keyof TUpgradeRow]
@@ -199,7 +208,7 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 					<Typography color="#FFF" fontSize="14px" fontWeight="600" lineHeight="22px">
 						Node Details
 					</Typography>
-					<OutlinedBorderButton icon={Flash} filledIcon={Flash} disabled>
+					<OutlinedBorderButton onClick={performUpgradeAll} icon={Flash} filledIcon={Flash} disabled={isPending || (data && (data.filter((item: any) => (item.status !== "available" && item.status !== "upgraded")).length > 0))}>
 						Upgrade all
 					</OutlinedBorderButton>
 				</Box>
