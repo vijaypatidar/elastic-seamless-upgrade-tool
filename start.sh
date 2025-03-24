@@ -41,6 +41,24 @@ EOF
 echo "Starting the containers..."
 docker-compose up -d
 
-echo "Deployment complete!"
-echo "Frontend: http://localhost:8080"
-echo "Backend: http://localhost:3000"
+# Function to check service status
+check_service() {
+    local service_name=$1
+    local status=$(docker inspect --format='{{.State.Status}}' $service_name 2>/dev/null)
+    if [ "$status" != "running" ]; then
+        echo "$service_name failed to start. Logs:"
+        docker logs $service_name
+        exit 1
+    fi
+}
+
+# Wait a few seconds before checking status
+sleep 5
+
+# Check each service
+check_service "mongodb"
+check_service "backend"
+check_service "frontend"
+
+echo "Seamless upgrade tool running on:"
+echo "http://localhost:8080"
