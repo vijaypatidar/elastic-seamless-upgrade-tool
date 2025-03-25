@@ -14,6 +14,7 @@ import { taskProgressMap, taskProgressMapKibana } from '../utils/tasks.info';
 import { IElasticNode } from '../models/elastic-node.model';
 import { IKibanaNode } from '../models/kibana-node.model';
 import {syncKibanaNodes, updateKibanaNodeProgress, updateKibanaNodeStatus} from "../services/kibana-node.service";
+import { extractESNodeNames } from '../services/ansible.service';
 
 export const createAnsibleInventory = async (
   nodes: IElasticNode[],
@@ -44,14 +45,14 @@ export const createAnsibleInventory = async (
 
     const inventoryParts: string[] = [];
 
-    // Only add groups that have hosts
+    
     Object.entries(roleGroups).forEach(([group, hosts]) => {
       if (hosts.length > 0) {
         inventoryParts.push(`[${group}]\n${hosts.join('\n')}`);
       }
     });
 
-    // Only include non-empty groups in elasticsearch:children
+    
     const nonEmptyGroups = Object.entries(roleGroups)
       .filter(([_, hosts]) => hosts.length > 0)
       .map(([group]) => group);
@@ -97,38 +98,43 @@ export const runPlaybookWithLogging = async (
     username: string;
     password: string;
     [key: string]: string; // To allow additional variables
-  },
-  nodeId: string,
+  }
 ): Promise<ExecResult> => {
   try {
-    logger.info(`Starting playbook for node: ${nodeId}`);
 
-    let currentProgress = 0;
-
+    const currentProgress: Record<string, number> = {};
+    const nodesForUpgrade = extractESNodeNames();
+    logger.info(`Starting playbook for node: ${extractESNodeNames()}`);
     const extraVars = Object.entries(variables)
       .map(([key, value]) => `${key}=${value}`)
       .join(' ');
+    const command = `ansible-playbook -i ${inventoryPath} -e "${extraVars}" ${playbookPath}`; 
+    logger.info('running command' + command);
+    for(const node of nodesForUpgrade){
+      currentProgress[node] = 0;
+      updateNodeStatus(node, 'upgrading');
+      updateNodeProgress(node, 0);
+    }
 
-    const command = `ansible-playbook -i ${inventoryPath} -e "${extraVars}" ${playbookPath} -vvv`; ////command
-    logger.info('running command', command);
     return new Promise<ExecResult>((resolve, reject) => {
       const childProcess = exec(command);
-      updateNodeStatus(nodeId, 'upgrading');
-      updateNodeProgress(nodeId, 0);
       const stdout: string[] = [];
       const stderr: string[] = [];
 
       childProcess.stdout?.on('data', (data) => {
         const chunk = data.toString();
         stdout.push(chunk);
-        logger.info(`[${nodeId}] STDOUT: ${chunk}`);
+        logger.info(`${chunk}`);
         const taskMatch = chunk.match(/TASK \[(.+?)\]/);
-        if (taskMatch && taskMatch.length >= 1) {
+        const statusMatch = chunk.match(/(ok|changed|skipping): \[(.+?)\]/);
+
+        if (taskMatch && taskMatch.length >= 1 && statusMatch && statusMatch.length >= 3) {
           const taskName = taskMatch[1].trim();
-          logger.info('Executing the task', taskName);
+          const executedNode = statusMatch[2].trim();
+          logger.info('Executing the task' + taskName + 'for node' + executedNode);
           if (taskProgressMap[taskName] !== undefined) {
-            currentProgress = currentProgress + taskProgressMap[taskName];
-            updateNodeProgress(nodeId, currentProgress);
+            currentProgress[executedNode] = currentProgress[executedNode] + taskProgressMap[taskName];
+            updateNodeProgress(executedNode, currentProgress[executedNode]);
           }
         }
       });
@@ -136,13 +142,14 @@ export const runPlaybookWithLogging = async (
       childProcess.stderr?.on('data', (data) => {
         const chunk = data.toString();
         stderr.push(chunk);
-        logger.error(`[${nodeId}] STDERR: ${chunk}`);
+        logger.error(`STDERR: ${chunk}`);
       });
       childProcess.on('close', (code) => {
         if (code === 0) {
-          logger.info(`[${nodeId}] Playbook executed successfully.`);
-          updateNodeProgress(nodeId, 100);
-          updateNodeStatus(nodeId, 'upgraded');
+          for(const node of nodesForUpgrade){
+            updateNodeProgress(node, 100);
+            updateNodeStatus(node, 'upgraded');
+          }
           resolve({
             code: 0,
             stdout: Readable.from(stdout.join('')),
@@ -150,10 +157,12 @@ export const runPlaybookWithLogging = async (
           });
         } else {
           const errorMessage = stderr.join('');
-          updateNodeStatus(nodeId, 'failed');
-          logger.error(
-            `[${nodeId}] Playbook failed with exit code ${code}. Error: ${errorMessage}`,
-          );
+          for(const node of nodesForUpgrade){
+            updateNodeStatus(node, 'failed');
+            logger.error(
+              `[${[...nodesForUpgrade]}] Playbook failed with exit code ${code}. Error: ${errorMessage}`,
+            );
+          }
           resolve({
             code: code || 1,
             stdout: Readable.from(stdout.join('')),
@@ -163,8 +172,10 @@ export const runPlaybookWithLogging = async (
         }
       });
       childProcess.on('error', (error) => {
-        const errorMessage = `Error running playbook for node: ${nodeId}: ${error.message}`;
-        updateNodeStatus(nodeId, 'failed');
+        const errorMessage = `Error running playbook for node: ${nodesForUpgrade}: ${error.message}`;
+        for(const node of nodesForUpgrade){
+          updateNodeStatus(node, 'failed');
+        }
         logger.error(errorMessage);
         reject({
           code: 1,
@@ -175,7 +186,7 @@ export const runPlaybookWithLogging = async (
       });
     });
   } catch (error: any) {
-    const errorMessage = `Unexpected error running playbook for node: ${nodeId}: ${error.message}`;
+    const errorMessage = `Unexpected error running playbook for nodes: ${extractESNodeNames()}: ${error.message}`;
     logger.error(errorMessage);
 
     return {
