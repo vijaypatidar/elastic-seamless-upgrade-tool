@@ -92,7 +92,7 @@ Step by step UI walk thorugh
   - Check **Docker network settings**.
 
 - **Upgrade stuck?**
-  - View backend logs: `docker logs seamless-upgrade-backend`
+  - View backend logs: `docker logs backend`
   - Check **logs** in `/app/backend/logs/app.log`
 
 ---
