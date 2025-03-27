@@ -27,7 +27,7 @@ The way to set up the Seamless Upgrade Tool is by using **Start Script**.
 ### Run Seamless Upgrade Tool on local
 To set up the seamless-upgrade-tool locally, run the start-local script:
 ```
-curl -fsSL https://raw.githubusercontent.com/ConsultaddHQ/elastic-seamless-upgrade-tool/refs/heads/hpf-32-necessary-changes-for-release/start.sh | sh
+curl -fsSL https://raw.githubusercontent.com/ConsultaddHQ/elastic-seamless-upgrade-tool/main/start.sh | sh
 ```
 
 After running the tool, access it at:
