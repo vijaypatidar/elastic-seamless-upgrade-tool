@@ -27,7 +27,7 @@ The way to set up the Seamless Upgrade Tool is by using **Start Script**.
 ### Run Seamless Upgrade Tool on local
 To set up the seamless-upgrade-tool locally, run the start-local script:
 ```
-curl -fsSL https://gist.githubusercontent.com/srajan1202/c8c353fee45c2ea29eced4ae12a6237c/raw/e9a9e77362ca366e43c047520c77fbb27ce24131/start.sh | sh
+curl -fsSL https://raw.githubusercontent.com/ConsultaddHQ/elastic-seamless-upgrade-tool/refs/heads/hpf-32-necessary-changes-for-release/start.sh | sh
 ```
 
 After running the tool, access it at:
@@ -92,12 +92,12 @@ Step by step UI walk thorugh
   - Check **Docker network settings**.
 
 - **Upgrade stuck?**
-  - View backend logs: `docker logs seamless-upgrade-backend`
+  - View backend logs: `docker logs backend`
   - Check **logs** in `/app/backend/logs/app.log`
 
 ---
 ## Contribute
-We welcome contributions! To report a bug or request a feature, create an issue on our [GitHub repository](https://github.com/seamless-upgrade).
+We welcome contributions! To report a bug or request a feature, create an issue on our [GitHub repository](https://github.com/ConsultaddHQ/elastic-seamless-upgrade-tool).
 
 Need help? Join our community on Slack or our discussion forums!
 
