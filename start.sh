@@ -39,7 +39,7 @@ EOF
 
 # Start the services
 echo "Starting the containers..."
-docker-compose up -d
+docker-compose -p seamless-upgrade up -d
 
 # Function to check service status
 check_service() {
