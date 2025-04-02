@@ -1,31 +1,31 @@
-import mongoose, { Schema, Document } from "mongoose"
+import mongoose, { Schema, Document } from "mongoose";
 
 export interface IElasticInfo {
-	url: string
-	apiKey?: string
-	username?: string
-	password?: string
-	bearer?: string
+	url: string;
+	apiKey?: string;
+	username?: string;
+	password?: string;
+	bearer?: string;
 }
 
 export interface IKibanaInfo {
-	url: string
-	apiKey?: string
-	username?: string
-	password?: string
-	bearer?: string
+	url: string;
+	apiKey?: string;
+	username?: string;
+	password?: string;
+	bearer?: string;
 }
 
 export interface IClusterInfo {
-	clusterId: string
-	elastic: IElasticInfo
-	kibana: IKibanaInfo
-	certificateIds?: string[]
-	targetVersion?: string
-	infrastructureType?: string
-	pathToKey?: string
-	key?: string
-	kibanaConfigs?: Object[] | undefined
+	clusterId: string;
+	elastic: IElasticInfo;
+	kibana: IKibanaInfo;
+	certificateIds?: string[];
+	targetVersion?: string;
+	infrastructureType?: string;
+	pathToKey?: string;
+	key?: string;
+	kibanaConfigs?: Object[] | undefined;
 }
 
 export interface IClusterInfoDocument extends IClusterInfo, Document {}
@@ -36,7 +36,7 @@ const ElasticInfoSchema: Schema<IElasticInfo> = new Schema<IElasticInfo>({
 	username: { type: String },
 	password: { type: String },
 	bearer: { type: String },
-})
+});
 
 const KibanaInfoSchema: Schema<IElasticInfo> = new Schema<IKibanaInfo>({
 	url: { type: String, required: true },
@@ -44,7 +44,7 @@ const KibanaInfoSchema: Schema<IElasticInfo> = new Schema<IKibanaInfo>({
 	username: { type: String },
 	password: { type: String },
 	bearer: { type: String },
-})
+});
 
 const ClusterInfoSchema: Schema<IClusterInfoDocument> = new Schema<IClusterInfoDocument>(
 	{
@@ -59,9 +59,9 @@ const ClusterInfoSchema: Schema<IClusterInfoDocument> = new Schema<IClusterInfoD
 		kibanaConfigs: { type: [Object] },
 	},
 	{ timestamps: true }
-)
+);
 
 // Create the model
-const ClusterInfo = mongoose.model<IClusterInfoDocument>("ClusterInfo", ClusterInfoSchema)
+const ClusterInfo = mongoose.model<IClusterInfoDocument>("ClusterInfo", ClusterInfoSchema);
 
-export default ClusterInfo
+export default ClusterInfo;

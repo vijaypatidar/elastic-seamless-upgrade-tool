@@ -55,6 +55,7 @@ export const getAllClusters = async (): Promise<IClusterInfo[]> => {
 		throw error;
 	}
 };
+
 export const getClusterInfoById = async (clusterId: string): Promise<IClusterInfo> => {
 	// TODO These needs to be updated when we want to support multiple clusters
 	clusterId = "cluster-id";
