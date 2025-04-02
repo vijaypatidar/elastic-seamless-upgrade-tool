@@ -30,8 +30,3 @@ export const extractESNodeNames = (): string[] => {
       return [];
     }
 }
-
-
-// Example usage:
-// const nodes = extractNodeNames('/path/to/inventory.ini');
-// console.log(nodes);

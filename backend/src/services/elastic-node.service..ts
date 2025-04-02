@@ -39,7 +39,7 @@ export const getAllElasticNodes = async (
     await syncNodeData(clusterId);
   }
   catch(error){
-      logger.error("Unable to sync wit Elastic search instance! Maybe the connection is breaked")
+      logger.error("Unable to sync with Elastic search instance! Maybe the connection is breaked")
   }
   finally{
     const elasticNodes = await ElasticNode.find({ clusterId: clusterId });
