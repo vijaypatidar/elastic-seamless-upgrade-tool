@@ -24,7 +24,12 @@ const NodePrecheckRunSchema: Schema<INodePrecheckRunDocument> = new Schema<INode
 		startedAt: { type: Date, required: true },
 		endAt: { type: String, required: false },
 		logs: { type: [String], required: true },
-		status: { type: String, required: true, default: PrecheckStatus.PENDING },
+		status: {
+			type: String,
+			required: true,
+			enum: [PrecheckStatus.PENDING, PrecheckStatus.RUNNING, PrecheckStatus.FAILED, PrecheckStatus.COMPLETED],
+			default: PrecheckStatus.PENDING,
+		},
 	},
 
 	{ timestamps: true }
