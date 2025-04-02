@@ -1,68 +1,65 @@
-import { Router } from 'express';
+import { Router } from "express";
 import {
-  addOrUpdateClusterDetail,
-  getClusterDetails,
-  getElasticDeprecationInfo,
-  getNodesInfo,
-  healthCheck,
-  getLogsStream,
-  getKibanaDeprecationsInfo,
-  getValidSnapshots,
-  uploadCertificates,
-  getUpgradeDetails,
-  handleUpgrades,
-  getNodeInfo,
-  addOrUpdateTargetVersion,
-  verfiySshKey,
-  verfiyCluster,
-  getKibanaNodesInfo,
-  handleKibanaUpgrades,
-  handleUpgradeAll,
-} from '../controllers/elastic-controller';
+	addOrUpdateClusterDetail,
+	getClusterDetails,
+	getElasticDeprecationInfo,
+	getNodesInfo,
+	healthCheck,
+	getLogsStream,
+	getKibanaDeprecationsInfo,
+	getValidSnapshots,
+	uploadCertificates,
+	getUpgradeDetails,
+	handleUpgrades,
+	getNodeInfo,
+	addOrUpdateTargetVersion,
+	verfiySshKey,
+	verfiyCluster,
+	getKibanaNodesInfo,
+	handleKibanaUpgrades,
+	handleUpgradeAll,
+} from "../controllers/elastic-controller";
 
 const router = Router();
 
-import multer from 'multer';
+import multer from "multer";
 
-const upload = multer({ dest: 'uploads/' });
+const upload = multer({ dest: "uploads/" });
 
-router.post('/:clusterId/add-version',addOrUpdateTargetVersion);
+router.post("/:clusterId/add-version", addOrUpdateTargetVersion);
 
-router.get('/:clusterId/health', healthCheck);
+router.get("/:clusterId/health", healthCheck);
 
-router.get('/:clusterId/nodes', getNodesInfo);
-router.get('/:clusterId/kibana-nodes', getKibanaNodesInfo);
+router.get("/:clusterId/nodes", getNodesInfo);
 
-router.get(
-  '/:clusterId/deprecations/elastic-search',
-  getElasticDeprecationInfo,
-);
+router.get("/:clusterId/kibana-nodes", getKibanaNodesInfo);
 
-router.get('/:clusterId/valid-snapshots', getValidSnapshots);
+router.get("/:clusterId/deprecations/elastic-search", getElasticDeprecationInfo);
 
-router.post('', addOrUpdateClusterDetail);
+router.get("/:clusterId/valid-snapshots", getValidSnapshots);
 
-router.get('/nodes/:nodeId', getNodeInfo);
+router.post("", addOrUpdateClusterDetail);
 
-router.post('/:clusterId/nodes/upgrade', handleUpgrades);
-router.post('/:clusterId/upgrade-all', handleUpgradeAll);
+router.get("/nodes/:nodeId", getNodeInfo);
 
-router.post('/:clusterId/nodes/upgrade-kibana', handleKibanaUpgrades);
+router.post("/:clusterId/nodes/upgrade", handleUpgrades);
 
-router.get('/:clusterId/info', getClusterDetails);
+router.post("/:clusterId/upgrade-all", handleUpgradeAll);
 
-router.get('/:clusterId/nodes/:nodeId/logs/stream', getLogsStream);
+router.post("/:clusterId/nodes/upgrade-kibana", handleKibanaUpgrades);
 
-router.post('/certificates/upload', upload.array('files'), uploadCertificates);
+router.get("/:clusterId/info", getClusterDetails);
 
-router.get('/:clusterId/upgrade_info', getUpgradeDetails);
+router.get("/:clusterId/nodes/:nodeId/logs/stream", getLogsStream);
 
-router.get('/:clusterId/deprecations/kibana', getKibanaDeprecationsInfo);
+router.post("/certificates/upload", upload.array("files"), uploadCertificates);
 
-router.post('/:clusterId/verify-ssh',verfiySshKey);
+router.get("/:clusterId/upgrade_info", getUpgradeDetails);
 
-router.get('/verify',verfiyCluster)
+router.get("/:clusterId/deprecations/kibana", getKibanaDeprecationsInfo);
 
+router.post("/:clusterId/verify-ssh", verfiySshKey);
 
+router.get("/verify", verfiyCluster);
 
 export default router;

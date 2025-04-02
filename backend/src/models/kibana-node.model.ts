@@ -1,19 +1,19 @@
-import mongoose, { Schema, Document } from "mongoose"
+import mongoose, { Schema, Document } from "mongoose";
 
 export interface IKibanaNode {
-	nodeId: string
-	clusterId: string
-	name: string
-	version: string
-	ip: string
-	roles: string[]
-	os: Record<string, any>
-	progress: Number
-	status: "available" | "upgrading" | "upgraded" | "failed"
+	nodeId: string;
+	clusterId: string;
+	name: string;
+	version: string;
+	ip: string;
+	roles: string[];
+	os: Record<string, any>;
+	progress: Number;
+	status: "available" | "upgrading" | "upgraded" | "failed";
 }
 export interface KibanaConfig {
-	name: string
-	ip: string
+	name: string;
+	ip: string;
 }
 
 export interface IKibanaNodeDocument extends IKibanaNode, Document {}
@@ -35,8 +35,8 @@ const KibanaNodeSchema: Schema<IKibanaNodeDocument> = new Schema<IKibanaNodeDocu
 		},
 	},
 	{ timestamps: true }
-)
+);
 
-const KibanaNode = mongoose.model<IKibanaNodeDocument>("KibanaNode", KibanaNodeSchema)
+const KibanaNode = mongoose.model<IKibanaNodeDocument>("KibanaNode", KibanaNodeSchema);
 
-export default KibanaNode
+export default KibanaNode;

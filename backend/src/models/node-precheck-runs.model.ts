@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from "mongoose"
+import mongoose, { Schema, Document } from "mongoose";
 
 export enum PrecheckStatus {
 	PENDING = "PENDING",
@@ -7,12 +7,12 @@ export enum PrecheckStatus {
 	COMPLETED = "COMPLETED",
 }
 export interface INodePrecheckRun {
-	nodeId: string
-	precheckId: string
-	startedAt: Date
-	endAt?: Date
-	status: PrecheckStatus
-	logs: string[]
+	nodeId: string;
+	precheckId: string;
+	startedAt: Date;
+	endAt?: Date;
+	status: PrecheckStatus;
+	logs: string[];
 }
 
 export interface INodePrecheckRunDocument extends INodePrecheckRun, Document {}
@@ -33,8 +33,8 @@ const NodePrecheckRunSchema: Schema<INodePrecheckRunDocument> = new Schema<INode
 	},
 
 	{ timestamps: true }
-)
+);
 
-const NodePrecheckRun = mongoose.model<INodePrecheckRunDocument>("NodePrecheckRun", NodePrecheckRunSchema)
+const NodePrecheckRun = mongoose.model<INodePrecheckRunDocument>("NodePrecheckRun", NodePrecheckRunSchema);
 
-export default NodePrecheckRun
+export default NodePrecheckRun;
