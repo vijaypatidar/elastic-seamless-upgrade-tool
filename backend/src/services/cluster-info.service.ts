@@ -1,14 +1,22 @@
 import { ElasticClient } from "../clients/elastic.client"
 import { DeprecationCounts, DeprecationSetting } from "../interfaces"
-import ClusterInfo, { IClusterInfo, IClusterInfoDocument, IElasticInfo, IKibanaInfo } from "../models/cluster-info.model"
+import ClusterInfo, {
+	IClusterInfo,
+	IClusterInfoDocument,
+	IElasticInfo,
+	IKibanaInfo,
+} from "../models/cluster-info.model"
 import { MigrationDeprecationsDeprecation } from "@elastic/elasticsearch/lib/api/types"
 import { DeprecationDetail, KibanaClient } from "../clients/kibana.client"
 import { ElasticClusterBaseRequest } from ".."
 
+const cache: Record<string, IClusterInfo | null> = {}
+
 export const createOrUpdateClusterInfo = async (clusterInfo: IClusterInfo): Promise<IClusterInfoDocument> => {
 	// TODO These needs to be updated when we want to support multiple clusters
 	const clusterId = "cluster-id" //clusterInfo.clusterId
-	const { elastic, kibana, certificateIds, targetVersion,infrastructureType, pathToKey, key,kibanaConfigs} = clusterInfo
+	const { elastic, kibana, certificateIds, targetVersion, infrastructureType, pathToKey, key, kibanaConfigs } =
+		clusterInfo
 	const data = await ClusterInfo.findOneAndUpdate(
 		{ clusterId: clusterId },
 		{
@@ -20,10 +28,11 @@ export const createOrUpdateClusterInfo = async (clusterInfo: IClusterInfo): Prom
 			infrastructureType: infrastructureType,
 			pathToKey: pathToKey,
 			key: key,
-			kibanaConfigs: kibanaConfigs
+			kibanaConfigs: kibanaConfigs,
 		},
 		{ new: true, upsert: true, runValidators: true }
 	)
+	cache[clusterId] = data
 	return data
 }
 
@@ -39,7 +48,7 @@ export const getAllClusters = async (): Promise<IClusterInfo[]> => {
 			certificateIds: cluster.certificateIds,
 			pathToKey: cluster.pathToKey,
 			key: cluster.key,
-			kibanaConfigs: cluster.kibanaConfigs
+			kibanaConfigs: cluster.kibanaConfigs,
 		}))
 	} catch (error) {
 		console.error("Error fetching cluster list:", error)
@@ -49,9 +58,13 @@ export const getAllClusters = async (): Promise<IClusterInfo[]> => {
 export const getClusterInfoById = async (clusterId: string): Promise<IClusterInfo> => {
 	// TODO These needs to be updated when we want to support multiple clusters
 	clusterId = "cluster-id"
-	const clusterInfo = await ClusterInfo.findOne({
-		clusterId: clusterId,
-	})
+
+	const clusterInfo = cache[clusterId]
+		? cache[clusterId]
+		: await ClusterInfo.findOne({
+				clusterId: clusterId,
+			})
+	cache[clusterId] = clusterInfo
 	return {
 		clusterId,
 		elastic: clusterInfo?.elastic!!,
@@ -61,7 +74,7 @@ export const getClusterInfoById = async (clusterId: string): Promise<IClusterInf
 		certificateIds: clusterInfo?.certificateIds,
 		pathToKey: clusterInfo?.pathToKey,
 		key: clusterInfo?.key,
-		kibanaConfigs: clusterInfo?.kibanaConfigs
+		kibanaConfigs: clusterInfo?.kibanaConfigs,
 	}
 }
 
@@ -162,41 +175,35 @@ export const getKibanaDeprecation = async (
 	}
 }
 
-
-export const verifyElasticCredentials = async(elastic: IElasticInfo): Promise<boolean> =>{
+export const verifyElasticCredentials = async (elastic: IElasticInfo): Promise<boolean> => {
 	try {
-	   const body: ElasticClusterBaseRequest = {
+		const body: ElasticClusterBaseRequest = {
 			url: elastic?.url!!,
 			ssl: {},
 			username: elastic?.username!!,
 			password: elastic?.password!!,
-		  };
-	    const client = new ElasticClient(body);
-	    const healthDetails = await client.getClient().cluster.health();
-		if (
-			healthDetails.status &&
-			typeof healthDetails.number_of_nodes === 'number'
-		  ) {
-			return true; 
-		  }
-		  else{
-			return false;
-		  }
+		}
+		const client = new ElasticClient(body)
+		const healthDetails = await client.getClient().cluster.health()
+		if (healthDetails.status && typeof healthDetails.number_of_nodes === "number") {
+			return true
+		} else {
+			return false
+		}
 	} catch (error) {
-	  console.error('Elasticsearch connection failed:', error);
-	  return false;
+		console.error("Elasticsearch connection failed:", error)
+		return false
 	}
-  }
+}
 
-  export const verifyKibanaCredentials = async(kibana: IKibanaInfo): Promise<boolean> =>{
-	try{
-		const client = new KibanaClient(kibana);
-		const version = await client.getKibanaVersion();
-		
-		return true;
+export const verifyKibanaCredentials = async (kibana: IKibanaInfo): Promise<boolean> => {
+	try {
+		const client = new KibanaClient(kibana)
+		const version = await client.getKibanaVersion()
+
+		return true
+	} catch (error) {
+		console.error("Kibana connection failed:", error)
+		return false
 	}
-	catch(error){
-		console.error('Kibana connection failed:', error);
-		return false;
-	}
-  }
+}
