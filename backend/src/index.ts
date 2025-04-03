@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 import http from "http";
 import { Server, Socket } from "socket.io";
+import webhookRouter from "./routes/webhook.router"
 
 dotenv.config();
 
@@ -37,6 +38,7 @@ export interface ElasticClusterHealthRequest extends ElasticClusterBaseRequest {
 
 //routes
 app.use("/api/elastic/clusters", elasticRouter);
+app.use("/webhook",webhookRouter);
 
 const io = new Server(server);
 io.of("/notification").on("connection", (socket: Socket) => {
