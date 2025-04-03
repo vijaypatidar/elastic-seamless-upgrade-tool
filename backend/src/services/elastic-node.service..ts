@@ -1,10 +1,11 @@
-import { error } from "console";
+
 import { ElasticClient } from "../clients/elastic.client";
-import { createAnsibleInventory, runPlaybookWithLogging } from "../controllers/ansible-controller";
-import { getNodeInfo } from "../controllers/elastic-controller";
 import logger from "../logger/logger";
-import ElasticNode, { IElasticNode, IElasticNodeDocument } from "../models/elastic-node.model";
+import ElasticNode, { IElasticNode, IElasticNodeDocument, NodeStatus } from "../models/elastic-node.model";
 import { getClusterInfoById } from "./cluster-info.service";
+import { ansibleExecutionManager } from "./ansible.service";
+
+
 
 export const createOrUpdateElasticNode = async (elasticNode: IElasticNode): Promise<IElasticNodeDocument> => {
 	const nodeId = elasticNode.nodeId;
@@ -54,19 +55,19 @@ export const syncNodeData = async (clusterId: string) => {
 				os: value.os,
 				progress: 0,
 				isMaster: masterNode[0].id === key,
-				status: "available",
+				status: NodeStatus.AVAILABLE,
 			})
 		);
 		for (const node of elasticNodes) {
 			const existingNode = await ElasticNode.findOne({ nodeId: node.nodeId });
 			if (existingNode) {
-				if (existingNode.status !== "upgraded") {
+				if (existingNode.status !== NodeStatus.UPGRADED) {
 					node.status = existingNode.status;
 					node.progress = existingNode.progress;
 				}
 			}
 			if (node.version === clusterInfo.targetVersion) {
-				node.status = "upgraded";
+				node.status = NodeStatus.UPGRADED;
 				node.progress = 100;
 			}
 
@@ -81,15 +82,11 @@ export const syncNodeData = async (clusterId: string) => {
 	}
 };
 
-export const updateNodeStatus = async (identifier: string, newStatus: string): Promise<IElasticNodeDocument | null> => {
+export const updateNodeStatus = async (identifier: Record<string,any>, newStatus: string): Promise<IElasticNodeDocument | null> => {
 	try {
-		// Check if the identifier matches a nodeId or a name
-		const query = (await ElasticNode.exists({ nodeId: identifier }))
-			? { nodeId: identifier }
-			: { name: identifier };
 
 		const updatedNode = await ElasticNode.findOneAndUpdate(
-			query,
+			identifier,
 			{ status: newStatus },
 			{ new: true, runValidators: true }
 		);
@@ -106,13 +103,26 @@ export const updateNodeStatus = async (identifier: string, newStatus: string): P
 	}
 };
 
-export const updateNodeProgress = async (identifier: string, progress: number) => {
+export const updateNode = async(identifier: Record<string,any>,updatedNodeValues: Partial<IElasticNode>)=>{
+    try{
+      const updatedNode = await ElasticNode.findOneAndUpdate(
+        identifier,
+        { $set: updatedNodeValues },
+        { new: true } 
+      )
+      if (!updatedNode) {
+        throw new Error(`Node with identfier ${identifier} not found`)
+      }
+    }catch(error){
+      throw new Error(`Unable to fin`)
+    }
+}
+
+export const updateNodeProgress = async (identifier: Record<string,any>, progress: number) => {
 	try {
-		const query =
-			identifier.includes(".") || identifier.includes(":") ? { nodeId: identifier } : { name: identifier };
 
 		const updatedNode = await ElasticNode.findOneAndUpdate(
-			query,
+			{identifier},
 			{ progress: progress },
 			{ new: true, runValidators: true }
 		);
@@ -136,12 +146,13 @@ export const triggerNodeUpgrade = async (nodeId: string, clusterId: string) => {
 		}
 		const clusterInfo = await getClusterInfoById(clusterId);
 		const pathToKey = clusterInfo.pathToKey ? clusterInfo.pathToKey : "";
-		await createAnsibleInventory([node], pathToKey);
+
+		await ansibleExecutionManager.createAnsibleInventory([node], pathToKey);
 		if (!clusterInfo.targetVersion || !clusterInfo.elastic.username || !clusterInfo.elastic.password) {
 			return false;
 		}
 
-		runPlaybookWithLogging("ansible/main.yml", "ansible_inventory.ini", {
+		ansibleExecutionManager.runPlaybook("ansible/main.yml", "ansible_inventory.ini", {
 			elk_version: clusterInfo.targetVersion,
 			username: clusterInfo.elastic.username,
 			password: clusterInfo.elastic.password,
@@ -157,16 +168,19 @@ export const triggerUpgradeAll = async (nodes: IElasticNode[], clusterId: string
 	try {
 		const clusterInfo = await getClusterInfoById(clusterId);
 		const pathToKey = clusterInfo.pathToKey ? clusterInfo.pathToKey : "";
-		await createAnsibleInventory(nodes, pathToKey);
+
+		await ansibleExecutionManager.createAnsibleInventory(nodes, pathToKey);
 		if (!clusterInfo.targetVersion || !clusterInfo.elastic.username || !clusterInfo.elastic.password) {
 			return false;
 		}
 
-		runPlaybookWithLogging("ansible/main.yml", "ansible_inventory.ini", {
+		ansibleExecutionManager.runPlaybook("ansible/main.yml", "ansible_inventory.ini", {
 			elk_version: clusterInfo.targetVersion,
 			username: clusterInfo.elastic.username,
 			password: clusterInfo.elastic.password,
-		});
+		}).catch((error)=>{
+      logger.error(`Error executing Ansible playbook: ${error.message}`)
+    })
 	} catch (error: any) {
 		logger.error(`Error performing upgrade for nodes:  ${nodes} because of ${error.message}`);
 		throw new Error(`Error performing upgrade for nodes:  ${nodes}`);

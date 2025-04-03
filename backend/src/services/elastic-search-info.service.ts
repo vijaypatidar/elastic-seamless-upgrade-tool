@@ -6,7 +6,7 @@ import ElasticSearchInfo, {
 	IElasticSearchInfoDocument,
 } from "../models/elastic-search-info.model";
 import { getAllElasticNodes } from "./elastic-node.service.";
-import { IElasticNode } from "../models/elastic-node.model";
+import { IElasticNode, NodeStatus } from "../models/elastic-node.model";
 import logger from "../logger/logger";
 
 export const createOrUpdateElasticSearchInfo = async (
@@ -35,10 +35,10 @@ export const syncElasticSearchInfo = async (clusterId: string) => {
 		let underUpgradation = false;
 		let upgradeComplete = true;
 		nodes.forEach((node: IElasticNode) => {
-			if (node.status !== "available") {
+			if (node.status !== NodeStatus.AVAILABLE) {
 				underUpgradation = true;
 			}
-			if (node.status !== "upgraded") {
+			if (node.status !== NodeStatus.UPGRADED) {
 				upgradeComplete = false;
 			}
 		});

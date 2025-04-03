@@ -1,13 +1,10 @@
 import axios from "axios";
 import KibanaNode, { IKibanaNode, IKibanaNodeDocument } from "../models/kibana-node.model";
 import logger from "../logger/logger";
-import {
-	createAnsibleInventoryForKibana,
-	runPlaybookWithLogging,
-	runPlaybookWithLoggingForKibana,
-} from "../controllers/ansible-controller";
 import { getClusterInfoById } from "./cluster-info.service";
 import { IClusterInfo } from "../models/cluster-info.model";
+import { ansibleExecutionManager } from "./ansible.service";
+import { NodeStatus } from "../models/elastic-node.model";
 
 export interface KibanaConfig {
 	name: string;
@@ -62,7 +59,7 @@ export const createKibanaNodes = async (kibanaConfigs: KibanaConfig[], clusterId
 			);
 			const nodeId = `node-${kibanaConfig.ip}`;
 			const progress = 0;
-			const status: "available" | "upgrading" | "upgraded" | "failed" = "available";
+			const status: NodeStatus =  NodeStatus.AVAILABLE;
 			const kibanaNode: IKibanaNode = {
 				nodeId,
 				clusterId,
@@ -75,7 +72,7 @@ export const createKibanaNodes = async (kibanaConfigs: KibanaConfig[], clusterId
 				status,
 			};
 			if (clusterInfo.targetVersion === version) {
-				kibanaNode.status = "upgraded";
+				kibanaNode.status = NodeStatus.UPGRADED;
 				kibanaNode.progress = 100;
 			}
 			await KibanaNode.findOneAndUpdate({ nodeId: kibanaNode.nodeId }, kibanaNode, {
@@ -138,6 +135,22 @@ export const updateKibanaNodeProgress = async (nodeId: string, progress: number)
 	}
 };
 
+
+export const updateKibanaNode = async(identifier: Record<string,any>,updatedNodeValues: Partial<IKibanaNode>)=>{
+  try{
+    const updatedNode = await KibanaNode.findOneAndUpdate(
+      identifier,
+      { $set: updatedNodeValues },
+      { new: true } 
+    )
+    if (!updatedNode) {
+      throw new Error(`Node with identfier ${identifier} not found`)
+    }
+  }catch(error){
+    throw new Error(`Unable to fin`)
+  }
+}
+
 export const getKibanaNodeById = async (nodeId: string): Promise<IKibanaNode | null> => {
 	const kibanaNode = await KibanaNode.findOne({ nodeId: nodeId });
 	if (!kibanaNode) return null;
@@ -152,12 +165,12 @@ export const triggerKibanaNodeUpgrade = async (nodeId: string, clusterId: string
 		}
 		const clusterInfo = await getClusterInfoById(clusterId);
 		const pathToKey = clusterInfo.pathToKey ? clusterInfo.pathToKey : ""; //Should be stored in clusterInfo
-		await createAnsibleInventoryForKibana([node], pathToKey);
+		await ansibleExecutionManager.createAnsibleInventoryForKibana([node], pathToKey);
 		if (!clusterInfo.targetVersion || !clusterInfo.elastic.username || !clusterInfo.elastic.password) {
 			return false;
 		}
 
-		runPlaybookWithLoggingForKibana(
+		ansibleExecutionManager.runPlaybook(
 			"ansible/main.yml",
 			"ansible_inventory.ini",
 			{
@@ -165,8 +178,6 @@ export const triggerKibanaNodeUpgrade = async (nodeId: string, clusterId: string
 				username: clusterInfo.elastic.username,
 				password: clusterInfo.elastic.password,
 			},
-			clusterId,
-			nodeId
 		);
 		return new Promise((resolve, reject) => resolve(true));
 	} catch (error) {
