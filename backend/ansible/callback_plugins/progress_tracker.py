@@ -33,20 +33,21 @@ class CallbackModule(CallbackBase):
             progress = 0
             payload = {
                 'tasks': tasks,
-                'total_tasks': self.task_total,
+                "totalTask": self.task_total,
                 'play_name': play.get_name(),
                 'hosts': host_info_list,
                 "progress": progress,
+                "status": "UPGRADING",
             }
             self.post_progress(payload)
 
     def v2_playbook_on_task_start(self, task, is_conditional):
         play = task.get_play()
-        self.task_current += 1
+        self.task_current += 1 # TODO 
         host_info_list = self.get_host_info_from_play(play)
         self._display.display(f"⚙️  Starting Task {self.task_current}/{self.task_total or '?'}: {task.get_name()} for hosts {host_info_list}")
         payload = {
-            'total_tasks': self.task_total,
+            "totalTask": self.task_total,
             'play_name': play.get_name(),
             'hosts': host_info_list,
             "progress": 0,
@@ -55,17 +56,31 @@ class CallbackModule(CallbackBase):
 
     def v2_runner_on_failed(self, result, ignore_errors=False):
         self._display.display(f"❌ Failed: {result.task_name or result._task.name} Host: {result._host.get_name()}")
+        self.task_current += 1
         host_info = {
             "name": result._host.get_name(),
             "ip": result._host.get_vars().get('ansible_host', 'N/A')
         }
         payload = {
-            'total_tasks': self.task_total,
+            "totalTask": self.task_total,
             'hosts': [host_info],
             'status': 'FAILED',
         }
         self.post_progress(payload)
-        
+
+    def v2_runner_on_unreachable(self, result):
+        self._display.display(f"❌ Unreachable:  Host: {result._host.get_name()} Task: {result.task_name}")
+        host_info = {
+            "name": result._host.get_name(),
+            "ip": result._host.get_vars().get('ansible_host', 'N/A')
+        }
+        payload = {
+            "totalTask": self.task_total,
+            'hosts': [host_info],
+            'status': 'FAILED',
+        }
+        self.post_progress(payload)
+
     def v2_runner_on_ok(self, result):
         self._display.display(f"✅ Completed:  Host: {result._host.get_name()} Task: {result._task.name}")
         host_info = {
@@ -77,7 +92,7 @@ class CallbackModule(CallbackBase):
             'totalTasks': self.task_total,
             'hosts': [host_info],
             'progress': progress,
-            'status': 'COMPETED',
+            'status': 'UPGRADING',
         }
         self.post_progress(payload)
 
@@ -89,10 +104,10 @@ class CallbackModule(CallbackBase):
         }
         progress = 50 # TODO: Calculate progress based on tasks 
         payload = {
-            'total_tasks': self.task_total,
+            "totalTask": self.task_total,
             'hosts': [host_info],
             'progress': progress,
-            'status': 'COMPETED',
+            'status': 'UPGRADING',
         }
         self.post_progress(payload)
 
@@ -134,3 +149,4 @@ class CallbackModule(CallbackBase):
                 print(f"Failed to post progress: {response.status_code} - {response.text}")
         except Exception as e:
             self._display.display(f"error posting progress: {str(e)}")
+

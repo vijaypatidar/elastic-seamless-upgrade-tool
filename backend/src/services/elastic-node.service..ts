@@ -109,7 +109,7 @@ export const updateNode = async (identifier: Record<string, any>, updatedNodeVal
 			throw new Error(`Node with identfier ${identifier} not found`);
 		}
 	} catch (error) {
-		throw new Error(`Unable to fin`);
+		// throw new Error(`Unable to fin`);
 	}
 };
 
@@ -146,7 +146,7 @@ export const triggerNodeUpgrade = async (nodeId: string, clusterId: string) => {
 			return false;
 		}
 
-		ansibleExecutionManager.runPlaybook("ansible/main.yml", "ansible_inventory.ini", {
+		ansibleExecutionManager.runPlaybook("playbooks/main.yml", "ansible_inventory.ini", {
 			elk_version: clusterInfo.targetVersion,
 			username: clusterInfo.elastic.username,
 			password: clusterInfo.elastic.password,
@@ -169,7 +169,7 @@ export const triggerUpgradeAll = async (nodes: IElasticNode[], clusterId: string
 		}
 
 		ansibleExecutionManager
-			.runPlaybook("ansible/main.yml", "ansible_inventory.ini", {
+			.runPlaybook("playbooks/main.yml", "ansible_inventory.ini", {
 				elk_version: clusterInfo.targetVersion,
 				username: clusterInfo.elastic.username,
 				password: clusterInfo.elastic.password,
