@@ -24,7 +24,7 @@ import { KibanaClient } from "../clients/kibana.client";
 import path from "path";
 import { getPossibleUpgrades } from "../utils/upgrade.versions";
 import { normalizeNodeUrl } from "../utils/utlity.functions";
-import { IElasticNode } from "../models/elastic-node.model";
+import { IElasticNode, NodeStatus } from "../models/elastic-node.model";
 import { createKibanaNodes, getKibanaNodes, triggerKibanaNodeUpgrade } from "../services/kibana-node.service";
 import { getElasticSearchInfo, syncElasticSearchInfo } from "../services/elastic-search-info.service";
 
@@ -161,7 +161,7 @@ export const getUpgradeDetails = async (req: Request, res: Response) => {
 		const isKibanaUpgraded = kibanaVersion === clusterInfo.targetVersion ? true : false;
 		//verifying upgradability
 
-		const isESUpgraded = elasticNodes.filter((item) => item.status !== "upgraded").length === 0;
+		const isESUpgraded = elasticNodes.filter((item) => item.status !== NodeStatus.UPGRADED).length === 0;
 
 		res.send({
 			elastic: {
@@ -202,9 +202,9 @@ export const getNodesInfo = async (req: Request, res: Response) => {
 	try {
 		const clusterId = req.params.clusterId;
 		const elasticNodes = await getAllElasticNodes(clusterId);
-		const isDataNodeDisabled = elasticNodes.some((node) => node.status === "upgrading");
+		const isDataNodeDisabled = elasticNodes.some((node) => node.status === NodeStatus.UPGRADING);
 		const isMasterDisabled =
-			elasticNodes.some((node) => node.roles.includes("data") && node.status !== "upgraded") ||
+			elasticNodes.some((node) => node.roles.includes("data") && node.status !== NodeStatus.UPGRADED) ||
 			isDataNodeDisabled;
 		let nodes = elasticNodes.map((node) => {
 			if (node.isMaster) {
@@ -259,7 +259,7 @@ export const handleUpgrades = async (req: Request, res: Response) => {
 		let isUpgrading = false;
 		const allNodes = await getAllElasticNodes(clusterId);
 		allNodes.forEach((node) => {
-			if (node.status === "upgrading") {
+			if (node.status === NodeStatus.UPGRADING) {
 				isUpgrading = true;
 			}
 		});
@@ -486,12 +486,12 @@ export const handleUpgradeAll = async (req: Request, res: Response) => {
 	let failedUpgrade = false;
 	let upgradingNode = false;
 	const nodesToBeUpgraded = nodes.filter((node) => {
-		if (node.status === "available") {
+		if (node.status === NodeStatus.AVAILABLE) {
 			return true;
-		} else if (node.status === "failed") {
+		} else if (node.status === NodeStatus.FAILED) {
 			failedUpgrade = true;
 			return false;
-		} else if (node.status === "upgrading") {
+		} else if (node.status === NodeStatus.UPGRADING) {
 			upgradingNode = true;
 			return false;
 		} else {

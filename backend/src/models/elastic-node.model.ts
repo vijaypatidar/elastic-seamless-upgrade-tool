@@ -1,5 +1,13 @@
 import mongoose, { Schema, Document } from "mongoose";
 
+
+export enum NodeStatus{
+	UPGRADING = "UPGRADING",
+	AVAILABLE = "AVAILABLE",
+	UPGRADED = "UPGRADED",
+	FAILED = "FAILED"
+}
+
 export interface IElasticNode {
 	nodeId: string;
 	clusterId: string;
@@ -10,7 +18,7 @@ export interface IElasticNode {
 	os: Record<string, any>;
 	isMaster: boolean;
 	progress: Number;
-	status: "available" | "upgrading" | "upgraded" | "failed";
+	status: NodeStatus
 }
 
 export interface IElasticNodeDocument extends IElasticNode, Document {}
@@ -28,8 +36,9 @@ const ElasticNodeSchema: Schema<IElasticNodeDocument> = new Schema<IElasticNodeD
 		progress: { type: Number, required: false },
 		status: {
 			type: String,
-			enum: ["available", "upgrading", "upgraded", "failed"],
-			default: "available",
+			required: true,
+			enum: Object.values(NodeStatus),
+			default: NodeStatus.AVAILABLE,
 		},
 	},
 	{ timestamps: true }

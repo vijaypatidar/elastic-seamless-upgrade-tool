@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from "mongoose";
+import { NodeStatus } from "./elastic-node.model";
 
 export interface IKibanaNode {
 	nodeId: string;
@@ -9,7 +10,7 @@ export interface IKibanaNode {
 	roles: string[];
 	os: Record<string, any>;
 	progress: Number;
-	status: "available" | "upgrading" | "upgraded" | "failed";
+	status: NodeStatus;
 }
 export interface KibanaConfig {
 	name: string;
@@ -30,8 +31,8 @@ const KibanaNodeSchema: Schema<IKibanaNodeDocument> = new Schema<IKibanaNodeDocu
 		progress: { type: Number, required: false },
 		status: {
 			type: String,
-			enum: ["available", "upgrading", "upgraded", "failed"],
-			default: "available",
+			enum: Object.values(NodeStatus),
+			default: NodeStatus.AVAILABLE,
 		},
 	},
 	{ timestamps: true }
