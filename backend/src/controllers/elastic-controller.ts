@@ -24,9 +24,9 @@ import { KibanaClient } from "../clients/kibana.client";
 import path from "path";
 import { getPossibleUpgrades } from "../utils/upgrade.versions";
 import { normalizeNodeUrl } from "../utils/utlity.functions";
-import { IElasticNode, NodeStatus } from "../models/elastic-node.model";
 import { createKibanaNodes, getKibanaNodes, triggerKibanaNodeUpgrade } from "../services/kibana-node.service";
 import { getElasticSearchInfo, syncElasticSearchInfo } from "../services/elastic-search-info.service";
+import { NodeStatus } from "../enums";
 
 export const healthCheck = async (req: Request, res: Response) => {
 	try {

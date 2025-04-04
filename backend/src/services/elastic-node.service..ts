@@ -1,11 +1,9 @@
-
 import { ElasticClient } from "../clients/elastic.client";
 import logger from "../logger/logger";
-import ElasticNode, { IElasticNode, IElasticNodeDocument, NodeStatus } from "../models/elastic-node.model";
+import ElasticNode, { IElasticNode, IElasticNodeDocument } from "../models/elastic-node.model";
 import { getClusterInfoById } from "./cluster-info.service";
 import { ansibleExecutionManager } from "./ansible.service";
-
-
+import { NodeStatus } from "../enums";
 
 export const createOrUpdateElasticNode = async (elasticNode: IElasticNode): Promise<IElasticNodeDocument> => {
 	const nodeId = elasticNode.nodeId;
@@ -82,9 +80,11 @@ export const syncNodeData = async (clusterId: string) => {
 	}
 };
 
-export const updateNodeStatus = async (identifier: Record<string,any>, newStatus: string): Promise<IElasticNodeDocument | null> => {
+export const updateNodeStatus = async (
+	identifier: Record<string, any>,
+	newStatus: string
+): Promise<IElasticNodeDocument | null> => {
 	try {
-
 		const updatedNode = await ElasticNode.findOneAndUpdate(
 			identifier,
 			{ status: newStatus },
@@ -103,26 +103,21 @@ export const updateNodeStatus = async (identifier: Record<string,any>, newStatus
 	}
 };
 
-export const updateNode = async(identifier: Record<string,any>,updatedNodeValues: Partial<IElasticNode>)=>{
-    try{
-      const updatedNode = await ElasticNode.findOneAndUpdate(
-        identifier,
-        { $set: updatedNodeValues },
-        { new: true } 
-      )
-      if (!updatedNode) {
-        throw new Error(`Node with identfier ${identifier} not found`)
-      }
-    }catch(error){
-      throw new Error(`Unable to fin`)
-    }
-}
-
-export const updateNodeProgress = async (identifier: Record<string,any>, progress: number) => {
+export const updateNode = async (identifier: Record<string, any>, updatedNodeValues: Partial<IElasticNode>) => {
 	try {
+		const updatedNode = await ElasticNode.findOneAndUpdate(identifier, { $set: updatedNodeValues }, { new: true });
+		if (!updatedNode) {
+			throw new Error(`Node with identfier ${identifier} not found`);
+		}
+	} catch (error) {
+		throw new Error(`Unable to fin`);
+	}
+};
 
+export const updateNodeProgress = async (identifier: Record<string, any>, progress: number) => {
+	try {
 		const updatedNode = await ElasticNode.findOneAndUpdate(
-			{identifier},
+			{ identifier },
 			{ progress: progress },
 			{ new: true, runValidators: true }
 		);
@@ -174,13 +169,15 @@ export const triggerUpgradeAll = async (nodes: IElasticNode[], clusterId: string
 			return false;
 		}
 
-		ansibleExecutionManager.runPlaybook("ansible/main.yml", "ansible_inventory.ini", {
-			elk_version: clusterInfo.targetVersion,
-			username: clusterInfo.elastic.username,
-			password: clusterInfo.elastic.password,
-		}).catch((error)=>{
-      logger.error(`Error executing Ansible playbook: ${error.message}`)
-    })
+		ansibleExecutionManager
+			.runPlaybook("ansible/main.yml", "ansible_inventory.ini", {
+				elk_version: clusterInfo.targetVersion,
+				username: clusterInfo.elastic.username,
+				password: clusterInfo.elastic.password,
+			})
+			.catch((error) => {
+				logger.error(`Error executing Ansible playbook: ${error.message}`);
+			});
 	} catch (error: any) {
 		logger.error(`Error performing upgrade for nodes:  ${nodes} because of ${error.message}`);
 		throw new Error(`Error performing upgrade for nodes:  ${nodes}`);
