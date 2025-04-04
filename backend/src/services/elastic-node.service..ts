@@ -1,7 +1,5 @@
-import { error } from "console";
 import { ElasticClient } from "../clients/elastic.client";
 import { createAnsibleInventory, runPlaybookWithLogging } from "../controllers/ansible-controller";
-import { getNodeInfo } from "../controllers/elastic-controller";
 import logger from "../logger/logger";
 import ElasticNode, { IElasticNode, IElasticNodeDocument } from "../models/elastic-node.model";
 import { getClusterInfoById } from "./cluster-info.service";

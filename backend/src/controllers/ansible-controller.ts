@@ -1,8 +1,6 @@
 import { exec } from "child_process";
-import { ElasticNode } from "../interfaces";
 // import { ExecResult, Playbook} from 'node-ansible';
 import fs from "fs";
-import path from "path";
 import logger from "../logger/logger";
 import { Readable } from "stream";
 import { ExecResult } from "../types/node-ansible";
