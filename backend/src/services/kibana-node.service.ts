@@ -139,10 +139,10 @@ export const updateKibanaNode = async (identifier: Record<string, any>, updatedN
 	try {
 		const updatedNode = await KibanaNode.findOneAndUpdate(identifier, { $set: updatedNodeValues }, { new: true });
 		if (!updatedNode) {
-			throw new Error(`Node with identfier ${identifier} not found`);
+			throw new Error(`Node with identifier ${identifier} not found`);
 		}
 	} catch (error) {
-		throw new Error(`Unable to fin`);
+		throw new Error(`Error updating node: ${error}`);
 	}
 };
 

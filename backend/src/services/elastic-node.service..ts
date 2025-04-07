@@ -110,14 +110,14 @@ export const updateNode = async (identifier: Record<string, any>, updatedNodeVal
 			throw new Error(`Node with identfier ${identifier} not found`);
 		}
 	} catch (error) {
-		throw new Error(`Unable to fin`);
+		throw new Error(`Error updating node: ${error}`);
 	}
 };
 
 export const updateNodeProgress = async (identifier: Record<string, any>, progress: number) => {
 	try {
 		const updatedNode = await ElasticNode.findOneAndUpdate(
-			{ identifier },
+			identifier,
 			{ progress: progress },
 			{ new: true, runValidators: true }
 		);

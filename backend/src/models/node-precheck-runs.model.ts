@@ -19,7 +19,7 @@ const NodePrecheckRunSchema: Schema<INodePrecheckRunDocument> = new Schema<INode
 		nodeName: { type: String, required: true },
 		precheck: { type: String, required: true },
 		startedAt: { type: Date, required: true },
-		endAt: { type: String, required: false },
+		endAt: { type: Date, required: false },
 		logs: { type: [String], required: true },
 		status: {
 			type: String,
