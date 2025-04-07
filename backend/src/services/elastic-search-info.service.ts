@@ -1,13 +1,10 @@
 import { CatHealthHealthRecord } from "@elastic/elasticsearch/lib/api/types";
 import { ElasticClient } from "../clients/elastic.client";
-import ElasticSearchInfo, {
-	clusterStatus,
-	IElasticSearchInfo,
-	IElasticSearchInfoDocument,
-} from "../models/elastic-search-info.model";
+import ElasticSearchInfo, { IElasticSearchInfo, IElasticSearchInfoDocument } from "../models/elastic-search-info.model";
 import { getAllElasticNodes } from "./elastic-node.service.";
-import { IElasticNode, NodeStatus } from "../models/elastic-node.model";
+import { IElasticNode } from "../models/elastic-node.model";
 import logger from "../logger/logger";
+import { clusterStatus, NodeStatus } from "../enums";
 
 export const createOrUpdateElasticSearchInfo = async (
 	elasticSearchInfo: IElasticSearchInfo
