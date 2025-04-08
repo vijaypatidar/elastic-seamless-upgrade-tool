@@ -1,5 +1,5 @@
 import mongoose, { Schema, Document } from "mongoose";
-import { NodeStatus } from "./elastic-node.model";
+import { NodeStatus } from "../enums";
 
 export interface IKibanaNode {
 	nodeId: string;

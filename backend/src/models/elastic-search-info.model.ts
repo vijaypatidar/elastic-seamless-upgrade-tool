@@ -1,10 +1,5 @@
 import mongoose, { Schema, Document } from "mongoose";
-
-export enum clusterStatus {
-	green = "green",
-	yellow = "yellow",
-	red = "red",
-}
+import { clusterStatus } from "../enums";
 
 export interface IElasticSearchInfo {
 	clusterId: string;

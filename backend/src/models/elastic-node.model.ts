@@ -1,12 +1,5 @@
 import mongoose, { Schema, Document } from "mongoose";
-
-
-export enum NodeStatus{
-	UPGRADING = "UPGRADING",
-	AVAILABLE = "AVAILABLE",
-	UPGRADED = "UPGRADED",
-	FAILED = "FAILED"
-}
+import { NodeStatus } from "../enums";
 
 export interface IElasticNode {
 	nodeId: string;
@@ -18,7 +11,7 @@ export interface IElasticNode {
 	os: Record<string, any>;
 	isMaster: boolean;
 	progress: Number;
-	status: NodeStatus
+	status: NodeStatus;
 }
 
 export interface IElasticNodeDocument extends IElasticNode, Document {}

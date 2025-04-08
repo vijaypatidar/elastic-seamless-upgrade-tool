@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
 import logger from "../logger/logger";
 import { updateNode } from "../services/elastic-node.service.";
-import { NodeStatus } from "../models/elastic-node.model";
 import { updateKibanaNode } from "../services/kibana-node.service";
-import { log } from "console";
+import { mapAnsibleToPrecheckStatus, NodeStatus } from "../enums";
+import { updateRunStatus } from "../services/precheck-runs.service";
 
 export enum ClusterType {
 	KIBANA = "KIBANA",
@@ -33,6 +33,8 @@ interface BaseAnsibleRequest {
 export interface AnsibleRequestPrecheck extends BaseAnsibleRequest {
 	type: AnsibleRequestType.PRECHECK;
 	precheckId: string;
+	clusterType: ClusterType;
+	precheck: string;
 	status: AnsibleTaskStatus;
 }
 export interface AnsibleRequestUpgrade extends BaseAnsibleRequest {
@@ -51,9 +53,9 @@ export const handleAnsibleWebhook = async (req: Request, res: Response) => {
 		// return;
 		const clusterId = req.params.clusterId;
 		const body: AnsibleRequest = req.body;
-		const { type, nodeName } = body;
+		const { type, nodeName, status } = body;
 		if (type === AnsibleRequestType.UPGRADE) {
-			const { progress, clusterType, status, hosts } = body;
+			const { progress, clusterType, hosts } = body;
 			// Handle upgrade request
 			if (clusterType === ClusterType.ELASTIC) {
 				hosts.forEach((host) => {
@@ -75,8 +77,9 @@ export const handleAnsibleWebhook = async (req: Request, res: Response) => {
 				);
 			}
 		} else {
-			const { precheckId } = req.body;
 			//fetch precheck data and update corresponding run
+			const { precheck } = req.body;
+			await updateRunStatus({ nodeName: nodeName, precheck: precheck }, mapAnsibleToPrecheckStatus(status));
 		}
 		logger.info(
 			`Received Ansible webhook for cluster ${clusterId}: ${nodeName} of type ${type}  ${JSON.stringify(req.body)}`

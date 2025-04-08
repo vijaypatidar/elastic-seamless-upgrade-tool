@@ -4,8 +4,8 @@ import logger from "../logger/logger";
 import { getClusterInfoById } from "./cluster-info.service";
 import { IClusterInfo } from "../models/cluster-info.model";
 import { ansibleInventoryService } from "./ansible-inventory.service";
-import { NodeStatus } from "../models/elastic-node.model";
 import { ansibleRunnerService } from "./ansible-runner.service";
+import { NodeStatus } from "../enums";
 
 export interface KibanaConfig {
 	name: string;
@@ -140,10 +140,10 @@ export const updateKibanaNode = async (identifier: Record<string, any>, updatedN
 	try {
 		const updatedNode = await KibanaNode.findOneAndUpdate(identifier, { $set: updatedNodeValues }, { new: true });
 		if (!updatedNode) {
-			throw new Error(`Node with identfier ${identifier} not found`);
+			throw new Error(`Node with identifier ${identifier} not found`);
 		}
 	} catch (error) {
-		throw new Error(`Unable to fin`);
+		throw new Error(`Error updating node: ${error}`);
 	}
 };
 
@@ -175,7 +175,6 @@ export const triggerKibanaNodeUpgrade = async (nodeId: string, clusterId: string
 				password: clusterInfo.elastic.password,
 			},
 		});
-
 		return new Promise((resolve, reject) => resolve(true));
 	} catch (error) {
 		logger.error(`Error performing upgrade for node with id ${nodeId}`);

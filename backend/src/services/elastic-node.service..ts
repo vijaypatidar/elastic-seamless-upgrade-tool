@@ -1,9 +1,10 @@
 import { ElasticClient } from "../clients/elastic.client";
 import logger from "../logger/logger";
-import ElasticNode, { IElasticNode, IElasticNodeDocument, NodeStatus } from "../models/elastic-node.model";
+import ElasticNode, { IElasticNode, IElasticNodeDocument } from "../models/elastic-node.model";
 import { getClusterInfoById } from "./cluster-info.service";
 import { ansibleInventoryService } from "./ansible-inventory.service";
 import { ansibleRunnerService } from "./ansible-runner.service";
+import { NodeStatus } from "../enums";
 
 export const createOrUpdateElasticNode = async (elasticNode: IElasticNode): Promise<IElasticNodeDocument> => {
 	const nodeId = elasticNode.nodeId;
@@ -110,14 +111,14 @@ export const updateNode = async (identifier: Record<string, any>, updatedNodeVal
 			throw new Error(`Node with identfier ${identifier} not found`);
 		}
 	} catch (error) {
-		// throw new Error(`Unable to fin`);
+		throw new Error(`Error updating node: ${error}`);
 	}
 };
 
 export const updateNodeProgress = async (identifier: Record<string, any>, progress: number) => {
 	try {
 		const updatedNode = await ElasticNode.findOneAndUpdate(
-			{ identifier },
+			identifier,
 			{ progress: progress },
 			{ new: true, runValidators: true }
 		);
