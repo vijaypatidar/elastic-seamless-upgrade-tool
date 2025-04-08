@@ -40,7 +40,6 @@ export const healthCheck = async (req: Request, res: Response) => {
 	}
 };
 
-let interval;
 export const getClusterDetails = async (req: Request, res: Response) => {
 	try {
 		const clusterId = req.params.clusterId;

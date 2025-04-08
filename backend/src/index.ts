@@ -8,6 +8,7 @@ import elasticRouter from "./routes/elastic.router";
 
 import logger from "./logger/logger";
 import { connectDB } from "./databases/db";
+import { NotificationEvent, NotificationListner, notificationService } from "./services/notification.service";
 
 const app = express();
 const server = http.createServer(app);
@@ -47,8 +48,13 @@ app.use((req, res) => {
 });
 
 const io = new Server(server);
+
 io.of("/notification").on("connection", (socket: Socket) => {
 	logger.debug("User connected to socker.io with socketId:", socket.id);
+	const notificationListner: NotificationListner = (event: NotificationEvent) => {
+		socket.send(JSON.stringify(event));
+	};
+	notificationService.addNotificationListner(notificationListner);
 
 	socket.on("message", (data) => {
 		logger.debug("Received message:", data);
@@ -56,6 +62,7 @@ io.of("/notification").on("connection", (socket: Socket) => {
 
 	socket.on("disconnect", () => {
 		logger.debug("User disconnected from socker.io with socketId:", socket.id);
+		notificationService.removeNotificationListner(notificationListner);
 	});
 });
 

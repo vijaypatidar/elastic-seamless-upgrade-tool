@@ -2,24 +2,10 @@ import { Request, Response } from "express";
 import logger from "../logger/logger";
 import { updateNode } from "../services/elastic-node.service.";
 import { updateKibanaNode } from "../services/kibana-node.service";
-import { mapAnsibleToPrecheckStatus, NodeStatus } from "../enums";
+import { AnsibleRequestType, AnsibleTaskStatus, ClusterType, mapAnsibleToPrecheckStatus, NodeStatus } from "../enums";
 import { updateRunStatus } from "../services/precheck-runs.service";
+import { NotificationEventType, notificationService } from "../services/notification.service";
 
-export enum ClusterType {
-	KIBANA = "KIBANA",
-	ELASTIC = "ELASTIC",
-}
-
-export enum AnsibleRequestType {
-	UPGRADE = "UPGRADE",
-	PRECHECK = "PRECHECK",
-}
-
-export enum AnsibleTaskStatus {
-	STARTED = "STARTED",
-	SUCCESS = "SUCCESS",
-	FAILED = "FAILED",
-}
 interface HostInfo {
 	ip: string;
 	name: string;
@@ -81,6 +67,9 @@ export const handleAnsibleWebhook = async (req: Request, res: Response) => {
 			const { precheck } = req.body;
 			await updateRunStatus({ nodeName: nodeName, precheck: precheck }, mapAnsibleToPrecheckStatus(status));
 		}
+		notificationService.sendNotification({
+			type: NotificationEventType.UPGRADE_PROGRESS_CHANGE,
+		});
 		logger.info(
 			`Received Ansible webhook for cluster ${clusterId}: ${nodeName} of type ${type}  ${JSON.stringify(req.body)}`
 		);
