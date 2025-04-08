@@ -30,27 +30,23 @@ class CallbackModule(CallbackBase):
             
             self.task_total = len(tasks)
             self._display.display(f"📋 Play '{play.get_name()}' has {len(tasks)} tasks. {host_info_list}")
-            progress = 0
             payload = {
                 'tasks': tasks,
                 "totalTask": self.task_total,
                 'play_name': play.get_name(),
                 'hosts': host_info_list,
-                "progress": progress,
                 "status": "UPGRADING",
             }
             self.post_progress(payload)
 
     def v2_playbook_on_task_start(self, task, is_conditional):
         play = task.get_play()
-        self.task_current += 1 # TODO 
         host_info_list = self.get_host_info_from_play(play)
         self._display.display(f"⚙️  Starting Task {self.task_current}/{self.task_total or '?'}: {task.get_name()} for hosts {host_info_list}")
         payload = {
             "totalTask": self.task_total,
             'play_name': play.get_name(),
             'hosts': host_info_list,
-            "progress": 0,
         }
         self.post_progress(payload)
 
@@ -87,12 +83,13 @@ class CallbackModule(CallbackBase):
             "name": result._host.get_name(),
             "ip": result._host.get_vars().get('ansible_host', 'N/A')
         }
-        progress = 50 # TODO: Calculate progress based on tasks 
+        self.task_current += 1
+        progress = self.task_current / self.task_total * 100 if self.task_total else 0
         payload = {
             'totalTasks': self.task_total,
             'hosts': [host_info],
             'progress': progress,
-            'status': 'UPGRADING',
+            'status': 'UPGRADING' if self.task_current < self.task_total else 'UPGRADED',
         }
         self.post_progress(payload)
 
@@ -102,12 +99,13 @@ class CallbackModule(CallbackBase):
             "name": result._host.get_name(),
             "ip": result._host.get_vars().get('ansible_host', 'N/A')
         }
-        progress = 50 # TODO: Calculate progress based on tasks 
+        self.task_current += 1
+        progress = (self.task_current / self.task_total)* 100  if self.task_total else 0
         payload = {
             "totalTask": self.task_total,
             'hosts': [host_info],
             'progress': progress,
-            'status': 'UPGRADING',
+            'status': 'UPGRADING' if self.task_current < self.task_total else 'UPGRADED',
         }
         self.post_progress(payload)
 
@@ -142,6 +140,8 @@ class CallbackModule(CallbackBase):
             
             payload["type"] = "UPGRADE"
             payload["clusterType"] = "ELASTIC"
+            if "progress" in payload:
+                payload["progress"] = int(payload["progress"])
 
             data = json.dumps(payload)
             response = requests.request("POST", url, headers=headers, data=data)

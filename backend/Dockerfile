@@ -25,7 +25,8 @@ RUN apt-get update && \
     python3 -m pip install ansible && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
-    apt-get install -y openssh-client
+    apt-get install -y openssh-client && \
+    pip3 install requests
 
 # Verify installations
 RUN node --version && yarn --version && ansible --version

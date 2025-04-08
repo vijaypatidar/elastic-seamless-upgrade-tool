@@ -1,10 +1,7 @@
-import dotenv from "dotenv";
+import "dotenv/config";
 import http from "http";
 import { Server, Socket } from "socket.io";
 import webhookRouter from "./routes/webhook.router";
-
-dotenv.config();
-
 import express, { Request, Response } from "express";
 import cors from "cors";
 import elasticRouter from "./routes/elastic.router";

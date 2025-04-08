@@ -1,6 +1,6 @@
 ---
 - name: Elasticsearch rolling upgrade
-  hosts: elasticsearch
+  hosts: "{{ elasticsearch_node }}"
   become: true
   gather_facts: no
   serial: 1
