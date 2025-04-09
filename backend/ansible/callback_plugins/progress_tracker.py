@@ -1,9 +1,9 @@
 import json
 from ansible.plugins.callback import CallbackBase
 import requests
-# import debugpy
 
 # # Listen for debugger to attach
+# import debugpy
 # debugpy.listen(("localhost", 5678))
 # print("🛠 Waiting for debugger to attach...")
 # debugpy.wait_for_client()
@@ -17,120 +17,84 @@ class CallbackModule(CallbackBase):
 
     def __init__(self):
         super(CallbackModule, self).__init__()
-        self.task_total = 0
-        self.task_current = 0
+        self.task_current_by_host_ip = {}
         self._display.banner("🔧 Progress Tracker Initialized")
 
     def v2_playbook_on_start(self, playbook):
-            self.task_total = 0
-            self.task_current = 0
-            self.playbook_run_id = playbook._entries[0]._variable_manager.extra_vars.get('playbook_run_id', None)
-            self.playbook_run_type = playbook._entries[0]._variable_manager.extra_vars.get('playbook_run_type', "UPGRADE")
-            self.cluster_type = playbook._entries[0]._variable_manager.extra_vars.get('cluster_type', None)
-            self._display.banner(f"🚀 Playbook started")
+        self.playbook_run_id = playbook._entries[0]._variable_manager.extra_vars.get('playbook_run_id', None)
+        self.playbook_run_type = playbook._entries[0]._variable_manager.extra_vars.get('playbook_run_type', "UPGRADE")
+        self.cluster_type = playbook._entries[0]._variable_manager.extra_vars.get('cluster_type', None)
+        self.task_count_per_host_group = self.get_total_task_count_per_host_group(playbook)
+        self._display.banner(f"🚀 Playbook started")
 
+   
     def v2_playbook_on_play_start(self, play):
-            tasks = [];
             host_info_list = self.get_host_info_from_play(play)
         
-            for block in play.compile():
-                for task in block.block:
-                    if task.get_name() and 'meta' not in task.get_name().lower():
-                        tasks.append(task.get_name())
-            
-            self.task_total = len(tasks)
-            self._display.display(f"📋 Play '{play.get_name()}' has {len(tasks)} tasks. {host_info_list} {play.vars}")
+            self._display.display(f"📋 Play '{play.get_name()}' started. {host_info_list}")
             payload = {
-                'tasks': tasks,
-                "totalTask": self.task_total,
                 'play_name': play.get_name(),
                 'hosts': host_info_list,
                 "status": "STARTED",
             }
-            self.post_progress(payload)
+            # self.post_progress(payload)
 
     def v2_playbook_on_task_start(self, task, is_conditional):
         play = task.get_play()
         host_info_list = self.get_host_info_from_play(play)
-        self._display.display(f"⚙️  Starting Task {self.task_current}/{self.task_total or '?'}: {task.get_name()} for hosts {host_info_list}")
+        self._display.display(f"⚙️  Starting Task {task.get_name()} for hosts {host_info_list}")
         payload = {
-            "totalTask": self.task_total,
             'play_name': play.get_name(),
             'hosts': host_info_list,
+            "source": "v2_playbook_on_task_start"
         }
-        self.post_progress(payload)
+        # self.post_progress(payload)
 
     def v2_runner_on_failed(self, result, ignore_errors=False):
         self._display.display(f"❌ Failed: {result.task_name or result._task.name} Host: {result._host.get_name()}")
-        self.task_current += 1
-        host_info = {
-            "name": result._host.get_name(),
-            "ip": result._host.get_vars().get('ansible_host', 'N/A'),
-            "precheckId": result._task.get_play().vars.get("precheck_id", None),          
-        }
+        host_info = self.get_host_info_from_result(result)
         payload = {
-            "totalTask": self.task_total,
             'hosts': [host_info],
             'status': 'FAILED',
+            "source": "v2_runner_on_failed"
         }
         self.post_progress(payload)
 
     def v2_runner_on_unreachable(self, result):
         self._display.display(f"❌ Unreachable:  Host: {result._host.get_name()} Task: {result.task_name}")
-        host_info = {
-            "name": result._host.get_name(),
-            "ip": result._host.get_vars().get('ansible_host', 'N/A'),
-            "precheckId": result._task.get_play().vars.get("precheck_id", None),          
-        }
+        host_info = self.get_host_info_from_result(result)
         payload = {
-            "totalTask": self.task_total,
             'hosts': [host_info],
             'status': 'FAILED',
+            "source": "v2_runner_on_unreachable"
         }
         self.post_progress(payload)
 
     def v2_runner_on_ok(self, result):
         self._display.display(f"✅ Completed:  Host: {result._host.get_name()} Task: {result._task.name}")
-        host_info = {
-            "name": result._host.get_name(),
-            "ip": result._host.get_vars().get('ansible_host', 'N/A'),
-            "precheckId": result._task.get_play().vars.get("precheck_id", None),          
-        }
-        self.task_current += 1
-        progress = self.task_current / self.task_total * 100 if self.task_total else 0
+        host_info = self.get_host_info_from_result(result)
         payload = {
-            'totalTasks': self.task_total,
             'hosts': [host_info],
-            'progress': progress,
-            'status': 'STARTED' if self.task_current < self.task_total else 'SUCCESS',
+            'status': 'STARTED' if host_info['progress'] < 100 else 'SUCCESS',
+            "source": "v2_runner_on_ok"
         }
         self.post_progress(payload)
 
     def v2_runner_on_skipped(self, result):
         host_vars = result._host.get_vars()
+        host_info = self.get_host_info_from_result(result)
         self._display.display(f"⏭️  Skipped:  Host: {result._host.get_name()} Task: {result._task.name} Host IP: {host_vars.get('ansible_host', 'N/A')}")
-        play = result._task.get_play()
-        precheck_id = play.vars.get("precheck_id", None)
-
-        host_info = {
-            "name": result._host.get_name(),
-            "ip": host_vars.get('ansible_host', 'N/A'),
-            "precheckId": precheck_id,
-        }
-        self.task_current += 1
-        progress = (self.task_current / self.task_total)* 100  if self.task_total else 0
         payload = {
-            "totalTask": self.task_total,
             'hosts': [host_info],
-            'progress': progress,
-            'status': 'STARTED' if self.task_current < self.task_total else 'SUCCESS',
-            "skip":"true"
+            'status': 'STARTED' if host_info['progress'] < 100 else 'SUCCESS',
+            "skip":"true",
+            "source": "v2_runner_on_skipped"
         }
         self.post_progress(payload)
 
 
     def v2_playbook_on_stats(self, stats):
-        self._display.display(f"✅ Playbook completed 🧮 Final Task Progress: {self.task_current}/{self.task_total or '?'}")
+        self._display.display(f"✅ Playbook completed")
       
 
     def get_host_info_from_play(self, play):
@@ -161,8 +125,6 @@ class CallbackModule(CallbackBase):
             payload["clusterType"] = self.cluster_type
             payload["playbookRunId"] = self.playbook_run_id
             payload["type"] = self.playbook_run_type
-            if "progress" in payload:
-                payload["progress"] = int(payload["progress"])
 
             data = json.dumps(payload)
             response = requests.request("POST", url, headers=headers, data=data)
@@ -171,3 +133,49 @@ class CallbackModule(CallbackBase):
         except Exception as e:
             self._display.display(f"error posting progress: {str(e)}")
 
+    def get_total_task_count_per_host_group(self, playbook):
+        task_count_per_host_group = {}
+        for play in playbook.get_plays():
+            for block in play.compile():
+                for task in block.block:
+                    if task.get_name() and 'meta' not in task.get_name().lower():
+                        hosts = play.hosts
+                        if isinstance(hosts, str) and hosts.startswith('{{') and hosts.endswith('}}'):
+                            hosts = play.vars.get(hosts.strip('{{ }}').strip(), hosts)
+                        if hosts not in task_count_per_host_group:
+                            task_count_per_host_group[hosts] = 0
+                        task_count_per_host_group[hosts] += 1
+        return task_count_per_host_group
+
+    def get_host_info_from_result(self, result):
+        host_vars = result._host.get_vars()
+        play = result._task.get_play()
+        precheck_id = play.vars.get("precheck_id", None)
+        ip = host_vars.get('ansible_host', 'N/A')
+        total_tasks = self.get_total_task_count_by_host_group(result._host.groups);
+        current_task = self.get_task_current_by_host_ip(ip)
+        progress = int((current_task / total_tasks) * 100 if total_tasks else 0)
+        return {
+            "name": result._host.get_name(),
+            "ip": ip,
+            "precheckId": precheck_id,
+            "progress": progress,
+            "totalTasks": total_tasks,
+            "currentTask": current_task,
+            "task": result._task.name,
+        }
+
+
+    def get_total_task_count_by_host_group(self, host_groups):
+        total_tasks = 0
+        for group in host_groups:
+            if group.name in self.task_count_per_host_group:
+                total_tasks += self.task_count_per_host_group[group.name]
+        return total_tasks
+    
+    def get_task_current_by_host_ip(self, host_ip):
+        if host_ip not in self.task_current_by_host_ip:
+            self.task_current_by_host_ip[host_ip] = 1
+        else:
+            self.task_current_by_host_ip[host_ip] += 1
+        return self.task_current_by_host_ip[host_ip]

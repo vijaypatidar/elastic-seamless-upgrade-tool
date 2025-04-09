@@ -51,7 +51,7 @@ export const mapAnsibleToUpgradeStatus = (ansibleStatus: AnsibleTaskStatus): Nod
 		case AnsibleTaskStatus.STARTED:
 			return NodeStatus.UPGRADING;
 		case AnsibleTaskStatus.SUCCESS:
-			return NodeStatus.FAILED;
+			return NodeStatus.UPGRADED;
 		case AnsibleTaskStatus.FAILED:
 			return NodeStatus.FAILED;
 		default:

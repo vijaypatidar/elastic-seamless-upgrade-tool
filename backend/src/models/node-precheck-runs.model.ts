@@ -4,7 +4,8 @@ import { PrecheckStatus } from "../enums";
 export interface INodePrecheckRun {
 	runId: string;
 	nodeName: string;
-	precheck: string;
+	precheckId: string;
+	precheckRunId: string;
 	startedAt: Date;
 	endAt?: Date;
 	status: PrecheckStatus;
@@ -17,7 +18,8 @@ const NodePrecheckRunSchema: Schema<INodePrecheckRunDocument> = new Schema<INode
 	{
 		runId: { type: String, required: true, unique: true, index: true },
 		nodeName: { type: String, required: true },
-		precheck: { type: String, required: true },
+		precheckId: { type: String, required: true },
+		precheckRunId: { type: String, required: true },
 		startedAt: { type: Date, required: true },
 		endAt: { type: Date, required: false },
 		logs: { type: [String], required: true },
