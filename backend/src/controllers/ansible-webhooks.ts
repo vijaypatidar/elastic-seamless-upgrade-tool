@@ -2,7 +2,14 @@ import { Request, Response } from "express";
 import logger from "../logger/logger";
 import { updateNode } from "../services/elastic-node.service.";
 import { updateKibanaNode } from "../services/kibana-node.service";
-import { AnsibleRequestType, AnsibleTaskStatus, ClusterType, mapAnsibleToPrecheckStatus, NodeStatus } from "../enums";
+import {
+	AnsibleRequestType,
+	AnsibleTaskStatus,
+	ClusterType,
+	mapAnsibleToPrecheckStatus,
+	mapAnsibleToUpgradeStatus,
+	NodeStatus,
+} from "../enums";
 import { updateRunStatus } from "../services/precheck-runs.service";
 import { NotificationEventType, notificationService } from "../services/notification.service";
 
@@ -15,17 +22,16 @@ interface BaseAnsibleRequest {
 	hosts: HostInfo[];
 	clusterType: ClusterType;
 	logs?: string[];
+	status: AnsibleTaskStatus;
 }
 export interface AnsibleRequestPrecheck extends BaseAnsibleRequest {
 	type: AnsibleRequestType.PRECHECK;
 	precheckId: string;
 	clusterType: ClusterType;
 	precheck: string;
-	status: AnsibleTaskStatus;
 }
 export interface AnsibleRequestUpgrade extends BaseAnsibleRequest {
 	type: AnsibleRequestType.UPGRADE;
-	status: NodeStatus;
 	progress?: number;
 	taskName: string;
 }
@@ -43,13 +49,14 @@ export const handleAnsibleWebhook = async (req: Request, res: Response) => {
 		if (type === AnsibleRequestType.UPGRADE) {
 			const { progress, clusterType, hosts } = body;
 			// Handle upgrade request
+			const nodeStatus = mapAnsibleToUpgradeStatus(status);
 			if (clusterType === ClusterType.ELASTIC) {
 				hosts.forEach((host) => {
 					updateNode(
 						{ ip: host.ip },
 						{
 							progress: progress,
-							status: (status as NodeStatus) || NodeStatus.UPGRADING,
+							status: nodeStatus || NodeStatus.UPGRADING,
 						}
 					);
 				});
@@ -58,14 +65,17 @@ export const handleAnsibleWebhook = async (req: Request, res: Response) => {
 					{ name: nodeName },
 					{
 						progress: progress,
-						status: (status as NodeStatus) || NodeStatus.UPGRADING,
+						status: nodeStatus || NodeStatus.UPGRADING,
 					}
 				);
 			}
 		} else {
 			//fetch precheck data and update corresponding run
-			const { precheck } = req.body;
-			await updateRunStatus({ nodeName: nodeName, precheck: precheck }, mapAnsibleToPrecheckStatus(status));
+			const { playbookRunId, hosts } = req.body;
+			await updateRunStatus(
+				{ nodeName: nodeName, playbookRunId: playbookRunId },
+				mapAnsibleToPrecheckStatus(status)
+			);
 		}
 		notificationService.sendNotification({
 			type: NotificationEventType.UPGRADE_PROGRESS_CHANGE,

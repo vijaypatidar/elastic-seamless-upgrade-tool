@@ -1,6 +1,7 @@
 import fs from "fs";
 import { IElasticNode } from "../models/elastic-node.model";
 import { IKibanaNode } from "../models/kibana-node.model";
+const ENABLE_PASSWORD_AUTH_FOR_SSH = process.env.ENABLE_PASSWORD_AUTH_FOR_SSH === "true";
 
 class AnsibleInventoryService {
 	constructor() {}
@@ -37,8 +38,7 @@ class AnsibleInventoryService {
 				inventoryParts.push(`[elasticsearch:children]\n${nonEmptyGroups.join("\n")}`);
 			}
 
-			const devMode = true;
-			if (devMode) {
+			if (ENABLE_PASSWORD_AUTH_FOR_SSH) {
 				inventoryParts.push(
 					`[elasticsearch:vars]\nansible_ssh_user=root\nansible_ssh_pass=admin\nansible_ssh_common_args='-o StrictHostKeyChecking=no'\n`
 				);

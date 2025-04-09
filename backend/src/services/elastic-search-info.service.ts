@@ -1,4 +1,3 @@
-import { CatHealthHealthRecord } from "@elastic/elasticsearch/lib/api/types";
 import { ElasticClient } from "../clients/elastic.client";
 import ElasticSearchInfo, { IElasticSearchInfo, IElasticSearchInfoDocument } from "../models/elastic-search-info.model";
 import { getAllElasticNodes } from "./elastic-node.service.";

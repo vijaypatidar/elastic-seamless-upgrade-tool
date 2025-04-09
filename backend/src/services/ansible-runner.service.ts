@@ -7,6 +7,13 @@ if (ANSIBLE_PLAYBOOKS_PATH === undefined || ANSIBLE_PLAYBOOKS_PATH === "") {
 	throw new Error("ANSIBLE_PLAYBOOKS_PATH is not defined");
 }
 
+interface PlaybookVariables {
+	[key: string]: any;
+	playbook_run_id: string;
+	playbook_run_type: string;
+	cluster_type: string;
+}
+
 class AnsibleRunnerService {
 	constructor() {}
 
@@ -14,15 +21,12 @@ class AnsibleRunnerService {
 		playbookPath,
 		inventoryPath,
 		variables,
-		runId,
 	}: {
 		playbookPath: string;
 		inventoryPath: string;
-		variables: Record<string, any>;
-		runId?: string;
-	}): { runId: string; timestamp: Date } {
-		runId = runId || randomUUID();
-		const timestamp = new Date();
+		variables: PlaybookVariables;
+	}) {
+		const runId = variables.playbook_run_id;
 		const extraVars = [...Object.entries(variables), ...Object.entries({ runId: runId })]
 			.map(([key, value]) => `${key}=${value}`)
 			.join(" ");
@@ -50,11 +54,6 @@ class AnsibleRunnerService {
 		process.on("error", (err) => {
 			logger.error(`[runId: ${runId}] [playbook: ${playbookPath}] Failed to start playbook: ${err.message}`);
 		});
-
-		return {
-			runId: runId,
-			timestamp,
-		};
 	}
 }
 

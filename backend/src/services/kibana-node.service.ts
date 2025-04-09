@@ -6,6 +6,7 @@ import { IClusterInfo } from "../models/cluster-info.model";
 import { ansibleInventoryService } from "./ansible-inventory.service";
 import { ansibleRunnerService } from "./ansible-runner.service";
 import { NodeStatus } from "../enums";
+import { randomUUID } from "crypto";
 
 export interface KibanaConfig {
 	name: string;
@@ -165,14 +166,18 @@ export const triggerKibanaNodeUpgrade = async (nodeId: string, clusterId: string
 		if (!clusterInfo.targetVersion || !clusterInfo.elastic.username || !clusterInfo.elastic.password) {
 			return false;
 		}
+		const playbookRunId = randomUUID();
 
-		const {} = ansibleRunnerService.runPlaybook({
+		ansibleRunnerService.runPlaybook({
 			playbookPath: "ansible/main.yml",
 			inventoryPath: "ansible_inventory.ini",
 			variables: {
 				elk_version: clusterInfo.targetVersion,
 				username: clusterInfo.elastic.username,
 				password: clusterInfo.elastic.password,
+				cluster_type: "KIBANA",
+				playbook_run_id: playbookRunId,
+				playbook_run_type: "UPGRADE",
 			},
 		});
 		return new Promise((resolve, reject) => resolve(true));
