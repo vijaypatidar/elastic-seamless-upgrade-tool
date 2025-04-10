@@ -25,7 +25,7 @@ class CallbackModule(CallbackBase):
         self.playbook_run_type = playbook._entries[0]._variable_manager.extra_vars.get('playbook_run_type', "UPGRADE")
         self.cluster_type = playbook._entries[0]._variable_manager.extra_vars.get('cluster_type', None)
         self.task_count_per_host_group = self.get_total_task_count_per_host_group(playbook)
-        self._display.banner(f"🚀 Playbook started")
+        self._display.banner(f"Playbook started")
 
    
     def v2_playbook_on_play_start(self, play):
@@ -43,15 +43,9 @@ class CallbackModule(CallbackBase):
         play = task.get_play()
         host_info_list = self.get_host_info_from_play(play)
         self._display.display(f"⚙️  Starting Task {task.get_name()} for hosts {host_info_list}")
-        payload = {
-            'play_name': play.get_name(),
-            'hosts': host_info_list,
-            "source": "v2_playbook_on_task_start"
-        }
-        # self.post_progress(payload)
 
     def v2_runner_on_failed(self, result, ignore_errors=False):
-        self._display.display(f"❌ Failed: {result.task_name or result._task.name} Host: {result._host.get_name()}")
+        self._display.display(f"Failed: {result.task_name or result._task.name} Host: {result._host.get_name()}")
         host_info = self.get_host_info_from_result(result)
         payload = {
             'hosts': [host_info],
@@ -61,7 +55,7 @@ class CallbackModule(CallbackBase):
         self.post_progress(payload)
 
     def v2_runner_on_unreachable(self, result):
-        self._display.display(f"❌ Unreachable:  Host: {result._host.get_name()} Task: {result.task_name}")
+        self._display.display(f"Unreachable:  Host: {result._host.get_name()} Task: {result.task_name}")
         host_info = self.get_host_info_from_result(result)
         payload = {
             'hosts': [host_info],
@@ -71,7 +65,7 @@ class CallbackModule(CallbackBase):
         self.post_progress(payload)
 
     def v2_runner_on_ok(self, result):
-        self._display.display(f"✅ Completed:  Host: {result._host.get_name()} Task: {result._task.name}")
+        self._display.display(f"Completed:  Host: {result._host.get_name()} Task: {result._task.name}")
         host_info = self.get_host_info_from_result(result)
         payload = {
             'hosts': [host_info],
@@ -83,7 +77,7 @@ class CallbackModule(CallbackBase):
     def v2_runner_on_skipped(self, result):
         host_vars = result._host.get_vars()
         host_info = self.get_host_info_from_result(result)
-        self._display.display(f"⏭️  Skipped:  Host: {result._host.get_name()} Task: {result._task.name} Host IP: {host_vars.get('ansible_host', 'N/A')}")
+        self._display.display(f"Skipped:  Host: {result._host.get_name()} Task: {result._task.name} Host IP: {host_vars.get('ansible_host', 'N/A')}")
         payload = {
             'hosts': [host_info],
             'status': 'STARTED' if host_info['progress'] < 100 else 'SUCCESS',
@@ -94,7 +88,7 @@ class CallbackModule(CallbackBase):
 
 
     def v2_playbook_on_stats(self, stats):
-        self._display.display(f"✅ Playbook completed")
+        self._display.display(f"Playbook completed")
       
 
     def get_host_info_from_play(self, play):
