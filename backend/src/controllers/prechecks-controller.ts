@@ -42,10 +42,11 @@ export const getPrecheckRunByClusterIdHandler = async (req: Request, res: Respon
 		return acc;
 	}, {});
 	const response = ELASTIC_PRECHECK_CONFIG.individuals.map((precheck) => {
+		const precheckRuns = groupedPrecheckRuns[precheck.id];
 		return {
 			id: precheck.id,
 			name: precheck.name,
-			status: groupedPrecheckRuns[precheck.id].reduce((acc, run) => {
+			status: precheckRuns.reduce((acc, run) => {
 				if (run.status === "FAILED") {
 					return "FAILED";
 				}
@@ -57,7 +58,7 @@ export const getPrecheckRunByClusterIdHandler = async (req: Request, res: Respon
 				}
 				return acc;
 			}, "PENDING"),
-			nodes: groupedPrecheckRuns[precheck.id],
+			nodes: precheckRuns,
 		};
 	});
 	res.send(response);
