@@ -3,6 +3,7 @@ import { getAllElasticNodes, getElasticNodeById } from "../services/elastic-node
 import { getLatestRunsByPrecheck, runPrecheck } from "../services/precheck-runs.service";
 import { ELASTIC_PRECHECK_CONFIG } from "../config/precheck-config";
 import { IElasticNode } from "../models/elastic-node.model";
+import { PrecheckStatus } from "../enums";
 
 export const runAllPrecheksHandler = async (req: Request, res: Response) => {
 	const { clusterId } = req.params;
@@ -33,5 +34,31 @@ export const runPrechekByNodeIdHandler = async (req: Request, res: Response) => 
 export const getPrecheckRunByClusterIdHandler = async (req: Request, res: Response) => {
 	const { clusterId } = req.params;
 	const precheckRuns = await getLatestRunsByPrecheck(clusterId);
-	res.send(precheckRuns);
+	const groupedPrecheckRuns = precheckRuns.reduce<Record<string, typeof precheckRuns>>((acc, run) => {
+		if (!acc[run.precheckId]) {
+			acc[run.precheckId] = [];
+		}
+		acc[run.precheckId].push(run);
+		return acc;
+	}, {});
+	const response = ELASTIC_PRECHECK_CONFIG.individuals.map((precheck) => {
+		return {
+			id: precheck.id,
+			name: precheck.name,
+			status: groupedPrecheckRuns[precheck.id].reduce((acc, run) => {
+				if (run.status === "FAILED") {
+					return "FAILED";
+				}
+				if (run.status === "RUNNING") {
+					return "RUNNING";
+				}
+				if (acc === "PENDING" && run.status === "COMPLETED") {
+					return "COMPLETED";
+				}
+				return acc;
+			}, "PENDING"),
+			nodes: groupedPrecheckRuns[precheck.id],
+		};
+	});
+	res.send(response);
 };
