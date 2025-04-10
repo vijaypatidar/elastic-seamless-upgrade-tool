@@ -1,9 +1,12 @@
+import { randomUUID } from "crypto";
 import { getPrecheckById } from "../config/precheck-config";
 import { PrecheckStatus } from "../enums";
 import logger from "../logger/logger";
 import NodePrecheckRun, { INodePrecheckRun, INodePrecheckRunDocument } from "../models/node-precheck-runs.model";
+import { ansibleInventoryService } from "./ansible-inventory.service";
 import { ansibleRunnerService } from "./ansible-runner.service";
 import { getClusterInfoById } from "./cluster-info.service";
+import { IElasticNode } from "../models/elastic-node.model";
 
 export interface PrecheckRunJob {
 	precheckId: string;
@@ -106,4 +109,53 @@ export const updateRunStatus = async (
 		console.error(`Error updating status for node ${identifier}: ${error.message}`);
 		throw error;
 	}
+};
+
+export const runPrecheck = async (precheckIds: string[], nodes: IElasticNode[], clusterId: string) => {
+	const runId = randomUUID();
+	const clusterInfo = await getClusterInfoById(clusterId);
+	if (!clusterInfo.pathToKey) {
+		throw new Error("Cluster info not found or path to key is missing");
+	}
+
+	const startedAt = new Date();
+	const precheckRuns: INodePrecheckRun[] = nodes
+		.map((node) => ({
+			ip: node.ip,
+			nodeId: node.nodeId,
+			precheckRunId: runId,
+			startedAt: startedAt,
+			status: PrecheckStatus.PENDING,
+			logs: [],
+			clusterId: clusterId,
+		}))
+		.map((precheck) => {
+			return precheckIds.map((precheckId) => ({
+				...precheck,
+				precheckId,
+			}));
+		})
+		.flat();
+	await NodePrecheckRun.insertMany(precheckRuns);
+
+	Promise.all(
+		precheckRuns.map(async (precheckRun) => {
+			const inventoryFileName = `${precheckRun.precheckRunId}-${precheckRun.ip}.ini`;
+			await ansibleInventoryService.createInventoryForPrecheckPerNode({
+				node: { ip: precheckRun.ip, name: precheckRun.ip },
+				iniName: inventoryFileName,
+				pathToKey: clusterInfo.pathToKey!!,
+			});
+			const precheckRunJob: PrecheckRunJob = {
+				precheckId: precheckRun.precheckId,
+				clusterId: clusterId,
+				playbookRunId: precheckRun.precheckRunId,
+				inventoryPath: `ini/${inventoryFileName}`,
+			};
+			return precheckRunJob;
+		})
+	).then((precheckRuns) => {
+		addPrecheckRunJobs(precheckRuns);
+	});
+	return runId;
 };
