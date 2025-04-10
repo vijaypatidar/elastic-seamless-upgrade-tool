@@ -134,7 +134,7 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 		refetchInterval: (data) => {
 			const nodes = data.state.data
 			const isUpgrading = nodes?.some((node: any) => node.status === "UPGRADING")
-			return isUpgrading ? 1000 : 500
+			return isUpgrading ? 1000 : false
 		},
 		refetchIntervalInBackground: true,
 		staleTime: 0,
