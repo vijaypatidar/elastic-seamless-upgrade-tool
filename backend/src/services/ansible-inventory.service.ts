@@ -88,68 +88,6 @@ class AnsibleInventoryService {
 		}
 	};
 
-	public createInventoryForPrecheck = async ({
-		pathToKey,
-		nodes,
-		iniName,
-	}: {
-		nodes: IElasticNode[];
-		pathToKey: string;
-		iniName: string;
-	}) => {
-		try {
-			const roleGroups: Record<"elasticsearch_master" | "elasticsearch_data", string[]> = {
-				elasticsearch_data: [],
-				elasticsearch_master: [],
-			};
-
-			for (const node of nodes) {
-				if (node.isMaster === true) {
-					roleGroups.elasticsearch_master.push(`${node.name} ansible_host=${node.ip}`);
-					continue;
-				}
-				if (node.roles.includes("data")) {
-					roleGroups.elasticsearch_data.push(`${node.name} ansible_host=${node.ip}`);
-				}
-			}
-
-			const inventoryParts: string[] = [];
-
-			Object.entries(roleGroups).forEach(([group, hosts]) => {
-				if (hosts.length > 0) {
-					inventoryParts.push(`[${group}]\n${hosts.join("\n")}`);
-				}
-			});
-
-			const nonEmptyGroups = Object.entries(roleGroups)
-				.filter(([_, hosts]) => hosts.length > 0)
-				.map(([group]) => group);
-
-			if (nonEmptyGroups.length > 0) {
-				inventoryParts.push(`[elasticsearch:children]\n${nonEmptyGroups.join("\n")}`);
-			}
-
-			if (ENABLE_PASSWORD_AUTH_FOR_SSH) {
-				inventoryParts.push(
-					`[elasticsearch:vars]\nansible_ssh_user=root\nansible_ssh_pass=admin\nansible_ssh_common_args='-o StrictHostKeyChecking=no'\n`
-				);
-			} else {
-				inventoryParts.push(
-					`[elasticsearch:vars]\nansible_ssh_user=root\nansible_ssh_private_key_file=${pathToKey}\nansible_ssh_common_args='-o StrictHostKeyChecking=no'\n`
-				);
-			}
-
-			const inventoryContent = inventoryParts.join("\n\n");
-
-			await fs.promises.writeFile(`ansible/ini/${iniName}.ini`, inventoryContent, "utf8");
-
-			return inventoryContent;
-		} catch (error) {
-			console.error("Error creating Ansible inventory:", error);
-			throw error;
-		}
-	};
-
 	public createInventoryForPrecheckPerNode = async ({
 		pathToKey,
 		node,
