@@ -17,7 +17,7 @@ interface PlaybookVariables {
 class AnsibleRunnerService {
 	constructor() {}
 
-	runPlaybook({
+	async runPlaybook({
 		playbookPath,
 		inventoryPath,
 		variables,
@@ -35,24 +35,32 @@ class AnsibleRunnerService {
 		logger.info(
 			`[runId: ${runId}] [playbook: ${playbookPath}] [cwd:${ANSIBLE_PLAYBOOKS_PATH}]  Running playbook with args: ${args.join(" ")}`
 		);
-		const process = spawn("ansible-playbook", args, {
-			cwd: ANSIBLE_PLAYBOOKS_PATH,
-		});
+		return new Promise((resolve, reject) => {
+			const process = spawn("ansible-playbook", args, {
+				cwd: ANSIBLE_PLAYBOOKS_PATH,
+			});
 
-		process.stdout.on("data", (data) => {
-			logger.info(`[runId: ${runId}] [playbook: ${playbookPath}] [stdout]: ${data}`);
-		});
+			process.stdout.on("data", (data) => {
+				logger.info(`[runId: ${runId}] [playbook: ${playbookPath}] [stdout]: ${data}`);
+			});
 
-		process.stderr.on("data", (data) => {
-			logger.error(`[runId: ${runId}] [playbook: ${playbookPath}] [stderr]: ${data}`);
-		});
+			process.stderr.on("data", (data) => {
+				logger.error(`[runId: ${runId}] [playbook: ${playbookPath}] [stderr]: ${data}`);
+			});
 
-		process.on("close", (code) => {
-			logger.info(`[runId: ${runId}] [playbook: ${playbookPath}] Process exited with code: ${code}`);
-		});
+			process.on("close", (code) => {
+				logger.info(`[runId: ${runId}] [playbook: ${playbookPath}] Process exited with code: ${code}`);
+				if (code === 0) {
+					resolve(code);
+				} else {
+					reject(new Error(`Process exited with non-zero code: ${code}`));
+				}
+			});
 
-		process.on("error", (err) => {
-			logger.error(`[runId: ${runId}] [playbook: ${playbookPath}] Failed to start playbook: ${err.message}`);
+			process.on("error", (err) => {
+				logger.error(`[runId: ${runId}] [playbook: ${playbookPath}] Failed to start playbook: ${err.message}`);
+				reject(err);
+			});
 		});
 	}
 }

@@ -1,6 +1,63 @@
+import { getPrecheckById } from "../config/precheck-config";
 import { PrecheckStatus } from "../enums";
 import logger from "../logger/logger";
 import NodePrecheckRun, { INodePrecheckRun, INodePrecheckRunDocument } from "../models/node-precheck-runs.model";
+import { ansibleRunnerService } from "./ansible-runner.service";
+import { getClusterInfoById } from "./cluster-info.service";
+
+export interface PrecheckRunJob {
+	precheckId: string;
+	clusterId: string;
+	playbookRunId: string;
+	inventoryPath: string;
+}
+
+const PRECHECK_RUN_JOB_QUEUE: PrecheckRunJob[] = [];
+export const addPrecheckRunJobs = (jobs: PrecheckRunJob[]) => {
+	PRECHECK_RUN_JOB_QUEUE.push(...jobs);
+};
+export const getPrecheckRunJob = (): PrecheckRunJob | undefined => {
+	return PRECHECK_RUN_JOB_QUEUE.shift();
+};
+
+export const schedulePrecheckRun = async (): Promise<void> => {
+	while (true) {
+		const job = getPrecheckRunJob();
+		if (!job) {
+			logger.debug("No jobs in the queue. Waiting for new jobs...");
+			await new Promise((resolve) => setTimeout(resolve, 5000)); // Wait for 5 second before checking again
+			continue;
+		}
+
+		try {
+			logger.info(`Processing precheck run job: ${JSON.stringify(job)}`);
+			const { precheckId, clusterId, playbookRunId, inventoryPath } = job;
+			const { elastic, targetVersion } = await getClusterInfoById(clusterId);
+			const precheck = getPrecheckById(precheckId);
+
+			if (!precheck) {
+				logger.error(`Precheck with ID ${precheckId} not found.`);
+				continue;
+			}
+			await ansibleRunnerService.runPlaybook({
+				playbookPath: precheck.playbookPath,
+				inventoryPath: inventoryPath,
+				variables: {
+					elk_version: targetVersion,
+					username: elastic.username,
+					password: elastic.password,
+					cluster_type: "ELASTIC",
+					playbook_run_id: playbookRunId,
+					playbook_run_type: "PRECHECK",
+				},
+			});
+		} catch (error: any) {
+			logger.error(`Error processing job ${JSON.stringify(job)}: ${error.message}`);
+		}
+	}
+};
+
+schedulePrecheckRun();
 
 export const getRunByName = async (precheck: string, nodeName: string): Promise<INodePrecheckRun | null> => {
 	const nodePrecheckRun = await NodePrecheckRun.findOne({ nodeName, precheck }).sort({ createdAt: -1 });
@@ -8,28 +65,25 @@ export const getRunByName = async (precheck: string, nodeName: string): Promise<
 	return nodePrecheckRun;
 };
 
-export const getLatestRunsByPrecheck = async (precheck: string): Promise<INodePrecheckRunDocument[]> => {
-	try {
-		const results = await NodePrecheckRun.aggregate<INodePrecheckRunDocument>([
-			{ $match: { precheck: precheck } },
-			{ $sort: { createdAt: -1 } },
-			{
-				$group: {
-					_id: "$nodeName",
-					doc: { $first: "$$ROOT" },
-				},
+export const getLatestRunsByPrecheck = async (clusterId: string): Promise<INodePrecheckRunDocument[]> => {
+	return await NodePrecheckRun.aggregate([
+		{ $match: { clusterId } },
+		{
+			$sort: { startedAt: -1 },
+		},
+		{
+			$group: {
+				_id: { ip: "$ip", precheckId: "$precheckId" },
+				precheckRun: { $first: "$$ROOT" },
 			},
-			{
-				$replaceRoot: {
-					newRoot: "$doc",
-				},
-			},
-		]);
-		return results;
-	} catch (error: any) {
-		logger.error(`Error getting latest run: ${error.message}`);
-		throw new Error(`Error getting latest run: ${error.message}`);
-	}
+		},
+		{
+			$replaceRoot: { newRoot: "$precheckRun" },
+		},
+		{
+			$sort: { ip: 1, precheckId: 1 },
+		},
+	]);
 };
 
 export const updateRunStatus = async (
@@ -41,7 +95,7 @@ export const updateRunStatus = async (
 			newStatus === PrecheckStatus.COMPLETED || newStatus === PrecheckStatus.FAILED ? Date.now() : undefined;
 		const updatedNode = await NodePrecheckRun.findOneAndUpdate(
 			identifier,
-			{ status: newStatus },
+			{ status: newStatus, endAt: endAt },
 			{ new: true, runValidators: true }
 		);
 		if (!updatedNode) {

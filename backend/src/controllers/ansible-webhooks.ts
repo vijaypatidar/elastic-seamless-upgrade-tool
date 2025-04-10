@@ -83,9 +83,9 @@ export const handleAnsibleWebhook = async (req: Request, res: Response) => {
 			//fetch precheck data and update corresponding run
 			const { playbookRunId, hosts } = body;
 			hosts.forEach((host) => {
-				const { precheckId } = host;
+				const { precheckId, ip } = host;
 				updateRunStatus(
-					{ precheckRunId: playbookRunId, precheckId: precheckId },
+					{ precheckRunId: playbookRunId, precheckId: precheckId, ip: ip },
 					mapAnsibleToPrecheckStatus(status)
 				);
 			});
