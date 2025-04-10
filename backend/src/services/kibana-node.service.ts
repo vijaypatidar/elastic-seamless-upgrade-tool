@@ -3,8 +3,10 @@ import KibanaNode, { IKibanaNode, IKibanaNodeDocument } from "../models/kibana-n
 import logger from "../logger/logger";
 import { getClusterInfoById } from "./cluster-info.service";
 import { IClusterInfo } from "../models/cluster-info.model";
-import { ansibleExecutionManager } from "./ansible.service";
+import { ansibleInventoryService } from "./ansible-inventory.service";
+import { ansibleRunnerService } from "./ansible-runner.service";
 import { NodeStatus } from "../enums";
+import { randomUUID } from "crypto";
 
 export interface KibanaConfig {
 	name: string;
@@ -160,15 +162,23 @@ export const triggerKibanaNodeUpgrade = async (nodeId: string, clusterId: string
 		}
 		const clusterInfo = await getClusterInfoById(clusterId);
 		const pathToKey = clusterInfo.pathToKey ? clusterInfo.pathToKey : ""; //Should be stored in clusterInfo
-		await ansibleExecutionManager.createAnsibleInventoryForKibana([node], pathToKey);
+		await ansibleInventoryService.createAnsibleInventoryForKibana([node], pathToKey);
 		if (!clusterInfo.targetVersion || !clusterInfo.elastic.username || !clusterInfo.elastic.password) {
 			return false;
 		}
+		const playbookRunId = randomUUID();
 
-		ansibleExecutionManager.runPlaybook("ansible/main.yml", "ansible_inventory.ini", {
-			elk_version: clusterInfo.targetVersion,
-			username: clusterInfo.elastic.username,
-			password: clusterInfo.elastic.password,
+		ansibleRunnerService.runPlaybook({
+			playbookPath: "ansible/main.yml",
+			inventoryPath: "ansible_inventory.ini",
+			variables: {
+				elk_version: clusterInfo.targetVersion,
+				username: clusterInfo.elastic.username,
+				password: clusterInfo.elastic.password,
+				cluster_type: "KIBANA",
+				playbook_run_id: playbookRunId,
+				playbook_run_type: "UPGRADE",
+			},
 		});
 		return new Promise((resolve, reject) => resolve(true));
 	} catch (error) {

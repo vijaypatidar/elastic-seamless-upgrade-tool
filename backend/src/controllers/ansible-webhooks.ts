@@ -2,59 +2,99 @@ import { Request, Response } from "express";
 import logger from "../logger/logger";
 import { updateNode } from "../services/elastic-node.service.";
 import { updateKibanaNode } from "../services/kibana-node.service";
-import { AnsibleRequestType, AnsibleTaskStatus, ClusterType, mapAnsibleToPrecheckStatus, NodeStatus } from "../enums";
+import {
+	AnsibleRequestType,
+	AnsibleTaskStatus,
+	ClusterType,
+	mapAnsibleToPrecheckStatus,
+	mapAnsibleToUpgradeStatus,
+	NodeStatus,
+} from "../enums";
 import { updateRunStatus } from "../services/precheck-runs.service";
+import { NotificationEventType, notificationService } from "../services/notification.service";
+
+interface HostInfoUpgrade {
+	ip: string;
+	name: string;
+	progress: number;
+}
+interface HostInfoPrecheck {
+	ip: string;
+	name: string;
+	progress: number;
+	precheckId: string;
+}
 
 interface BaseAnsibleRequest {
-	nodeName: string;
+	clusterType: ClusterType;
 	logs?: string[];
+	status: AnsibleTaskStatus;
+	playbookRunId: string;
 }
 export interface AnsibleRequestPrecheck extends BaseAnsibleRequest {
 	type: AnsibleRequestType.PRECHECK;
+	precheckId: string;
 	clusterType: ClusterType;
+	hosts: HostInfoPrecheck[];
 	precheck: string;
-	status: AnsibleTaskStatus;
 }
 export interface AnsibleRequestUpgrade extends BaseAnsibleRequest {
 	type: AnsibleRequestType.UPGRADE;
-	status: NodeStatus;
 	progress?: number;
+	hosts: HostInfoUpgrade[];
 	taskName: string;
 }
 
 export type AnsibleRequest = AnsibleRequestPrecheck | AnsibleRequestUpgrade;
+
 export const handleAnsibleWebhook = async (req: Request, res: Response) => {
 	try {
-		const clusterId = req.params.clusterId;
-		const { type, nodeName, status }: AnsibleRequest = req.body;
+		const body: AnsibleRequest = req.body;
+		const { type, status, playbookRunId } = body;
+		logger.info(
+			`Received Ansible webhook [playbookRunId: ${playbookRunId}] of [type: ${type}]  [Hook Body: ${JSON.stringify(req.body, null, 2)}]`
+		);
 		if (type === AnsibleRequestType.UPGRADE) {
-			const { progress, taskName, clusterType } = req.body;
+			const { clusterType, hosts } = body;
 			// Handle upgrade request
+			const nodeStatus = mapAnsibleToUpgradeStatus(status);
 			if (clusterType === ClusterType.ELASTIC) {
-				updateNode(
-					{ name: nodeName },
-					{
-						progress: progress,
-						status: (status as NodeStatus) || NodeStatus.UPGRADING,
-					}
-				);
+				hosts.forEach((host) => {
+					updateNode(
+						{ ip: host.ip },
+						{
+							progress: host.progress,
+							status: nodeStatus || NodeStatus.UPGRADING,
+						}
+					);
+				});
 			} else {
-				updateKibanaNode(
-					{ name: nodeName },
-					{
-						progress: progress,
-						status: (status as NodeStatus) || NodeStatus.UPGRADING,
-					}
-				);
+				hosts.forEach((host) => {
+					updateKibanaNode(
+						{ ip: host.ip },
+						{
+							progress: host.progress,
+							status: nodeStatus || NodeStatus.UPGRADING,
+						}
+					);
+				});
 			}
 		} else {
-			const { precheck } = req.body;
-			await updateRunStatus({ nodeName: nodeName, precheck: precheck }, mapAnsibleToPrecheckStatus(status));
+			//fetch precheck data and update corresponding run
+			const { playbookRunId, hosts } = body;
+			hosts.forEach((host) => {
+				const { precheckId } = host;
+				updateRunStatus(
+					{ precheckRunId: playbookRunId, precheckId: precheckId },
+					mapAnsibleToPrecheckStatus(status)
+				);
+			});
 		}
-		logger.info(
-			`Received Ansible webhook for cluster ${clusterId}: ${nodeName} of type ${type}  ${JSON.stringify(req.body)}`
-		);
+		notificationService.sendNotification({
+			type: NotificationEventType.UPGRADE_PROGRESS_CHANGE,
+		});
 		res.sendStatus(200);
+		// Handle the webhook data here
 	} catch (error) {
 		logger.error(`Error handling Ansible request: ${error}`);
 		res.sendStatus(400);

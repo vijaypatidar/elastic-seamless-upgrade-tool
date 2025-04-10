@@ -1,16 +1,14 @@
-import dotenv from "dotenv";
+import "dotenv/config";
 import http from "http";
 import { Server, Socket } from "socket.io";
-import webhookRouter from "./routes/webhook.router"
-
-dotenv.config();
-
+import webhookRouter from "./routes/webhook.router";
 import express, { Request, Response } from "express";
 import cors from "cors";
 import elasticRouter from "./routes/elastic.router";
 
 import logger from "./logger/logger";
 import { connectDB } from "./databases/db";
+import { NotificationEvent, NotificationListner, notificationService } from "./services/notification.service";
 
 const app = express();
 const server = http.createServer(app);
@@ -38,11 +36,25 @@ export interface ElasticClusterHealthRequest extends ElasticClusterBaseRequest {
 
 //routes
 app.use("/api/elastic/clusters", elasticRouter);
-app.use("/webhook",webhookRouter);
+app.use("/webhook", webhookRouter);
+
+app.use((req, res) => {
+	logger.info(`The requested route '${req.originalUrl}' was not found.`);
+	res.status(404).json({
+		error: "Not Found",
+		path: req.originalUrl,
+		message: `The requested route '${req.originalUrl}' was not found.`,
+	});
+});
 
 const io = new Server(server);
+
 io.of("/notification").on("connection", (socket: Socket) => {
 	logger.debug("User connected to socker.io with socketId:", socket.id);
+	const notificationListner: NotificationListner = (event: NotificationEvent) => {
+		socket.send(JSON.stringify(event));
+	};
+	notificationService.addNotificationListner(notificationListner);
 
 	socket.on("message", (data) => {
 		logger.debug("Received message:", data);
@@ -50,6 +62,7 @@ io.of("/notification").on("connection", (socket: Socket) => {
 
 	socket.on("disconnect", () => {
 		logger.debug("User disconnected from socker.io with socketId:", socket.id);
+		notificationService.removeNotificationListner(notificationListner);
 	});
 });
 

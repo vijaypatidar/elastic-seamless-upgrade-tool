@@ -32,22 +32,18 @@ export const getLatestRunsByPrecheck = async (precheck: string): Promise<INodePr
 	}
 };
 
-export const updateRunStatus = async (identifier: Record<string, any>, newStatus: PrecheckStatus): Promise<void> => {
+export const updateRunStatus = async (
+	identifier: Partial<INodePrecheckRun>,
+	newStatus: PrecheckStatus
+): Promise<void> => {
 	try {
-		let updatedNode = null;
-		if (newStatus === PrecheckStatus.COMPLETED || newStatus === PrecheckStatus.FAILED) {
-			updatedNode = await NodePrecheckRun.findOneAndUpdate(
-				identifier,
-				{ status: newStatus, endAt: Date.now() },
-				{ new: true, runValidators: true }
-			);
-		} else {
-			updatedNode = await NodePrecheckRun.findOneAndUpdate(
-				identifier,
-				{ status: newStatus },
-				{ new: true, runValidators: true }
-			);
-		}
+		const endAt =
+			newStatus === PrecheckStatus.COMPLETED || newStatus === PrecheckStatus.FAILED ? Date.now() : undefined;
+		const updatedNode = await NodePrecheckRun.findOneAndUpdate(
+			identifier,
+			{ status: newStatus },
+			{ new: true, runValidators: true }
+		);
 		if (!updatedNode) {
 			logger.debug(`Node with identifier ${identifier} not found.`);
 			return;

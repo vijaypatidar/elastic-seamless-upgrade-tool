@@ -42,6 +42,19 @@ export const mapAnsibleToPrecheckStatus = (ansibleStatus: AnsibleTaskStatus): Pr
 		case AnsibleTaskStatus.FAILED:
 			return PrecheckStatus.FAILED;
 		default:
-			throw new Error(`Unknown Ansible status: ${ansibleStatus}`);
+			return PrecheckStatus.RUNNING;
+	}
+};
+
+export const mapAnsibleToUpgradeStatus = (ansibleStatus: AnsibleTaskStatus): NodeStatus => {
+	switch (ansibleStatus) {
+		case AnsibleTaskStatus.STARTED:
+			return NodeStatus.UPGRADING;
+		case AnsibleTaskStatus.SUCCESS:
+			return NodeStatus.UPGRADED;
+		case AnsibleTaskStatus.FAILED:
+			return NodeStatus.FAILED;
+		default:
+			return NodeStatus.UPGRADING;
 	}
 };
