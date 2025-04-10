@@ -1,0 +1,13 @@
+- hosts: elasticsearch
+  become: true
+  any_errors_fatal: true
+  gather_facts: no
+  vars:
+      precheck_id: elasticsearch_disk_precheck
+  tasks:
+      - name: Disk Utilization Check
+        fail: msg="Invalid ELK Version"
+        when: elk_version is undefined or not elk_version is match("\d+\.\d+\.\d+")
+      - name: Pause for 5 seconds
+        ansible.builtin.pause:
+            seconds: 5
