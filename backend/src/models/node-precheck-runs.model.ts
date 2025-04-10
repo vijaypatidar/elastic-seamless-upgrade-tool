@@ -2,11 +2,12 @@ import mongoose, { Schema, Document } from "mongoose";
 import { PrecheckStatus } from "../enums";
 
 export interface INodePrecheckRun {
-	runId: string;
-	nodeName: string;
+	ip: string;
+	nodeId: string;
 	precheckId: string;
 	precheckRunId: string;
 	startedAt: Date;
+	clusterId: string;
 	endAt?: Date;
 	status: PrecheckStatus;
 	logs: string[];
@@ -16,13 +17,14 @@ export interface INodePrecheckRunDocument extends INodePrecheckRun, Document {}
 
 const NodePrecheckRunSchema: Schema<INodePrecheckRunDocument> = new Schema<INodePrecheckRunDocument>(
 	{
-		runId: { type: String, required: true, unique: true, index: true },
-		nodeName: { type: String, required: true },
+		ip: { type: String, required: true },
 		precheckId: { type: String, required: true },
 		precheckRunId: { type: String, required: true },
+		clusterId: { type: String, required: true },
 		startedAt: { type: Date, required: true },
 		endAt: { type: Date, required: false },
 		logs: { type: [String], required: true },
+		nodeId: { type: String, required: false },
 		status: {
 			type: String,
 			required: true,

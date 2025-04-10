@@ -19,6 +19,11 @@ import {
 	handleKibanaUpgrades,
 	handleUpgradeAll,
 } from "../controllers/elastic-controller";
+import {
+	runAllPrecheksHandler,
+	runPrechekByNodeIdHandler,
+	getPrecheckRunByClusterIdHandler,
+} from "../controllers/prechecks-controller";
 
 const router = Router();
 
@@ -59,6 +64,12 @@ router.get("/:clusterId/upgrade_info", getUpgradeDetails);
 router.get("/:clusterId/deprecations/kibana", getKibanaDeprecationsInfo);
 
 router.post("/:clusterId/verify-ssh", verfiySshKey);
+
+router.post("/:clusterId/prechecks", runAllPrecheksHandler);
+
+router.get("/:clusterId/prechecks", getPrecheckRunByClusterIdHandler);
+
+router.post("/:clusterId/prechecks/:precheckId/nodes/:nodeId", runPrechekByNodeIdHandler);
 
 router.get("/verify", verfiyCluster);
 

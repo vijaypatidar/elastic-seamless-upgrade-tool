@@ -76,18 +76,6 @@ const columns: TUpgradeColumn = [
 ]
 
 function UpgradeCluster({ clusterType }: TUpgradeCluster) {
-	const getNodeStatus = async (nodeId: string) => {
-		try {
-			const response = await axiosJSON.get(`/api/elastic/clusters/nodes/${nodeId}`)
-
-			// Assuming the API returns a status or progress field
-			const { status, progress } = response.data
-			return { status, progress }
-		} catch (error) {
-			console.error("Status check error:", error)
-			throw error
-		}
-	}
 
 	const getNodesInfo = async () => {
 		const clusterId = LocalStorageHandler.getItem(StorageManager.CLUSTER_ID) || "cluster-id"
@@ -121,21 +109,21 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 			.post(`/api/elastic/clusters/${clusterId}/nodes/upgrade`, {
 				nodes: [nodeId],
 			})
-			.then((res) => {
+			.then(() => {
 				refetch()
 				toast.success("Upgrade started")
 			})
-			.catch((error) => {
+			.catch(() => {
 				toast.error("Failed to start upgrade")
 			})
 	}
 	const performUpgradeAll = async () => {
 		const clusterId = LocalStorageHandler.getItem(StorageManager.CLUSTER_ID) || "cluster-id"
-		await axiosJSON.post(`/api/elastic/clusters/${clusterId}/upgrade-all`).then((res) => {
+		await axiosJSON.post(`/api/elastic/clusters/${clusterId}/upgrade-all`).then(() => {
 			refetch()
 			toast.success("Upgrade started")
 		}
-		).catch((error) => {	
+		).catch(() => {	
 			toast.error("Failed to start upgrade")
 		}
 		)

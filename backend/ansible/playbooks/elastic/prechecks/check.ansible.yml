@@ -1,0 +1,6 @@
+- name: CPU check
+  import_playbook: cpu.ansible.yml
+- name: Disk storage check
+  import_playbook: disk.ansible.yml
+- name: Pre-download
+  import_playbook: download-check.ansible.yml
