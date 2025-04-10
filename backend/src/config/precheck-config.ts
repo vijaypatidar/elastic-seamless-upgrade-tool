@@ -1,4 +1,4 @@
-import { loadYaml, saveYaml } from "../utils/yaml-utils";
+import { loadYaml } from "../utils/yaml-utils";
 
 export interface PlaybookConfig {
 	id: string;
