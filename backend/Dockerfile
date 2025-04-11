@@ -31,6 +31,7 @@ RUN apt-get update && \
 # Verify installations
 RUN node --version && yarn --version && ansible --version
 
+ENV ANSIBLE_PLAYBOOKS_PATH=/app/ansible
 # Set the working directory in the container
 WORKDIR /app
 
@@ -43,6 +44,9 @@ COPY --from=builder /app/package*.json ./
 
 #Copy ansible files
 COPY --from=builder /app/ansible/ ./ansible/
+
+# Copy prechecks.yaml file
+COPY --from=builder /app/prechecks.yaml ./prechecks.yaml
 
 # Install only production dependencies
 RUN yarn install --production
