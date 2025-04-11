@@ -37,7 +37,7 @@ export interface ElasticClusterHealthRequest extends ElasticClusterBaseRequest {
 
 //routes
 app.use("/api/elastic/clusters", elasticRouter);
-app.use("/api", settingsRouter);
+app.use("/api/settings", settingsRouter);
 app.use("/webhook", webhookRouter);
 
 app.use((req, res) => {
