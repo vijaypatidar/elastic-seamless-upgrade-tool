@@ -19,6 +19,8 @@ RUN yarn build
 # Stage 2: Production Stage
 FROM node:18-bullseye
 
+ENV ANSIBLE_PLAYBOOKS_PATH="/app/ansible"
+ENV MONGO_URI=mongodb://admin:admin123@mongodb:27017
 # Install dependencies and Ansible
 RUN apt-get update && \
     apt-get install -y python3 python3-pip && \
@@ -31,7 +33,6 @@ RUN apt-get update && \
 # Verify installations
 RUN node --version && yarn --version && ansible --version
 
-ENV ANSIBLE_PLAYBOOKS_PATH=/app/ansible
 # Set the working directory in the container
 WORKDIR /app
 
