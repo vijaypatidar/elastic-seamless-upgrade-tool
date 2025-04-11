@@ -79,20 +79,25 @@ export const handleAnsibleWebhook = async (req: Request, res: Response) => {
 					);
 				});
 			}
+			notificationService.sendNotification({
+				type: NotificationEventType.UPGRADE_PROGRESS_CHANGE,
+			});
 		} else {
 			//fetch precheck data and update corresponding run
 			const { playbookRunId, hosts } = body;
-			hosts.forEach((host) => {
-				const { precheckId, ip } = host;
-				updateRunStatus(
-					{ precheckRunId: playbookRunId, precheckId: precheckId, ip: ip },
-					mapAnsibleToPrecheckStatus(status)
-				);
+			await Promise.all(
+				hosts.map(async (host) => {
+					const { precheckId, ip } = host;
+					await updateRunStatus(
+						{ precheckRunId: playbookRunId, precheckId: precheckId, ip: ip },
+						mapAnsibleToPrecheckStatus(status)
+					);
+				})
+			);
+			notificationService.sendNotification({
+				type: NotificationEventType.PRECHECK_PROGRESS_CHANGE,
 			});
 		}
-		notificationService.sendNotification({
-			type: NotificationEventType.UPGRADE_PROGRESS_CHANGE,
-		});
 		res.sendStatus(200);
 		// Handle the webhook data here
 	} catch (error) {
