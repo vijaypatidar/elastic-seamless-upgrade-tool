@@ -2,9 +2,10 @@ import "dotenv/config";
 import http from "http";
 import { Server, Socket } from "socket.io";
 import webhookRouter from "./routes/webhook.router";
+import elasticRouter from "./routes/elastic.router";
+import settingsRouter from "./routes/settings.router";
 import express, { Request, Response } from "express";
 import cors from "cors";
-import elasticRouter from "./routes/elastic.router";
 
 import logger from "./logger/logger";
 import { connectDB } from "./databases/db";
@@ -36,6 +37,7 @@ export interface ElasticClusterHealthRequest extends ElasticClusterBaseRequest {
 
 //routes
 app.use("/api/elastic/clusters", elasticRouter);
+app.use("/api/settings", settingsRouter);
 app.use("/webhook", webhookRouter);
 
 app.use((req, res) => {
