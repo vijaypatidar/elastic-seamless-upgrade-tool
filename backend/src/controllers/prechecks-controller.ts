@@ -2,7 +2,6 @@ import { Request, Response } from "express";
 import { getAllElasticNodes, getElasticNodeById } from "../services/elastic-node.service.";
 import { getLatestRunsByPrecheck, runPrecheck } from "../services/precheck-runs.service";
 import { ELASTIC_PRECHECK_CONFIG } from "../config/precheck-config";
-import { IElasticNode } from "../models/elastic-node.model";
 import { PrecheckStatus } from "../enums";
 
 export const runAllPrecheksHandler = async (req: Request, res: Response) => {
@@ -34,6 +33,10 @@ export const runPrechekByNodeIdHandler = async (req: Request, res: Response) => 
 export const getPrecheckRunByClusterIdHandler = async (req: Request, res: Response) => {
 	const { clusterId } = req.params;
 	const precheckRuns = await getLatestRunsByPrecheck(clusterId);
+	if (!precheckRuns || precheckRuns.length === 0) {
+		res.status(404).send({ message: "No precheck runs found" });
+		return;
+	}
 	const groupedPrecheckRuns = precheckRuns.reduce<Record<string, typeof precheckRuns>>((acc, run) => {
 		if (!acc[run.precheckId]) {
 			acc[run.precheckId] = [];
@@ -42,22 +45,27 @@ export const getPrecheckRunByClusterIdHandler = async (req: Request, res: Respon
 		return acc;
 	}, {});
 	const response = ELASTIC_PRECHECK_CONFIG.individuals.map((precheck) => {
+		const precheckRuns = groupedPrecheckRuns[precheck.id];
+		const status = (() => {
+			let hasCompleted = false;
+			let hasPending = false;
+
+			for (const run of precheckRuns) {
+				if (run.status === PrecheckStatus.FAILED) return PrecheckStatus.FAILED;
+				if (run.status === PrecheckStatus.RUNNING) return PrecheckStatus.RUNNING;
+				if (run.status === PrecheckStatus.PENDING) hasPending = true;
+				if (run.status === PrecheckStatus.COMPLETED) hasCompleted = true;
+			}
+
+			if (hasPending && hasCompleted) return PrecheckStatus.RUNNING;
+			if (hasPending) return PrecheckStatus.PENDING;
+			return PrecheckStatus.COMPLETED;
+		})();
 		return {
 			id: precheck.id,
 			name: precheck.name,
-			status: groupedPrecheckRuns[precheck.id].reduce((acc, run) => {
-				if (run.status === "FAILED") {
-					return "FAILED";
-				}
-				if (run.status === "RUNNING") {
-					return "RUNNING";
-				}
-				if (acc === "PENDING" && run.status === "COMPLETED") {
-					return "COMPLETED";
-				}
-				return acc;
-			}, "PENDING"),
-			nodes: groupedPrecheckRuns[precheck.id],
+			status: status,
+			nodes: precheckRuns,
 		};
 	});
 	res.send(response);

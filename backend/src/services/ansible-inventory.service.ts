@@ -112,14 +112,6 @@ class AnsibleInventoryService {
 				inventoryParts.push(`[${group}]\n${hosts.join("\n")}`);
 			});
 
-			const nonEmptyGroups = Object.entries(roleGroups)
-				.filter(([_, hosts]) => hosts.length > 0)
-				.map(([group]) => group);
-
-			if (nonEmptyGroups.length > 0) {
-				inventoryParts.push(`[elasticsearch:children]\n${nonEmptyGroups.join("\n")}`);
-			}
-
 			if (ENABLE_PASSWORD_AUTH_FOR_SSH) {
 				inventoryParts.push(
 					`[elasticsearch:vars]\nansible_ssh_user=root\nansible_ssh_pass=admin\nansible_ssh_common_args='-o StrictHostKeyChecking=no'\n`
