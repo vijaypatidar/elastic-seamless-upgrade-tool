@@ -4,4 +4,5 @@ type TSelectionTile = {
 	label: string
 	isSelected: boolean
 	onSelect: (value: string | number) => void
+	comingSoon:  boolean
 }
