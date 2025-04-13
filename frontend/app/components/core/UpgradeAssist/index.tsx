@@ -1,31 +1,27 @@
 import { Skeleton, Tooltip } from "@heroui/react"
 import { Box, Typography } from "@mui/material"
-import type { ActionCreatorWithPayload } from "@reduxjs/toolkit"
 import { useQuery } from "@tanstack/react-query"
 import { Camera, Flash, InfoCircle } from "iconsax-react"
 import moment from "moment"
 import { useState } from "react"
-import { useDispatch } from "react-redux"
 import { Link } from "react-router"
 import { toast } from "sonner"
 import axiosJSON from "~/apis/http"
 import { OutlinedBorderButton } from "~/components/utilities/Buttons"
-import StorageManager from "~/constants/StorageManager"
+import StringManager from "~/constants/StringManager"
 import useCountdownTimer from "~/lib/hooks/useTimer"
-import LocalStorageHandler from "~/lib/LocalHanlder"
 import { getStepIndicatorData } from "~/lib/Utils"
-import {
-	setDeprecationChangesAllowed,
-	setElasticNodeUpgradeAllowed,
-	setKibanaNodeUpgradeAllowed,
-} from "~/store/reducers/safeRoutes"
+import { useLocalStore } from "~/store/common"
+import useSafeRouteStore from "~/store/safeRoutes"
 import DeprectedSettings from "./widgets/DeprectedSettings"
 import StepBox from "./widgets/StepBox"
-import StringManager from "~/constants/StringManager"
 
 function UpgradeAssistant() {
-	const dispatch = useDispatch()
+	const clusterId = useLocalStore((state: any) => state.clusterId)
 	const { remainingTime, startTimer, resetTimer } = useCountdownTimer()
+	const setDeprecationChangesAllowed = useSafeRouteStore((state: any) => state.setDeprecationChangesAllowed)
+	const setElasticNodeUpgradeAllowed = useSafeRouteStore((state: any) => state.setElasticNodeUpgradeAllowed)
+	const setKibanaNodeUpgradeAllowed = useSafeRouteStore((state: any) => state.setKibanaNodeUpgradeAllowed)
 
 	// Format remaining time in HH:MM:SS
 	const formatTime = (milliseconds: number | null): string => {
@@ -48,22 +44,21 @@ function UpgradeAssistant() {
 
 	const handleRoutingStates = (
 		status: string,
-		updateState: ActionCreatorWithPayload<boolean>,
+		updateState: (value: boolean) => void,
 		stateToCheck: string[] = ["PENDING", "INPROGRESS"]
 	) => {
 		if (stateToCheck.some((state) => state === status)) {
-			dispatch(updateState(true))
+			updateState(true)
 		}
 	}
 
 	const getUpgradeInfo = async () => {
-		const clusterId = LocalStorageHandler.getItem(StorageManager.CLUSTER_ID) || "cluster-id"
 		let response: any = []
 		await axiosJSON
 			.get(`/api/elastic/clusters/${clusterId}/upgrade_info`)
 			.then((res) => {
 				response = res.data
-				if(response?.elastic?.snapshot?.snapshot){
+				if (response?.elastic?.snapshot?.snapshot) {
 					startTimer(moment.utc(response?.elastic?.snapshot?.snapshot.createdAt).local().valueOf())
 				}
 				const { elastic, kibana } = response ?? {}
@@ -176,8 +171,8 @@ function UpgradeAssistant() {
 					</Box>
 					{!(stepStatus["01"] === "COMPLETED") ? (
 						data?.elastic?.snapshot?.snapshot ? (
-							<Box className="flex flex-row gap-[6px] items-center">
-								<Tooltip
+							<Box className="flex flex-col gap-[6px] items-end">
+								{/* <Tooltip
 									content={"You have to take snapshot again after the time ends."}
 									closeDelay={0}
 									color="foreground"
@@ -186,9 +181,25 @@ function UpgradeAssistant() {
 									placement="left"
 								>
 									<InfoCircle size="14px" color="#6E6E6E" />
-								</Tooltip>
-								<Typography fontSize="14px" fontWeight="400" lineHeight="18px" color="#6E6E6E" minWidth="76px">
+								</Tooltip> */}
+								<Typography
+									fontSize="14px"
+									fontWeight="400"
+									lineHeight="18px"
+									color="#F3D07C"
+									minWidth="76px"
+								>
 									{formatTime(remainingTime)}
+								</Typography>
+								<Typography
+									color="#6E6E6E"
+									textAlign="right"
+									fontSize="13px"
+									fontWeight="400"
+									lineHeight="20px"
+									letterSpacing="0.26px"
+								>
+									Take a new snapshot once time's up.
 								</Typography>
 							</Box>
 						) : (

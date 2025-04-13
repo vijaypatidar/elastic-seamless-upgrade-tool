@@ -13,9 +13,9 @@ export default [
 				route("kibana/deprecation-logs", "routes/kibanaDeprecationLogs.tsx"),
 			]),
 			layout("safeRoutes/elasticUpgrade.tsx", [route("elastic/upgrade", "routes/clusterUpgrade.tsx")]),
-			// layout("safeRoutes/kibanaUpgrade.tsx", [
+			layout("safeRoutes/kibanaUpgrade.tsx", [
 				route("kibana/upgrade", "routes/kibanaUpgrade.tsx")
-			// ]),
+			]),
 		]),
 	]),
 	route("*", "routes/status/page404.tsx"),

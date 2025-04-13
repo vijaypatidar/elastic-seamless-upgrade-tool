@@ -3,19 +3,17 @@ import { useMutation, useQuery } from "@tanstack/react-query"
 import { ArrowDown2 } from "iconsax-react"
 import _ from "lodash"
 import PopupState, { bindMenu, bindTrigger } from "material-ui-popup-state"
+import { useEffect } from "react"
+import { useNavigate } from "react-router"
 import { toast } from "sonner"
 import axiosJSON from "~/apis/http"
 import { OutlinedBorderButton } from "~/components/utilities/Buttons"
 import { OneLineSkeleton } from "~/components/utilities/Skeletons"
-import StorageManager from "~/constants/StorageManager"
-import LocalStorageHandler from "~/lib/LocalHanlder"
-import DetailBox from "./widgets/DetailBox"
-import { connect, useDispatch } from "react-redux"
-import { setUpgradeAssistAllowed } from "~/store/reducers/safeRoutes"
-import { useNavigate } from "react-router"
-import { useEffect } from "react"
-import { refresh } from "~/store/reducers/refresh"
 import StringManager from "~/constants/StringManager"
+import { useLocalStore } from "~/store/common"
+import useRefreshStore from "~/store/refresh"
+import useSafeRouteStore from "~/store/safeRoutes"
+import DetailBox from "./widgets/DetailBox"
 
 const CLUSTER_STATUS_COLOR: { [key: string]: string } = {
 	yellow: "#E0B517",
@@ -50,17 +48,19 @@ const STYLES = {
 	},
 }
 
-function ClusterInfo({ refresh }: { refresh: boolean }) {
+function ClusterInfo() {
 	const navigate = useNavigate()
-	const dispatch = useDispatch()
+	const clusterId = useLocalStore((state: any) => state.clusterId)
+	const infraType = useLocalStore((state: any) => state.infraType)
+	const setUpgradeAssistAllowed  = useSafeRouteStore((state: any) => state.setUpgradeAssistAllowed)
+	const refresh  = useRefreshStore((state: any) => state.refreshToggle)
 
 	const getClusterInfo = async () => {
-		const clusterId = LocalStorageHandler.getItem(StorageManager.CLUSTER_ID) || "cluster-id"
 		let response: any = []
 		await axiosJSON
 			.get(`/api/elastic/clusters/${clusterId}/info`)
 			.then((res) => {
-				dispatch(setUpgradeAssistAllowed(res.data?.targetVersion ? true : false))
+				setUpgradeAssistAllowed(res.data?.targetVersion ? true : false)
 				response = res.data
 			})
 			.catch((err) => {
@@ -78,11 +78,10 @@ function ClusterInfo({ refresh }: { refresh: boolean }) {
 	})
 
 	const handleVersionSelect = async (ver: string) => {
-		const clusterId = LocalStorageHandler.getItem(StorageManager.CLUSTER_ID) || "cluster-id"
 		await axiosJSON
 			.post(`/api/elastic/clusters/${clusterId}/add-version`, { version: ver })
 			.then((res) => {
-				dispatch(setUpgradeAssistAllowed(res.data?.targetVersion ? true : false))
+				setUpgradeAssistAllowed(res.data?.targetVersion ? true : false)
 				navigate("/upgrade-assistant")
 			})
 			.catch((err) => toast.error(err?.response?.data?.err ?? StringManager.GENERIC_ERROR))
@@ -181,13 +180,7 @@ function ClusterInfo({ refresh }: { refresh: boolean }) {
 							<DetailBox
 								title="Infrastructure type"
 								description={
-									error
-										? "--"
-										: _.capitalize(
-												data?.infrastructureType ??
-													LocalStorageHandler.getItem(StorageManager.INFRA_TYPE) ??
-													"placeholder"
-										  )
+									error ? "--" : _.capitalize(data?.infrastructureType ?? infraType ?? "placeholder")
 								}
 								isLoading={isLoading || isRefetching}
 							/>
@@ -274,8 +267,4 @@ function ClusterInfo({ refresh }: { refresh: boolean }) {
 	)
 }
 
-const mapStateToProps = (state: any) => ({
-	refresh: state.refresh.refresh,
-})
-
-export default connect(mapStateToProps)(ClusterInfo)
+export default ClusterInfo

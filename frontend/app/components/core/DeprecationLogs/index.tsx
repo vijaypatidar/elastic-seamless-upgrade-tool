@@ -16,9 +16,8 @@ import { useCallback, useState, type Key } from "react"
 import { FiAlertTriangle } from "react-icons/fi"
 import { toast } from "sonner"
 import axiosJSON from "~/apis/http"
-import StorageManager from "~/constants/StorageManager"
 import StringManager from "~/constants/StringManager"
-import LocalStorageHandler from "~/lib/LocalHanlder"
+import { useLocalStore } from "~/store/common"
 
 const rows = [
 	{
@@ -102,10 +101,10 @@ const columns: TDeprecationColumn = [
 ]
 
 function DeprecationLogs({ clusterType }: { clusterType: "ELASTIC" | "KIBANA" }) {
+	const clusterId = useLocalStore((state: any) => state.clusterId)
 	const [search, setSearch] = useState<string>("")
 
 	const getLogs = async () => {
-		const clusterId = LocalStorageHandler.getItem(StorageManager.CLUSTER_ID) || "cluster-id"
 		let response: any = []
 		await axiosJSON
 			.get(

@@ -105,3 +105,30 @@ export const getStepIndicatorData = (
 			}
 	}
 }
+
+
+export const localStorageConfig = {
+	getItem: (name: string) => {
+		const item = localStorage.getItem(name)
+		return item ? JSON.parse(item) : null
+	},
+	setItem: (name: string, value: any) => {
+		localStorage.setItem(name, JSON.stringify(value))
+	},
+	removeItem: (name: string) => {
+		localStorage.removeItem(name)
+	},
+}
+
+export const sessionStorageConfig = {
+	getItem: (name: string) => {
+		const item = sessionStorage.getItem(name)
+		return item ? JSON.parse(item) : null
+	},
+	setItem: (name: string, value: any) => {
+		sessionStorage.setItem(name, JSON.stringify(value))
+	},
+	removeItem: (name: string) => {
+		sessionStorage.removeItem(name)
+	},
+}

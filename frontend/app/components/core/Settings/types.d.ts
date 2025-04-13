@@ -1,0 +1,3 @@
+type TSettingValues = {
+    webhookURL: string
+}

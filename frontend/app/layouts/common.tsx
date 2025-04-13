@@ -1,15 +1,18 @@
-import { useDisclosure } from "@heroui/react"
+import { Button, Divider, useDisclosure } from "@heroui/react"
 import { Box } from "@mui/material"
-import { Edit2, Magicpen } from "iconsax-react"
+import { Edit, Edit2, Magicpen, Setting2 } from "iconsax-react"
 import { Outlet } from "react-router"
 import EditCluster from "~/components/core/EditCluster"
+import Settings from "~/components/core/Settings"
 import UpcomingFeature from "~/components/core/UpcomingFeature"
 import { OutlinedBorderButton } from "~/components/utilities/Buttons"
 import AssetsManager from "~/constants/AssetsManager"
 
 function Common() {
 	const { isOpen, onOpen, onOpenChange } = useDisclosure()
+	const { isOpen: isSettingsOpen, onOpen: onSettingsOpen, onOpenChange: onSettingsOpenChange } = useDisclosure()
 	const { isOpen: isEditOpen, onOpen: onEditOpen, onOpenChange: onEditOpenChange } = useDisclosure()
+
 	// const [headerIndexChange, setHeaderIndexChange] = useState<boolean>(false)
 
 	// useMemo(() => {
@@ -30,8 +33,39 @@ function Common() {
 				zIndex="99999"
 			>
 				<img src={AssetsManager.LOGO_PLUS_NAMED} width="161.6px" height="36px" />
-				<Box className="flex flex-row gap-[6px] items-center">
-					<OutlinedBorderButton
+				<Box className="flex flex-row max-h-11 items-center border border-solid border-[#3A3544] rounded-lg overflow-hidden">
+					<Button
+						isIconOnly
+						aria-label="Settings"
+						variant="light"
+						radius="none"
+						className="min-w-11 min-h-11"
+						onPress={onEditOpen}
+					>
+						<Edit color="currentColor" size="20px" />
+					</Button>
+					<Divider orientation="vertical" className="bg-[#3A3544]" />
+					<Button
+						isIconOnly
+						aria-label="Settings"
+						variant="light"
+						radius="none"
+						className="min-w-11 min-h-11"
+						onPress={onSettingsOpen}
+					>
+						<Setting2 color="currentColor" size="20px" />
+					</Button>
+					<Divider orientation="vertical" className="bg-[#3A3544]" />
+					<Button
+						aria-label="Settings"
+						variant="light"
+						radius="none"
+						className="min-w-11 min-h-11"
+						onPress={onOpen}
+					>
+						<Magicpen variant="Bold" color="currentColor" size="20px" /> Upcoming features
+					</Button>
+					{/* <OutlinedBorderButton
 						icon={Edit2}
 						filledIcon={Edit2}
 						iconProps={{ variant: "Bold" }}
@@ -42,8 +76,9 @@ function Common() {
 						onClick={onEditOpen}
 					>
 						Edit cluster
-					</OutlinedBorderButton>
-					<OutlinedBorderButton
+					</OutlinedBorderButton> */}
+
+					{/* <OutlinedBorderButton
 						icon={Magicpen}
 						filledIcon={Magicpen}
 						iconProps={{ variant: "Bold" }}
@@ -54,11 +89,12 @@ function Common() {
 						onClick={onOpen}
 					>
 						Upcoming features
-					</OutlinedBorderButton>
+					</OutlinedBorderButton> */}
 				</Box>
 			</Box>
 			<EditCluster isOpen={isEditOpen} onOpenChange={onEditOpenChange} />
 			<UpcomingFeature isOpen={isOpen} onOpenChange={onOpenChange} />
+			<Settings isOpen={isSettingsOpen} onOpenChange={onSettingsOpenChange} />
 			<Outlet />
 		</Box>
 	)

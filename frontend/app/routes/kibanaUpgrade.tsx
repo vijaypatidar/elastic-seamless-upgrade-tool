@@ -5,7 +5,7 @@ import UpgradeKibana from "~/components/core/UpgradeKibana"
 import type { Route } from "../+types/root"
 
 export function meta({}: Route.MetaArgs) {
-	return [{ title: "Deprecation Logs" }, { name: "description", content: "Welcome to Hyperflex" }]
+	return [{ title: "Kibana Upgrade" }, { name: "description", content: "Welcome to Hyperflex" }]
 }
 
 function KibanaUpgrades() {

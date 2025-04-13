@@ -5,7 +5,7 @@ import DeprecationLogs from "~/components/core/DeprecationLogs"
 import type { Route } from "../+types/root"
 
 export function meta({}: Route.MetaArgs) {
-	return [{ title: "Deprecation Logs" }, { name: "description", content: "Welcome to Hyperflex" }]
+	return [{ title: "Kibana Deprecation Logs" }, { name: "description", content: "Welcome to Hyperflex" }]
 }
 
 function KibanaDeprecationLogs() {

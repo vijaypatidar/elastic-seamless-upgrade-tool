@@ -1,8 +1,8 @@
-import { useSelector } from "react-redux"
 import { Navigate, Outlet } from "react-router"
+import useSafeRouteStore from "~/store/safeRoutes"
 
 function DeprecationSafeRoute() {
-	const canResolveDeprecation = useSelector<any, boolean>((state) => state.safeRoutes.deprecationChangesAllowed)
+	const canResolveDeprecation = useSafeRouteStore((state: any) => state.deprecationChangesAllowed)
 
 	return canResolveDeprecation ? <Outlet /> : <Navigate to="/upgrade-assistant" />
 }

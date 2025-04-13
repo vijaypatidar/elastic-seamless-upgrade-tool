@@ -2,14 +2,12 @@ import { HeroUIProvider } from "@heroui/react"
 import { Box, ThemeProvider } from "@mui/material"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { useEffect, useRef, useState } from "react"
-import { Provider } from "react-redux"
 import { isRouteErrorResponse, Links, Meta, Scripts, ScrollRestoration, useNavigation } from "react-router"
 import LoadingBar, { LoadingBarContainer } from "react-top-loading-bar"
 import { Toaster } from "sonner"
 import type { Route } from "./+types/root"
 import MainApp from "./app"
 import AssetsManager from "./constants/AssetsManager"
-import store from "./store/store"
 import stylesheet from "./styles/app.css?url"
 import themes from "./themes"
 
@@ -98,30 +96,23 @@ export default function App() {
 	}, [navigation.state])
 
 	return (
-		<Provider store={store}>
-			<QueryClientProvider client={new QueryClient()}>
-				<HeroUIProvider>
-					<ThemeProvider theme={themes}>
-						<LoadingBarContainer>
-							<LoadingBar
-								color="#6627FF"
-								progress={progress}
-								onLoaderFinished={() => setProgress(0)}
-								height={1}
-								waitingTime={500}
-							/>
-							<MainApp />
-							<Toaster
-								richColors
-								theme="light"
-								position="top-right"
-								toastOptions={{ closeButton: true }}
-							/>
-						</LoadingBarContainer>
-					</ThemeProvider>
-				</HeroUIProvider>
-			</QueryClientProvider>
-		</Provider>
+		<QueryClientProvider client={new QueryClient()}>
+			<HeroUIProvider>
+				<ThemeProvider theme={themes}>
+					<LoadingBarContainer>
+						<LoadingBar
+							color="#6627FF"
+							progress={progress}
+							onLoaderFinished={() => setProgress(0)}
+							height={1}
+							waitingTime={500}
+						/>
+						<MainApp />
+						<Toaster richColors theme="light" position="top-right" toastOptions={{ closeButton: true }} />
+					</LoadingBarContainer>
+				</ThemeProvider>
+			</HeroUIProvider>
+		</QueryClientProvider>
 	)
 }
 

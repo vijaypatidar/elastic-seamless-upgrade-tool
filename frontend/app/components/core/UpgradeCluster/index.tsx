@@ -10,6 +10,7 @@ import StorageManager from "~/constants/StorageManager"
 import LocalStorageHandler from "~/lib/LocalHanlder"
 import ProgressBar from "./widgets/progress"
 import StringManager from "~/constants/StringManager"
+import { useLocalStore } from "~/store/common"
 
 const UPGRADE_ENUM = {
 	completed: (
@@ -47,25 +48,31 @@ const columns: TUpgradeColumn = [
 		key: "node_name",
 		label: "Node name",
 		align: "start",
-		width: 300,
+		width: 200,
+	},
+	{
+		key: "ip",
+		label: "IP address",
+		align: "start",
+		width: 120,
 	},
 	{
 		key: "role",
 		label: "Role",
 		align: "start",
-		width: 150,
+		width: 120,
 	},
 	{
 		key: "os",
 		label: "OS",
 		align: "start",
-		width: 150,
+		width: 120,
 	},
 	{
 		key: "version",
 		label: "Version",
 		align: "start",
-		width: 150,
+		width: 100,
 	},
 	{
 		key: "action",
@@ -76,15 +83,16 @@ const columns: TUpgradeColumn = [
 ]
 
 function UpgradeCluster({ clusterType }: TUpgradeCluster) {
+	const clusterId = useLocalStore((state: any) => state.clusterId)
 
 	const getNodesInfo = async () => {
-		const clusterId = LocalStorageHandler.getItem(StorageManager.CLUSTER_ID) || "cluster-id"
 		let response: any = []
 		await axiosJSON
 			.get(`/api/elastic/clusters/${clusterId}/nodes`)
 			.then((res) => {
 				response = res.data.map((item: any) => ({
 					key: item.nodeId,
+					ip: item.ip,
 					node_name: item.name,
 					role: item.roles[0],
 					os: item.os.name,
@@ -103,7 +111,6 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 	}
 
 	const performUpgrade = async (nodeId: string) => {
-		const clusterId = LocalStorageHandler.getItem(StorageManager.CLUSTER_ID) || "cluster-id"
 		console.log("triggered")
 		await axiosJSON
 			.post(`/api/elastic/clusters/${clusterId}/nodes/upgrade`, {
@@ -118,7 +125,6 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 			})
 	}
 	const performUpgradeAll = async () => {
-		const clusterId = LocalStorageHandler.getItem(StorageManager.CLUSTER_ID) || "cluster-id"
 		await axiosJSON.post(`/api/elastic/clusters/${clusterId}/upgrade-all`).then(() => {
 			refetch()
 			toast.success("Upgrade started")
@@ -151,16 +157,31 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 			switch (columnKey) {
 				case "node_name":
 					return row.node_name
+				case "ip":
+					return <span className="text-[#ADADAD]">{row.ip}</span>
 				case "role":
-					return row.role
+					return <span className="text-[#ADADAD]">{row.role}</span>
 				case "os":
-					return row.os
+					return <span className="text-[#ADADAD]">{row.os}</span>
 				case "version":
-					return row.version
+					return <span className="text-[#ADADAD]">{row.version}</span>
 				case "action":
 					return (
-						<>
-							{row.status === "AVAILABLE" ? (
+						<Box className="flex justify-end">
+							{row?.disabled ? (
+								<Box
+									className="flex gap-1 items-center"
+									color="#EFC93D"
+									fontSize="12px"
+									fontWeight="500"
+									lineHeight="normal"
+								>
+									<Box className="min-w-4 min-h-4">
+										<Warning2 size="16px" color="currentColor" variant="Bold" />
+									</Box>
+									Upgrade other nodes first.
+								</Box>
+							) : row.status === "available" ? (
 								<Box className="flex justify-end">
 									<OutlinedBorderButton
 										onClick={() => {
@@ -173,14 +194,14 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 										Upgrade
 									</OutlinedBorderButton>
 								</Box>
-							) : row.status === "UPGRADING" ? (
+							) : row.status === "upgrading" ? (
 								<ProgressBar progress={row.progress ? row.progress : 0} />
-							) : row.status === "UPGRADED" ? (
+							) : row.status === "upgraded" ? (
 								UPGRADE_ENUM["completed"]
 							) : (
 								UPGRADE_ENUM["failed"]
 							)}
-						</>
+						</Box>
 					)
 				default:
 					return cellValue

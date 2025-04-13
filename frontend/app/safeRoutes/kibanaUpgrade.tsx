@@ -1,8 +1,8 @@
-import { useSelector } from "react-redux"
 import { Navigate, Outlet } from "react-router"
+import useSafeRouteStore from "~/store/safeRoutes"
 
 function KibanaUpgradeSafeRoute() {
-	const canUpgrade = useSelector<any, boolean>((state) => state.safeRoutes.kibanaNodeUpgradeAllowed)
+	const canUpgrade = useSafeRouteStore((state: any) => state.kibanaNodeUpgradeAllowed)
 
 	return canUpgrade ? <Outlet /> : <Navigate to="/upgrade-assistant" />
 }
