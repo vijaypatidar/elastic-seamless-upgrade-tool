@@ -162,7 +162,10 @@ export const triggerKibanaNodeUpgrade = async (nodeId: string, clusterId: string
 		}
 		const clusterInfo = await getClusterInfoById(clusterId);
 		const pathToKey = clusterInfo.pathToKey ? clusterInfo.pathToKey : ""; //Should be stored in clusterInfo
-		await ansibleInventoryService.createAnsibleInventoryForKibana([node], pathToKey);
+		await ansibleInventoryService.createAnsibleInventoryForKibana([node], {
+			pathToKey,
+			sshUser: clusterInfo.sshUser,
+		});
 		if (!clusterInfo.targetVersion || !clusterInfo.elastic.username || !clusterInfo.elastic.password) {
 			return false;
 		}

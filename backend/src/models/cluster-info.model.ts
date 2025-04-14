@@ -23,6 +23,7 @@ export interface IClusterInfo {
 	certificateIds?: string[];
 	targetVersion?: string;
 	infrastructureType?: string;
+	sshUser: string;
 	pathToKey?: string;
 	key?: string;
 	kibanaConfigs?: Object[] | undefined;
@@ -56,6 +57,7 @@ const ClusterInfoSchema: Schema<IClusterInfoDocument> = new Schema<IClusterInfoD
 		targetVersion: { type: String },
 		pathToKey: { type: String },
 		key: { type: String },
+		sshUser: { type: String, required: true, default: "root" },
 		kibanaConfigs: { type: [Object] },
 	},
 	{ timestamps: true }

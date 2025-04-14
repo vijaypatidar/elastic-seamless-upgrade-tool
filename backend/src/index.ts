@@ -49,7 +49,13 @@ app.use((req, res) => {
 	});
 });
 
-const io = new Server(server);
+const io = new Server(server, {
+	cors: {
+		origin: "*",
+		methods: ["GET", "POST"],
+		credentials: true,
+	},
+});
 
 io.of("/notification").on("connection", (socket: Socket) => {
 	logger.debug("User connected to socker.io with socketId:", socket.id);

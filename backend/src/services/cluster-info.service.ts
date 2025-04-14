@@ -49,6 +49,7 @@ export const getAllClusters = async (): Promise<IClusterInfo[]> => {
 			pathToKey: cluster.pathToKey,
 			key: cluster.key,
 			kibanaConfigs: cluster.kibanaConfigs,
+			sshUser: cluster.sshUser,
 		}));
 	} catch (error) {
 		console.error("Error fetching cluster list:", error);
@@ -76,6 +77,7 @@ export const getClusterInfoById = async (clusterId: string): Promise<IClusterInf
 		pathToKey: clusterInfo?.pathToKey,
 		key: clusterInfo?.key,
 		kibanaConfigs: clusterInfo?.kibanaConfigs,
+		sshUser: clusterInfo?.sshUser!!,
 	};
 };
 

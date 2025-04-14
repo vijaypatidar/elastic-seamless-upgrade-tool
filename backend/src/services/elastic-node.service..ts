@@ -144,7 +144,7 @@ export const triggerNodeUpgrade = async (nodeId: string, clusterId: string) => {
 		const clusterInfo = await getClusterInfoById(clusterId);
 		const pathToKey = clusterInfo.pathToKey ? clusterInfo.pathToKey : "";
 
-		await ansibleInventoryService.createAnsibleInventory([node], pathToKey);
+		await ansibleInventoryService.createAnsibleInventory([node], { pathToKey, sshUser: clusterInfo.sshUser });
 		if (!clusterInfo.targetVersion || !clusterInfo.elastic.username || !clusterInfo.elastic.password) {
 			return false;
 		}
@@ -174,7 +174,7 @@ export const triggerUpgradeAll = async (nodes: IElasticNode[], clusterId: string
 		const clusterInfo = await getClusterInfoById(clusterId);
 		const pathToKey = clusterInfo.pathToKey ? clusterInfo.pathToKey : "";
 
-		await ansibleInventoryService.createAnsibleInventory(nodes, pathToKey);
+		await ansibleInventoryService.createAnsibleInventory(nodes, { pathToKey, sshUser: clusterInfo.sshUser });
 		if (!clusterInfo.targetVersion || !clusterInfo.elastic.username || !clusterInfo.elastic.password) {
 			return false;
 		}

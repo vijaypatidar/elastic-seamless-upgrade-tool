@@ -107,6 +107,7 @@ export const addOrUpdateClusterDetail = async (req: Request, res: Response) => {
 			infrastructureType: req.body.infrastructureType,
 			pathToKey: keyPath,
 			key: sshKey,
+			sshUser: req.body.sshUser,
 			kibanaConfigs: kibanaConfigs,
 		};
 		const elasticCredsVerificationResult = await verifyElasticCredentials(clusterInfo.elastic);
@@ -432,6 +433,7 @@ export const verfiyCluster = async (req: Request, res: Response) => {
 							targetVersion: clusters[0].targetVersion ?? null,
 							infrastructureType: clusters[0].infrastructureType ?? null,
 							pathToKey: clusters[0].key ?? null,
+							sshUser: clusters[0].sshUser,
 							kibanaConfigs: clusters[0].kibanaConfigs ? clusters[0].kibanaConfigs : [],
 						}
 					: null,
