@@ -5,8 +5,8 @@
 
   vars:
     set_default_index: '{"changes":{"defaultIndex":"syslog"}}'
-    username: "elastic"
-    password: "AXxnVfG-wUFScHNBeL73"
+    es_es_username: "elastic"
+    es_password: "AXxnVfG-wUFScHNBeL73"
 
   tasks:
   - name: Validate ELK Version
@@ -34,8 +34,8 @@
       uri:
         url: http://localhost:5601/api/kibana/settings
         method: GET
-        url_username: "{{ username }}"
-        url_password: "{{ password }}"
+        url_es_username: "{{ es_username }}"
+        url_es_password: "{{ es_password }}"
         validate_certs: false
         force_basic_auth: true
       register: response
@@ -47,8 +47,8 @@
       uri:
         url: http://localhost:5601/api/kibana/settings
         method: POST
-        url_username: "{{ username }}"
-        url_password: "{{ password }}"
+        url_es_username: "{{ es_username }}"
+        url_es_password: "{{ es_password }}"
         validate_certs: false
         force_basic_auth: true
         body_format: json

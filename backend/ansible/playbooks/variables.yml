@@ -1,0 +1,23 @@
+---
+SET_ACTION: "UPGRADE"
+rerun: false
+precheck_id: []
+
+#OS Variable default value
+DISK_SPACE_LIMIT: 75
+CPU_LIMIT: 80
+Memory_LIMIT: 80
+
+#Elastic Variable Vars
+elasticsearch_uri: https://44.220.150.255:9200
+es_host_protocol: https
+es_username: "elastic"
+es_password: "8PKLmtEgyXWHN*K2VQed"
+
+es_disable_allocation: '{"transient":{"cluster.routing.allocation.enable":"primaries"}}'
+es_enable_allocation: '{"transient":{"cluster.routing.allocation.enable": "all","cluster.routing.allocation.node_concurrent_recoveries": 5,"indices.recovery.max_bytes_per_sec": "500mb"}}'
+es_http_port: 9200
+es_transport_port: 9300
+
+#Kibana Variable
+set_default_index: '{"changes":{"defaultIndex":"syslog"}}'
