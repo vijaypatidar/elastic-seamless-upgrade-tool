@@ -45,6 +45,7 @@ COPY --from=builder /app/package*.json ./
 
 #Copy ansible files
 COPY --from=builder /app/ansible/ ./ansible/
+RUN mkdir -p ansible/ini
 
 # Copy prechecks.yaml file
 COPY --from=builder /app/prechecks.yaml ./prechecks.yaml
