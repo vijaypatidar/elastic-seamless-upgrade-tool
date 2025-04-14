@@ -3,11 +3,6 @@
   become: true
   gather_facts: no
 
-  vars:
-    set_default_index: '{"changes":{"defaultIndex":"syslog"}}'
-    es_es_username: "elastic"
-    es_password: "AXxnVfG-wUFScHNBeL73"
-
   tasks:
   - name: Validate ELK Version
     fail: msg="Invalid ELK Version"
