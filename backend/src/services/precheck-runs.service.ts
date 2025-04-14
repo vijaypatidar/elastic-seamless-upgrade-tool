@@ -145,6 +145,7 @@ export const runPrecheck = async (precheckIds: string[], nodes: IElasticNode[], 
 				node: { ip: precheckRun.ip, name: precheckRun.ip },
 				iniName: inventoryFileName,
 				pathToKey: clusterInfo.pathToKey!!,
+				sshUser: clusterInfo.sshUser,
 			});
 			const precheckRunJob: PrecheckRunJob = {
 				precheckId: precheckRun.precheckId,

@@ -5,7 +5,10 @@ const ENABLE_PASSWORD_AUTH_FOR_SSH = process.env.ENABLE_PASSWORD_AUTH_FOR_SSH ==
 
 class AnsibleInventoryService {
 	constructor() {}
-	public createAnsibleInventory = async (nodes: IElasticNode[], pathToKey: string) => {
+	public createAnsibleInventory = async (
+		nodes: IElasticNode[],
+		{ sshUser, pathToKey }: { pathToKey: string; sshUser: string }
+	) => {
 		try {
 			const roleGroups: Record<"elasticsearch_master" | "elasticsearch_data", string[]> = {
 				elasticsearch_data: [],
@@ -40,11 +43,11 @@ class AnsibleInventoryService {
 
 			if (ENABLE_PASSWORD_AUTH_FOR_SSH) {
 				inventoryParts.push(
-					`[elasticsearch:vars]\nansible_ssh_user=root\nansible_ssh_pass=admin\nansible_ssh_common_args='-o StrictHostKeyChecking=no'\n`
+					`[elasticsearch:vars]\nansible_ssh_user=${sshUser}\nansible_ssh_pass=admin\nansible_ssh_common_args='-o StrictHostKeyChecking=no'\n`
 				);
 			} else {
 				inventoryParts.push(
-					`[elasticsearch:vars]\nansible_ssh_user=root\nansible_ssh_private_key_file=${pathToKey}\nansible_ssh_common_args='-o StrictHostKeyChecking=no'\n`
+					`[elasticsearch:vars]\nansible_ssh_user=${sshUser}\nansible_ssh_private_key_file=${pathToKey}\nansible_ssh_common_args='-o StrictHostKeyChecking=no'\n`
 				);
 			}
 
@@ -59,8 +62,10 @@ class AnsibleInventoryService {
 		}
 	};
 
-	///////////////////Kibana////////////////////////
-	public createAnsibleInventoryForKibana = async (kibanaNodes: IKibanaNode[], pathToKey: string) => {
+	public createAnsibleInventoryForKibana = async (
+		kibanaNodes: IKibanaNode[],
+		{ pathToKey, sshUser }: { pathToKey: string; sshUser: string }
+	) => {
 		try {
 			const roleGroups: Record<"kibana", string[]> = {
 				kibana: [],
@@ -76,7 +81,7 @@ class AnsibleInventoryService {
 				}
 			});
 			inventoryParts.push(
-				`[kibana:vars]\nansible_ssh_user=ubuntu\nansible_ssh_private_key_file=${pathToKey}\nansible_ssh_common_args='-o StrictHostKeyChecking=no'`
+				`[kibana:vars]\nansible_ssh_user=${sshUser}\nansible_ssh_private_key_file=${pathToKey}\nansible_ssh_common_args='-o StrictHostKeyChecking=no'`
 			);
 			const inventoryContent = inventoryParts.join("\n\n");
 
@@ -92,9 +97,11 @@ class AnsibleInventoryService {
 		pathToKey,
 		node,
 		iniName,
+		sshUser,
 	}: {
 		node: { ip: string; name: string };
 		pathToKey: string;
+		sshUser: string;
 		iniName: string;
 	}) => {
 		try {
@@ -114,11 +121,11 @@ class AnsibleInventoryService {
 
 			if (ENABLE_PASSWORD_AUTH_FOR_SSH) {
 				inventoryParts.push(
-					`[elasticsearch:vars]\nansible_ssh_user=root\nansible_ssh_pass=admin\nansible_ssh_common_args='-o StrictHostKeyChecking=no'\n`
+					`[elasticsearch:vars]\nansible_ssh_user=${sshUser}\nansible_ssh_pass=admin\nansible_ssh_common_args='-o StrictHostKeyChecking=no'\n`
 				);
 			} else {
 				inventoryParts.push(
-					`[elasticsearch:vars]\nansible_ssh_user=root\nansible_ssh_private_key_file=${pathToKey}\nansible_ssh_common_args='-o StrictHostKeyChecking=no'\n`
+					`[elasticsearch:vars]\nansible_ssh_user=${sshUser}\nansible_ssh_private_key_file=${pathToKey}\nansible_ssh_common_args='-o StrictHostKeyChecking=no'\n`
 				);
 			}
 
