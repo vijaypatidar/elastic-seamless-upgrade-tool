@@ -10,7 +10,7 @@
 
       - name: Get elasticsearch current version
         command: dpkg-query -W -f='${Version}' elasticsearch
-        # changed_when: False
+        changed_when: False
         register: version_found
 
       - name: Pre-download elasticsearch install package
