@@ -43,7 +43,7 @@ COPY --from=builder /app/package*.json ./
 
 #Copy ansible files
 COPY --from=builder /app/ansible/ ./ansible/
-
+RUN mkdir -p ansible/ini
 # Install only production dependencies
 RUN yarn install --production
 
