@@ -160,3 +160,19 @@ export const runPrecheck = async (nodes: IElasticNode[], clusterId: string) => {
 	});
 	return runId;
 };
+
+export const getMergedPrecheckStatus = (precheckRuns: PrecheckStatus[]) => {
+	let hasCompleted = false;
+	let hasPending = false;
+
+	for (const run of precheckRuns) {
+		if (run === PrecheckStatus.FAILED) return PrecheckStatus.FAILED;
+		if (run === PrecheckStatus.RUNNING) return PrecheckStatus.RUNNING;
+		if (run === PrecheckStatus.PENDING) hasPending = true;
+		if (run === PrecheckStatus.COMPLETED) hasCompleted = true;
+	}
+
+	if (hasPending && hasCompleted) return PrecheckStatus.RUNNING;
+	if (hasPending) return PrecheckStatus.PENDING;
+	return PrecheckStatus.COMPLETED;
+};

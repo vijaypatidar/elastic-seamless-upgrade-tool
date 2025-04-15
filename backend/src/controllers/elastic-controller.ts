@@ -25,8 +25,9 @@ import { KibanaClient } from "../clients/kibana.client";
 import path from "path";
 import { normalizeNodeUrl } from "../utils/utlity.functions";
 import { createKibanaNodes, getKibanaNodes, triggerKibanaNodeUpgrade } from "../services/kibana-node.service";
-import { NodeStatus } from "../enums";
+import { NodeStatus, PrecheckStatus } from "../enums";
 import { clusterMonitorService } from "../services/cluster-monitor.service";
+import { getLatestRunsByPrecheck, getMergedPrecheckStatus } from "../services/precheck-runs.service";
 
 export const healthCheck = async (req: Request, res: Response) => {
 	try {
@@ -124,15 +125,15 @@ export const getUpgradeDetails = async (req: Request, res: Response) => {
 
 		const kibanaUrl = clusterInfo.kibana?.url;
 
-		const [elasticsearchDeprecation, kibanaDeprecation, kibanaVersion, elasticNodes, snapshots] = await Promise.all(
-			[
+		const [elasticsearchDeprecation, kibanaDeprecation, kibanaVersion, elasticNodes, snapshots, prechecks] =
+			await Promise.all([
 				getElasticsearchDeprecation(clusterId),
 				getKibanaDeprecation(clusterId),
 				kibanaClient.getKibanaVersion(),
 				getAllElasticNodes(clusterId),
 				client.getValidSnapshots(),
-			]
-		);
+				getLatestRunsByPrecheck(clusterId),
+			]);
 		const esDeprecationCount = elasticsearchDeprecation.counts;
 		const kibanaDeprecationCount = kibanaDeprecation.counts;
 
@@ -153,6 +154,9 @@ export const getUpgradeDetails = async (req: Request, res: Response) => {
 			kibana: {
 				isUpgradable: !isKibanaUpgraded,
 				deprecations: { ...kibanaDeprecationCount },
+			},
+			precheck: {
+				status: getMergedPrecheckStatus(prechecks.flat().map((precheck) => precheck.status)),
 			},
 		});
 	} catch (error: any) {
