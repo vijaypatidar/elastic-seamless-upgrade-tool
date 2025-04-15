@@ -1,12 +1,21 @@
 import { Drawer, DrawerBody, DrawerContent } from "@heroui/react"
-import { Box, IconButton, InputAdornment, Typography } from "@mui/material"
+import { Box, Breadcrumbs, IconButton, InputAdornment, Typography } from "@mui/material"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { useFormik } from "formik"
-import { Add, ArrowLeft, DocumentText1, DocumentUpload, Edit2, Eye, EyeSlash, Trash } from "iconsax-react"
+import {
+	Add,
+	ArrowLeft,
+	ArrowRight2,
+	DocumentText1,
+	DocumentUpload,
+	Eye,
+	EyeSlash,
+	Trash
+} from "iconsax-react"
 import _ from "lodash"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
-import { ConatinedButton, OutlinedButton } from "~/components/utilities/Buttons"
+import { OutlinedBorderButton, OutlinedButton } from "~/components/utilities/Buttons"
 import Input from "~/components/utilities/Input"
 import { cn } from "~/lib/Utils"
 import SelectionTile from "../Setup/Credentials/widgets/SelectionTile"
@@ -45,6 +54,7 @@ const INITIAL_VALUES = {
 	password: "",
 	apiKey: "",
 	pathToSSH: "",
+	sshUser: "",
 	kibanaConfigs: [],
 	certFiles: [],
 }
@@ -102,6 +112,7 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 					username: res?.data?.clusterData?.elastic?.username,
 					password: res?.data?.clusterData?.elastic?.password,
 					apiKey: "",
+					sshUser: res?.data?.clusterData?.sshUser,
 					pathToSSH: res?.data?.clusterData?.pathToKey,
 					kibanaConfigs: res?.data?.clusterData?.kibanaConfigs,
 					certFiles:
@@ -158,6 +169,7 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 							.map((cert: TExistingFile) => cert.name),
 						...certIds,
 					],
+					sshUser: values.sshUser,
 					infrastructureType: "on-premise",
 					key: values.pathToSSH ?? "",
 					kibanaConfigs: values.kibanaConfigs,
@@ -170,6 +182,7 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 					if (pathname === "/cluster-overview") {
 						refresh()
 					}
+					toast.success("Cluster updated successfully")
 					onOpenChange()
 				})
 				.catch((err) => toast.error(err?.response?.data.err ?? StringManager.GENERIC_ERROR))
@@ -203,49 +216,47 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 			<DrawerContent>
 				{(onClose) => (
 					<DrawerBody>
-						<Box height="50px" />
-						<Box className="flex flex-col gap-2 w-full">
-							<OutlinedButton onClick={onOpenChange} sx={STYLES.GO_BACK_BUTTON}>
-								<ArrowLeft size="14px" color="currentColor" /> Go back
-							</OutlinedButton>
+						<Box minHeight="58px" />
+						<form
+							onSubmit={formik.handleSubmit}
+							onReset={formik.handleReset}
+							className="flex flex-col gap-2 w-full"
+						>
+							<Box className="flex items-center gap-3 justify-between">
+								<Box className="flex border border-solid border-[#2F2F2F] w-max py-[6px] px-[10px] rounded-lg bg-[#141415]">
+									<Breadcrumbs separator={<ArrowRight2 color="#ADADAD" size="14px" />}>
+										<Typography
+											className="flex items-center gap-[6px] cursor-pointer"
+											color="#ADADAD"
+											fontSize="12px"
+											fontWeight="500"
+											lineHeight="normal"
+											onClick={onOpenChange}
+										>
+											<ArrowLeft size="14px" color="currentColor" /> Go back
+										</Typography>
+										<Typography
+											color="#BDA0FF"
+											fontSize="12px"
+											fontWeight="500"
+											lineHeight="normal"
+										>
+											Edit cluster
+										</Typography>
+									</Breadcrumbs>
+								</Box>
+								<OutlinedBorderButton
+									type="submit"
+									disabled={!formik.dirty || formik.isSubmitting || isPending}
+								>
+									{formik.isSubmitting || isPending ? "Updating" : "Update"}
+								</OutlinedBorderButton>
+							</Box>
 							<Box
 								className="flex p-px rounded-2xl h-[calc(var(--window-height)-120px)]"
 								sx={{ background: "radial-gradient(#6E687C, #1D1D1D)" }}
 							>
-								<form
-									onSubmit={formik.handleSubmit}
-									onReset={formik.handleReset}
-									className="flex flex-col gap-6 rounded-2xl bg-[#0D0D0D] w-full h-full items-start"
-								>
-									<Box
-										padding="24px 32px 0px 32px"
-										className="flex flex-row gap-3 justify-between items-center w-full"
-									>
-										<Box className="flex flex-row gap-5 items-center">
-											<Box
-												className="flex p-px rounded-[10px]"
-												sx={{
-													background:
-														"linear-gradient(125deg, #6627FF 0%, #C9C0DF 38.44%, #C9C0DF 84.94%, #6627FF 100%)",
-													boxShadow: "0px 0px 15px 3px rgba(102, 39, 255, 0.41)",
-												}}
-											>
-												<Box className="flex rounded-[10px] items-center justify-center min-h-[42px] min-w-[42px] bg-[#0D0D0D]">
-													<Edit2 size="20px" color="#FFF" variant="Bold" />
-												</Box>
-											</Box>
-
-											<Typography color="#FFF" fontSize="20px" fontWeight="600" lineHeight="22px">
-												Edit cluster
-											</Typography>
-										</Box>
-										<ConatinedButton
-											type="submit"
-											disabled={!formik.dirty || formik.isSubmitting || isPending}
-										>
-											{formik.isSubmitting || isPending ? "Updating" : "Update"}
-										</ConatinedButton>
-									</Box>
+								<Box className="flex flex-col gap-6 pt-6 rounded-2xl bg-[#0D0D0D] w-full h-full items-start">
 									<Box
 										className="flex flex-col h-full w-full gap-3 overflow-auto items-center"
 										padding="0px 32px 24px 32px"
@@ -671,6 +682,41 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 														fontWeight="400"
 														lineHeight="20px"
 													>
+														SSH Username
+													</Typography>
+													<OneLineSkeleton
+														show={isLoading || isRefetching}
+														height="52px"
+														className="w-full rounded-[10px]"
+														component={
+															<Input
+																fullWidth
+																id="sshUser"
+																name="sshUser"
+																type="text"
+																placeholder="Enter ssh username"
+																variant="outlined"
+																value={formik.values.sshUser}
+																onChange={formik.handleChange}
+																onBlur={formik.handleBlur}
+																error={
+																	formik.touched.sshUser &&
+																	Boolean(formik.errors.sshUser)
+																}
+																helperText={
+																	formik.touched.sshUser && formik.errors.sshUser
+																}
+															/>
+														}
+													/>
+												</Box>
+												<Box className="flex flex-col gap-[6px] max-w-[515px]">
+													<Typography
+														color="#ABA9B1"
+														fontSize="14px"
+														fontWeight="400"
+														lineHeight="20px"
+													>
 														SSH key
 													</Typography>
 													<OneLineSkeleton
@@ -827,9 +873,9 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 											</Box>
 										</Box>
 									</Box>
-								</form>
+								</Box>
 							</Box>
-						</Box>
+						</form>
 					</DrawerBody>
 				)}
 			</DrawerContent>

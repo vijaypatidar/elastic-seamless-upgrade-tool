@@ -78,7 +78,7 @@ function Credentials({ initialValues: IV, backStep, onSubmit }: TCredentialsComp
 								isSelected={formik.values.authPref === "U/P"}
 								value="U/P"
 								onSelect={(value: string | number) => formik.setFieldValue("authPref", value)}
-								/>
+							/>
 							<SelectionTile
 								label="API Key"
 								isSelected={formik.values.authPref === "API_KEY"}
@@ -269,6 +269,31 @@ function Credentials({ initialValues: IV, backStep, onSubmit }: TCredentialsComp
 							)
 						})}
 					</Box>
+				</Box>
+				<Box className="flex flex-col gap-[6px] max-w-[515px]">
+					<Typography color="#ABA9B1" fontSize="14px" fontWeight="400" lineHeight="20px">
+						SSH Username
+					</Typography>
+					<OneLineSkeleton
+						show={isLoading || isRefetching}
+						height="52px"
+						className="w-full rounded-[10px]"
+						component={
+							<Input
+								fullWidth
+								id="sshUser"
+								name="sshUser"
+								type="text"
+								placeholder="Enter ssh username"
+								variant="outlined"
+								value={formik.values.sshUser}
+								onChange={formik.handleChange}
+								onBlur={formik.handleBlur}
+								error={formik.touched.sshUser && Boolean(formik.errors.sshUser)}
+								helperText={formik.touched.sshUser && formik.errors.sshUser}
+							/>
+						}
+					/>
 				</Box>
 				<Box className="flex flex-col gap-[6px] max-w-[515px]">
 					<Typography color="#ABA9B1" fontSize="14px" fontWeight="400" lineHeight="20px">

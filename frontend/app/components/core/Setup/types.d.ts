@@ -5,6 +5,7 @@ type TCreds = {
 	username?: string
 	password?: string
 	apiKey?: string
+	sshUser: string
 	pathToSSH?: string
 	kibanaConfigs: TKibanaConfigs[]
 }

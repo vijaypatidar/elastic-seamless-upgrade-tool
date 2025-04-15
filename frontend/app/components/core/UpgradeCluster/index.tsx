@@ -235,11 +235,13 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 						icon={Flash}
 						filledIcon={Flash}
 						disabled={
-							isPending ||
+							isPending || isLoading ||
 							(data &&
 								data.filter((item: any) => item.status !== "AVAILABLE" && item.status !== "UPGRADED")
 									.length > 0)
 						}
+						padding="8px 16px"
+						fontSize="13px"
 					>
 						Upgrade all
 					</OutlinedBorderButton>

@@ -24,11 +24,11 @@ function PreCheckPage() {
 							fontWeight="500"
 							lineHeight="normal"
 						>
-							<Convertshape2 color="currentColor" size="14px" /> Prechecks
+							<Convertshape2 color="currentColor" size="14px" /> Assist
 						</Typography>
 					</Link>
 					<Typography color="#BDA0FF" fontSize="12px" fontWeight="500" lineHeight="normal">
-						Detail view [Rename]
+						Prechecks
 					</Typography>
 				</Breadcrumbs>
 			</Box>

@@ -7,11 +7,13 @@ const useSafeRouteStore = create()(
 		(set) => ({
 			clusterAdded: false,
 			deprecationChangesAllowed: false,
-			elasticNodeUpgradeAllowed: true,
+			elasticNodeUpgradeAllowed: false,
 			kibanaNodeUpgradeAllowed: false,
 			upgradeAssistAllowed: false,
+			precheckAllowed: false,
 
 			setClusterAdded: (payload: boolean) => set((_: any) => ({ clusterAdded: payload })),
+			setPrecheck: (payload: boolean) => set((_: any) => ({ precheckAllowed: payload })),
 			setDeprecationChangesAllowed: (payload: boolean) =>
 				set((_: any) => ({ deprecationChangesAllowed: payload })),
 			setElasticNodeUpgradeAllowed: (payload: boolean) =>
@@ -24,6 +26,7 @@ const useSafeRouteStore = create()(
 					elasticNodeUpgradeAllowed: false,
 					kibanaNodeUpgradeAllowed: false,
 					upgradeAssistAllowed: false,
+					precheckAllowed: false,
 				})),
 			resetSafeRoutes: () =>
 				set((_: any) => ({
@@ -32,6 +35,7 @@ const useSafeRouteStore = create()(
 					elasticNodeUpgradeAllowed: false,
 					kibanaNodeUpgradeAllowed: false,
 					upgradeAssistAllowed: false,
+					precheckAllowed: false,
 				})),
 		}),
 		{

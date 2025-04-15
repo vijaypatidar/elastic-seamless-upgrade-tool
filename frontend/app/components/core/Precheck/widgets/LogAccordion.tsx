@@ -1,4 +1,4 @@
-import { Divider } from "@heroui/react"
+import { Divider, Spinner } from "@heroui/react"
 import { Box, styled, Typography, type AccordionProps } from "@mui/material"
 import MuiAccordion from "@mui/material/Accordion"
 import MuiAccordionSummary, {
@@ -14,6 +14,7 @@ const Accordion = styled((props: AccordionProps) => <MuiAccordion disableGutters
 		".MuiAccordionSummary-root": {
 			minHeight: "44px",
 			padding: "0px 14px",
+			transition: "all 0.5s",
 
 			":hover": {
 				backgroundColor: "#28282A",
@@ -72,14 +73,14 @@ const AccordionDetails = styled(MuiAccordionDetails)(({ theme }) => ({
 
 function LogAccordion({
 	title,
-	isSuccess = true,
+	status = "PENDING",
 	logs = [],
 	duration,
 	expanded,
 	onChange,
 }: {
 	title: string
-	isSuccess?: boolean
+	status?: "PENDING" | "COMPLETED" | "FAILED"
 	logs?: string[]
 	duration: string
 	expanded: boolean
@@ -96,10 +97,12 @@ function LogAccordion({
 						fontWeight="500"
 						lineHeight="20px"
 					>
-						{isSuccess ? (
+						{status === "PENDING" ? (
+							<Spinner color="default" variant="simple" classNames={{ wrapper: "size-4 text-inherit" }} />
+						) : status === "COMPLETED" ? (
 							<TickCircle size="20px" color="currentColor" variant="Bold" />
 						) : (
-							<Warning2 size="20px" color="#E75547" />
+							<Warning2 size="20px" color="#E75547" variant="Bold" />
 						)}
 						{title}
 					</Typography>
@@ -117,40 +120,73 @@ function LogAccordion({
 				</Box>
 			</AccordionSummary>
 			<AccordionDetails>
-				{logs.map((item: string, index: number) => {
-					return (
-						<Box
-							className="flex flex-row items-center gap-[18px]"
-							sx={{
-								":hover": { background: "#28282A", color: "#A08AF7" },
-								padding: "4px 10px 4px 38px",
-								borderRadius: "4px",
-							}}
+				{logs.length !== 0 ? (
+					logs.map((item: string, index: number) => {
+						return (
+							<Box
+								className="flex flex-row items-center gap-[18px]"
+								sx={{
+									":hover": { background: "#28282A", color: "#A08AF7" },
+									padding: "4px 10px 4px 38px",
+									borderRadius: "4px",
+								}}
+							>
+								<Typography
+									minWidth="18px"
+									textAlign="right"
+									fontFamily="Roboto Mono"
+									fontSize="13px"
+									fontStyle="normal"
+									fontWeight="400"
+									lineHeight="20px"
+								>
+									{index}
+								</Typography>
+								<Typography
+									color="#E5E0E0"
+									fontFamily="Roboto Mono"
+									fontSize="13px"
+									fontStyle="normal"
+									fontWeight="400"
+									lineHeight="20px"
+								>
+									{item}
+								</Typography>
+							</Box>
+						)
+					})
+				) : (
+					<Box
+						className="flex flex-row items-center gap-[18px]"
+						sx={{
+							":hover": { background: "#28282A", color: "#A08AF7" },
+							padding: "4px 10px 4px 38px",
+							borderRadius: "4px",
+						}}
+					>
+						<Typography
+							minWidth="18px"
+							textAlign="right"
+							fontFamily="Roboto Mono"
+							fontSize="13px"
+							fontStyle="normal"
+							fontWeight="400"
+							lineHeight="20px"
 						>
-							<Typography
-								minWidth="18px"
-								textAlign="right"
-								fontFamily="Roboto Mono"
-								fontSize="13px"
-								fontStyle="normal"
-								fontWeight="400"
-								lineHeight="20px"
-							>
-								{index}
-							</Typography>
-							<Typography
-								color="#E5E0E0"
-								fontFamily="Roboto Mono"
-								fontSize="13px"
-								fontStyle="normal"
-								fontWeight="400"
-								lineHeight="20px"
-							>
-								{item}
-							</Typography>
-						</Box>
-					)
-				})}
+							1
+						</Typography>
+						<Typography
+							color="#A6A6A6"
+							fontFamily="Roboto Mono"
+							fontSize="13px"
+							fontStyle="italic"
+							fontWeight="400"
+							lineHeight="20px"
+						>
+							No logs available
+						</Typography>
+					</Box>
+				)}
 			</AccordionDetails>
 		</Accordion>
 	)

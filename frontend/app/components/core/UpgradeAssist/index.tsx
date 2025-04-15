@@ -23,6 +23,7 @@ function UpgradeAssistant() {
 	const setDeprecationChangesAllowed = useSafeRouteStore((state: any) => state.setDeprecationChangesAllowed)
 	const setElasticNodeUpgradeAllowed = useSafeRouteStore((state: any) => state.setElasticNodeUpgradeAllowed)
 	const setKibanaNodeUpgradeAllowed = useSafeRouteStore((state: any) => state.setKibanaNodeUpgradeAllowed)
+	const setPrecheckAllowed = useSafeRouteStore((state: any) => state.setPrecheckAllowed)
 
 	// Format remaining time in HH:MM:SS
 	const formatTime = (milliseconds: number | null): string => {
@@ -63,8 +64,15 @@ function UpgradeAssistant() {
 				if (response?.elastic?.snapshot?.snapshot) {
 					startTimer(moment.utc(response?.elastic?.snapshot?.snapshot.createdAt).local().valueOf())
 				}
-				const { elastic, kibana } = response ?? {}
+				const { elastic, kibana, precheck } = response ?? {}
 				const step1Status = elastic?.snapshot?.snapshot ? "COMPLETED" : "PENDING"
+
+				const step2Status =
+					step1Status !== "COMPLETED"
+						? "NOTVISITED"
+						: precheck?.status === "COMPLETED"
+						? "COMPLETED"
+						: "PENDING"
 
 				// Helper function to sum deprecations safely
 				const sumDeprecations = (type: string) =>
@@ -75,7 +83,7 @@ function UpgradeAssistant() {
 				const warningDeprecations = sumDeprecations("warning")
 
 				const step3Status =
-					step1Status === "PENDING"
+					step2Status !== "COMPLETED"
 						? "NOTVISITED"
 						: criticalDeprecations > 0
 						? "PENDING"
@@ -97,7 +105,7 @@ function UpgradeAssistant() {
 
 				setStepStatus({
 					"1": step1Status,
-					"2": "COMPLETED",
+					"2": step2Status,
 					"3": step3Status,
 					"4": step4Status,
 					"5": step5Status,
@@ -107,6 +115,7 @@ function UpgradeAssistant() {
 				// 	Toast({varient: "SUCCESS", msg:"done"})
 				// }
 
+				handleRoutingStates(step2Status, setPrecheckAllowed)
 				handleRoutingStates(step3Status, setDeprecationChangesAllowed)
 				handleRoutingStates(step4Status, setElasticNodeUpgradeAllowed)
 				handleRoutingStates(step5Status, setKibanaNodeUpgradeAllowed)
@@ -125,11 +134,11 @@ function UpgradeAssistant() {
 	const step2Data = getStepIndicatorData("02", stepStatus["2"])
 	const step3Data = getStepIndicatorData("03", stepStatus["3"])
 	const step4Data = getStepIndicatorData("04", stepStatus["4"])
-	const step5Data = getStepIndicatorData("04", stepStatus["5"])
+	const step5Data = getStepIndicatorData("05", stepStatus["5"])
 
 	if (isLoading || isRefetching) {
 		return (
-			<Box className="flex flex-col gap-4 w-full px-6">
+			<Box className="flex flex-col gap-4 w-full px-6 overflow-scroll h-[calc(var(--window-height)-220px)]">
 				<Skeleton className="w-full rounded-[20px]">
 					<Box height="88px" />
 				</Skeleton>
@@ -150,7 +159,7 @@ function UpgradeAssistant() {
 	}
 
 	return (
-		<ol className="relative flex flex-col gap-4 w-full overflow-auto h-[calc(var(--window-height)-214px)] px-6">
+		<ol className="relative flex flex-col gap-4 w-full overflow-auto h-[calc(var(--window-height)-220px)] px-6">
 			<StepBox
 				currentStepStatus={stepStatus["1"]}
 				nextStepStatus={stepStatus["2"]}
@@ -253,8 +262,8 @@ function UpgradeAssistant() {
 				<Box className="flex items-start">
 					<OutlinedBorderButton
 						component={Link}
-						to="/pre-check"
-						disabled={stepStatus["1"] === "NOTVISITED"}
+						to="/prechecks"
+						disabled={stepStatus["2"] === "NOTVISITED"}
 						borderRadius="50%"
 						sx={{ minWidth: "38px !important", minHeight: "38px !important", padding: "0px" }}
 					>
