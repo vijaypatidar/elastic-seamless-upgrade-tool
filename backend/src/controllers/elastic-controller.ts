@@ -27,7 +27,7 @@ import { normalizeNodeUrl } from "../utils/utlity.functions";
 import { createKibanaNodes, getKibanaNodes, triggerKibanaNodeUpgrade } from "../services/kibana-node.service";
 import { NodeStatus, PrecheckStatus } from "../enums";
 import { clusterMonitorService } from "../services/cluster-monitor.service";
-import { getLatestRunsByPrecheck, getMergedPrecheckStatus } from "../services/precheck-runs.service";
+import { getLatestRunsByPrecheck, getMergedPrecheckStatus, runPrecheck } from "../services/precheck-runs.service";
 
 export const healthCheck = async (req: Request, res: Response) => {
 	try {
@@ -136,6 +136,11 @@ export const getUpgradeDetails = async (req: Request, res: Response) => {
 			]);
 		const esDeprecationCount = elasticsearchDeprecation.counts;
 		const kibanaDeprecationCount = kibanaDeprecation.counts;
+		const allPrechecks = prechecks.flat();
+		if (allPrechecks.length === 0) {
+			const runId = await runPrecheck(elasticNodes, clusterId);
+			logger.info(`Prechecks initiated successfully for cluster '${clusterId}' with Playbook Run ID '${runId}'.`);
+		}
 
 		const isKibanaUpgraded = kibanaVersion === clusterInfo.targetVersion ? true : false;
 		//verifying upgradability
@@ -156,7 +161,10 @@ export const getUpgradeDetails = async (req: Request, res: Response) => {
 				deprecations: { ...kibanaDeprecationCount },
 			},
 			precheck: {
-				status: getMergedPrecheckStatus(prechecks.flat().map((precheck) => precheck.status)),
+				status:
+					allPrechecks.length == 0
+						? PrecheckStatus.RUNNING
+						: getMergedPrecheckStatus(allPrechecks.map((precheck) => precheck.status)),
 			},
 		});
 	} catch (error: any) {
