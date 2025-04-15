@@ -8,12 +8,28 @@ import axiosJSON from "~/apis/http"
 import { useLocalStore } from "~/store/common"
 import { toast } from "sonner"
 import StringManager from "~/constants/StringManager"
-import { useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery } from "@tanstack/react-query"
+
+type TNodeData = {
+	nodeId: string
+	ip: string
+	name: string
+	status: "FAILED" | "SUCCEEDED" | "PENDING"
+	prechecks: {
+		id: string
+		name: string
+		status: "FAILED" | "SUCCEEDED" | "PENDING"
+		duration: string
+		logs: string[]
+		startTime: string
+		endTime: string
+	}[]
+}
 
 function Precheck() {
 	const clusterId = useLocalStore((state: any) => state.clusterId)
 	const [expanded, setExpanded] = useState<string[]>([])
-	const [nodeSelected, setNodeSelected] = useState<{}>({})
+	const [nodeSelected, setNodeSelected] = useState<TNodeData | null>(null)
 
 	const handleChange = (panel: string) => (event: React.SyntheticEvent, newExpanded: boolean) => {
 		if (expanded.includes(panel)) {
@@ -24,10 +40,10 @@ function Precheck() {
 	}
 
 	const getNodes = async () => {
-		let response: any = []
+		let response: TNodeData[] = []
 		await axiosJSON
 			.get(`/api/elastic/clusters/${clusterId}/prechecks`)
-			.then((res) => (response = res))
+			.then((res) => (response = res?.data))
 			.catch((err) => {
 				console.log("Err", err)
 				toast.error(err?.response?.data.err ?? StringManager.GENERIC_ERROR)
@@ -39,6 +55,21 @@ function Precheck() {
 		queryFn: getNodes,
 		staleTime: 0,
 	})
+
+	const reReunPrecheck = async () => {
+		await axiosJSON
+			.post(`/api/elastic/clusters/${clusterId}/prechecks`)
+			.then(() => refetch())
+			.catch((err) => {
+				console.log("Err", err)
+				toast.error(err?.response?.data.err ?? StringManager.GENERIC_ERROR)
+			})
+	}
+
+    const { mutate: HandleRerun, isPending } = useMutation({
+        mutationKey: ["re-run-prechecks"],
+        mutationFn: reReunPrecheck,
+    })
 
 	return (
 		<Box className="flex gap-4 h-[calc(var(--window-height)-129px)]">
@@ -83,7 +114,7 @@ function Precheck() {
 							</Typography>
 						</Box>
 						<Box className="flex flex-row gap-[6px]">
-							<OutlinedBorderButton>
+							<OutlinedBorderButton onClick={HandleRerun} disabled={isPending}>
 								<Refresh color="currentColor" size="18px" /> Re-run
 							</OutlinedBorderButton>
 							<OutlinedBorderButton>
