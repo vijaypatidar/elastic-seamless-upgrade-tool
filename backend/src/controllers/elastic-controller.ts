@@ -28,6 +28,7 @@ import { createKibanaNodes, getKibanaNodes, triggerKibanaNodeUpgrade } from "../
 import { NodeStatus, PrecheckStatus } from "../enums";
 import { clusterMonitorService } from "../services/cluster-monitor.service";
 import { getLatestRunsByPrecheck, getMergedPrecheckStatus, runPrecheck } from "../services/precheck-runs.service";
+const ANSIBLE_PLAYBOOKS_PATH = process.env.ANSIBLE_PLAYBOOKS_PATH || "";
 
 export const healthCheck = async (req: Request, res: Response) => {
 	try {
@@ -67,7 +68,12 @@ export const addOrUpdateClusterDetail = async (req: Request, res: Response) => {
 		const sanitizedKey = sshKey.replace(/\r?\n|\r/g, "");
 		const formattedKey = `-----BEGIN RSA PRIVATE KEY-----\n${sanitizedKey}\n-----END RSA PRIVATE KEY-----`;
 
-		const keyPath = path.join(__dirname, "..", "..", "SSH_key.pem");
+		const sshKeysDir = path.join(ANSIBLE_PLAYBOOKS_PATH, "ssh-keys");
+		if (!fs.existsSync(sshKeysDir)) {
+			fs.mkdirSync(sshKeysDir, { recursive: true });
+		}
+		const keyPath = path.join(sshKeysDir, "SSH_key.pem");
+
 		fs.writeFileSync(keyPath, formattedKey, { encoding: "utf8" });
 		fs.chmodSync(keyPath, 0o600);
 		fs.writeFileSync(keyPath, formattedKey);
