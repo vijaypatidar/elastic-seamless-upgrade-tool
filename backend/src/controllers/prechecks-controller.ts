@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { getAllElasticNodes, getElasticNodeById } from "../services/elastic-node.service.";
-import { getLatestRunsByPrecheck, runPrecheck } from "../services/precheck-runs.service";
+import { getLatestRunsByPrecheck, getMergedPrecheckStatus, runPrecheck } from "../services/precheck-runs.service";
 import { getPrecheckById } from "../config/precheck-config";
 import { PrecheckStatus } from "../enums";
 import { INodePrecheckRun } from "../models/node-precheck-runs.model";
@@ -41,21 +41,7 @@ export const getPrecheckRunByClusterIdHandler = async (req: Request, res: Respon
 		return acc;
 	}, {});
 	const response = Object.entries(groupedPrecheckRunsByNodeId).map(([nodeId, precheckRuns]) => {
-		const status = (() => {
-			let hasCompleted = false;
-			let hasPending = false;
-
-			for (const run of precheckRuns) {
-				if (run.status === PrecheckStatus.FAILED) return PrecheckStatus.FAILED;
-				if (run.status === PrecheckStatus.RUNNING) return PrecheckStatus.RUNNING;
-				if (run.status === PrecheckStatus.PENDING) hasPending = true;
-				if (run.status === PrecheckStatus.COMPLETED) hasCompleted = true;
-			}
-
-			if (hasPending && hasCompleted) return PrecheckStatus.RUNNING;
-			if (hasPending) return PrecheckStatus.PENDING;
-			return PrecheckStatus.COMPLETED;
-		})();
+		const status = getMergedPrecheckStatus(precheckRuns.map((precheck) => precheck.status));
 		const precheck = precheckRuns[0];
 
 		const transformPrecheckRunForUI = (precheck: INodePrecheckRun) => {
