@@ -42,7 +42,7 @@ export const syncNodeData = async (clusterId: string) => {
 		const response: any = await client.getClient().nodes.info({
 			filter_path: "nodes.*.name,nodes.*.roles,nodes.*.os.name,nodes.*.os.version,nodes.*.version,nodes.*.ip",
 		});
-		const masterNode: any = await client.getClient().cat.master({
+		const masterNodes = await client.getClient().cat.master({
 			format: "json",
 		});
 		const elasticNodes: IElasticNode[] | null = Object.entries(response.nodes).map(
@@ -55,7 +55,7 @@ export const syncNodeData = async (clusterId: string) => {
 				roles: value.roles,
 				os: value.os,
 				progress: 0,
-				isMaster: masterNode[0].id === key,
+				isMaster: masterNodes.some((master) => master.id === key),
 				status: NodeStatus.AVAILABLE,
 			})
 		);
