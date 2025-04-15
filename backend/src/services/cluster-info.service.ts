@@ -9,6 +9,8 @@ import ClusterInfo, {
 import { MigrationDeprecationsDeprecation } from "@elastic/elasticsearch/lib/api/types";
 import { DeprecationDetail, KibanaClient } from "../clients/kibana.client";
 import { ElasticClusterBaseRequest } from "..";
+import { getElasticSearchInfo, syncElasticSearchInfo } from "./elastic-search-info.service";
+import { getPossibleUpgrades } from "../utils/upgrade.versions";
 
 const cache: Record<string, IClusterInfo | null> = {};
 
@@ -219,4 +221,30 @@ export const verifyKibanaCredentials = async (kibana: IKibanaInfo): Promise<bool
 		console.error("Kibana connection failed:", error);
 		return false;
 	}
+};
+
+export const getClusterInfo = async (clusterId: string) => {
+	await syncElasticSearchInfo(clusterId);
+	const elasticSearchInfo = await getElasticSearchInfo(clusterId);
+	const clusterInfo = await getClusterInfoById(clusterId);
+	const currentVersion = elasticSearchInfo?.version;
+	const possibleUpgradeVersions = currentVersion ? getPossibleUpgrades(currentVersion) : [];
+	return {
+		clusterName: elasticSearchInfo?.clusterName ?? null,
+		clusterUUID: elasticSearchInfo?.clusterUUID ?? null,
+		status: elasticSearchInfo?.status ?? null,
+		version: elasticSearchInfo?.version ?? null,
+		timedOut: elasticSearchInfo?.timedOut ?? null,
+		numberOfDataNodes: elasticSearchInfo?.numberOfDataNodes ?? null,
+		numberOfNodes: elasticSearchInfo?.numberOfNodes ?? null,
+		activePrimaryShards: elasticSearchInfo?.activePrimaryShards ?? null,
+		activeShards: elasticSearchInfo?.activeShards ?? null,
+		unassignedShards: elasticSearchInfo?.unassignedShards ?? null,
+		initializingShards: elasticSearchInfo?.initializingShards ?? null,
+		relocatingShards: elasticSearchInfo?.relocatingShards ?? null,
+		infrastructureType: clusterInfo?.infrastructureType ?? null,
+		targetVersion: clusterInfo?.targetVersion ?? null,
+		possibleUpgradeVersions: possibleUpgradeVersions ?? null,
+		underUpgradation: elasticSearchInfo?.underUpgradation ?? null,
+	};
 };

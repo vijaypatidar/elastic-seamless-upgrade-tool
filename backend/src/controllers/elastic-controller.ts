@@ -6,6 +6,7 @@ import { IClusterInfo, IElasticInfo, IKibanaInfo } from "../models/cluster-info.
 import {
 	createOrUpdateClusterInfo,
 	getAllClusters,
+	getClusterInfo,
 	getClusterInfoById,
 	getElasticsearchDeprecation,
 	getKibanaDeprecation,
@@ -22,11 +23,10 @@ import {
 } from "../services/elastic-node.service.";
 import { KibanaClient } from "../clients/kibana.client";
 import path from "path";
-import { getPossibleUpgrades } from "../utils/upgrade.versions";
 import { normalizeNodeUrl } from "../utils/utlity.functions";
 import { createKibanaNodes, getKibanaNodes, triggerKibanaNodeUpgrade } from "../services/kibana-node.service";
-import { getElasticSearchInfo, syncElasticSearchInfo } from "../services/elastic-search-info.service";
 import { NodeStatus } from "../enums";
+import { clusterMonitorService } from "../services/cluster-monitor.service";
 
 export const healthCheck = async (req: Request, res: Response) => {
 	try {
@@ -43,31 +43,9 @@ export const healthCheck = async (req: Request, res: Response) => {
 export const getClusterDetails = async (req: Request, res: Response) => {
 	try {
 		const clusterId = req.params.clusterId;
-		await syncElasticSearchInfo(clusterId);
-		const elasticSearchInfo = await getElasticSearchInfo(clusterId);
-		const clusterInfo = await getClusterInfoById(clusterId);
-		const currentVersion = elasticSearchInfo?.version;
-		const possibleUpgradeVersions = currentVersion ? getPossibleUpgrades(currentVersion) : [];
-		res.send({
-			clusterName: elasticSearchInfo?.clusterName ?? null,
-			clusterUUID: elasticSearchInfo?.clusterUUID ?? null,
-			status: elasticSearchInfo?.status ?? null,
-			version: elasticSearchInfo?.version ?? null,
-			timedOut: elasticSearchInfo?.timedOut ?? null,
-			numberOfDataNodes: elasticSearchInfo?.numberOfDataNodes ?? null,
-			numberOfNodes: elasticSearchInfo?.numberOfNodes ?? null,
-			activePrimaryShards: elasticSearchInfo?.activePrimaryShards ?? null,
-			activeShards: elasticSearchInfo?.activeShards ?? null,
-			unassignedShards: elasticSearchInfo?.unassignedShards ?? null,
-			initializingShards: elasticSearchInfo?.initializingShards ?? null,
-			relocatingShards: elasticSearchInfo?.relocatingShards ?? null,
-			infrastructureType: clusterInfo?.infrastructureType ?? null,
-			targetVersion: clusterInfo?.targetVersion ?? null,
-			possibleUpgradeVersions: possibleUpgradeVersions ?? null,
-			underUpgradation: elasticSearchInfo?.underUpgradation ?? null,
-		});
-
-		return;
+		const clusterInfo = await getClusterInfo(clusterId);
+		clusterMonitorService.addCluster(clusterId);
+		res.send(clusterInfo);
 	} catch (err: any) {
 		logger.info(err);
 		res.status(400).send({ err: err.message });
