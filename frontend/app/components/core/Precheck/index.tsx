@@ -35,6 +35,7 @@ function Precheck() {
 	const [expanded, setExpanded] = useState<string[]>([])
 	const [nodeSelected, setNodeSelected] = useState<TNodeData | null>(null)
 	const { socket, isConnected } = useSocketStore()
+	const [isExportPending, setIsExportPending] = useState(false)
 
 	useEffect(() => {
 		if (!socket) return
@@ -90,6 +91,25 @@ function Precheck() {
 		mutationKey: ["re-run-prechecks"],
 		mutationFn: reReunPrecheck,
 	})
+
+	const handleExport = async () => {
+		setIsExportPending(true)
+		try {
+			const jsonString = JSON.stringify(data, null, 2)
+			const blob = new Blob([jsonString], { type: "application/json" })
+			const url = URL.createObjectURL(blob)
+			const a = document.createElement("a")
+			a.href = url
+			a.download = "precheck-logs.json"
+			a.click()
+
+			URL.revokeObjectURL(url)
+		} catch (err) {
+			toast.error("Something went wrong while exporting the file")
+		} finally {
+			setIsExportPending(false)
+		}
+	}
 
 	if (isLoading) return <Loading />
 
@@ -149,11 +169,11 @@ function Precheck() {
 								</Box>
 								<Box className="flex flex-row gap-[6px]">
 									<OutlinedBorderButton onClick={HandleRerun} disabled={isPending}>
-										<Refresh color="currentColor" size="14px" />{" "}
-										{isPending ? "Running..." : "Re-run"}
+										<Refresh color="currentColor" size="14px" /> {isPending ? "Running" : "Re-run"}
 									</OutlinedBorderButton>
-									<OutlinedBorderButton>
-										<ExportCurve color="currentColor" size="14px" /> Export
+									<OutlinedBorderButton onClick={handleExport} disable={isExportPending}>
+										<ExportCurve color="currentColor" size="14px" />{" "}
+										{isExportPending ? "Exporting" : "Export"}
 									</OutlinedBorderButton>
 								</Box>
 							</Box>
