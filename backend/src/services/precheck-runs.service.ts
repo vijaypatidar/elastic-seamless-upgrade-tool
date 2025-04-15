@@ -91,14 +91,19 @@ export const getLatestRunsByPrecheck = async (clusterId: string): Promise<INodeP
 
 export const updateRunStatus = async (
 	identifier: Partial<INodePrecheckRun>,
-	newStatus: PrecheckStatus
+	newStatus: PrecheckStatus,
+	logs: string[]
 ): Promise<void> => {
 	try {
 		const endAt =
 			newStatus === PrecheckStatus.COMPLETED || newStatus === PrecheckStatus.FAILED ? Date.now() : undefined;
 		const updatedNode = await NodePrecheckRun.findOneAndUpdate(
 			identifier,
-			{ status: newStatus, endAt: endAt },
+			{
+				status: newStatus,
+				endAt: endAt,
+				$push: { logs: { $each: logs } },
+			},
 			{ new: true, runValidators: true }
 		);
 		if (!updatedNode) {
