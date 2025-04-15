@@ -14,6 +14,7 @@ import { useLocalStore } from "~/store/common"
 import useRefreshStore from "~/store/refresh"
 import useSafeRouteStore from "~/store/safeRoutes"
 import DetailBox from "./widgets/DetailBox"
+import { useSocketStore } from "~/store/socket"
 
 const CLUSTER_STATUS_COLOR: { [key: string]: string } = {
 	yellow: "#E0B517",
@@ -49,11 +50,24 @@ const STYLES = {
 }
 
 function ClusterInfo() {
+	const { socket, isConnected } = useSocketStore()
 	const navigate = useNavigate()
 	const clusterId = useLocalStore((state: any) => state.clusterId)
 	const infraType = useLocalStore((state: any) => state.infraType)
-	const setUpgradeAssistAllowed  = useSafeRouteStore((state: any) => state.setUpgradeAssistAllowed)
-	const refresh  = useRefreshStore((state: any) => state.refreshToggle)
+	const setUpgradeAssistAllowed = useSafeRouteStore((state: any) => state.setUpgradeAssistAllowed)
+	const refresh = useRefreshStore((state: any) => state.refreshToggle)
+
+	useEffect(() => {
+		console.log(isConnected)
+		if (!socket) return
+
+		socket.on("message", (message) => {
+			console.log("ksjfksf", message)
+		})
+		return () => {
+			socket.off("meskfls")
+		}
+	}, [socket])
 
 	const getClusterInfo = async () => {
 		let response: any = []

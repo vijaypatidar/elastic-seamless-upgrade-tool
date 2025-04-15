@@ -48,7 +48,7 @@ function SelectionTile({ value, label, isSelected, onSelect, comingSoon = false 
 							sx={{
 								marginLeft: "26px",
 								background: "linear-gradient(270deg, #B07FF4 28.46%, #CCFE76 100%)",
-								"background-clip": "text",
+								"backgroundClip": "text",
 								"-webkit-background-clip": "text",
 								"-webkit-text-fill-color": "transparent",
 							}}

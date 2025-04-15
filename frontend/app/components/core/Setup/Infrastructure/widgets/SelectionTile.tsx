@@ -60,7 +60,7 @@ const SelectionTile = ({
 							lineHeight="22px"
 							sx={{
 								background: "linear-gradient(270deg, #B07FF4 28.46%, #CCFE76 100%)",
-								"background-clip": "text",
+								"backgroundClip": "text",
 								"-webkit-background-clip": "text",
 								"-webkit-text-fill-color": "transparent",
 							}}

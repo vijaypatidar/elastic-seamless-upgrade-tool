@@ -1,17 +1,28 @@
 import { Button, Divider, useDisclosure } from "@heroui/react"
 import { Box } from "@mui/material"
 import { Edit, Edit2, Magicpen, Setting2 } from "iconsax-react"
+import { useEffect } from "react"
 import { Outlet } from "react-router"
 import EditCluster from "~/components/core/EditCluster"
 import Settings from "~/components/core/Settings"
 import UpcomingFeature from "~/components/core/UpcomingFeature"
 import { OutlinedBorderButton } from "~/components/utilities/Buttons"
 import AssetsManager from "~/constants/AssetsManager"
+import { useSocketStore } from "~/store/socket"
 
 function Common() {
+	const { connect, disconnect } = useSocketStore()
 	const { isOpen, onOpen, onOpenChange } = useDisclosure()
 	const { isOpen: isSettingsOpen, onOpen: onSettingsOpen, onOpenChange: onSettingsOpenChange } = useDisclosure()
 	const { isOpen: isEditOpen, onOpen: onEditOpen, onOpenChange: onEditOpenChange } = useDisclosure()
+
+	useEffect(() => {
+		connect() // Connect on mount
+
+		return () => {
+			disconnect() // Disconnect on unmount
+		}
+	}, [connect, disconnect])
 
 	// const [headerIndexChange, setHeaderIndexChange] = useState<boolean>(false)
 
@@ -29,7 +40,7 @@ function Common() {
 		<Box className="flex flex-col w-full pb-4 bg-[#0A0A0A]" height="var(--window-height)">
 			<Box
 				className="flex flex-row gap-2 justify-between bg-[#0A0A0A]"
-				padding="16px 32px 10px 40px"
+				padding="16px 26px 10px 40px"
 				zIndex="99999"
 			>
 				<img src={AssetsManager.LOGO_PLUS_NAMED} width="161.6px" height="36px" />

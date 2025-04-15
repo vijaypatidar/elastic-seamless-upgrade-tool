@@ -7,7 +7,7 @@ const useSafeRouteStore = create()(
 		(set) => ({
 			clusterAdded: false,
 			deprecationChangesAllowed: false,
-			elasticNodeUpgradeAllowed: false,
+			elasticNodeUpgradeAllowed: true,
 			kibanaNodeUpgradeAllowed: false,
 			upgradeAssistAllowed: false,
 
