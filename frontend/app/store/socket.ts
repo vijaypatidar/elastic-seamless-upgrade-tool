@@ -16,8 +16,7 @@ export const useSocketStore = create<SocketStore>((set) => ({
 
 	connect: () => {
 		const socket = io(URLManager.SOCKET_BASE_URL, {
-			transports: ["websocket"],
-			// withCredentials: true,
+			transports: ["websocket", "polling", "webtransport"],
 		})
 
 		socket.on("connect", () => set({ isConnected: true }))

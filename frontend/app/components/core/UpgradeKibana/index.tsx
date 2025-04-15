@@ -1,16 +1,17 @@
 import { Spinner, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from "@heroui/react"
 import { Box, Typography } from "@mui/material"
 import { useMutation, useQuery } from "@tanstack/react-query"
-import { CloseCircle, Flash, TickCircle } from "iconsax-react"
-import { useCallback, type Key } from "react"
+import { CloseCircle, Flash, TickCircle, Warning2 } from "iconsax-react"
+import { useCallback, useEffect, type Key } from "react"
 import { toast } from "sonner"
 import axiosJSON from "~/apis/http"
 import { OutlinedBorderButton } from "~/components/utilities/Buttons"
 import StorageManager from "~/constants/StorageManager"
-import LocalStorageHandler from "~/lib/LocalHanlder"
-import ProgressBar from "./widgets/progress"
 import StringManager from "~/constants/StringManager"
+import LocalStorageHandler from "~/lib/LocalHanlder"
 import { useLocalStore } from "~/store/common"
+import { useSocketStore } from "~/store/socket"
+import ProgressBar from "./widgets/progress"
 
 const UPGRADE_ENUM = {
 	completed: (
@@ -84,6 +85,20 @@ const columns: TUpgradeColumn = [
 
 function UpgradeKibana({ clusterType }: TUpgradeKibana) {
 	const clusterId = useLocalStore((state: any) => state.clusterId)
+	const { socket, isConnected } = useSocketStore()
+
+	useEffect(() => {
+		if (!socket) return
+
+		socket.on("UPGRADE_PROGRESS_CHANGE", (message) => {
+			refetch()
+		})
+
+		return () => {
+			socket.off("UPGRADE_PROGRESS_CHANGE")
+		}
+	}, [socket])
+
 	const getNodeStatus = async (nodeId: string) => {
 		try {
 			const response = await axiosJSON.get(`/api/elastic/clusters/nodes/${nodeId}`)
@@ -112,8 +127,10 @@ function UpgradeKibana({ clusterType }: TUpgradeKibana) {
 					status: item.status,
 					progress: item.progress,
 					isMaster: false,
-					disabled: (item.isMaster && res.data.filter((i: any) => i.status !== "UPGRADED" && i.isMaster).length > 0) ||
-					res.data.some((i: any) => i.status === "UPGRADING"),
+					disabled:
+						(item.isMaster &&
+							res.data.filter((i: any) => i.status !== "UPGRADED" && i.isMaster).length > 0) ||
+						res.data.some((i: any) => i.status === "UPGRADING"),
 				}))
 			})
 			.catch((err) => toast.error(err?.response?.data.err ?? StringManager.GENERIC_ERROR))
@@ -140,12 +157,12 @@ function UpgradeKibana({ clusterType }: TUpgradeKibana) {
 	const { data, isLoading, refetch, isRefetching } = useQuery({
 		queryKey: ["nodes-info"],
 		queryFn: getNodesInfo,
-		refetchInterval: (data) => {
-			const nodes = data.state.data
-			const isUpgrading = nodes?.some((node: any) => node.status === "UPGRADING")
-			return isUpgrading ? 1000 : false
-		},
-		refetchIntervalInBackground: true,
+		// refetchInterval: (data) => {
+		// 	const nodes = data.state.data
+		// 	const isUpgrading = nodes?.some((node: any) => node.status === "UPGRADING")
+		// 	return isUpgrading ? 1000 : false
+		// },
+		// refetchIntervalInBackground: true,
 		staleTime: 0,
 	})
 
@@ -221,7 +238,7 @@ function UpgradeKibana({ clusterType }: TUpgradeKibana) {
 					<Typography color="#FFF" fontSize="14px" fontWeight="600" lineHeight="22px">
 						Node Details
 					</Typography>
-					<OutlinedBorderButton icon={Flash} filledIcon={Flash} disabled>
+					<OutlinedBorderButton icon={Flash} filledIcon={Flash} disabled padding="8px 16px" fontSize="13px">
 						Upgrade all
 					</OutlinedBorderButton>
 				</Box>

@@ -58,14 +58,13 @@ function ClusterInfo() {
 	const refresh = useRefreshStore((state: any) => state.refreshToggle)
 
 	useEffect(() => {
-		console.log(isConnected)
 		if (!socket) return
 
-		socket.on("message", (message) => {
-			console.log("ksjfksf", message)
+		socket.on("CLUSTER_INFO_CHANGE", (message) => {
+			refetch()
 		})
 		return () => {
-			socket.off("meskfls")
+			socket.off("CLUSTER_INFO_CHANGE")
 		}
 	}, [socket])
 
@@ -112,7 +111,7 @@ function ClusterInfo() {
 
 	return (
 		<Box
-			className="flex p-px rounded-2xl w-full h-[calc(var(--window-height)-190px)]"
+			className="flex p-px rounded-2xl w-full h-[calc(var(--window-height)-196px)]"
 			sx={{
 				background: "radial-gradient(#927CC5, #1D1D1D)",
 			}}

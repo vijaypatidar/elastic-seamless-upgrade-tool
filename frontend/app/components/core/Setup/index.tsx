@@ -34,6 +34,7 @@ function Setup() {
 		username: "",
 		password: "",
 		apiKey: "",
+		sshUser: "",
 		pathToSSH: "",
 		kibanaConfigs: [],
 	})
@@ -79,6 +80,7 @@ function Setup() {
 					kibana: { url: creds.kibanaUrl, username: creds.username, password: creds.password },
 					certificateIds: certIds,
 					infrastructureType: infraType,
+					sshUser: creds.sshUser,
 					key: creds.pathToSSH ?? "",
 					kibanaConfigs: creds.kibanaConfigs,
 				})
