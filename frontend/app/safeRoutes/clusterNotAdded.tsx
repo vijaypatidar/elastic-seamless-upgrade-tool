@@ -1,8 +1,8 @@
-import { useSelector } from "react-redux"
 import { Navigate, Outlet } from "react-router"
+import useSafeRouteStore from "~/store/safeRoutes"
 
 function ClusterNotAddedSafeRoute() {
-	const canAccess = useSelector<any, boolean>((state) => state.safeRoutes.clusterAdded)
+	const canAccess = useSafeRouteStore((state: any) => state.clusterAdded)
 
 	return canAccess ? <Outlet /> : <Navigate to="/" />
 }

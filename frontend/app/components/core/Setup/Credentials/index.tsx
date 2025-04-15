@@ -78,11 +78,12 @@ function Credentials({ initialValues: IV, backStep, onSubmit }: TCredentialsComp
 								isSelected={formik.values.authPref === "U/P"}
 								value="U/P"
 								onSelect={(value: string | number) => formik.setFieldValue("authPref", value)}
-							/>
+								/>
 							<SelectionTile
 								label="API Key"
 								isSelected={formik.values.authPref === "API_KEY"}
 								value="API_KEY"
+								comingSoon
 								onSelect={(value: string | number) => formik.setFieldValue("authPref", value)}
 							/>
 						</Box>
@@ -194,7 +195,7 @@ function Credentials({ initialValues: IV, backStep, onSubmit }: TCredentialsComp
 								}}
 							>
 								<Add size="16px" color="currentColor" />
-								Add Node
+								Add cluster
 							</OutlinedButton>
 						</Box>
 					</Box>
@@ -209,7 +210,7 @@ function Credentials({ initialValues: IV, backStep, onSubmit }: TCredentialsComp
 												id={`kibanaConfigs.${index}`}
 												name={`kibanaConfigs.${index}`}
 												type="text"
-												placeholder="Enter node name"
+												placeholder="Enter cluster name"
 												varient="outlined"
 												value={cluster.name}
 												onBlur={formik.handleBlur}
@@ -229,7 +230,7 @@ function Credentials({ initialValues: IV, backStep, onSubmit }: TCredentialsComp
 												id={`kibanaConfigs.${index}`}
 												name={`kibanaConfigs.${index}`}
 												type="text"
-												placeholder="Enter node IP"
+												placeholder="Enter cluster name"
 												varient="outlined"
 												value={cluster.ip}
 												onBlur={formik.handleBlur}

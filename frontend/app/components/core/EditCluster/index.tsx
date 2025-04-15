@@ -12,17 +12,14 @@ import { cn } from "~/lib/Utils"
 import SelectionTile from "../Setup/Credentials/widgets/SelectionTile"
 // @ts-ignore-block
 import Files from "react-files"
+import { useLocation } from "react-router"
 import axiosJSON from "~/apis/http"
 import { OneLineSkeleton } from "~/components/utilities/Skeletons"
-import StorageManager from "~/constants/StorageManager"
-import LocalStorageHandler from "~/lib/LocalHanlder"
-import SessionStorageHandler from "~/lib/SessionHandler"
-import validationSchema from "./validation/validation"
-import { useLocation, useNavigate } from "react-router"
-import { useDispatch } from "react-redux"
-import { resetForEditCluster } from "~/store/reducers/safeRoutes"
-import { refresh } from "~/store/reducers/refresh"
 import StringManager from "~/constants/StringManager"
+import { useLocalStore } from "~/store/common"
+import useRefreshStore from "~/store/refresh"
+import useSafeRouteStore from "~/store/safeRoutes"
+import validationSchema from "./validation/validation"
 
 const STYLES = {
 	GO_BACK_BUTTON: {
@@ -53,8 +50,12 @@ const INITIAL_VALUES = {
 }
 
 function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: () => void }) {
+	const refresh = useRefreshStore((state: any) => state.refresh)
+	const resetForEditCluster = useSafeRouteStore((state: any) => state.resetForEditCluster)
+	const setInfraType = useLocalStore((state: any) => state.setInfraType)
+	const setClusterId = useLocalStore((state: any) => state.setClusterId)
+
 	const { pathname } = useLocation()
-	const dispatch = useDispatch()
 	const [initialValues, setInitialValues] = useState<TClusterValues>(INITIAL_VALUES)
 	const [showPassword, setShowPassword] = useState<boolean>(false)
 
@@ -162,13 +163,12 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 					kibanaConfigs: values.kibanaConfigs,
 				})
 				.then((res) => {
-					LocalStorageHandler.setItem(StorageManager.INFRA_TYPE, "on-premise")
-					SessionStorageHandler.setItem(StorageManager.SETUP_SET, 1)
-					LocalStorageHandler.setItem(StorageManager.CLUSTER_ID, res?.data?.clusterId || "cluster-id")
+					setInfraType("on-premise")
+					setClusterId(res?.data?.clusterId || "cluster-id")
 					refetch()
-					dispatch(resetForEditCluster())
+					resetForEditCluster()
 					if (pathname === "/cluster-overview") {
-						dispatch(refresh())
+						refresh()
 					}
 					onOpenChange()
 				})
@@ -352,6 +352,7 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 																		onSelect={(value: string | number) =>
 																			formik.setFieldValue("authPref", value)
 																		}
+																		comingSoon
 																	/>
 																</Box>
 																{formik.touched.authPref &&
@@ -645,7 +646,12 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 																		</Box>
 																		{formik.touched.kibanaConfigs &&
 																		formik.errors.kibanaConfigs?.[index] ? (
-																			<Typography fontSize="12px" fontWeight="400" color="#EF4444" lineHeight="20px">
+																			<Typography
+																				fontSize="12px"
+																				fontWeight="400"
+																				color="#EF4444"
+																				lineHeight="20px"
+																			>
 																				{formik.errors.kibanaConfigs?.[index]
 																					?.name ||
 																					formik.errors.kibanaConfigs?.[index]

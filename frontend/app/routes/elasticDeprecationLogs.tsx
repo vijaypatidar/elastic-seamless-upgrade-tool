@@ -5,7 +5,7 @@ import { Link } from "react-router"
 import DeprecationLogs from "~/components/core/DeprecationLogs"
 
 export function meta({}: Route.MetaArgs) {
-	return [{ title: "Deprecation Logs" }, { name: "description", content: "Welcome to Hyperflex" }]
+	return [{ title: "Elastic Deprecation Logs" }, { name: "description", content: "Welcome to Hyperflex" }]
 }
 
 function ElasticDeprecationLogs() {

@@ -9,6 +9,7 @@ import StarsLarge from "../assets/imgs/webp/stars-large.webp"
 import StarsSmall from "../assets/imgs/webp/stars-small.webp"
 import AnimatedLoaderSVG from "../assets/svgs/animated-loader.svg"
 import WavingHandSVG from "../assets/svgs/waving-hand.svg"
+import GradientFlashSVG from "../assets/svgs/graident-flash.svg"
 
 const AssetsManager = {
 	LOGO: Logo,
@@ -22,6 +23,7 @@ const AssetsManager = {
 	LOGO_PLUS_NAMED: LogoPlusNamed,
 	LOGSTASH: Logstash,
 	EL: El,
+	GRADIENT_FLASH: GradientFlashSVG
 } as const
 
 export default AssetsManager

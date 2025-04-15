@@ -1,14 +1,14 @@
 import { Box, Breadcrumbs, Typography } from "@mui/material"
+import type { Route } from "../+types/root"
 import { ArrowRight2, Convertshape2 } from "iconsax-react"
 import { Link } from "react-router"
-import DeprecationLogs from "~/components/core/DeprecationLogs"
-import type { Route } from "../+types/root"
+import Precheck from "~/components/core/Precheck"
 
 export function meta({}: Route.MetaArgs) {
-	return [{ title: "Kibana Deprecation Logs" }, { name: "description", content: "Welcome to Hyperflex" }]
+	return [{ title: "Pre-check" }, { name: "description", content: "Welcome to Hyperflex" }]
 }
 
-function KibanaDeprecationLogs() {
+function PreCheckPage() {
 	return (
 		<Box className="flex flex-col w-full gap-[10px]" padding="0px 32px">
 			<Box
@@ -24,17 +24,17 @@ function KibanaDeprecationLogs() {
 							fontWeight="500"
 							lineHeight="normal"
 						>
-							<Convertshape2 color="currentColor" size="14px" /> Assist
+							<Convertshape2 color="currentColor" size="14px" /> Prechecks
 						</Typography>
 					</Link>
 					<Typography color="#BDA0FF" fontSize="12px" fontWeight="500" lineHeight="normal">
-						Kibana deprecated logs
+						Detail view [Rename]
 					</Typography>
 				</Breadcrumbs>
 			</Box>
-			<DeprecationLogs clusterType="KIBANA" />
+			<Precheck />
 		</Box>
 	)
 }
 
-export default KibanaDeprecationLogs
+export default PreCheckPage
