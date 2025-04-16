@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { ELASTIC_PRECHECK_CONFIG, getPrecheckById } from "../config/precheck-config";
+import { PRECHECK_CONFIG, getPrecheckById } from "../config/precheck-config";
 import { PrecheckStatus } from "../enums";
 import logger from "../logger/logger";
 import NodePrecheckRun, { INodePrecheckRun, INodePrecheckRunDocument } from "../models/node-precheck-runs.model";
@@ -47,8 +47,8 @@ export const schedulePrecheckRun = async (): Promise<void> => {
 				inventoryPath: inventoryPath,
 				variables: {
 					elk_version: targetVersion,
-					username: elastic.username,
-					password: elastic.password,
+					es_username: elastic.username!!,
+					es_password: elastic.password!!,
 					cluster_type: "ELASTIC",
 					playbook_run_id: playbookRunId,
 					playbook_run_type: "PRECHECK",
@@ -135,7 +135,7 @@ export const runPrecheck = async (nodes: IElasticNode[], clusterId: string) => {
 			clusterId: clusterId,
 		}))
 		.map((precheck) => {
-			return ELASTIC_PRECHECK_CONFIG.individuals.map(({ id: precheckId }) => ({
+			return PRECHECK_CONFIG.map(({ id: precheckId }) => ({
 				...precheck,
 				precheckId,
 			}));

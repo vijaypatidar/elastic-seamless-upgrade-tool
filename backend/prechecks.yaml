@@ -1,30 +1,13 @@
-elastic:
-  combined:
-    id: elastic_precheck
-    name: Elastic Search Prechecks
-    playbookPath: playbooks/elastic/prechecks/check.ansible.yml
 
-  individuals:
-    - id: elasticsearch_cpu_precheck
-      name: CPU Utilization check
-      playbookPath: playbooks/elastic/prechecks/cpu.ansible.yml
-    
-    - id: elasticsearch_disk_precheck
-      name: Disk Utilization Check
-      playbookPath: playbooks/elastic/prechecks/disk.ansible.yml
-    
-    - id: elasticsearch_download_precheck
-      name: Pre-download check
-      playbookPath: playbooks/elastic/prechecks/download-check.ansible.yml
+- id: elasticsearch_cpu_precheck
+  name: CPU Utilization check
+  playbookPath: playbooks/pre_checks/cpu.ansible.yml
 
-kibana:
-  combined:
-    id: kibana_precheck
-    name: Elastic Search Prechecks
-    playbookPath: playbooks/elastic/prechecks/check.ansible.yml
+- id: elasticsearch_disk_precheck
+  name: Disk Utilization Check
+  playbookPath: playbooks/pre_checks/disk.ansible.yml
 
-  individuals:
-    - id: elasticsearch_cpu_precheck
-      name: CPU Utilization check
-      playbookPath: playbooks/elastic/prechecks/cpu.ansible.yml
-    
+- id: elasticsearch_memory_precheck
+  name: Memory Utilization Check
+  playbookPath: playbooks/pre_checks/memory.ansible.yml
+

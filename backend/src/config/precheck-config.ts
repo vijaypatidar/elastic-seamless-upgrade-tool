@@ -1,21 +1,12 @@
 import { loadYaml } from "../utils/yaml-utils";
 
-export interface PlaybookConfig {
+export interface PrecheckConfig {
 	id: string;
 	name: string;
 	playbookPath: string;
 }
+export const PRECHECK_CONFIG: PrecheckConfig[] = loadYaml("prechecks.yaml");
 
-export interface PlaybookConfigGroup {
-	combined: PlaybookConfig;
-	individuals: PlaybookConfig[];
-}
-
-const PRECHECK_CONFIG: { elastic: PlaybookConfigGroup; kibana: PlaybookConfigGroup } = loadYaml("prechecks.yaml");
-
-export const getPrecheckById = (precheckId: string): PlaybookConfig | undefined => {
-	const allPrechecks = [...PRECHECK_CONFIG.elastic.individuals, ...PRECHECK_CONFIG.kibana.individuals];
-	return allPrechecks.find((precheck) => precheck.id === precheckId);
+export const getPrecheckById = (precheckId: string): PrecheckConfig | undefined => {
+	return PRECHECK_CONFIG.find((precheck) => precheck.id === precheckId);
 };
-export const ELASTIC_PRECHECK_CONFIG = PRECHECK_CONFIG.elastic;
-export const KIBANA_PRECHECK_CONFIG = PRECHECK_CONFIG.kibana;
