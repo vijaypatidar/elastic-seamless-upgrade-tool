@@ -5,7 +5,7 @@ import UpgradeCluster from "~/components/core/UpgradeCluster"
 import type { Route } from "../+types/root"
 
 export function meta({}: Route.MetaArgs) {
-	return [{ title: "Deprecation Logs" }, { name: "description", content: "Welcome to Hyperflex" }]
+	return [{ title: "Cluster Upgrade" }, { name: "description", content: "Welcome to Hyperflex" }]
 }
 
 function ClusterUpgrade() {

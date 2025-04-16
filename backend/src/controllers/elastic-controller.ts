@@ -6,6 +6,7 @@ import { IClusterInfo, IElasticInfo, IKibanaInfo } from "../models/cluster-info.
 import {
 	createOrUpdateClusterInfo,
 	getAllClusters,
+	getClusterInfo,
 	getClusterInfoById,
 	getElasticsearchDeprecation,
 	getKibanaDeprecation,
@@ -22,11 +23,12 @@ import {
 } from "../services/elastic-node.service.";
 import { KibanaClient } from "../clients/kibana.client";
 import path from "path";
-import { getPossibleUpgrades } from "../utils/upgrade.versions";
 import { normalizeNodeUrl } from "../utils/utlity.functions";
 import { createKibanaNodes, getKibanaNodes, triggerKibanaNodeUpgrade } from "../services/kibana-node.service";
-import { getElasticSearchInfo, syncElasticSearchInfo } from "../services/elastic-search-info.service";
-import { NodeStatus } from "../enums";
+import { NodeStatus, PrecheckStatus } from "../enums";
+import { clusterMonitorService } from "../services/cluster-monitor.service";
+import { getLatestRunsByPrecheck, getMergedPrecheckStatus, runPrecheck } from "../services/precheck-runs.service";
+const ANSIBLE_PLAYBOOKS_PATH = process.env.ANSIBLE_PLAYBOOKS_PATH || "";
 
 export const healthCheck = async (req: Request, res: Response) => {
 	try {
@@ -43,31 +45,9 @@ export const healthCheck = async (req: Request, res: Response) => {
 export const getClusterDetails = async (req: Request, res: Response) => {
 	try {
 		const clusterId = req.params.clusterId;
-		await syncElasticSearchInfo(clusterId);
-		const elasticSearchInfo = await getElasticSearchInfo(clusterId);
-		const clusterInfo = await getClusterInfoById(clusterId);
-		const currentVersion = elasticSearchInfo?.version;
-		const possibleUpgradeVersions = currentVersion ? getPossibleUpgrades(currentVersion) : [];
-		res.send({
-			clusterName: elasticSearchInfo?.clusterName ?? null,
-			clusterUUID: elasticSearchInfo?.clusterUUID ?? null,
-			status: elasticSearchInfo?.status ?? null,
-			version: elasticSearchInfo?.version ?? null,
-			timedOut: elasticSearchInfo?.timedOut ?? null,
-			numberOfDataNodes: elasticSearchInfo?.numberOfDataNodes ?? null,
-			numberOfNodes: elasticSearchInfo?.numberOfNodes ?? null,
-			activePrimaryShards: elasticSearchInfo?.activePrimaryShards ?? null,
-			activeShards: elasticSearchInfo?.activeShards ?? null,
-			unassignedShards: elasticSearchInfo?.unassignedShards ?? null,
-			initializingShards: elasticSearchInfo?.initializingShards ?? null,
-			relocatingShards: elasticSearchInfo?.relocatingShards ?? null,
-			infrastructureType: clusterInfo?.infrastructureType ?? null,
-			targetVersion: clusterInfo?.targetVersion ?? null,
-			possibleUpgradeVersions: possibleUpgradeVersions ?? null,
-			underUpgradation: elasticSearchInfo?.underUpgradation ?? null,
-		});
-
-		return;
+		const clusterInfo = await getClusterInfo(clusterId);
+		clusterMonitorService.addCluster(clusterId);
+		res.send(clusterInfo);
 	} catch (err: any) {
 		logger.info(err);
 		res.status(400).send({ err: err.message });
@@ -88,7 +68,12 @@ export const addOrUpdateClusterDetail = async (req: Request, res: Response) => {
 		const sanitizedKey = sshKey.replace(/\r?\n|\r/g, "");
 		const formattedKey = `-----BEGIN RSA PRIVATE KEY-----\n${sanitizedKey}\n-----END RSA PRIVATE KEY-----`;
 
-		const keyPath = path.join(__dirname, "..", "..", "SSH_key.pem");
+		const sshKeysDir = path.join(ANSIBLE_PLAYBOOKS_PATH, "ssh-keys");
+		if (!fs.existsSync(sshKeysDir)) {
+			fs.mkdirSync(sshKeysDir, { recursive: true });
+		}
+		const keyPath = path.join(sshKeysDir, "SSH_key.pem");
+
 		fs.writeFileSync(keyPath, formattedKey, { encoding: "utf8" });
 		fs.chmodSync(keyPath, 0o600);
 		fs.writeFileSync(keyPath, formattedKey);
@@ -107,6 +92,7 @@ export const addOrUpdateClusterDetail = async (req: Request, res: Response) => {
 			infrastructureType: req.body.infrastructureType,
 			pathToKey: keyPath,
 			key: sshKey,
+			sshUser: req.body.sshUser,
 			kibanaConfigs: kibanaConfigs,
 		};
 		const elasticCredsVerificationResult = await verifyElasticCredentials(clusterInfo.elastic);
@@ -145,17 +131,22 @@ export const getUpgradeDetails = async (req: Request, res: Response) => {
 
 		const kibanaUrl = clusterInfo.kibana?.url;
 
-		const [elasticsearchDeprecation, kibanaDeprecation, kibanaVersion, elasticNodes, snapshots] = await Promise.all(
-			[
+		const [elasticsearchDeprecation, kibanaDeprecation, kibanaVersion, elasticNodes, snapshots, prechecks] =
+			await Promise.all([
 				getElasticsearchDeprecation(clusterId),
 				getKibanaDeprecation(clusterId),
 				kibanaClient.getKibanaVersion(),
 				getAllElasticNodes(clusterId),
 				client.getValidSnapshots(),
-			]
-		);
+				getLatestRunsByPrecheck(clusterId),
+			]);
 		const esDeprecationCount = elasticsearchDeprecation.counts;
 		const kibanaDeprecationCount = kibanaDeprecation.counts;
+		const allPrechecks = prechecks.flat();
+		if (allPrechecks.length === 0) {
+			const runId = await runPrecheck(elasticNodes, clusterId);
+			logger.info(`Prechecks initiated successfully for cluster '${clusterId}' with Playbook Run ID '${runId}'.`);
+		}
 
 		const isKibanaUpgraded = kibanaVersion === clusterInfo.targetVersion ? true : false;
 		//verifying upgradability
@@ -174,6 +165,12 @@ export const getUpgradeDetails = async (req: Request, res: Response) => {
 			kibana: {
 				isUpgradable: !isKibanaUpgraded,
 				deprecations: { ...kibanaDeprecationCount },
+			},
+			precheck: {
+				status:
+					allPrechecks.length == 0
+						? PrecheckStatus.RUNNING
+						: getMergedPrecheckStatus(allPrechecks.map((precheck) => precheck.status)),
 			},
 		});
 	} catch (error: any) {
@@ -432,6 +429,7 @@ export const verfiyCluster = async (req: Request, res: Response) => {
 							targetVersion: clusters[0].targetVersion ?? null,
 							infrastructureType: clusters[0].infrastructureType ?? null,
 							pathToKey: clusters[0].key ?? null,
+							sshUser: clusters[0].sshUser,
 							kibanaConfigs: clusters[0].kibanaConfigs ? clusters[0].kibanaConfigs : [],
 						}
 					: null,

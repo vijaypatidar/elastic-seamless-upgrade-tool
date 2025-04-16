@@ -49,7 +49,14 @@ app.use((req, res) => {
 	});
 });
 
-const io = new Server(server);
+const io = new Server(server, {
+	transports: ["polling", "websocket", "webtransport"],
+	cors: {
+		origin: "*",
+		methods: ["GET", "POST"],
+		credentials: true,
+	},
+});
 
 io.of("/notification").on("connection", (socket: Socket) => {
 	logger.debug("User connected to socker.io with socketId:", socket.id);
@@ -59,6 +66,7 @@ io.of("/notification").on("connection", (socket: Socket) => {
 	notificationService.addNotificationListner(notificationListner);
 
 	socket.on("message", (data) => {
+		socket.emit("message","Received message from client");
 		logger.debug("Received message:", data);
 	});
 

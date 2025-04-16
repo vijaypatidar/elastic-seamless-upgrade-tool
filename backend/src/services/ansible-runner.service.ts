@@ -1,10 +1,11 @@
-import { randomUUID } from "crypto";
 import { spawn } from "child_process";
 import logger from "../logger/logger";
 const ANSIBLE_PLAYBOOKS_PATH = process.env.ANSIBLE_PLAYBOOKS_PATH;
 
 if (ANSIBLE_PLAYBOOKS_PATH === undefined || ANSIBLE_PLAYBOOKS_PATH === "") {
 	throw new Error("ANSIBLE_PLAYBOOKS_PATH is not defined");
+} else {
+	logger.info(`ANSIBLE_PLAYBOOKS_PATH: ${ANSIBLE_PLAYBOOKS_PATH}`);
 }
 
 interface PlaybookVariables {

@@ -5,6 +5,7 @@ type TClusterValues = {
 	username: string
 	password: string
 	apiKey: string | null
+	sshUser: string
 	pathToSSH: string
 	kibanaConfigs: TKibanaConfigs[]
 	certFiles: File[] | TExistingFile[]

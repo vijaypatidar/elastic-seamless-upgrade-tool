@@ -1,6 +1,6 @@
 import { Box, IconButton, Typography } from "@mui/material"
 import { ArrowLeft, ArrowRight, DocumentText1, DocumentUpload, Trash } from "iconsax-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 // @ts-ignore-block
 import Files from "react-files"
 import { toast } from "sonner"
@@ -131,8 +131,8 @@ function Certificates({ backStep, onSubmit, isSubmitting }: TCertificateComp) {
 				<OutlinedButton onClick={backStep}>
 					<ArrowLeft size="20px" color="currentColor" /> Back
 				</OutlinedButton>
-				<ConatinedButton onClick={handleSubmit}>
-					Continue <ArrowRight size="20px" color="currentColor" />
+				<ConatinedButton onClick={handleSubmit} disabled={isSubmitting}>
+					{isSubmitting ? "Submitting": "Continue"} <ArrowRight size="20px" color="currentColor" />
 				</ConatinedButton>
 			</Box>
 		</Box>

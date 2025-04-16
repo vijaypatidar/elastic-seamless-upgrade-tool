@@ -1,8 +1,8 @@
-import { useSelector } from "react-redux";
-import { Navigate, Outlet } from "react-router";
+import { Navigate, Outlet } from "react-router"
+import useSafeRouteStore from "~/store/safeRoutes"
 
 function UpgradeAssistSafeRoute() {
-	const canAccess = useSelector<any, boolean>((state) => state.safeRoutes.upgradeAssistAllowed)
+	const canAccess = useSafeRouteStore((state: any) => state.upgradeAssistAllowed)
 
 	return canAccess ? <Navigate to="/cluster-overview" /> : <Outlet />
 }

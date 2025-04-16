@@ -23,6 +23,10 @@ interface HostInfoPrecheck {
 	name: string;
 	progress: number;
 	precheckId: string;
+	logs?: {
+		stdout: string;
+		stderr: string;
+	};
 }
 
 interface BaseAnsibleRequest {
@@ -87,10 +91,14 @@ export const handleAnsibleWebhook = async (req: Request, res: Response) => {
 			const { playbookRunId, hosts } = body;
 			await Promise.all(
 				hosts.map(async (host) => {
-					const { precheckId, ip } = host;
+					const { precheckId, ip, logs } = host;
+					const processedLogs = !logs
+						? []
+						: [...logs.stdout.split("\n"), ...logs.stderr.split("\n")].filter((log) => log);
 					await updateRunStatus(
 						{ precheckRunId: playbookRunId, precheckId: precheckId, ip: ip },
-						mapAnsibleToPrecheckStatus(status)
+						mapAnsibleToPrecheckStatus(status),
+						processedLogs
 					);
 				})
 			);

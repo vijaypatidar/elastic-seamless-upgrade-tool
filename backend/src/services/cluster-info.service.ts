@@ -9,14 +9,25 @@ import ClusterInfo, {
 import { MigrationDeprecationsDeprecation } from "@elastic/elasticsearch/lib/api/types";
 import { DeprecationDetail, KibanaClient } from "../clients/kibana.client";
 import { ElasticClusterBaseRequest } from "..";
+import { getElasticSearchInfo, syncElasticSearchInfo } from "./elastic-search-info.service";
+import { getPossibleUpgrades } from "../utils/upgrade.versions";
 
 const cache: Record<string, IClusterInfo | null> = {};
 
 export const createOrUpdateClusterInfo = async (clusterInfo: IClusterInfo): Promise<IClusterInfoDocument> => {
 	// TODO These needs to be updated when we want to support multiple clusters
 	const clusterId = "cluster-id"; //clusterInfo.clusterId
-	const { elastic, kibana, certificateIds, targetVersion, infrastructureType, pathToKey, key, kibanaConfigs } =
-		clusterInfo;
+	const {
+		elastic,
+		kibana,
+		certificateIds,
+		targetVersion,
+		infrastructureType,
+		pathToKey,
+		key,
+		kibanaConfigs,
+		sshUser,
+	} = clusterInfo;
 	const data = await ClusterInfo.findOneAndUpdate(
 		{ clusterId: clusterId },
 		{
@@ -29,6 +40,7 @@ export const createOrUpdateClusterInfo = async (clusterInfo: IClusterInfo): Prom
 			pathToKey: pathToKey,
 			key: key,
 			kibanaConfigs: kibanaConfigs,
+			sshUser: sshUser,
 		},
 		{ new: true, upsert: true, runValidators: true }
 	);
@@ -49,6 +61,7 @@ export const getAllClusters = async (): Promise<IClusterInfo[]> => {
 			pathToKey: cluster.pathToKey,
 			key: cluster.key,
 			kibanaConfigs: cluster.kibanaConfigs,
+			sshUser: cluster.sshUser,
 		}));
 	} catch (error) {
 		console.error("Error fetching cluster list:", error);
@@ -76,6 +89,7 @@ export const getClusterInfoById = async (clusterId: string): Promise<IClusterInf
 		pathToKey: clusterInfo?.pathToKey,
 		key: clusterInfo?.key,
 		kibanaConfigs: clusterInfo?.kibanaConfigs,
+		sshUser: clusterInfo?.sshUser!!,
 	};
 };
 
@@ -207,4 +221,30 @@ export const verifyKibanaCredentials = async (kibana: IKibanaInfo): Promise<bool
 		console.error("Kibana connection failed:", error);
 		return false;
 	}
+};
+
+export const getClusterInfo = async (clusterId: string) => {
+	await syncElasticSearchInfo(clusterId);
+	const elasticSearchInfo = await getElasticSearchInfo(clusterId);
+	const clusterInfo = await getClusterInfoById(clusterId);
+	const currentVersion = elasticSearchInfo?.version;
+	const possibleUpgradeVersions = currentVersion ? getPossibleUpgrades(currentVersion) : [];
+	return {
+		clusterName: elasticSearchInfo?.clusterName ?? null,
+		clusterUUID: elasticSearchInfo?.clusterUUID ?? null,
+		status: elasticSearchInfo?.status ?? null,
+		version: elasticSearchInfo?.version ?? null,
+		timedOut: elasticSearchInfo?.timedOut ?? null,
+		numberOfDataNodes: elasticSearchInfo?.numberOfDataNodes ?? null,
+		numberOfNodes: elasticSearchInfo?.numberOfNodes ?? null,
+		activePrimaryShards: elasticSearchInfo?.activePrimaryShards ?? null,
+		activeShards: elasticSearchInfo?.activeShards ?? null,
+		unassignedShards: elasticSearchInfo?.unassignedShards ?? null,
+		initializingShards: elasticSearchInfo?.initializingShards ?? null,
+		relocatingShards: elasticSearchInfo?.relocatingShards ?? null,
+		infrastructureType: clusterInfo?.infrastructureType ?? null,
+		targetVersion: clusterInfo?.targetVersion ?? null,
+		possibleUpgradeVersions: possibleUpgradeVersions ?? null,
+		underUpgradation: elasticSearchInfo?.underUpgradation ?? null,
+	};
 };
