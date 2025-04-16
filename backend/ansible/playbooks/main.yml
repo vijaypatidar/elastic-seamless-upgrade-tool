@@ -31,5 +31,5 @@
   when: ACTION == "UPGRADE"
 
 - name: Kibana UPGRADE
-  import_playbook: kibana/kibana-UPGRADE.yml
+  import_playbook: kibana/kibana-upgrade.yml
   when: ACTION == "UPGRADE"
