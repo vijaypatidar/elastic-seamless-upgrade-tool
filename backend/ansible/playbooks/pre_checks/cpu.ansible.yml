@@ -1,0 +1,27 @@
+- hosts: all
+  become: true
+  any_errors_fatal: true
+  gather_facts: no
+  vars:
+      precheck_id: elasticsearch_cpu_precheck
+      CPU_LIMIT: 80
+  tasks:
+      - name: Monitor CPU usage
+        shell: "topu -b -d 300 -n 1 | grep 'Cpu' | awk '{print $2}' | cut -d'%' -f1"
+        register: cpu_utilization
+        changed_when: false
+
+      - name: Calculate average CPU usage over 5 minutes
+        set_fact:
+            avg_cpu: "{{ cpu_utilization.stdout_lines | map('float') | list | sum / cpu_utilization.stdout_lines | length }}"
+
+      - name: Show CPU utilization
+        debug:
+            msg: "Average CPU utilization over 5 minutes: {{ avg_cpu }}%"
+
+      - name: Validating Node CPU utilization
+        assert:
+            that:
+                - ( avg_cpu | float ) < CPU_LIMIT
+            fail_msg: "CPU Utilization is more than {{ CPU_LIMIT }}"
+            success_msg: "CPU Utilization is less than {{ CPU_LIMIT }}"

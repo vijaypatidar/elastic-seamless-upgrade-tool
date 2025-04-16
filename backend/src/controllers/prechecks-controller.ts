@@ -2,7 +2,6 @@ import { Request, Response } from "express";
 import { getAllElasticNodes, getElasticNodeById } from "../services/elastic-node.service.";
 import { getLatestRunsByPrecheck, getMergedPrecheckStatus, runPrecheck } from "../services/precheck-runs.service";
 import { getPrecheckById } from "../config/precheck-config";
-import { PrecheckStatus } from "../enums";
 import { INodePrecheckRun } from "../models/node-precheck-runs.model";
 
 export const runAllPrecheksHandler = async (req: Request, res: Response) => {
@@ -19,9 +18,7 @@ export const runPrechekByNodeIdHandler = async (req: Request, res: Response) => 
 		res.status(404).send({ message: "Node not found" });
 		return;
 	}
-
 	const runId = await runPrecheck([node], clusterId);
-
 	res.send({ message: "Prechecks started", runId });
 };
 
@@ -29,7 +26,7 @@ export const getPrecheckRunByClusterIdHandler = async (req: Request, res: Respon
 	const { clusterId } = req.params;
 	const precheckRuns = await getLatestRunsByPrecheck(clusterId);
 	if (!precheckRuns || precheckRuns.length === 0) {
-		res.status(404).send({ message: "No precheck runs found" });
+		res.status(404).send({ err: "No precheck runs found" });
 		return;
 	}
 	const groupedPrecheckRunsByNodeId = precheckRuns.reduce<Record<string, typeof precheckRuns>>((acc, run) => {
@@ -40,10 +37,10 @@ export const getPrecheckRunByClusterIdHandler = async (req: Request, res: Respon
 		acc[groupedBy].push(run);
 		return acc;
 	}, {});
+
 	const response = Object.entries(groupedPrecheckRunsByNodeId).map(([nodeId, precheckRuns]) => {
 		const status = getMergedPrecheckStatus(precheckRuns.map((precheck) => precheck.status));
 		const precheck = precheckRuns[0];
-
 		const transformPrecheckRunForUI = (precheck: INodePrecheckRun) => {
 			const { name } = getPrecheckById(precheck.precheckId) || {};
 			const duration = precheck.endAt
