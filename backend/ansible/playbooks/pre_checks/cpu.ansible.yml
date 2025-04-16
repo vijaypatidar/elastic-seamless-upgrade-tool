@@ -7,7 +7,7 @@
       CPU_LIMIT: 80
   tasks:
       - name: Monitor CPU usage
-        shell: "topu -b -d 300 -n 1 | grep 'Cpu' | awk '{print $2}' | cut -d'%' -f1"
+        shell: "top -b -d 300 -n 1 | grep 'Cpu' | awk '{print $2}' | cut -d'%' -f1"
         register: cpu_utilization
         changed_when: false
 
