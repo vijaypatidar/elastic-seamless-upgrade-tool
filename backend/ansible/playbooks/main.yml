@@ -3,6 +3,7 @@
   hosts: all
   gather_facts: no
   tasks:
+  
       - name: Load variables
         include_vars: variables.yml
 
