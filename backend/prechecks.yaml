@@ -13,4 +13,4 @@
 
 - id: elasticsearch_download_precheck
   name: Pre-download check
-  playbookPath: playbooks/prechecks/download-check.ansible.yml
+  playbookPath: playbooks/pre_checks/pre-download-check.yml
