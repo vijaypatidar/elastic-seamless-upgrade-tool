@@ -26,7 +26,7 @@ export const getPrecheckRunByClusterIdHandler = async (req: Request, res: Respon
 	const { clusterId } = req.params;
 	const precheckRuns = await getLatestRunsByPrecheck(clusterId);
 	if (!precheckRuns || precheckRuns.length === 0) {
-		res.status(404).send({ message: "No precheck runs found" });
+		res.status(404).send({ err: "No precheck runs found" });
 		return;
 	}
 	const groupedPrecheckRunsByNodeId = precheckRuns.reduce<Record<string, typeof precheckRuns>>((acc, run) => {

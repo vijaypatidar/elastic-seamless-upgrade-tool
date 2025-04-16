@@ -4,7 +4,7 @@ import ElasticNode, { IElasticNode, IElasticNodeDocument } from "../models/elast
 import { getClusterInfoById } from "./cluster-info.service";
 import { ansibleInventoryService } from "./ansible-inventory.service";
 import { ansibleRunnerService } from "./ansible-runner.service";
-import { NodeStatus } from "../enums";
+import { ClusterType, NodeStatus } from "../enums";
 import { randomUUID } from "crypto";
 import { NotificationEventType, notificationService, NotificationType } from "./notification.service";
 
@@ -159,7 +159,7 @@ export const triggerNodeUpgrade = async (nodeId: string, clusterId: string) => {
 					elk_version: clusterInfo.targetVersion,
 					es_username: clusterInfo.elastic.username,
 					es_password: clusterInfo.elastic.password,
-					cluster_type: "ELASTIC",
+					cluster_type: ClusterType.ELASTIC,
 					playbook_run_id: playbookRunId,
 					playbook_run_type: "UPGRADE",
 				},
@@ -207,7 +207,7 @@ export const triggerUpgradeAll = async (nodes: IElasticNode[], clusterId: string
 					elk_version: clusterInfo.targetVersion,
 					es_username: clusterInfo.elastic.username,
 					es_password: clusterInfo.elastic.password,
-					cluster_type: "ELASTIC",
+					cluster_type: ClusterType.ELASTIC,
 					playbook_run_id: playbookRunId,
 					playbook_run_type: "UPGRADE",
 				},

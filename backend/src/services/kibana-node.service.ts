@@ -5,7 +5,7 @@ import { getClusterInfoById } from "./cluster-info.service";
 import { IClusterInfo } from "../models/cluster-info.model";
 import { ansibleInventoryService } from "./ansible-inventory.service";
 import { ansibleRunnerService } from "./ansible-runner.service";
-import { NodeStatus } from "../enums";
+import { ClusterType, NodeStatus } from "../enums";
 import { randomUUID } from "crypto";
 
 export interface KibanaConfig {
@@ -178,7 +178,7 @@ export const triggerKibanaNodeUpgrade = async (nodeId: string, clusterId: string
 				elk_version: clusterInfo.targetVersion,
 				es_username: clusterInfo.elastic.username,
 				es_password: clusterInfo.elastic.password,
-				cluster_type: "KIBANA",
+				cluster_type: ClusterType.KIBANA,
 				playbook_run_id: playbookRunId,
 				playbook_run_type: "UPGRADE",
 			},
