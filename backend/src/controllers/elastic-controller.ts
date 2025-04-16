@@ -143,7 +143,7 @@ export const getUpgradeDetails = async (req: Request, res: Response) => {
 		const esDeprecationCount = elasticsearchDeprecation.counts;
 		const kibanaDeprecationCount = kibanaDeprecation.counts;
 		const allPrechecks = prechecks.flat();
-		if (allPrechecks.length === 0) {
+		if (allPrechecks.length === 0 && snapshots.length > 0) {
 			const runId = await runPrecheck(elasticNodes, clusterId);
 			logger.info(`Prechecks initiated successfully for cluster '${clusterId}' with Playbook Run ID '${runId}'.`);
 		}
