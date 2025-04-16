@@ -11,6 +11,3 @@
   name: Memory Utilization Check
   playbookPath: playbooks/pre_checks/memory.ansible.yml
 
-- id: elasticsearch_download_precheck
-  name: Pre-download check
-  playbookPath: playbooks/pre_checks/pre-download-check.yml
