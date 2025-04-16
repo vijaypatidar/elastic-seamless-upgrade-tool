@@ -200,8 +200,9 @@ export const getNodesInfo = async (req: Request, res: Response) => {
 		const elasticNodes = await getAllElasticNodes(clusterId);
 		const isDataNodeDisabled = elasticNodes.some((node) => node.status === NodeStatus.UPGRADING);
 		const isMasterDisabled =
-			elasticNodes.some((node) => node.roles.includes("data") && node.status !== NodeStatus.UPGRADED) ||
-			isDataNodeDisabled;
+			elasticNodes.some(
+				(node) => node.roles.includes("data") && !node.isMaster && node.status !== NodeStatus.UPGRADED
+			) || isDataNodeDisabled;
 		let nodes = elasticNodes.map((node) => {
 			if (node.isMaster) {
 				return {
