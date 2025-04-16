@@ -12,6 +12,8 @@ interface PlaybookVariables {
 	playbook_run_id: string;
 	playbook_run_type: string;
 	cluster_type: string;
+	es_password: string;
+	es_username: string;
 }
 
 class AnsibleRunnerService {

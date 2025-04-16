@@ -155,8 +155,8 @@ export const triggerNodeUpgrade = async (nodeId: string, clusterId: string) => {
 			inventoryPath: "ansible_inventory.ini",
 			variables: {
 				elk_version: clusterInfo.targetVersion,
-				username: clusterInfo.elastic.username,
-				password: clusterInfo.elastic.password,
+				es_username: clusterInfo.elastic.username,
+				es_password: clusterInfo.elastic.password,
 				cluster_type: "ELASTIC",
 				playbook_run_id: playbookRunId,
 				playbook_run_type: "UPGRADE",
@@ -184,8 +184,8 @@ export const triggerUpgradeAll = async (nodes: IElasticNode[], clusterId: string
 			inventoryPath: "ansible_inventory.ini",
 			variables: {
 				elk_version: clusterInfo.targetVersion,
-				username: clusterInfo.elastic.username,
-				password: clusterInfo.elastic.password,
+				es_username: clusterInfo.elastic.username,
+				es_password: clusterInfo.elastic.password,
 				cluster_type: "ELASTIC",
 				playbook_run_id: playbookRunId,
 				playbook_run_type: "UPGRADE",
