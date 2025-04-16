@@ -1,5 +1,7 @@
 import { Box, Typography } from "@mui/material"
-import { Record, TickCircle } from "iconsax-react"
+import { Flash, Record, TickCircle } from "iconsax-react"
+import { cn } from "~/lib/Utils"
+import AssetsManager from "~/constants/AssetsManager"
 
 const SelectionTile = ({
 	value,
@@ -7,16 +9,18 @@ const SelectionTile = ({
 	label,
 	isSelected,
 	onSelect,
+	comingSoon = false,
 }: {
 	value: string
 	Icon: React.FunctionComponent<{ size: string; color: string }>
 	label: string
 	isSelected: boolean
 	onSelect: (value: string | number) => void
+	comingSoon?: boolean
 }) => {
 	return (
 		<Box
-			className="flex rounded-2xl p-px"
+			className={cn("flex rounded-2xl p-px", { "pointer-events-none": comingSoon })}
 			sx={{
 				background: isSelected
 					? "linear-gradient(103deg, #393939 3.33%, #EBEAF0 53.63%, #6627FF 97.35%)"
@@ -45,7 +49,26 @@ const SelectionTile = ({
 						{label}
 					</Typography>
 				</Box>
-				{isSelected ? (
+				{comingSoon ? (
+					<Box className="relative flex gap-1 items-center">
+						<Typography className="absolute -left-11">
+							<img src={AssetsManager.GRADIENT_FLASH} />
+						</Typography>
+						<Typography
+							fontSize="14px"
+							fontWeight="400"
+							lineHeight="22px"
+							sx={{
+								background: "linear-gradient(270deg, #B07FF4 28.46%, #CCFE76 100%)",
+								"backgroundClip": "text",
+								"-webkit-background-clip": "text",
+								"-webkit-text-fill-color": "transparent",
+							}}
+						>
+							Coming soon
+						</Typography>
+					</Box>
+				) : isSelected ? (
 					<TickCircle color="#CCFE76" variant="Bold" size="25px" />
 				) : (
 					<span id="tick-icon" style={{ color: "#292929" }}>

@@ -5,21 +5,28 @@ import { useNavigate } from "react-router"
 import { toast } from "sonner"
 import axiosJSON from "~/apis/http"
 import Stepper from "~/components/utilities/Stepper"
-import StorageManager from "~/constants/StorageManager"
-import LocalStorageHandler from "~/lib/LocalHanlder"
-import SessionStorageHandler from "~/lib/SessionHandler"
 import Certificates from "./Certificates"
 import Credentials from "./Credentials"
 import Infrastructure from "./Infrastructure"
-import { useDispatch } from "react-redux"
-import { setClusterAdded } from "~/store/reducers/safeRoutes"
 import StringManager from "~/constants/StringManager"
+import { useLocalStore, useSessionStore } from "~/store/common"
+import useSafeRouteStore from "~/store/safeRoutes"
 
 function Setup() {
-	const dispatch = useDispatch()
 	const navigate = useNavigate()
-	const [step, setStep] = useState<number>(1)
-	const [infraType, setInfraType] = useState<string | number>("")
+
+	const setClusterAdded  = useSafeRouteStore((state: any) => state.setClusterAdded)
+
+	const infraType = useLocalStore((state:any) =>state.infraType)
+	const setInfraType = useLocalStore((state:any) =>state.setInfraType)
+	const setClusterId = useLocalStore((state:any) =>state.setClusterId)
+	const step = useSessionStore((state:any) =>state.setupStep)
+	const setStep = useSessionStore((state:any) =>state.setSetupStep)
+	// const [infraType, setClusterId, setInfraType] = useLocalStore((state: any) => {
+	// 	return [state.infraType, state.setClusterId, state.setInfraType]
+	// })
+	// const { step, setStep } = useSessionStore((state: any) => ({ step: state.setupStep, setStep: state.setSetupStep }))
+
 	const [creds, setCreds] = useState<TCreds>({
 		elasticUrl: "",
 		kibanaUrl: "",
@@ -27,26 +34,14 @@ function Setup() {
 		username: "",
 		password: "",
 		apiKey: "",
+		sshUser: "",
 		pathToSSH: "",
 		kibanaConfigs: [],
 	})
 
-	useEffect(() => {
-		const st = SessionStorageHandler.getItem(StorageManager.SETUP_SET)
-		if (st) {
-			setStep(st as number)
-		}
-	}, [])
+	const handleNextStep = () => setStep(step + 1)
 
-	const handleNextStep = () => {
-		SessionStorageHandler.setItem(StorageManager.SETUP_SET, step + 1)
-		setStep(step + 1)
-	}
-
-	const handleBackStep = () => {
-		SessionStorageHandler.setItem(StorageManager.SETUP_SET, step - 1)
-		setStep(step - 1)
-	}
+	const handleBackStep = () => setStep(step - 1)
 
 	const handleStepInfraSubmit = (value: string | number | null) => {
 		if (value) {
@@ -85,14 +80,14 @@ function Setup() {
 					kibana: { url: creds.kibanaUrl, username: creds.username, password: creds.password },
 					certificateIds: certIds,
 					infrastructureType: infraType,
+					sshUser: creds.sshUser,
 					key: creds.pathToSSH ?? "",
 					kibanaConfigs: creds.kibanaConfigs,
 				})
 				.then((res) => {
-					dispatch(setClusterAdded(true))
-					LocalStorageHandler.setItem(StorageManager.INFRA_TYPE, infraType)
-					SessionStorageHandler.setItem(StorageManager.SETUP_SET, 1)
-					LocalStorageHandler.setItem(StorageManager.CLUSTER_ID, res?.data?.clusterId || "cluster-id")
+					setClusterAdded(true)
+					setStep(1)
+					setClusterId(res?.data?.clusterId || "cluster-id")
 					navigate("/cluster-overview")
 				})
 				.catch((err) => toast.error(err?.response?.data.err ?? StringManager.GENERIC_ERROR))

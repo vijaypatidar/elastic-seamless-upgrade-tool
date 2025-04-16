@@ -31,6 +31,7 @@ function Infrastructure({ onSubmit }: { onSubmit: (value: string | number | null
 						isSelected={selected === "on-cloud"}
 						value="on-cloud"
 						onSelect={(value: string | number) => setSelected(value)}
+						comingSoon
 					/>
 					<SelectionTile
 						Icon={Driver2}

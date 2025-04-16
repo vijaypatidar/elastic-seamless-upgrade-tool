@@ -18,7 +18,7 @@ export const getSettings = async (req: Request, res: Response) => {
 	try {
 		const settings = await settingService.getSettings();
 		res.send({
-			notificationWebhookUrl: settings?.notificationWebhookUrl,
+			notificationWebhookUrl: settings?.notificationWebhookUrl || null,
 		});
 	} catch (err: any) {
 		logger.info(err);

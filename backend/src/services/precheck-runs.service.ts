@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { getPrecheckById } from "../config/precheck-config";
+import { PRECHECK_CONFIG, getPrecheckById } from "../config/precheck-config";
 import { PrecheckStatus } from "../enums";
 import logger from "../logger/logger";
 import NodePrecheckRun, { INodePrecheckRun, INodePrecheckRunDocument } from "../models/node-precheck-runs.model";
@@ -91,14 +91,19 @@ export const getLatestRunsByPrecheck = async (clusterId: string): Promise<INodeP
 
 export const updateRunStatus = async (
 	identifier: Partial<INodePrecheckRun>,
-	newStatus: PrecheckStatus
+	newStatus: PrecheckStatus,
+	logs: string[]
 ): Promise<void> => {
 	try {
 		const endAt =
 			newStatus === PrecheckStatus.COMPLETED || newStatus === PrecheckStatus.FAILED ? Date.now() : undefined;
 		const updatedNode = await NodePrecheckRun.findOneAndUpdate(
 			identifier,
-			{ status: newStatus, endAt: endAt },
+			{
+				status: newStatus,
+				endAt: endAt,
+				$push: { logs: { $each: logs } },
+			},
 			{ new: true, runValidators: true }
 		);
 		if (!updatedNode) {
@@ -111,7 +116,7 @@ export const updateRunStatus = async (
 	}
 };
 
-export const runPrecheck = async (precheckIds: string[], nodes: IElasticNode[], clusterId: string) => {
+export const runPrecheck = async (nodes: IElasticNode[], clusterId: string) => {
 	const runId = randomUUID();
 	const clusterInfo = await getClusterInfoById(clusterId);
 	if (!clusterInfo.pathToKey) {
@@ -130,7 +135,7 @@ export const runPrecheck = async (precheckIds: string[], nodes: IElasticNode[], 
 			clusterId: clusterId,
 		}))
 		.map((precheck) => {
-			return precheckIds.map((precheckId) => ({
+			return PRECHECK_CONFIG.map(({ id: precheckId }) => ({
 				...precheck,
 				precheckId,
 			}));
@@ -145,6 +150,7 @@ export const runPrecheck = async (precheckIds: string[], nodes: IElasticNode[], 
 				node: { ip: precheckRun.ip, name: precheckRun.ip },
 				iniName: inventoryFileName,
 				pathToKey: clusterInfo.pathToKey!!,
+				sshUser: clusterInfo.sshUser,
 			});
 			const precheckRunJob: PrecheckRunJob = {
 				precheckId: precheckRun.precheckId,
@@ -158,4 +164,21 @@ export const runPrecheck = async (precheckIds: string[], nodes: IElasticNode[], 
 		addPrecheckRunJobs(precheckRuns);
 	});
 	return runId;
+};
+
+export const getMergedPrecheckStatus = (precheckRuns: PrecheckStatus[]) => {
+	let hasCompleted = false;
+	let hasPending = false;
+	let hasRunning = false;
+
+	for (const run of precheckRuns) {
+		if (run === PrecheckStatus.FAILED) return PrecheckStatus.FAILED;
+		if (run === PrecheckStatus.RUNNING) hasRunning = true;
+		if (run === PrecheckStatus.PENDING) hasPending = true;
+		if (run === PrecheckStatus.COMPLETED) hasCompleted = true;
+	}
+
+	if ((hasPending && hasCompleted) || hasRunning) return PrecheckStatus.RUNNING;
+	if (hasPending) return PrecheckStatus.PENDING;
+	return PrecheckStatus.COMPLETED;
 };

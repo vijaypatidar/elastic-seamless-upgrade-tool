@@ -149,6 +149,9 @@ class CallbackModule(CallbackBase):
         total_tasks = self.get_total_task_count_by_host_group(result._host.groups);
         current_task = self.get_task_current_by_host_ip(ip)
         progress = int((current_task / total_tasks) * 100 if total_tasks else 0)
+        stdout = result._result.get('stdout', '')
+        stderr = result._result.get('stderr', '')
+         
         return {
             "name": result._host.get_name(),
             "ip": ip,
@@ -157,6 +160,10 @@ class CallbackModule(CallbackBase):
             "totalTasks": total_tasks,
             "currentTask": current_task,
             "task": result._task.name,
+            "logs":{
+                "stdout": stdout,
+                "stderr": stderr
+            }
         }
 
 

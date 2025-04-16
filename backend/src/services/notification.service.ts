@@ -1,12 +1,41 @@
+import axios from "axios";
+import { settingService } from "./settings.service";
+
 export enum NotificationEventType {
 	UPGRADE_PROGRESS_CHANGE = "UPGRADE_PROGRESS_CHANGE",
 	PRECHECK_PROGRESS_CHANGE = "PRECHECK_PROGRESS_CHANGE",
+	CLUSTER_INFO_CHANGE = "CLUSTER_INFO_CHANGE",
+	NOTIFICATION = "NOTIFICATION",
 }
 
-export interface NotificationEvent {
-	type: NotificationEventType;
-	[key: string]: any;
+export interface UpgradeProgressChangeEvent {
+	type: NotificationEventType.UPGRADE_PROGRESS_CHANGE;
 }
+
+export interface PrecheckProgressChangeEvent {
+	type: NotificationEventType.PRECHECK_PROGRESS_CHANGE;
+}
+
+export interface ClusterInfoChangeEvent {
+	type: NotificationEventType.CLUSTER_INFO_CHANGE;
+}
+
+export enum NotificationType {
+	SUCCESS = "success",
+	ERROR = "error",
+}
+export interface GeneralNotificationEvent {
+	type: NotificationEventType.NOTIFICATION;
+	notificationType: NotificationType;
+	message: string;
+	title: string;
+}
+
+export type NotificationEvent =
+	| UpgradeProgressChangeEvent
+	| PrecheckProgressChangeEvent
+	| ClusterInfoChangeEvent
+	| GeneralNotificationEvent;
 
 export type NotificationListner = (event: NotificationEvent) => void;
 
@@ -24,3 +53,24 @@ class NotificationService {
 }
 
 export const notificationService = new NotificationService();
+
+notificationService.addNotificationListner(async (event) => {
+	if (event.type === NotificationEventType.NOTIFICATION) {
+		const settings = await settingService.getSettings();
+		if (settings && settings.notificationWebhookUrl) {
+			const data = JSON.stringify(event);
+			axios
+				.post(settings.notificationWebhookUrl, data, {
+					headers: {
+						"Content-Type": "application/json",
+					},
+				})
+				.then(() => {
+					console.log("Notification sent successfully.");
+				})
+				.catch((error) => {
+					console.error("Failed to send notification:", error.message);
+				});
+		}
+	}
+});

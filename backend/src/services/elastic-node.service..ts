@@ -6,6 +6,7 @@ import { ansibleInventoryService } from "./ansible-inventory.service";
 import { ansibleRunnerService } from "./ansible-runner.service";
 import { NodeStatus } from "../enums";
 import { randomUUID } from "crypto";
+import { NotificationEventType, notificationService, NotificationType } from "./notification.service";
 
 export const createOrUpdateElasticNode = async (elasticNode: IElasticNode): Promise<IElasticNodeDocument> => {
 	const nodeId = elasticNode.nodeId;
@@ -41,7 +42,7 @@ export const syncNodeData = async (clusterId: string) => {
 		const response: any = await client.getClient().nodes.info({
 			filter_path: "nodes.*.name,nodes.*.roles,nodes.*.os.name,nodes.*.os.version,nodes.*.version,nodes.*.ip",
 		});
-		const masterNode: any = await client.getClient().cat.master({
+		const masterNodes = await client.getClient().cat.master({
 			format: "json",
 		});
 		const elasticNodes: IElasticNode[] | null = Object.entries(response.nodes).map(
@@ -54,7 +55,7 @@ export const syncNodeData = async (clusterId: string) => {
 				roles: value.roles,
 				os: value.os,
 				progress: 0,
-				isMaster: masterNode[0].id === key,
+				isMaster: masterNodes.some((master) => master.id === key),
 				status: NodeStatus.AVAILABLE,
 			})
 		);
@@ -144,24 +145,42 @@ export const triggerNodeUpgrade = async (nodeId: string, clusterId: string) => {
 		const clusterInfo = await getClusterInfoById(clusterId);
 		const pathToKey = clusterInfo.pathToKey ? clusterInfo.pathToKey : "";
 
-		await ansibleInventoryService.createAnsibleInventory([node], pathToKey);
+		await ansibleInventoryService.createAnsibleInventory([node], { pathToKey, sshUser: clusterInfo.sshUser });
 		if (!clusterInfo.targetVersion || !clusterInfo.elastic.username || !clusterInfo.elastic.password) {
 			return false;
 		}
 		const playbookRunId = randomUUID();
 
-		ansibleRunnerService.runPlaybook({
-			playbookPath: "playbooks/main.yml",
-			inventoryPath: "ansible_inventory.ini",
-			variables: {
-				elk_version: clusterInfo.targetVersion,
-				es_username: clusterInfo.elastic.username,
-				es_password: clusterInfo.elastic.password,
-				cluster_type: "ELASTIC",
-				playbook_run_id: playbookRunId,
-				playbook_run_type: "UPGRADE",
-			},
-		});
+		ansibleRunnerService
+			.runPlaybook({
+				playbookPath: "playbooks/main.yml",
+				inventoryPath: "ansible_inventory.ini",
+				variables: {
+					elk_version: clusterInfo.targetVersion,
+					es_username: clusterInfo.elastic.username,
+					es_password: clusterInfo.elastic.password,
+					cluster_type: "ELASTIC",
+					playbook_run_id: playbookRunId,
+					playbook_run_type: "UPGRADE",
+				},
+			})
+			.then(() => {
+				notificationService.sendNotification({
+					type: NotificationEventType.NOTIFICATION,
+					title: "Upgrade Successful",
+					message: "Node has been successfully upgraded to the target version.",
+					notificationType: NotificationType.SUCCESS,
+				});
+			})
+			.catch(() => {
+				notificationService.sendNotification({
+					type: NotificationEventType.NOTIFICATION,
+					title: "Upgrade Failed",
+					message: "An error occurred while upgrading the node. Please check the logs for more details.",
+					notificationType: NotificationType.ERROR,
+				});
+			});
+
 		return new Promise((resolve, reject) => resolve(true));
 	} catch (error) {
 		logger.error(`Error performing upgrade for node with id ${nodeId}`);
@@ -174,27 +193,43 @@ export const triggerUpgradeAll = async (nodes: IElasticNode[], clusterId: string
 		const clusterInfo = await getClusterInfoById(clusterId);
 		const pathToKey = clusterInfo.pathToKey ? clusterInfo.pathToKey : "";
 
-		await ansibleInventoryService.createAnsibleInventory(nodes, pathToKey);
+		await ansibleInventoryService.createAnsibleInventory(nodes, { pathToKey, sshUser: clusterInfo.sshUser });
 		if (!clusterInfo.targetVersion || !clusterInfo.elastic.username || !clusterInfo.elastic.password) {
 			return false;
 		}
 		const playbookRunId = randomUUID();
-		ansibleRunnerService.runPlaybook({
-			playbookPath: "playbooks/main.yml",
-			inventoryPath: "ansible_inventory.ini",
-			variables: {
-				elk_version: clusterInfo.targetVersion,
-				es_username: clusterInfo.elastic.username,
-				es_password: clusterInfo.elastic.password,
-				cluster_type: "ELASTIC",
-				playbook_run_id: playbookRunId,
-				playbook_run_type: "UPGRADE",
-			},
-		});
+
+		ansibleRunnerService
+			.runPlaybook({
+				playbookPath: "playbooks/main.yml",
+				inventoryPath: "ansible_inventory.ini",
+				variables: {
+					elk_version: clusterInfo.targetVersion,
+					es_username: clusterInfo.elastic.username,
+					es_password: clusterInfo.elastic.password,
+					cluster_type: "ELASTIC",
+					playbook_run_id: playbookRunId,
+					playbook_run_type: "UPGRADE",
+				},
+			})
+			.then(() => {
+				notificationService.sendNotification({
+					type: NotificationEventType.NOTIFICATION,
+					title: "Upgrade Successful",
+					message: "All nodes have been successfully upgraded to the target version.",
+					notificationType: NotificationType.SUCCESS,
+				});
+			})
+			.catch(() => {
+				notificationService.sendNotification({
+					type: NotificationEventType.NOTIFICATION,
+					title: "Upgrade Failed",
+					message: "An error occurred while upgrading the nodes. Please check the logs for more details.",
+					notificationType: NotificationType.ERROR,
+				});
+			});
 	} catch (error: any) {
 		logger.error(`Error performing upgrade for nodes:  ${nodes} because of ${error.message}`);
 		throw new Error(`Error performing upgrade for nodes:  ${nodes}`);
 	}
 };
-
-/// /upgrade (exec)

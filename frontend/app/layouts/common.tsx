@@ -1,15 +1,81 @@
-import { useDisclosure } from "@heroui/react"
-import { Box } from "@mui/material"
-import { Edit2, Magicpen } from "iconsax-react"
-import { Outlet } from "react-router"
+import { addToast, Button, Divider, ToastProvider, useDisclosure } from "@heroui/react"
+import { Box, Typography } from "@mui/material"
+import { Edit, Magicpen, Refresh2, Setting2, TickCircle, Warning2 } from "iconsax-react"
+import { useEffect } from "react"
+import { FiArrowUpRight, FiX } from "react-icons/fi"
+import { Link, Outlet } from "react-router"
 import EditCluster from "~/components/core/EditCluster"
+import Settings from "~/components/core/Settings"
 import UpcomingFeature from "~/components/core/UpcomingFeature"
-import { OutlinedBorderButton } from "~/components/utilities/Buttons"
 import AssetsManager from "~/constants/AssetsManager"
+import { cn } from "~/lib/Utils"
+import { useSocketStore } from "~/store/socket"
 
 function Common() {
+	const { socket, isConnected, connect, disconnect } = useSocketStore()
 	const { isOpen, onOpen, onOpenChange } = useDisclosure()
+	const { isOpen: isSettingsOpen, onOpen: onSettingsOpen, onOpenChange: onSettingsOpenChange } = useDisclosure()
 	const { isOpen: isEditOpen, onOpen: onEditOpen, onOpenChange: onEditOpenChange } = useDisclosure()
+
+	useEffect(() => {
+		connect() // Connect on mount
+
+		return () => {
+			disconnect() // Disconnect on unmount
+		}
+	}, [connect, disconnect])
+
+	useEffect(() => {
+		if (!socket) return
+
+		socket.on("NOTIFICATION", (message) => {
+			addToast({
+				title: message.title,
+				description: message.message,
+				classNames: {
+					base: cn(
+						[
+							"flex flex-col gap-[6px] items-start bg-[linear-gradient(88deg,_rgba(61,59,68,0.2)_1.02%,_rgba(71,67,81,0.2)_98.21%)] p-3 border border-solid",
+						],
+						{
+							"border-[#384F45]": message.notificationType === "success",
+							"border-[#623834]": message.notificationType === "error",
+							"border-[#4F422A]": message.notificationType === "warning",
+						}
+					),
+					content: "items-start",
+					closeButton: "size-6 opacity-100 absolute right-2 top-5 -translate-y-1/2",
+				},
+				closeIcon: <FiX size="24px" />,
+				icon:
+					message.notificationType === "success" ? (
+						<TickCircle variant="Bold" color="#4CDB9D" size="20px" />
+					) : message.notificationType === "error" ? (
+						<Warning2 variant="Bold" color="#E75547" size="20px" />
+					) : (
+						<Refresh2 variant="Bold" color="#F4B82C" size="20px" />
+					),
+				endContent: message?.link ? (
+					<Typography
+						component={Link}
+						to={message.link}
+						className="pl-10 flex items-center"
+						color="#A9AAB6"
+						lineHeight="16px"
+						fontSize="12px"
+						fontWeight="400"
+					>
+						Go to node <FiArrowUpRight size="16px" />
+					</Typography>
+				) : null,
+			})
+		})
+
+		return () => {
+			socket.off("NOTIFICATION")
+		}
+	}, [socket])
+
 	// const [headerIndexChange, setHeaderIndexChange] = useState<boolean>(false)
 
 	// useMemo(() => {
@@ -24,41 +90,50 @@ function Common() {
 
 	return (
 		<Box className="flex flex-col w-full pb-4 bg-[#0A0A0A]" height="var(--window-height)">
+			<ToastProvider placement="bottom-right" />
 			<Box
 				className="flex flex-row gap-2 justify-between bg-[#0A0A0A]"
-				padding="16px 32px 10px 40px"
+				padding="16px 30px 10px 40px"
 				zIndex="99999"
 			>
 				<img src={AssetsManager.LOGO_PLUS_NAMED} width="161.6px" height="36px" />
-				<Box className="flex flex-row gap-[6px] items-center">
-					<OutlinedBorderButton
-						icon={Edit2}
-						filledIcon={Edit2}
-						iconProps={{ variant: "Bold" }}
-						sx={{ ":hover": { color: "#C3B7F5 !important" } }}
-						gradient="linear-gradient(135deg, #6627FF 2.29%, #C9C0DF 44.53%, #151413 97.18%, #151413 97.18%)"
-						boxShadow="0px 0px 19px 2px rgba(102, 39, 255, 0.41)"
-						borderRadius="50px"
-						onClick={onEditOpen}
+				<Box className="flex flex-row max-h-11 items-center border border-solid border-[#3A3544] rounded-lg overflow-hidden">
+					<Button
+						isIconOnly
+						aria-label="Settings"
+						variant="light"
+						radius="none"
+						className="min-w-11 min-h-11"
+						onPress={onEditOpen}
 					>
-						Edit cluster
-					</OutlinedBorderButton>
-					<OutlinedBorderButton
-						icon={Magicpen}
-						filledIcon={Magicpen}
-						iconProps={{ variant: "Bold" }}
-						sx={{ ":hover": { color: "#F5BE3D !important" } }}
-						gradient="linear-gradient(135deg,#E0B517 2.29%, #DFD8C0 44.53%, #151413 97.18%, #151413 97.18%)"
-						boxShadow="0px 0px 19px 2px rgba(234, 180, 63, 0.41)"
-						borderRadius="50px"
-						onClick={onOpen}
+						<Edit color="currentColor" size="20px" />
+					</Button>
+					<Divider orientation="vertical" className="bg-[#3A3544]" />
+					<Button
+						isIconOnly
+						aria-label="Settings"
+						variant="light"
+						radius="none"
+						className="min-w-11 min-h-11"
+						onPress={onSettingsOpen}
 					>
-						Upcoming features
-					</OutlinedBorderButton>
+						<Setting2 color="currentColor" size="20px" />
+					</Button>
+					<Divider orientation="vertical" className="bg-[#3A3544]" />
+					<Button
+						aria-label="Settings"
+						variant="light"
+						radius="none"
+						className="min-w-11 min-h-11"
+						onPress={onOpen}
+					>
+						<Magicpen variant="Bold" color="currentColor" size="20px" /> Upcoming features
+					</Button>
 				</Box>
 			</Box>
 			<EditCluster isOpen={isEditOpen} onOpenChange={onEditOpenChange} />
 			<UpcomingFeature isOpen={isOpen} onOpenChange={onOpenChange} />
+			<Settings isOpen={isSettingsOpen} onOpenChange={onSettingsOpenChange} />
 			<Outlet />
 		</Box>
 	)

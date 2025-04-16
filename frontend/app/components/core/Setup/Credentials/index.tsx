@@ -8,6 +8,7 @@ import Input from "~/components/utilities/Input"
 import { cn } from "~/lib/Utils"
 import validationSchema from "./validation/validation"
 import SelectionTile from "./widgets/SelectionTile"
+import { OneLineSkeleton } from "~/components/utilities/Skeletons"
 
 function Credentials({ initialValues: IV, backStep, onSubmit }: TCredentialsComp) {
 	const [showPassword, setShowPassword] = useState<boolean>(false)
@@ -83,6 +84,7 @@ function Credentials({ initialValues: IV, backStep, onSubmit }: TCredentialsComp
 								label="API Key"
 								isSelected={formik.values.authPref === "API_KEY"}
 								value="API_KEY"
+								comingSoon
 								onSelect={(value: string | number) => formik.setFieldValue("authPref", value)}
 							/>
 						</Box>
@@ -194,7 +196,7 @@ function Credentials({ initialValues: IV, backStep, onSubmit }: TCredentialsComp
 								}}
 							>
 								<Add size="16px" color="currentColor" />
-								Add Node
+								Add cluster
 							</OutlinedButton>
 						</Box>
 					</Box>
@@ -209,7 +211,7 @@ function Credentials({ initialValues: IV, backStep, onSubmit }: TCredentialsComp
 												id={`kibanaConfigs.${index}`}
 												name={`kibanaConfigs.${index}`}
 												type="text"
-												placeholder="Enter node name"
+												placeholder="Enter cluster name"
 												varient="outlined"
 												value={cluster.name}
 												onBlur={formik.handleBlur}
@@ -229,7 +231,7 @@ function Credentials({ initialValues: IV, backStep, onSubmit }: TCredentialsComp
 												id={`kibanaConfigs.${index}`}
 												name={`kibanaConfigs.${index}`}
 												type="text"
-												placeholder="Enter node IP"
+												placeholder="Enter cluster name"
 												varient="outlined"
 												value={cluster.ip}
 												onBlur={formik.handleBlur}
@@ -268,6 +270,24 @@ function Credentials({ initialValues: IV, backStep, onSubmit }: TCredentialsComp
 							)
 						})}
 					</Box>
+				</Box>
+				<Box className="flex flex-col gap-[6px] max-w-[515px]">
+					<Typography color="#ABA9B1" fontSize="14px" fontWeight="400" lineHeight="20px">
+						SSH Username
+					</Typography>
+					<Input
+						fullWidth
+						id="sshUser"
+						name="sshUser"
+						type="text"
+						placeholder="Enter SSH username"
+						variant="outlined"
+						value={formik.values.sshUser}
+						onChange={formik.handleChange}
+						onBlur={formik.handleBlur}
+						error={formik.touched.sshUser && Boolean(formik.errors.sshUser)}
+						helperText={formik.touched.sshUser && formik.errors.sshUser}
+					/>
 				</Box>
 				<Box className="flex flex-col gap-[6px] max-w-[515px]">
 					<Typography color="#ABA9B1" fontSize="14px" fontWeight="400" lineHeight="20px">
