@@ -87,13 +87,15 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 
 	useEffect(() => {
 		if (!socket) return
-
-		socket.on("UPGRADE_PROGRESS_CHANGE", (message) => {
-			refetch()
-		})
-
+		const listner = (rawMessage:string) => {
+			const message = JSON.parse(rawMessage)
+			if(message.type==='UPGRADE_PROGRESS_CHANGE'){
+				refetch()
+			}
+		}
+		socket.on("message", listner)
 		return () => {
-			socket.off("UPGRADE_PROGRESS_CHANGE")
+			socket.off("message",listner)
 		}
 	}, [socket])
 
@@ -237,7 +239,7 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 						disabled={
 							isPending || isLoading ||
 							(data &&
-								data.filter((item: any) => item.status !== "AVAILABLE" && item.status !== "UPGRADED")
+								data.filter((item: any) => item.status !== "available" && item.status !== "upgraded")
 									.length > 0)
 						}
 						padding="8px 16px"

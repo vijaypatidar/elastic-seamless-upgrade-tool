@@ -66,13 +66,13 @@ function Precheck() {
 
 	useEffect(() => {
 		if (!socket) return
-
-		socket.on("UPGRADE_STATUS_CHANGE", (message) => {
+		const listner = (message:string) => {
 			console.log(message)
 			_debounceRefetch()
-		})
+		} 
+		socket.on("message", listner)
 		return () => {
-			socket.off("UPGRADE_STATUS_CHANGE")
+			socket.off("message", listner)
 		}
 	}, [socket])
 
