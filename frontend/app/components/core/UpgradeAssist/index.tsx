@@ -258,7 +258,9 @@ function UpgradeAssistant() {
 							lineHeight="20px"
 							letterSpacing="0.26px"
 						>
-							One liner goes here.
+							Prechecks verify your cluster's readiness for upgrade by running essential health and
+							configuration checks. Your Cluster needs to pass all the Prechecks to be eligible for
+							upgrade.
 						</Typography>
 					</Box>
 				</Box>
