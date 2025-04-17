@@ -100,7 +100,7 @@
             - name: Display Elasticsearch service status
               debug:
                   msg: "Elasticsearch service is {{ 'running' if es_service.status.ActiveState == 'active' else 'not running' }}"
-              when: inventory_hostname in groups["elasticsearch"]
+              when: "'elasticsearch' in groups and inventory_hostname in groups['elasticsearch']"
 
       - name: Check Elasticsearch cluster health
         uri:

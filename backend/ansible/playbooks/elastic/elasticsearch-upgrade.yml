@@ -6,6 +6,7 @@
   serial: 1
 
   tasks:
+  
       - name: Ensure elasticsearch service is running
         systemd:
             name: elasticsearch
