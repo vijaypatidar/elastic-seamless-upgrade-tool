@@ -55,9 +55,25 @@ export const schedulePrecheckRun = async (): Promise<void> => {
 						playbook_run_type: "PRECHECK",
 					},
 				})
-				.then(() => {})
+				.then(() => {
+					updateRunStatus(
+						{
+							precheckId: precheckId,
+							precheckRunId: playbookRunId,
+						},
+						PrecheckStatus.COMPLETED,
+						[]
+					);
+				})
 				.catch(async () => {
-					//TODO handle completion here as well
+					updateRunStatus(
+						{
+							precheckId: precheckId,
+							precheckRunId: playbookRunId,
+						},
+						PrecheckStatus.FAILED,
+						[]
+					);
 				});
 		} catch (error: any) {
 			logger.error(`Error processing job ${JSON.stringify(job)}: ${error.message}`);
