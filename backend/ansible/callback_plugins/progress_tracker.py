@@ -137,7 +137,7 @@ class CallbackModule(CallbackBase):
                         if isinstance(hosts, str) and hosts.startswith('{{') and hosts.endswith('}}'):
                             hosts = play.vars.get(hosts.strip('{{ }}').strip(), hosts)
                         if hosts not in task_count_per_host_group:
-                            task_count_per_host_group[hosts] = 0
+                            task_count_per_host_group[hosts] = 1
                         task_count_per_host_group[hosts] += 1
         return task_count_per_host_group
 
