@@ -66,13 +66,12 @@ function Precheck() {
 
 	useEffect(() => {
 		if (!socket) return
-		const listner = (message:string) => {
-			console.log(message)
+		const listner = () => {
 			_debounceRefetch()
-		} 
-		socket.on("message", listner)
+		}
+		socket.on("PRECHECK_PROGRESS_CHANGE", listner)
 		return () => {
-			socket.off("message", listner)
+			socket.off("PRECHECK_PROGRESS_CHANGE", listner)
 		}
 	}, [socket])
 

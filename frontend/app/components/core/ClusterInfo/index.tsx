@@ -59,15 +59,12 @@ function ClusterInfo() {
 
 	useEffect(() => {
 		if (!socket) return
-		const listner = (rawMessage:string) => {
-			const message = JSON.parse(rawMessage)
-			if(message.type==='CLUSTER_INFO_CHANGE'){
-				refetch()
-			}
+		const listner = () => {
+			refetch()
 		}
-		socket.on("message",listner)
+		socket.on("CLUSTER_INFO_CHANGE", listner)
 		return () => {
-			socket.off("message", listner)
+			socket.off("CLUSTER_INFO_CHANGE", listner)
 		}
 	}, [socket])
 

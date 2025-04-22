@@ -87,15 +87,12 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 
 	useEffect(() => {
 		if (!socket) return
-		const listner = (rawMessage: string) => {
-			const message = JSON.parse(rawMessage)
-			if (message.type === "UPGRADE_PROGRESS_CHANGE") {
-				refetch()
-			}
+		const listner = () => {
+			refetch()
 		}
-		socket.on("message", listner)
+		socket.on("UPGRADE_PROGRESS_CHANGE", listner)
 		return () => {
-			socket.off("message", listner)
+			socket.off("UPGRADE_PROGRESS_CHANGE", listner)
 		}
 	}, [socket])
 
