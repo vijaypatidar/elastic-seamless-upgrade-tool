@@ -13,6 +13,7 @@ export interface PrecheckRunJob {
 	clusterId: string;
 	playbookRunId: string;
 	inventoryPath: string;
+	ip: string;
 }
 
 const PRECHECK_RUN_JOB_QUEUE: PrecheckRunJob[] = [];
@@ -34,7 +35,7 @@ export const schedulePrecheckRun = async (): Promise<void> => {
 
 		try {
 			logger.info(`Processing precheck run job: ${JSON.stringify(job)}`);
-			const { precheckId, clusterId, playbookRunId, inventoryPath } = job;
+			const { precheckId, clusterId, playbookRunId, inventoryPath, ip } = job;
 			const { elastic, targetVersion } = await getClusterInfoById(clusterId);
 			const precheck = getPrecheckById(precheckId);
 
@@ -60,6 +61,7 @@ export const schedulePrecheckRun = async (): Promise<void> => {
 						{
 							precheckId: precheckId,
 							precheckRunId: playbookRunId,
+							ip: ip,
 						},
 						PrecheckStatus.COMPLETED,
 						[]
@@ -70,6 +72,7 @@ export const schedulePrecheckRun = async (): Promise<void> => {
 						{
 							precheckId: precheckId,
 							precheckRunId: playbookRunId,
+							ip: ip,
 						},
 						PrecheckStatus.FAILED,
 						[]
@@ -179,6 +182,7 @@ export const runPrecheck = async (nodes: IElasticNode[], clusterId: string) => {
 				clusterId: clusterId,
 				playbookRunId: precheckRun.precheckRunId,
 				inventoryPath: `ini/${inventoryFileName}`,
+				ip: precheckRun.ip,
 			};
 			return precheckRunJob;
 		})
