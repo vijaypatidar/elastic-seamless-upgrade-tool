@@ -122,3 +122,5 @@
         fail:
             msg: "Cluster is in {{ cluster_health.json.status }}, upgrade not recommended!"
         when: cluster_health.json.status != "green"  and rerun == false
+        retries: 15
+        delay: 20

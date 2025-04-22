@@ -133,6 +133,7 @@ export const runPrecheck = async (nodes: IElasticNode[], clusterId: string) => {
 		.map((node) => ({
 			ip: node.ip,
 			nodeId: node.nodeId,
+			nodeName: node.name,
 			precheckRunId: runId,
 			startedAt: startedAt,
 			status: PrecheckStatus.PENDING,

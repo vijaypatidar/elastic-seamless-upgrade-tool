@@ -67,10 +67,6 @@ export const syncNodeData = async (clusterId: string) => {
 					node.progress = existingNode.progress;
 				}
 			}
-			if (node.version === clusterInfo.targetVersion) {
-				node.status = NodeStatus.UPGRADED;
-				node.progress = 100;
-			}
 
 			await ElasticNode.findOneAndUpdate({ nodeId: node.nodeId }, node, {
 				new: true,
