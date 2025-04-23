@@ -249,6 +249,26 @@ function ClusterInfo() {
 							isLoading={isLoading || isRefetching}
 						/>
 						<DetailBox
+							title="Number of master nodes"
+							description={error ? "--" : data?.numberOfMasterNodes}
+							isLoading={isLoading || isRefetching}
+						/>
+						<DetailBox
+							title="Current Master"
+							description={error ? "--" : data?.currentMasterNode}
+							isLoading={isLoading || isRefetching}
+						/>
+						<DetailBox
+							title="Total Indices"
+							description={error ? "--" : data?.totalIndices}
+							isLoading={isLoading || isRefetching}
+						/>
+						<DetailBox
+							title="Adaptive Replica Enabled"
+							description={error ? "--" : data?.adaptiveReplicaEnabled}
+							isLoading={isLoading || isRefetching}
+						/>
+						<DetailBox
 							title="Active primary shards"
 							description={error ? "--" : data?.activePrimaryShards}
 							isLoading={isLoading || isRefetching}

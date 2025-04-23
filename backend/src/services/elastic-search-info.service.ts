@@ -26,7 +26,13 @@ export const syncElasticSearchInfo = async (clusterId: string) => {
 	try {
 		const client = await ElasticClient.buildClient(clusterId);
 		const clusterDetails = await client.getClient().info();
+		const indicesResponse = await client.getClient().cat.indices({ format: "json" });
 		const healthDetails = await client.getClient().cluster.health();
+		const setting = await client.getSetting();
+		const adaptiveReplicaEnabled =
+			setting.transient?.["search.adaptive_replica_selection"] ??
+			setting.persistent?.["search.adaptive_replica_selection"] ??
+			setting.defaults?.["search.adaptive_replica_selection"];
 		const nodes = await getAllElasticNodes(clusterId);
 		let underUpgradation = false;
 		let upgradeComplete = true;
@@ -41,6 +47,12 @@ export const syncElasticSearchInfo = async (clusterId: string) => {
 		if (upgradeComplete) {
 			underUpgradation = false;
 		}
+		const getNodeCountByRole = (role: string) => {
+			return nodes.filter((node) => node.roles.includes(role)).length;
+		};
+		const masterNodes = await client.getClient().cat.master({
+			format: "json",
+		});
 		const elasticSearchInfo: IElasticSearchInfo = {
 			clusterName: clusterDetails?.cluster_name ?? null,
 			clusterUUID: clusterDetails?.cluster_uuid ?? null,
@@ -48,6 +60,7 @@ export const syncElasticSearchInfo = async (clusterId: string) => {
 			version: clusterDetails.version.number,
 			timedOut: healthDetails?.timed_out,
 			numberOfDataNodes: healthDetails?.number_of_data_nodes ?? null,
+			numberOfMasterNodes: getNodeCountByRole("master"),
 			numberOfNodes: healthDetails?.number_of_nodes ?? null,
 			activePrimaryShards: healthDetails?.active_primary_shards ?? null,
 			activeShards: healthDetails?.active_shards ?? null,
@@ -55,8 +68,11 @@ export const syncElasticSearchInfo = async (clusterId: string) => {
 			initializingShards: healthDetails?.initializing_shards ?? null,
 			relocatingShards: healthDetails?.relocating_shards ?? null,
 			clusterId: clusterId,
+			adaptiveReplicationEnabled: adaptiveReplicaEnabled,
+			totalIndices: indicesResponse.length,
 			underUpgradation: underUpgradation,
 			lastSyncedAt: new Date(),
+			currentMasterNode: masterNodes.filter((node) => node).map((node) => `${node.node}/${node.id}`)[0],
 		};
 		await createOrUpdateElasticSearchInfo(elasticSearchInfo);
 	} catch (err) {

@@ -131,6 +131,10 @@ export class ElasticClient {
 		}
 	}
 
+	async getSetting() {
+		return await this.getClient().cluster.getSettings();
+	}
+
 	static async buildClient(clusterId: string) {
 		const cluterInfo = await getClusterInfoById(clusterId);
 		const body: ElasticClusterBaseRequest = {
