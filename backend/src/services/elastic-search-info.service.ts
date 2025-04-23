@@ -47,12 +47,7 @@ export const syncElasticSearchInfo = async (clusterId: string) => {
 		if (upgradeComplete) {
 			underUpgradation = false;
 		}
-		const getNodeCountByRole = (role: string) => {
-			return nodes.filter((node) => node.roles.includes(role)).length;
-		};
-		const masterNodes = await client.getClient().cat.master({
-			format: "json",
-		});
+		const masterNodes = await client.getMasterNodes();
 		const elasticSearchInfo: IElasticSearchInfo = {
 			clusterName: clusterDetails?.cluster_name ?? null,
 			clusterUUID: clusterDetails?.cluster_uuid ?? null,
@@ -60,7 +55,7 @@ export const syncElasticSearchInfo = async (clusterId: string) => {
 			version: clusterDetails.version.number,
 			timedOut: healthDetails?.timed_out,
 			numberOfDataNodes: healthDetails?.number_of_data_nodes ?? null,
-			numberOfMasterNodes: getNodeCountByRole("master"),
+			numberOfMasterNodes: masterNodes.length,
 			numberOfNodes: healthDetails?.number_of_nodes ?? null,
 			activePrimaryShards: healthDetails?.active_primary_shards ?? null,
 			activeShards: healthDetails?.active_shards ?? null,
