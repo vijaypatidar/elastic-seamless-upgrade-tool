@@ -59,7 +59,7 @@ export const getPrecheckRunByClusterIdHandler = async (req: Request, res: Respon
 		return {
 			nodeId: nodeId,
 			ip: precheck.ip,
-			name: nodeId,
+			name: precheck.nodeName,
 			status: status,
 			prechecks: precheckRuns.map(transformPrecheckRunForUI),
 		};

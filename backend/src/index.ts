@@ -58,18 +58,12 @@ const io = new Server(server, {
 	},
 });
 
-io.of("/notification").on("connection", (socket: Socket) => {
+io.on("connection", (socket: Socket) => {
 	logger.debug("User connected to socker.io with socketId:", socket.id);
 	const notificationListner: NotificationListner = (event: NotificationEvent) => {
-		socket.send(JSON.stringify(event));
+		socket.emit(event.type, event);
 	};
 	notificationService.addNotificationListner(notificationListner);
-
-	socket.on("message", (data) => {
-		socket.emit("message","Received message from client");
-		logger.debug("Received message:", data);
-	});
-
 	socket.on("disconnect", () => {
 		logger.debug("User disconnected from socker.io with socketId:", socket.id);
 		notificationService.removeNotificationListner(notificationListner);

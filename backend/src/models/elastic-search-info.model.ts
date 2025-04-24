@@ -9,7 +9,10 @@ export interface IElasticSearchInfo {
 	version: string;
 	timedOut: Boolean;
 	numberOfDataNodes: number;
+	numberOfMasterNodes: number;
+	totalIndices: number;
 	numberOfNodes: number;
+	currentMasterNode: string;
 	activePrimaryShards: number;
 	activeShards: number;
 	unassignedShards: number;
@@ -17,6 +20,7 @@ export interface IElasticSearchInfo {
 	relocatingShards: number;
 	underUpgradation: boolean;
 	lastSyncedAt: Date;
+	adaptiveReplicationEnabled: boolean;
 }
 
 export interface IElasticSearchInfoDocument extends IElasticSearchInfo, Document {}
@@ -30,6 +34,8 @@ const ElasticSearchInfoSchema: Schema<IElasticSearchInfoDocument> = new Schema<I
 		version: { type: String, required: true },
 		timedOut: { type: Number, required: true },
 		numberOfDataNodes: { type: Number, required: true },
+		numberOfMasterNodes: { type: Number, required: true },
+		currentMasterNode: { type: String },
 		numberOfNodes: { type: Number, required: true },
 		activePrimaryShards: { type: Number, required: true },
 		activeShards: { type: Number, required: true },
@@ -38,6 +44,8 @@ const ElasticSearchInfoSchema: Schema<IElasticSearchInfoDocument> = new Schema<I
 		relocatingShards: { type: Number, required: true },
 		underUpgradation: { type: Boolean, required: true },
 		lastSyncedAt: { type: Date, required: true },
+		totalIndices: { type: Number, required: true },
+		adaptiveReplicationEnabled: { type: Boolean },
 	},
 	{ timestamps: true }
 );

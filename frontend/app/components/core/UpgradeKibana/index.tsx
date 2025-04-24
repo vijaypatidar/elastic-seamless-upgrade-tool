@@ -89,13 +89,12 @@ function UpgradeKibana({ clusterType }: TUpgradeKibana) {
 
 	useEffect(() => {
 		if (!socket) return
-
-		socket.on("UPGRADE_PROGRESS_CHANGE", (message) => {
+		const listner = () => {
 			refetch()
-		})
-
+		}
+		socket.on("UPGRADE_PROGRESS_CHANGE", listner)
 		return () => {
-			socket.off("UPGRADE_PROGRESS_CHANGE")
+			socket.off("UPGRADE_PROGRESS_CHANGE", listner)
 		}
 	}, [socket])
 

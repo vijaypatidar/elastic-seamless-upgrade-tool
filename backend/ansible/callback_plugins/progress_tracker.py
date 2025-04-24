@@ -48,7 +48,7 @@ class CallbackModule(CallbackBase):
         self._display.display(f"Failed: {result.task_name or result._task.name} Host: {result._host.get_name()}")
         host_info = self.get_host_info_from_result(result)
         payload = {
-            'hosts': [host_info],
+            'host': host_info,
             'status': 'FAILED',
             "source": "v2_runner_on_failed"
         }
@@ -58,9 +58,9 @@ class CallbackModule(CallbackBase):
         self._display.display(f"Unreachable:  Host: {result._host.get_name()} Task: {result.task_name}")
         host_info = self.get_host_info_from_result(result)
         payload = {
-            'hosts': [host_info],
+            'host': host_info,
             'status': 'FAILED',
-            "source": "v2_runner_on_unreachable"
+            "error": "Host is unreachable. Please verify the SSH key and ensure the host IP is accessible from the system running the seamless upgrade tool."
         }
         self.post_progress(payload)
 
@@ -68,7 +68,7 @@ class CallbackModule(CallbackBase):
         self._display.display(f"Completed:  Host: {result._host.get_name()} Task: {result._task.name}")
         host_info = self.get_host_info_from_result(result)
         payload = {
-            'hosts': [host_info],
+            'host': host_info,
             'status': 'STARTED' if host_info['progress'] < 100 else 'SUCCESS',
             "source": "v2_runner_on_ok"
         }
@@ -79,7 +79,7 @@ class CallbackModule(CallbackBase):
         host_info = self.get_host_info_from_result(result)
         self._display.display(f"Skipped:  Host: {result._host.get_name()} Task: {result._task.name} Host IP: {host_vars.get('ansible_host', 'N/A')}")
         payload = {
-            'hosts': [host_info],
+            'host': host_info,
             'status': 'STARTED' if host_info['progress'] < 100 else 'SUCCESS',
             "skip":"true",
             "source": "v2_runner_on_skipped"

@@ -13,6 +13,7 @@ export interface PrecheckRunJob {
 	clusterId: string;
 	playbookRunId: string;
 	inventoryPath: string;
+	ip: string;
 }
 
 const PRECHECK_RUN_JOB_QUEUE: PrecheckRunJob[] = [];
@@ -34,7 +35,7 @@ export const schedulePrecheckRun = async (): Promise<void> => {
 
 		try {
 			logger.info(`Processing precheck run job: ${JSON.stringify(job)}`);
-			const { precheckId, clusterId, playbookRunId, inventoryPath } = job;
+			const { precheckId, clusterId, playbookRunId, inventoryPath, ip } = job;
 			const { elastic, targetVersion } = await getClusterInfoById(clusterId);
 			const precheck = getPrecheckById(precheckId);
 
@@ -42,18 +43,41 @@ export const schedulePrecheckRun = async (): Promise<void> => {
 				logger.error(`Precheck with ID ${precheckId} not found.`);
 				continue;
 			}
-			await ansibleRunnerService.runPlaybook({
-				playbookPath: precheck.playbookPath,
-				inventoryPath: inventoryPath,
-				variables: {
-					elk_version: targetVersion,
-					es_username: elastic.username!!,
-					es_password: elastic.password!!,
-					cluster_type: "ELASTIC",
-					playbook_run_id: playbookRunId,
-					playbook_run_type: "PRECHECK",
-				},
-			});
+			await ansibleRunnerService
+				.runPlaybook({
+					playbookPath: precheck.playbookPath,
+					inventoryPath: inventoryPath,
+					variables: {
+						elk_version: targetVersion,
+						es_username: elastic.username!!,
+						es_password: elastic.password!!,
+						cluster_type: "ELASTIC",
+						playbook_run_id: playbookRunId,
+						playbook_run_type: "PRECHECK",
+					},
+				})
+				.then(() => {
+					updateRunStatus(
+						{
+							precheckId: precheckId,
+							precheckRunId: playbookRunId,
+							ip: ip,
+						},
+						PrecheckStatus.COMPLETED,
+						[]
+					);
+				})
+				.catch(async () => {
+					updateRunStatus(
+						{
+							precheckId: precheckId,
+							precheckRunId: playbookRunId,
+							ip: ip,
+						},
+						PrecheckStatus.FAILED,
+						[]
+					);
+				});
 		} catch (error: any) {
 			logger.error(`Error processing job ${JSON.stringify(job)}: ${error.message}`);
 		}
@@ -128,6 +152,7 @@ export const runPrecheck = async (nodes: IElasticNode[], clusterId: string) => {
 		.map((node) => ({
 			ip: node.ip,
 			nodeId: node.nodeId,
+			nodeName: node.name,
 			precheckRunId: runId,
 			startedAt: startedAt,
 			status: PrecheckStatus.PENDING,
@@ -157,6 +182,7 @@ export const runPrecheck = async (nodes: IElasticNode[], clusterId: string) => {
 				clusterId: clusterId,
 				playbookRunId: precheckRun.precheckRunId,
 				inventoryPath: `ini/${inventoryFileName}`,
+				ip: precheckRun.ip,
 			};
 			return precheckRunJob;
 		})

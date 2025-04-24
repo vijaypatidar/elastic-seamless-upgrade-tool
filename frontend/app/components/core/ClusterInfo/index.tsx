@@ -59,12 +59,12 @@ function ClusterInfo() {
 
 	useEffect(() => {
 		if (!socket) return
-
-		socket.on("CLUSTER_INFO_CHANGE", (message) => {
+		const listner = () => {
 			refetch()
-		})
+		}
+		socket.on("CLUSTER_INFO_CHANGE", listner)
 		return () => {
-			socket.off("CLUSTER_INFO_CHANGE")
+			socket.off("CLUSTER_INFO_CHANGE", listner)
 		}
 	}, [socket])
 
@@ -246,6 +246,26 @@ function ClusterInfo() {
 						<DetailBox
 							title="Number of nodes"
 							description={error ? "--" : data?.numberOfNodes}
+							isLoading={isLoading || isRefetching}
+						/>
+						<DetailBox
+							title="Number of master nodes"
+							description={error ? "--" : data?.numberOfMasterNodes}
+							isLoading={isLoading || isRefetching}
+						/>
+						<DetailBox
+							title="Current Master"
+							description={error ? "--" : data?.currentMasterNode}
+							isLoading={isLoading || isRefetching}
+						/>
+						<DetailBox
+							title="Total Indices"
+							description={error ? "--" : data?.totalIndices}
+							isLoading={isLoading || isRefetching}
+						/>
+						<DetailBox
+							title="Adaptive Replica Enabled"
+							description={error ? "--" : data?.adaptiveReplicaEnabled}
 							isLoading={isLoading || isRefetching}
 						/>
 						<DetailBox

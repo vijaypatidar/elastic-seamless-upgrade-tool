@@ -28,7 +28,7 @@ function Common() {
 	useEffect(() => {
 		if (!socket) return
 
-		socket.on("NOTIFICATION", (message) => {
+		const listner = (message: any) => {
 			addToast({
 				title: message.title,
 				description: message.message,
@@ -69,10 +69,11 @@ function Common() {
 					</Typography>
 				) : null,
 			})
-		})
+		}
+		socket.on("NOTIFICATION", listner)
 
 		return () => {
-			socket.off("NOTIFICATION")
+			socket.off("NOTIFICATION", listner)
 		}
 	}, [socket])
 

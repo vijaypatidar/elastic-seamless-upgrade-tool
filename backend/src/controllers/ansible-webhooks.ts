@@ -23,6 +23,7 @@ interface HostInfoPrecheck {
 	name: string;
 	progress: number;
 	precheckId: string;
+	task: string;
 	logs?: {
 		stdout: string;
 		stderr: string;
@@ -34,18 +35,18 @@ interface BaseAnsibleRequest {
 	logs?: string[];
 	status: AnsibleTaskStatus;
 	playbookRunId: string;
+	host: HostInfoPrecheck;
+	error?: string;
 }
 export interface AnsibleRequestPrecheck extends BaseAnsibleRequest {
 	type: AnsibleRequestType.PRECHECK;
 	precheckId: string;
 	clusterType: ClusterType;
-	hosts: HostInfoPrecheck[];
 	precheck: string;
 }
 export interface AnsibleRequestUpgrade extends BaseAnsibleRequest {
 	type: AnsibleRequestType.UPGRADE;
 	progress?: number;
-	hosts: HostInfoUpgrade[];
 	taskName: string;
 }
 
@@ -59,48 +60,41 @@ export const handleAnsibleWebhook = async (req: Request, res: Response) => {
 			`Received Ansible webhook [playbookRunId: ${playbookRunId}] of [type: ${type}]  [Hook Body: ${JSON.stringify(req.body, null, 2)}]`
 		);
 		if (type === AnsibleRequestType.UPGRADE) {
-			const { clusterType, hosts } = body;
+			const { clusterType, host } = body;
 			// Handle upgrade request
 			const nodeStatus = mapAnsibleToUpgradeStatus(status);
 			if (clusterType === ClusterType.ELASTIC) {
-				hosts.forEach((host) => {
-					updateNode(
-						{ ip: host.ip },
-						{
-							progress: host.progress,
-							status: nodeStatus || NodeStatus.UPGRADING,
-						}
-					);
-				});
+				updateNode(
+					{ ip: host.ip },
+					{
+						progress: host.progress,
+						status: nodeStatus || NodeStatus.UPGRADING,
+					}
+				);
 			} else {
-				hosts.forEach((host) => {
-					updateKibanaNode(
-						{ ip: host.ip },
-						{
-							progress: host.progress,
-							status: nodeStatus || NodeStatus.UPGRADING,
-						}
-					);
-				});
+				updateKibanaNode(
+					{ ip: host.ip },
+					{
+						progress: host.progress,
+						status: nodeStatus || NodeStatus.UPGRADING,
+					}
+				);
 			}
 			notificationService.sendNotification({
 				type: NotificationEventType.UPGRADE_PROGRESS_CHANGE,
 			});
 		} else {
 			//fetch precheck data and update corresponding run
-			const { playbookRunId, hosts } = body;
-			await Promise.all(
-				hosts.map(async (host) => {
-					const { precheckId, ip, logs } = host;
-					const processedLogs = !logs
-						? []
-						: [...logs.stdout.split("\n"), ...logs.stderr.split("\n")].filter((log) => log);
-					await updateRunStatus(
-						{ precheckRunId: playbookRunId, precheckId: precheckId, ip: ip },
-						mapAnsibleToPrecheckStatus(status),
-						processedLogs
-					);
-				})
+			const { playbookRunId, host, error = "" } = body;
+			const { precheckId, ip, logs, task } = host;
+			const taskLog = `Task: ${task}`;
+			const processedLogs = !logs
+				? [taskLog, error]
+				: [taskLog, ...logs.stdout.split("\n"), ...logs.stderr.split("\n"), error].filter((log) => log);
+			await updateRunStatus(
+				{ precheckRunId: playbookRunId, precheckId: precheckId, ip: ip },
+				mapAnsibleToPrecheckStatus(status),
+				processedLogs
 			);
 			notificationService.sendNotification({
 				type: NotificationEventType.PRECHECK_PROGRESS_CHANGE,
