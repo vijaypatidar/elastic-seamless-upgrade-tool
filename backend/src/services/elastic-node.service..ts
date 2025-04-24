@@ -38,7 +38,6 @@ export const getAllElasticNodes = async (clusterId: string): Promise<IElasticNod
 export const syncNodeData = async (clusterId: string) => {
 	try {
 		const client = await ElasticClient.buildClient(clusterId);
-		const clusterInfo = await getClusterInfoById(clusterId);
 		const response: any = await client.getClient().nodes.info({
 			filter_path: "nodes.*.name,nodes.*.roles,nodes.*.os.name,nodes.*.os.version,nodes.*.version,nodes.*.ip",
 		});
@@ -64,10 +63,6 @@ export const syncNodeData = async (clusterId: string) => {
 					node.status = existingNode.status;
 					node.progress = existingNode.progress;
 				}
-			}
-			if (node.version === clusterInfo.targetVersion) {
-				node.status = NodeStatus.UPGRADED;
-				node.progress = 100;
 			}
 
 			await ElasticNode.findOneAndUpdate({ nodeId: node.nodeId }, node, {
@@ -179,7 +174,7 @@ export const triggerNodeUpgrade = async (nodeId: string, clusterId: string) => {
 				});
 			});
 
-		return new Promise((resolve, reject) => resolve(true));
+		return new Promise((resolve) => resolve(true));
 	} catch (error) {
 		logger.error(`Error performing upgrade for node with id ${nodeId}`);
 		return false;

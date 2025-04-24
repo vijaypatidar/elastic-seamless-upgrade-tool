@@ -29,14 +29,8 @@ class CallbackModule(CallbackBase):
 
    
     def v2_playbook_on_play_start(self, play):
-            host_info_list = self.get_host_info_from_play(play)
-        
             self._display.display(f"📋 Play '{play.get_name()}' started. {host_info_list}")
-            payload = {
-                'play_name': play.get_name(),
-                'hosts': host_info_list,
-                "status": "STARTED",
-            }
+            
             # self.post_progress(payload)
 
     def v2_playbook_on_task_start(self, task, is_conditional):
@@ -50,7 +44,6 @@ class CallbackModule(CallbackBase):
         payload = {
             'host': host_info,
             'status': 'FAILED',
-            "source": "v2_runner_on_failed"
         }
         self.post_progress(payload)
 
@@ -70,7 +63,6 @@ class CallbackModule(CallbackBase):
         payload = {
             'host': host_info,
             'status': 'STARTED' if host_info['progress'] < 100 else 'SUCCESS',
-            "source": "v2_runner_on_ok"
         }
         self.post_progress(payload)
 
@@ -82,7 +74,6 @@ class CallbackModule(CallbackBase):
             'host': host_info,
             'status': 'STARTED' if host_info['progress'] < 100 else 'SUCCESS',
             "skip":"true",
-            "source": "v2_runner_on_skipped"
         }
         self.post_progress(payload)
 
@@ -151,7 +142,7 @@ class CallbackModule(CallbackBase):
         progress = int((current_task / total_tasks) * 100 if total_tasks else 0)
         stdout = result._result.get('stdout', '')
         stderr = result._result.get('stderr', '')
-         
+        self._display.display(f"IP: {ip}, Task Name: {result._task.name}, Total Tasks: {total_tasks}, Current Task: {current_task}")
         return {
             "name": result._host.get_name(),
             "ip": ip,
