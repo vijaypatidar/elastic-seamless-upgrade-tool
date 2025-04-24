@@ -139,9 +139,9 @@ class CallbackModule(CallbackBase):
         if result._task.run_once:
             for ip in self.task_current_by_host_ip:
                 self.incr_and_current_task_by_host_ip(ip)
-            current_task = self.get_task_current_by_host_ip(ip)
-        else:
-            current_task = self.incr_and_current_task_by_host_ip(ip)
+        elif result._task.name != 'Gathering Facts':
+            self.incr_and_current_task_by_host_ip(ip)
+        current_task = self.get_task_current_by_host_ip(ip)
         progress = int((current_task / total_tasks) * 100 if total_tasks else 0)
         stdout = result._result.get('stdout', '')
         stderr = result._result.get('stderr', '')
