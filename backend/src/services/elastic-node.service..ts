@@ -59,12 +59,9 @@ export const syncNodeData = async (clusterId: string) => {
 		for (const node of elasticNodes) {
 			const existingNode = await ElasticNode.findOne({ nodeId: node.nodeId });
 			if (existingNode) {
-				if (existingNode.status !== NodeStatus.UPGRADED) {
-					node.status = existingNode.status;
-					node.progress = existingNode.progress;
-				}
+				node.status = existingNode.status;
+				node.progress = existingNode.progress;
 			}
-
 			await ElasticNode.findOneAndUpdate({ nodeId: node.nodeId }, node, {
 				new: true,
 				runValidators: true,

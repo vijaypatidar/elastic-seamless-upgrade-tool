@@ -29,9 +29,7 @@ class CallbackModule(CallbackBase):
 
    
     def v2_playbook_on_play_start(self, play):
-            self._display.display(f"📋 Play '{play.get_name()}' started. {host_info_list}")
-            
-            # self.post_progress(payload)
+        self._display.display(f"📋 Play '{play.get_name()}' started.")
 
     def v2_playbook_on_task_start(self, task, is_conditional):
         play = task.get_play()
@@ -68,8 +66,8 @@ class CallbackModule(CallbackBase):
 
     def v2_runner_on_skipped(self, result):
         host_vars = result._host.get_vars()
+        self._display.display(f"Skipped:  Host: {result._host.get_name()} Task: {result._task.name}")
         host_info = self.get_host_info_from_result(result)
-        self._display.display(f"Skipped:  Host: {result._host.get_name()} Task: {result._task.name} Host IP: {host_vars.get('ansible_host', 'N/A')}")
         payload = {
             'host': host_info,
             'status': 'STARTED' if host_info['progress'] < 100 else 'SUCCESS',
