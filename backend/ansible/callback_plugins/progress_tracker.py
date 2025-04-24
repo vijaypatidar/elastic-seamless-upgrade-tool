@@ -136,7 +136,12 @@ class CallbackModule(CallbackBase):
         precheck_id = play.vars.get("precheck_id", None)
         ip = host_vars.get('ansible_host', 'N/A')
         total_tasks = self.get_total_task_count_by_host_group(result._host.groups);
-        current_task = self.get_task_current_by_host_ip(ip)
+        if result._task.run_once:
+            for ip in self.task_current_by_host_ip:
+                self.incr_and_current_task_by_host_ip(ip)
+            current_task = self.get_task_current_by_host_ip(ip)
+        else:
+            current_task = self.incr_and_current_task_by_host_ip(ip)
         progress = int((current_task / total_tasks) * 100 if total_tasks else 0)
         stdout = result._result.get('stdout', '')
         stderr = result._result.get('stderr', '')
@@ -164,6 +169,9 @@ class CallbackModule(CallbackBase):
         return total_tasks
     
     def get_task_current_by_host_ip(self, host_ip):
+        return self.task_current_by_host_ip[host_ip]
+    
+    def incr_and_current_task_by_host_ip(self, host_ip):
         if host_ip not in self.task_current_by_host_ip:
             self.task_current_by_host_ip[host_ip] = 1
         else:
