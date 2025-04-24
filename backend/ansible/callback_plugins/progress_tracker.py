@@ -145,7 +145,6 @@ class CallbackModule(CallbackBase):
         progress = int((current_task / total_tasks) * 100 if total_tasks else 0)
         stdout = result._result.get('stdout', '')
         stderr = result._result.get('stderr', '')
-        self._display.display(f"IP: {ip}, Task Name: {result._task.name}, Total Tasks: {total_tasks}, Current Task: {current_task}")
         return {
             "name": result._host.get_name(),
             "ip": ip,
