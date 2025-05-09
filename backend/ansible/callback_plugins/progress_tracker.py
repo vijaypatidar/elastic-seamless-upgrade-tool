@@ -29,15 +29,7 @@ class CallbackModule(CallbackBase):
 
    
     def v2_playbook_on_play_start(self, play):
-            host_info_list = self.get_host_info_from_play(play)
-        
-            self._display.display(f"📋 Play '{play.get_name()}' started. {host_info_list}")
-            payload = {
-                'play_name': play.get_name(),
-                'hosts': host_info_list,
-                "status": "STARTED",
-            }
-            # self.post_progress(payload)
+        self._display.display(f"📋 Play '{play.get_name()}' started.")
 
     def v2_playbook_on_task_start(self, task, is_conditional):
         play = task.get_play()
@@ -50,7 +42,6 @@ class CallbackModule(CallbackBase):
         payload = {
             'host': host_info,
             'status': 'FAILED',
-            "source": "v2_runner_on_failed"
         }
         self.post_progress(payload)
 
@@ -70,19 +61,17 @@ class CallbackModule(CallbackBase):
         payload = {
             'host': host_info,
             'status': 'STARTED' if host_info['progress'] < 100 else 'SUCCESS',
-            "source": "v2_runner_on_ok"
         }
         self.post_progress(payload)
 
     def v2_runner_on_skipped(self, result):
         host_vars = result._host.get_vars()
+        self._display.display(f"Skipped:  Host: {result._host.get_name()} Task: {result._task.name}")
         host_info = self.get_host_info_from_result(result)
-        self._display.display(f"Skipped:  Host: {result._host.get_name()} Task: {result._task.name} Host IP: {host_vars.get('ansible_host', 'N/A')}")
         payload = {
             'host': host_info,
             'status': 'STARTED' if host_info['progress'] < 100 else 'SUCCESS',
             "skip":"true",
-            "source": "v2_runner_on_skipped"
         }
         self.post_progress(payload)
 
@@ -147,11 +136,15 @@ class CallbackModule(CallbackBase):
         precheck_id = play.vars.get("precheck_id", None)
         ip = host_vars.get('ansible_host', 'N/A')
         total_tasks = self.get_total_task_count_by_host_group(result._host.groups);
+        if result._task.run_once:
+            for ip in self.task_current_by_host_ip:
+                self.incr_and_current_task_by_host_ip(ip)
+        elif result._task.name != 'Gathering Facts':
+            self.incr_and_current_task_by_host_ip(ip)
         current_task = self.get_task_current_by_host_ip(ip)
         progress = int((current_task / total_tasks) * 100 if total_tasks else 0)
         stdout = result._result.get('stdout', '')
         stderr = result._result.get('stderr', '')
-         
         return {
             "name": result._host.get_name(),
             "ip": ip,
@@ -175,6 +168,9 @@ class CallbackModule(CallbackBase):
         return total_tasks
     
     def get_task_current_by_host_ip(self, host_ip):
+        return self.task_current_by_host_ip[host_ip]
+    
+    def incr_and_current_task_by_host_ip(self, host_ip):
         if host_ip not in self.task_current_by_host_ip:
             self.task_current_by_host_ip[host_ip] = 1
         else:
