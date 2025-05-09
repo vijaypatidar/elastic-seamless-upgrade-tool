@@ -27,7 +27,7 @@ export const getPrecheckRunByClusterIdHandler = async (req: Request, res: Respon
 		const response = await getPrechecksGroupedByNode(clusterId);
 		res.send(response);
 	} catch (err: any) {
-		res.sendStatus(404).send(err.message);
+		res.status(404).send(err.message);
 	}
 };
 
@@ -39,6 +39,6 @@ export const getPrecheckReportByClusterId = async (req: Request<{ clusterId: str
 		res.setHeader("Content-Type", "text/markdown");
 		res.send(content);
 	} catch (err: any) {
-		res.sendStatus(404).send(err.message);
+		res.status(404).send(err.message);
 	}
 };
