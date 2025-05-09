@@ -121,12 +121,14 @@ function Precheck() {
 	const handleExport = async () => {
 		setIsExportPending(true)
 		try {
-			const jsonString = JSON.stringify(data, null, 2)
-			const blob = new Blob([jsonString], { type: "application/json" })
+			const response = await axiosJSON.get(`/api/elastic/clusters/${clusterId}/prechecks/report`, {
+				responseType: "blob",
+			})
+			const blob = new Blob([response.data], { type: "text/markdown" })
 			const url = URL.createObjectURL(blob)
 			const a = document.createElement("a")
 			a.href = url
-			a.download = "precheck-logs.json"
+			a.download = "precheck-report.md"
 			a.click()
 
 			URL.revokeObjectURL(url)

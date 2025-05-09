@@ -23,6 +23,7 @@ import {
 	runAllPrecheksHandler,
 	runPrechekByNodeIdHandler,
 	getPrecheckRunByClusterIdHandler,
+	getPrecheckReportByClusterId,
 } from "../controllers/prechecks-controller";
 
 const router = Router();
@@ -68,6 +69,8 @@ router.post("/:clusterId/verify-ssh", verfiySshKey);
 router.post("/:clusterId/prechecks", runAllPrecheksHandler);
 
 router.get("/:clusterId/prechecks", getPrecheckRunByClusterIdHandler);
+
+router.get("/:clusterId/prechecks/report", getPrecheckReportByClusterId);
 
 router.post("/:clusterId/prechecks/nodes/:nodeId", runPrechekByNodeIdHandler);
 

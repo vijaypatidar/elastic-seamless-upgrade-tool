@@ -208,3 +208,45 @@ export const getMergedPrecheckStatus = (precheckRuns: PrecheckStatus[]) => {
 	if (hasPending) return PrecheckStatus.PENDING;
 	return PrecheckStatus.COMPLETED;
 };
+
+export const getPrechecksGroupedByNode = async (clusterId: string) => {
+	const precheckRuns = await getLatestRunsByPrecheck(clusterId);
+	if (!precheckRuns || precheckRuns.length === 0) {
+		throw new Error("No precheck runs found");
+	}
+	const groupedPrecheckRunsByNodeId = precheckRuns.reduce<Record<string, typeof precheckRuns>>((acc, run) => {
+		const groupedBy = run.nodeId;
+		if (!acc[groupedBy]) {
+			acc[groupedBy] = [];
+		}
+		acc[groupedBy].push(run);
+		return acc;
+	}, {});
+
+	return Object.entries(groupedPrecheckRunsByNodeId).map(([nodeId, precheckRuns]) => {
+		const status = getMergedPrecheckStatus(precheckRuns.map((precheck) => precheck.status));
+		const precheck = precheckRuns[0];
+		const transformPrecheckRunForUI = (precheck: INodePrecheckRun) => {
+			const { name } = getPrecheckById(precheck.precheckId) || {};
+			const duration = precheck.endAt
+				? parseFloat(((precheck.endAt.getTime() - precheck.startedAt.getTime()) / 1000).toFixed(2))
+				: null;
+			return {
+				id: precheck.precheckId,
+				name: name,
+				status: precheck.status,
+				logs: precheck.logs,
+				startTime: precheck.startedAt,
+				endTime: precheck.endAt,
+				duration: duration,
+			};
+		};
+		return {
+			nodeId: nodeId,
+			ip: precheck.ip,
+			name: precheck.nodeName,
+			status: status,
+			prechecks: precheckRuns.map(transformPrecheckRunForUI),
+		};
+	});
+};
