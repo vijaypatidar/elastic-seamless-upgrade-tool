@@ -4,12 +4,13 @@ import { Server, Socket } from "socket.io";
 import webhookRouter from "./routes/webhook.router";
 import elasticRouter from "./routes/elastic.router";
 import settingsRouter from "./routes/settings.router";
-import express, { Request, Response } from "express";
+import express, { NextFunction, Request, Response } from "express";
 import cors from "cors";
 
 import logger from "./logger/logger";
 import { connectDB } from "./databases/db";
 import { NotificationEvent, NotificationListner, notificationService } from "./services/notification.service";
+import { AppError } from "./errors";
 
 const app = express();
 const server = http.createServer(app);
@@ -47,6 +48,15 @@ app.use((req, res) => {
 		path: req.originalUrl,
 		message: `The requested route '${req.originalUrl}' was not found.`,
 	});
+});
+
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+	if (err instanceof AppError) {
+		res.status(err.statusCode).json({ error: err.message });
+	} else {
+		logger.error(err);
+		res.status(500).json({ error: "Internal Server Error" });
+	}
 });
 
 const io = new Server(server, {
