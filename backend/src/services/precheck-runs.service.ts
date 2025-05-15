@@ -8,6 +8,7 @@ import { ansibleRunnerService } from "./ansible-runner.service";
 import { getClusterInfoById } from "./cluster-info.service";
 import { IElasticNode } from "../models/elastic-node.model";
 import { NotFoundError } from "../errors";
+import { UpdateQuery } from "mongoose";
 
 export interface PrecheckRunJob {
 	precheckId: string;
@@ -44,6 +45,13 @@ export const schedulePrecheckRun = async (): Promise<void> => {
 				logger.error(`Precheck with ID ${precheckId} not found.`);
 				continue;
 			}
+
+			const identifier = {
+				precheckId: precheckId,
+				precheckRunId: playbookRunId,
+				ip: ip,
+			};
+			await updateNodePrecheckRuns(identifier, { startedAt: Date.now() });
 			await ansibleRunnerService
 				.runPlaybook({
 					playbookPath: precheck.playbookPath,
@@ -58,26 +66,10 @@ export const schedulePrecheckRun = async (): Promise<void> => {
 					},
 				})
 				.then(() => {
-					updateRunStatus(
-						{
-							precheckId: precheckId,
-							precheckRunId: playbookRunId,
-							ip: ip,
-						},
-						PrecheckStatus.COMPLETED,
-						[]
-					);
+					updateRunStatus(identifier, PrecheckStatus.COMPLETED, []);
 				})
 				.catch(async () => {
-					updateRunStatus(
-						{
-							precheckId: precheckId,
-							precheckRunId: playbookRunId,
-							ip: ip,
-						},
-						PrecheckStatus.FAILED,
-						[]
-					);
+					updateRunStatus(identifier, PrecheckStatus.FAILED, []);
 				});
 		} catch (error: any) {
 			logger.error(`Error processing job ${JSON.stringify(job)}: ${error.message}`);
@@ -119,18 +111,28 @@ export const updateRunStatus = async (
 	newStatus: PrecheckStatus,
 	logs: string[]
 ): Promise<void> => {
+	const updates: UpdateQuery<INodePrecheckRun> = {
+		status: newStatus,
+		$push: { logs: { $each: logs } },
+	};
+	if (newStatus === PrecheckStatus.COMPLETED || newStatus === PrecheckStatus.FAILED) {
+		updates.endAt = Date.now();
+	} else if (newStatus === PrecheckStatus.RUNNING) {
+		// Need to confirm that ansible plugin not send this status mulitple time before setting start time based on this.
+		// updates.startedAt === Date.now();
+	}
+	await updateNodePrecheckRuns(identifier, updates);
+};
+
+export const updateNodePrecheckRuns = async (
+	identifier: Partial<INodePrecheckRun>,
+	updates: UpdateQuery<INodePrecheckRun>
+): Promise<void> => {
 	try {
-		const endAt =
-			newStatus === PrecheckStatus.COMPLETED || newStatus === PrecheckStatus.FAILED ? Date.now() : undefined;
-		const updatedNode = await NodePrecheckRun.findOneAndUpdate(
-			identifier,
-			{
-				status: newStatus,
-				endAt: endAt,
-				$push: { logs: { $each: logs } },
-			},
-			{ new: true, runValidators: true }
-		);
+		const updatedNode = await NodePrecheckRun.findOneAndUpdate(identifier, updates, {
+			new: true,
+			runValidators: true,
+		});
 		if (!updatedNode) {
 			logger.debug(`Node with identifier ${identifier} not found.`);
 			return;
