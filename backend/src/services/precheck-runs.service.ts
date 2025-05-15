@@ -7,6 +7,7 @@ import { ansibleInventoryService } from "./ansible-inventory.service";
 import { ansibleRunnerService } from "./ansible-runner.service";
 import { getClusterInfoById } from "./cluster-info.service";
 import { IElasticNode } from "../models/elastic-node.model";
+import { NotFoundError } from "../errors";
 
 export interface PrecheckRunJob {
 	precheckId: string;
@@ -212,7 +213,7 @@ export const getMergedPrecheckStatus = (precheckRuns: PrecheckStatus[]) => {
 export const getPrechecksGroupedByNode = async (clusterId: string) => {
 	const precheckRuns = await getLatestRunsByPrecheck(clusterId);
 	if (!precheckRuns || precheckRuns.length === 0) {
-		throw new Error("No precheck runs found");
+		throw new NotFoundError("No precheck runs found");
 	}
 	const groupedPrecheckRunsByNodeId = precheckRuns.reduce<Record<string, typeof precheckRuns>>((acc, run) => {
 		const groupedBy = run.nodeId;
