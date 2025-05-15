@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Get the docker tag from the first argument, default to 'latest'
+DOCKER_TAG="${1:-latest}"
+
 # Define the docker-compose.yml content
 cat <<EOF > docker-compose.yml
 
@@ -16,8 +19,9 @@ services:
       - mongo-data:/data/db
 
   backend:
-    image: hyperflex/elastic-seamless-upgrade-backend:latest
+    image: hyperflex/elastic-seamless-upgrade-backend:$DOCKER_TAG
     container_name: backend
+    pull_policy: always
     environment:
       MONGO_URI: mongodb://admin:admin123@mongodb:27017/
     depends_on:
@@ -26,8 +30,9 @@ services:
       - '3000:3000'
 
   frontend:
-    image: hyperflex/elastic-seamless-upgrade-frontend:latest
+    image: hyperflex/elastic-seamless-upgrade-frontend:$DOCKER_TAG
     container_name: frontend
+    pull_policy: always
     ports:
       - '8080:80'
     depends_on:
