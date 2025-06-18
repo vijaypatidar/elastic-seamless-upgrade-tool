@@ -9,9 +9,9 @@ const STYLES: { [path: string]: (props: any) => {} } = {
 			fontWeight: 500,
 			lineHeight: "normal",
 			textTransform: "none",
-			background: props.disabled ? "#181818" : "#0A0A0A",
+			background: props.disabled ? "#141414" : "#0A0A0A",
 			borderRadius: "10px",
-			color: props.disabled ? "#707070 !important" : "#FFF !important",
+			color: props.disabled ? "#49494B !important" : "#FFF !important",
 			display: "flex",
 			gap: "6px",
 			padding: "10px 16px",
@@ -27,9 +27,9 @@ const STYLES: { [path: string]: (props: any) => {} } = {
 			display: "flex",
 			gap: "6px",
 			padding: "10px 16px",
-			background: props.disabled ? "#181818" : "#FFF",
+			background: props.disabled ? "#141414" : "#FFF",
 			borderRadius: "10px",
-			color: props.disabled ? "#707070 !important" : "#0A0A0A !important",
+			color: props.disabled ? "#49494B !important" : "#0A0A0A !important",
 			textTransform: "none",
 			fontSize: "15px",
 			fontWeight: 500,
@@ -50,18 +50,23 @@ const STYLES: { [path: string]: (props: any) => {} } = {
 			height: "36px",
 			display: "flex",
 			gap: "6px",
-			padding: "10px 16px",
-			background: props.disabled ? "#181818" : "#0A0A0A",
+			padding: props.padding,
+			background: props.disabled ? "#141414" : "#212022",
 			borderRadius: "10px",
-			color: props.disabled ? "#707070 !important" : "#FFF !important",
+			color: props.disabled ? "#49494B !important" : "#D0CFD1 !important",
 			textTransform: "none",
-			fontSize: "13px",
+			fontSize: props.fontSize,
 			fontWeight: 500,
 			lineHeight: "normal",
 			transition: "all 0.5s",
 			borderWidth: "1px",
 			borderStyle: "solid",
 			borderColor: props.disabled ? "#292929" : "transparent",
+
+			":hover": {
+				color: "#FFFFFF !important",
+				background: props.disabled ? "#141414" : "#171717",
+			},
 
 			"& > #icon, :hover > #hoverIcon": {
 				display: "flex",
@@ -97,7 +102,7 @@ export function ConatinedButton(props: any) {
 
 export function OutlinedButton(props: any) {
 	const { sx = {}, ...buttonProps } = props
-	
+
 	return (
 		<Box
 			className="flex p-px bg-transparent rounded-[10px]"
@@ -112,6 +117,9 @@ export function OutlinedButton(props: any) {
 
 export function OutlinedBorderButton(props: any) {
 	const {
+		borderColor = "#615D6A",
+		bgColor = "#212022",
+		hoverBgColor = "#171717",
 		gradient = "linear-gradient(91deg, #896BD3 0%, #C8BDE4 52.44%, #6B46C5 98.94%)",
 		icon: Icon,
 		iconProps,
@@ -122,6 +130,8 @@ export function OutlinedBorderButton(props: any) {
 		sx = {},
 		boxShadow = "0px 0px 14px 2px rgba(126, 81, 231, 0.52)",
 		borderRadius = "10px",
+		padding = "6px 10px",
+		fontSize = "12px",
 		...buttonProps
 	} = props
 
@@ -145,14 +155,21 @@ export function OutlinedBorderButton(props: any) {
 				borderRadius: borderRadius,
 				transition: "all 0.5s",
 				cursor: buttonProps.disabled ? "not-allowed" : "pointer",
-				background: !buttonProps.disabled && gradient,
+				background: !buttonProps.disabled && borderColor,
 				":hover": {
+					background: !buttonProps.disabled && gradient,
 					boxShadow: !buttonProps.disabled ? boxShadow : "none",
 				},
 			}}
 		>
 			<MuiButton
-				sx={{ ...mergeDicts(STYLES["outlined-border"]({ disabled: props.disabled }), sx), borderRadius }}
+				sx={{
+					...mergeDicts(
+						STYLES["outlined-border"]({ disabled: props.disabled, padding: padding, fontSize: fontSize }),
+						sx
+					),
+					borderRadius,
+				}}
 				{...buttonProps}
 			>
 				{iconPos === "start" && Icon && getIcon()}

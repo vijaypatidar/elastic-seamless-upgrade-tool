@@ -1,15 +1,17 @@
 import { Spinner, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from "@heroui/react"
 import { Box, Typography } from "@mui/material"
 import { useMutation, useQuery } from "@tanstack/react-query"
-import { CloseCircle, Flash, TickCircle } from "iconsax-react"
-import { useCallback, type Key } from "react"
+import { CloseCircle, Flash, TickCircle, Warning2 } from "iconsax-react"
+import { useCallback, useEffect, type Key } from "react"
 import { toast } from "sonner"
 import axiosJSON from "~/apis/http"
 import { OutlinedBorderButton } from "~/components/utilities/Buttons"
 import StorageManager from "~/constants/StorageManager"
-import LocalStorageHandler from "~/lib/LocalHanlder"
-import ProgressBar from "./widgets/progress"
 import StringManager from "~/constants/StringManager"
+import LocalStorageHandler from "~/lib/LocalHanlder"
+import { useLocalStore } from "~/store/common"
+import { useSocketStore } from "~/store/socket"
+import ProgressBar from "./widgets/progress"
 
 const UPGRADE_ENUM = {
 	completed: (
@@ -47,25 +49,31 @@ const columns: TUpgradeColumn = [
 		key: "node_name",
 		label: "Node name",
 		align: "start",
-		width: 300,
+		width: 200,
+	},
+	{
+		key: "ip",
+		label: "IP address",
+		align: "start",
+		width: 120,
 	},
 	{
 		key: "role",
 		label: "Role",
 		align: "start",
-		width: 150,
+		width: 120,
 	},
 	{
 		key: "os",
 		label: "OS",
 		align: "start",
-		width: 150,
+		width: 120,
 	},
 	{
 		key: "version",
 		label: "Version",
 		align: "start",
-		width: 150,
+		width: 120,
 	},
 	{
 		key: "action",
@@ -76,6 +84,20 @@ const columns: TUpgradeColumn = [
 ]
 
 function UpgradeKibana({ clusterType }: TUpgradeKibana) {
+	const clusterId = useLocalStore((state: any) => state.clusterId)
+	const { socket, isConnected } = useSocketStore()
+
+	useEffect(() => {
+		if (!socket) return
+		const listner = () => {
+			refetch()
+		}
+		socket.on("UPGRADE_PROGRESS_CHANGE", listner)
+		return () => {
+			socket.off("UPGRADE_PROGRESS_CHANGE", listner)
+		}
+	}, [socket])
+
 	const getNodeStatus = async (nodeId: string) => {
 		try {
 			const response = await axiosJSON.get(`/api/elastic/clusters/nodes/${nodeId}`)
@@ -90,7 +112,6 @@ function UpgradeKibana({ clusterType }: TUpgradeKibana) {
 	}
 
 	const getNodesInfo = async () => {
-		const clusterId = LocalStorageHandler.getItem(StorageManager.CLUSTER_ID) || "cluster-id"
 		let response: any = []
 		await axiosJSON
 			.get(`/api/elastic/clusters/${clusterId}/kibana-nodes`)
@@ -98,15 +119,17 @@ function UpgradeKibana({ clusterType }: TUpgradeKibana) {
 				response = res.data.map((item: any) => ({
 					key: item.nodeId,
 					node_name: item.name,
+					ip: item.ip,
 					role: item.roles[0],
 					os: item.os.name,
 					version: item.version,
 					status: item.status,
 					progress: item.progress,
 					isMaster: false,
-					disabled: false,
-					// (item.isMaster && res.data.filter((i: any) => i.status !== "upgraded" && i.isMaster).length > 0) ||
-					// res.data.some((i: any) => i.status === "upgrading"),
+					disabled:
+						(item.isMaster &&
+							res.data.filter((i: any) => i.status !== "UPGRADED" && i.isMaster).length > 0) ||
+						res.data.some((i: any) => i.status === "UPGRADING"),
 				}))
 			})
 			.catch((err) => toast.error(err?.response?.data.err ?? StringManager.GENERIC_ERROR))
@@ -133,12 +156,12 @@ function UpgradeKibana({ clusterType }: TUpgradeKibana) {
 	const { data, isLoading, refetch, isRefetching } = useQuery({
 		queryKey: ["nodes-info"],
 		queryFn: getNodesInfo,
-		refetchInterval: (data) => {
-			const nodes = data.state.data
-			const isUpgrading = nodes?.some((node: any) => node.status === "upgrading")
-			return isUpgrading ? 1000 : false
-		},
-		refetchIntervalInBackground: true,
+		// refetchInterval: (data) => {
+		// 	const nodes = data.state.data
+		// 	const isUpgrading = nodes?.some((node: any) => node.status === "UPGRADING")
+		// 	return isUpgrading ? 1000 : false
+		// },
+		// refetchIntervalInBackground: true,
 		staleTime: 0,
 	})
 
@@ -154,16 +177,31 @@ function UpgradeKibana({ clusterType }: TUpgradeKibana) {
 			switch (columnKey) {
 				case "node_name":
 					return row.node_name
+				case "ip":
+					return <span className="text-[#ADADAD]">{row.ip}</span>
 				case "role":
-					return row.role
+					return <span className="text-[#ADADAD]">{row.role}</span>
 				case "os":
-					return row.os
+					return <span className="text-[#ADADAD]">{row.os}</span>
 				case "version":
-					return row.version
+					return <span className="text-[#ADADAD]">{row.version}</span>
 				case "action":
 					return (
-						<>
-							{row.status === "available" ? (
+						<Box className="flex justify-end">
+							{row?.disabled ? (
+								<Box
+									className="flex gap-1 items-center"
+									color="#EFC93D"
+									fontSize="12px"
+									fontWeight="500"
+									lineHeight="normal"
+								>
+									<Box className="min-w-4 min-h-4">
+										<Warning2 size="16px" color="currentColor" variant="Bold" />
+									</Box>
+									Upgrade other nodes first.
+								</Box>
+							) : row.status === "available" ? (
 								<Box className="flex justify-end">
 									<OutlinedBorderButton
 										onClick={() => {
@@ -183,7 +221,7 @@ function UpgradeKibana({ clusterType }: TUpgradeKibana) {
 							) : (
 								UPGRADE_ENUM["failed"]
 							)}
-						</>
+						</Box>
 					)
 				default:
 					return cellValue
@@ -199,7 +237,7 @@ function UpgradeKibana({ clusterType }: TUpgradeKibana) {
 					<Typography color="#FFF" fontSize="14px" fontWeight="600" lineHeight="22px">
 						Node Details
 					</Typography>
-					<OutlinedBorderButton icon={Flash} filledIcon={Flash} disabled>
+					<OutlinedBorderButton icon={Flash} filledIcon={Flash} disabled padding="8px 16px" fontSize="13px">
 						Upgrade all
 					</OutlinedBorderButton>
 				</Box>

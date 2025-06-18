@@ -181,30 +181,30 @@ const possibleUpgrades: Record<string, string[]> = {
 	"8.15": ["8.16.4", "8.17.2"],
 	"8.16": ["8.17.2"],
 	"8.17": [],
-}
+};
 
 export const getPossibleUpgrades = (version: string): string[] | null => {
 	if (version === null) {
-		return null
+		return null;
 	}
 	const versions = Object.keys(possibleUpgrades)
 		.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
-		.reverse() // Reverse to start from the highest version
+		.reverse(); // Reverse to start from the highest version
 
-	const foundVersion = versions.find((v) => compareVersions(v, version) <= 0)
+	const foundVersion = versions.find((v) => compareVersions(v, version) <= 0);
 
-	return foundVersion ? possibleUpgrades[foundVersion] : []
-}
+	return foundVersion ? possibleUpgrades[foundVersion] : [];
+};
 
 const compareVersions = (a: string, b: string): number => {
-	const aParts = a.split(".").map(Number)
-	const bParts = b.split(".").map(Number)
+	const aParts = a.split(".").map(Number);
+	const bParts = b.split(".").map(Number);
 
 	for (let i = 0; i < Math.max(aParts.length, bParts.length); i++) {
-		const aVal = aParts[i] || 0
-		const bVal = bParts[i] || 0
-		if (aVal > bVal) return 1
-		if (aVal < bVal) return -1
+		const aVal = aParts[i] || 0;
+		const bVal = bParts[i] || 0;
+		if (aVal > bVal) return 1;
+		if (aVal < bVal) return -1;
 	}
-	return 0
-}
+	return 0;
+};

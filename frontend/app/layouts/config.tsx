@@ -1,9 +1,9 @@
 import { Box, Typography } from "@mui/material"
 import { ArrowRight2, Convertshape2, Share } from "iconsax-react"
-import { connect } from "react-redux"
 import { Link, Outlet, useLocation } from "react-router"
 import { toast } from "sonner"
 import { cn } from "~/lib/Utils"
+import useSafeRouteStore from "~/store/safeRoutes"
 
 const PATH_META_DATA: { [key: string]: { label: string; pos: number } } = {
 	"/cluster-overview": { label: "CLUSTER_OVERVIEW", pos: 1 },
@@ -13,8 +13,9 @@ const PATH_META_DATA: { [key: string]: { label: string; pos: number } } = {
 const CENTER_ARROW_MIDDLE_GRADIENT = "linear-gradient(90deg, #52D97F 30%, #6B46C5 99%)"
 const CENTER_ARROW_COMPLETE_GRADIENT = "linear-gradient(90deg, #52D97F 30%, #52D97F 99%)"
 
-function ConfigLayout({ upgradeAllowed }: { upgradeAllowed: boolean }) {
+function ConfigLayout() {
 	const { pathname } = useLocation()
+	const upgradeAllowed  = useSafeRouteStore((state: any) => state.upgradeAssistAllowed)
 
 	const GradientBox = ({
 		to,
@@ -147,8 +148,4 @@ function ConfigLayout({ upgradeAllowed }: { upgradeAllowed: boolean }) {
 	)
 }
 
-const mapStateToProps = (state: any) => ({
-	upgradeAllowed: state.safeRoutes.upgradeAssistAllowed,
-})
-
-export default connect(mapStateToProps)(ConfigLayout)
+export default ConfigLayout

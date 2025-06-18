@@ -52,9 +52,11 @@ function UpcomingFeature({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChan
 					<DrawerBody>
 						<Box height="50px" />
 						<Box className="flex flex-col gap-2 w-full">
-							<OutlinedButton onClick={onOpenChange} sx={STYLES.GO_BACK_BUTTON}>
-								<ArrowLeft size="14px" color="currentColor" /> Go back
-							</OutlinedButton>
+							<Box className="flex">
+								<OutlinedButton onClick={onOpenChange} sx={STYLES.GO_BACK_BUTTON}>
+									<ArrowLeft size="14px" color="currentColor" /> Go back
+								</OutlinedButton>
+							</Box>
 							<Box
 								className="flex p-px rounded-2xl h-[calc(var(--window-height)-120px)]"
 								sx={{ background: "radial-gradient(#6E687C, #1D1D1D)" }}

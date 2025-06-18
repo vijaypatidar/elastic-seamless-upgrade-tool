@@ -9,6 +9,7 @@ type TUpgradeRow = {
 	action?: null
 	isMaster: boolean
 	disabled: boolean
+	ip: string
 }
 
 type TUpgradeColumn = Array<{

@@ -1,0 +1,13 @@
+
+- id: elasticsearch_cpu_precheck
+  name: CPU Utilization check
+  playbookPath: playbooks/pre_checks/cpu.ansible.yml
+
+- id: elasticsearch_disk_precheck
+  name: Disk Utilization Check
+  playbookPath: playbooks/pre_checks/disk.ansible.yml
+
+- id: elasticsearch_memory_precheck
+  name: Memory Utilization Check
+  playbookPath: playbooks/pre_checks/memory.ansible.yml
+
