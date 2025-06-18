@@ -181,6 +181,7 @@ export const triggerKibanaNodeUpgrade = async (nodeId: string, clusterId: string
 					elk_version: clusterInfo.targetVersion,
 					es_username: clusterInfo.elastic.username,
 					es_password: clusterInfo.elastic.password,
+					elasticsearch_uri: clusterInfo.elastic.url,
 					cluster_type: ClusterType.KIBANA,
 					playbook_run_id: playbookRunId,
 					playbook_run_type: "UPGRADE",
