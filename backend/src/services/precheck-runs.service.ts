@@ -30,7 +30,13 @@ const runningIPs = new Set<string>();
 
 export const schedulePrecheckRun = async (): Promise<void> => {
 	while (true) {
-		const availableJobs = PRECHECK_RUN_JOB_QUEUE.filter((job) => !runningIPs.has(job.ip));
+		const availableJobs = PRECHECK_RUN_JOB_QUEUE.filter((job) => {
+			if (!runningIPs.has(job.ip)) {
+				runningIPs.add(job.ip);
+				return true;
+			}
+			return false;
+		});
 
 		if (availableJobs.length === 0) {
 			logger.debug("No available jobs to process. Waiting...");
