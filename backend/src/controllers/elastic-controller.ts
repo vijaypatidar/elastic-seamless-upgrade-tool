@@ -71,9 +71,8 @@ export const addOrUpdateClusterDetail = async (req: Request, res: Response) => {
 			fs.mkdirSync(sshKeysDir, { recursive: true });
 		}
 		const keyPath = path.join(sshKeysDir, "SSH_key.pem");
-
-		fs.chmodSync(keyPath, 0o600);
 		fs.writeFileSync(keyPath, sshKey);
+		fs.chmodSync(keyPath, 0o600);
 		const clusterInfo: IClusterInfo = {
 			elastic: {
 				...elastic,
