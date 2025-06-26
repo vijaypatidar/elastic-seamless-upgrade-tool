@@ -65,18 +65,14 @@ export const addOrUpdateClusterDetail = async (req: Request, res: Response) => {
 		if (typeof sshKey !== "string" || !sshKey.trim()) {
 			throw new Error("Invalid SSH key: Key must be a non-empty string.");
 		}
-		const sanitizedKey = sshKey.replace(/\r?\n|\r/g, "");
-		const formattedKey = `-----BEGIN RSA PRIVATE KEY-----\n${sanitizedKey}\n-----END RSA PRIVATE KEY-----`;
 
 		const sshKeysDir = path.join(ANSIBLE_PLAYBOOKS_PATH, "ssh-keys");
 		if (!fs.existsSync(sshKeysDir)) {
 			fs.mkdirSync(sshKeysDir, { recursive: true });
 		}
 		const keyPath = path.join(sshKeysDir, "SSH_key.pem");
-
-		fs.writeFileSync(keyPath, formattedKey, { encoding: "utf8" });
+		fs.writeFileSync(keyPath, sshKey);
 		fs.chmodSync(keyPath, 0o600);
-		fs.writeFileSync(keyPath, formattedKey);
 		const clusterInfo: IClusterInfo = {
 			elastic: {
 				...elastic,
