@@ -37,13 +37,21 @@ The way to set up the Seamless Upgrade Tool is by using **Start Script**.
 
 ### Run Seamless Upgrade Tool on local
 
-To set up the seamless-upgrade-tool locally, run the start-local script:
+To set up the **seamless-upgrade-tool** locally, use the `start.sh` script:
 
-```
+#### Run the latest version:
+
+```bash
 curl -fsSL https://raw.githubusercontent.com/ConsultaddHQ/elastic-seamless-upgrade-tool/main/start.sh | sh
 ```
 
-After running the tool, access it at:
+#### Run a specific version:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/ConsultaddHQ/elastic-seamless-upgrade-tool/main/start.sh | sh -s -- v0.0.1
+```
+
+Once the tool is running, you can access it at:
 
 -   **Seamless-upgrade-tool**: [http://localhost:8080](http://localhost:8080)
 
