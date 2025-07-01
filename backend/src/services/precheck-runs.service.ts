@@ -77,6 +77,7 @@ export const schedulePrecheckRun = async (): Promise<void> => {
 						inventoryPath,
 						variables: {
 							elk_version: targetVersion,
+							elasticsearch_uri: elastic.url,
 							es_username: elastic.username!!,
 							es_password: elastic.password!!,
 							cluster_type: "ELASTIC",

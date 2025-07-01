@@ -2,11 +2,7 @@
   any_errors_fatal: true
   gather_facts: true
   vars:
-      precheck_id: elasticsearch_cpu_precheck
-      max_cpu_threshold: 80
-      check_interval_seconds: 30
-      max_checks: 5
-      cpu_usage_pass: true
+      precheck_id: elasticsearch_cluster_health_check
 
   tasks:
       - name: Check Elasticsearch cluster health
