@@ -20,6 +20,7 @@ import {
 	syncNodeData,
 	triggerNodeUpgrade,
 	triggerUpgradeAll,
+	updateNode,
 } from "../services/elastic-node.service.";
 import { KibanaClient } from "../clients/kibana.client";
 import path from "path";
@@ -360,6 +361,7 @@ export const addOrUpdateTargetVersion = async (req: Request, res: Response) => {
 	try {
 		const clusterInfo = await getClusterInfoById(clusterId);
 		await createOrUpdateClusterInfo({ ...clusterInfo, targetVersion: version });
+		await updateNode({ clusterId: clusterId }, { status: NodeStatus.AVAILABLE });
 		res.status(201).send({
 			message: `Target version set succesfully`,
 		});

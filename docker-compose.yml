@@ -14,6 +14,7 @@ services:
   backend:
     image: hyperflex/elastic-seamless-upgrade-backend:latest
     container_name: backend
+    pull_policy: always
     environment:
       MONGO_URI: mongodb://admin:admin123@mongodb:27017/
     depends_on:
@@ -24,6 +25,7 @@ services:
   frontend:
     image: hyperflex/elastic-seamless-upgrade-frontend:latest
     container_name: frontend
+    pull_policy: always
     ports:
       - '8080:80'
     depends_on:
