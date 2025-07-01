@@ -20,6 +20,7 @@ import {
 	syncNodeData,
 	triggerNodeUpgrade,
 	triggerUpgradeAll,
+	updateNode,
 } from "../services/elastic-node.service.";
 import { KibanaClient } from "../clients/kibana.client";
 import path from "path";
@@ -28,7 +29,7 @@ import { createKibanaNodes, getKibanaNodes, triggerKibanaNodeUpgrade } from "../
 import { NodeStatus, PrecheckStatus } from "../enums";
 import { clusterMonitorService } from "../services/cluster-monitor.service";
 import { getLatestRunsByPrecheck, getMergedPrecheckStatus, runPrecheck } from "../services/precheck-runs.service";
-const ANSIBLE_PLAYBOOKS_PATH = process.env.ANSIBLE_PLAYBOOKS_PATH || "";
+import { createSSHPrivateKeyFile } from "../utils/ssh-utils";
 
 export const healthCheck = async (req: Request, res: Response) => {
 	try {
@@ -62,17 +63,9 @@ export const addOrUpdateClusterDetail = async (req: Request, res: Response) => {
 		const kibanaConfigs = req.body.kibanaConfigs;
 
 		const sshKey = req.body.key;
-		if (typeof sshKey !== "string" || !sshKey.trim()) {
-			throw new Error("Invalid SSH key: Key must be a non-empty string.");
-		}
 
-		const sshKeysDir = path.join(ANSIBLE_PLAYBOOKS_PATH, "ssh-keys");
-		if (!fs.existsSync(sshKeysDir)) {
-			fs.mkdirSync(sshKeysDir, { recursive: true });
-		}
-		const keyPath = path.join(sshKeysDir, "SSH_key.pem");
-		fs.writeFileSync(keyPath, sshKey);
-		fs.chmodSync(keyPath, 0o600);
+		const keyPath = createSSHPrivateKeyFile(sshKey);
+
 		const clusterInfo: IClusterInfo = {
 			elastic: {
 				...elastic,
@@ -283,17 +276,6 @@ export const getLogsStream = async (req: Request, res: Response) => {
 	let lastTimestamp: Date | undefined = undefined;
 
 	const intervalId = setInterval(async () => {
-		// Uncomment this code block to create fack stream logs in db
-		// addLogs(
-		//   clusterId,
-		//   nodeId,
-		//   new Date(),
-		//   `data: ${JSON.stringify({
-		//     timestamp: new Date(),
-		//     message: 'Upgrade in progress',
-		//   })}`,
-		// );
-
 		const logs = await getLogs(clusterId, nodeId, lastTimestamp);
 		for (let log of logs) {
 			res.write(`${log.message}\n`);
@@ -360,6 +342,7 @@ export const addOrUpdateTargetVersion = async (req: Request, res: Response) => {
 	try {
 		const clusterInfo = await getClusterInfoById(clusterId);
 		await createOrUpdateClusterInfo({ ...clusterInfo, targetVersion: version });
+		await updateNode({ clusterId: clusterId }, { status: NodeStatus.AVAILABLE });
 		res.status(201).send({
 			message: `Target version set succesfully`,
 		});
@@ -369,7 +352,7 @@ export const addOrUpdateTargetVersion = async (req: Request, res: Response) => {
 	}
 };
 
-export const verfiySshKey = async (req: Request, res: Response) => {
+export const verifySshKey = async (req: Request, res: Response) => {
 	const { pathToKey } = req.body;
 	try {
 		if (!pathToKey) {

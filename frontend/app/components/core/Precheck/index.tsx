@@ -155,7 +155,7 @@ function Precheck() {
 						>
 							Nodes
 						</Typography>
-						<Box className="flex flex-col gap-[6px] overflow-scroll min-w-[282px]">
+						<Box className="flex flex-col gap-[6px] overflow-scroll scrollbar-hide min-w-[282px]">
 							{data?.map((item: any, index: number) => {
 								return (
 									<NodeListItem
@@ -205,7 +205,7 @@ function Precheck() {
 									</OutlinedBorderButton>
 								</Box>
 							</Box>
-							<Box className="flex flex-col gap-1 overflow-scroll" padding="0px 24px">
+							<Box className="flex flex-col gap-1 overflow-scroll scrollbar-hide" padding="0px 24px">
 								{nodeSelected?.["prechecks"].length !== 0 ? (
 									nodeSelected?.["prechecks"]?.map((item: any, idx: number) => {
 										return (
