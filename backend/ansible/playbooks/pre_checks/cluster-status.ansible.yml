@@ -5,7 +5,7 @@
       precheck_id: elasticsearch_cluster_health_check
 
   tasks:
-      - name: Check Elasticsearch cluster health
+      - name: Get Elasticsearch cluster health
         uri:
             url: "{{ elasticsearch_uri }}/_cluster/health?pretty"
             url_username: "{{ es_username }}"
@@ -18,9 +18,8 @@
       - name: Display cluster health
         debug:
             msg: "Cluster is in {{ cluster_health.json.status }}"
-        run_once: true
 
-      - name: Cluster health is not green
+      - name: Check Cluster health is green
         fail:
             msg: "Cluster is in {{ cluster_health.json.status }}, upgrade not recommended!"
         when: cluster_health.json.status != "green"
