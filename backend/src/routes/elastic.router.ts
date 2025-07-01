@@ -13,7 +13,7 @@ import {
 	handleUpgrades,
 	getNodeInfo,
 	addOrUpdateTargetVersion,
-	verfiySshKey,
+	verifySshKey,
 	verfiyCluster,
 	getKibanaNodesInfo,
 	handleKibanaUpgrades,
@@ -64,7 +64,7 @@ router.get("/:clusterId/upgrade_info", getUpgradeDetails);
 
 router.get("/:clusterId/deprecations/kibana", getKibanaDeprecationsInfo);
 
-router.post("/:clusterId/verify-ssh", verfiySshKey);
+router.post("/:clusterId/verify-ssh", verifySshKey);
 
 router.post("/:clusterId/prechecks", runAllPrecheksHandler);
 
