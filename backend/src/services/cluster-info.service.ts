@@ -11,6 +11,7 @@ import { DeprecationDetail, KibanaClient } from "../clients/kibana.client";
 import { ElasticClusterBaseRequest } from "..";
 import { getElasticSearchInfo, syncElasticSearchInfo } from "./elastic-search-info.service";
 import { getPossibleUpgrades } from "../utils/upgrade.versions";
+import { createSSHPrivateKeyFile, sshFilefileExists } from "../utils/ssh-utils";
 
 const cache: Record<string, IClusterInfo | null> = {};
 
@@ -79,6 +80,9 @@ export const getClusterInfoById = async (clusterId: string): Promise<IClusterInf
 				clusterId: clusterId,
 			});
 	cache[clusterId] = clusterInfo;
+	if (clusterInfo?.pathToKey && clusterInfo.key && sshFilefileExists(clusterInfo.pathToKey) === false) {
+		createSSHPrivateKeyFile(clusterInfo.key, "SSH_key.pem");
+	}
 	return {
 		clusterId,
 		elastic: clusterInfo?.elastic!!,
