@@ -119,8 +119,12 @@ export const getRunByName = async (precheck: string, nodeName: string): Promise<
 };
 
 export const getLatestRunsByPrecheck = async (clusterId: string): Promise<INodePrecheckRunDocument[]> => {
+	const clusterUpgradeJob = await clusterUpgradeJobService.getLatestClusterUpgradeJobByClusterId(clusterId);
+	if (!clusterUpgradeJob) {
+		throw new NotFoundError(`No cluster upgrade job found for clusterId: ${clusterId}`);
+	}
 	return await NodePrecheckRun.aggregate([
-		{ $match: { clusterId } },
+		{ $match: { clusterUpgradeJobId: clusterUpgradeJob?.jobId } },
 		{
 			$sort: { startedAt: -1 },
 		},
