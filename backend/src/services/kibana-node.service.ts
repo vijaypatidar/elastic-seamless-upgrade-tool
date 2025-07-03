@@ -8,6 +8,7 @@ import { ansibleRunnerService } from "./ansible-runner.service";
 import { ClusterType, NodeStatus } from "../enums";
 import { randomUUID } from "crypto";
 import { NotificationEventType, notificationService, NotificationType } from "./notification.service";
+import { clusterUpgradeJobService } from "./cluster-upgrade-job.service";
 
 export interface KibanaConfig {
 	name: string;
@@ -74,9 +75,16 @@ export const createKibanaNodes = async (kibanaConfigs: KibanaConfig[], clusterId
 				progress,
 				status,
 			};
-			if (clusterInfo.targetVersion === version) {
-				kibanaNode.status = NodeStatus.UPGRADED;
-				kibanaNode.progress = 100;
+
+			try {
+				const clusterUpgradeJob =
+					await clusterUpgradeJobService.getActiveClusterUpgradeJobByClusterId(clusterId);
+				if (clusterUpgradeJob.targetVersion === version) {
+					kibanaNode.status = NodeStatus.UPGRADED;
+					kibanaNode.progress = 100;
+				}
+			} catch (error) {
+				logger.debug(`No active upgrade job found:`, error);
 			}
 			await KibanaNode.findOneAndUpdate({ nodeId: kibanaNode.nodeId }, kibanaNode, {
 				new: true,
@@ -163,12 +171,13 @@ export const triggerKibanaNodeUpgrade = async (nodeId: string, clusterId: string
 			return;
 		}
 		const clusterInfo = await getClusterInfoById(clusterId);
+		const clusterUpgradeJob = await clusterUpgradeJobService.getActiveClusterUpgradeJobByClusterId(clusterId);
 		const pathToKey = clusterInfo.pathToKey ? clusterInfo.pathToKey : ""; //Should be stored in clusterInfo
 		await ansibleInventoryService.createAnsibleInventoryForKibana([node], {
 			pathToKey,
 			sshUser: clusterInfo.sshUser,
 		});
-		if (!clusterInfo.targetVersion || !clusterInfo.elastic.username || !clusterInfo.elastic.password) {
+		if (!clusterInfo.elastic.username || !clusterInfo.elastic.password) {
 			return;
 		}
 		const playbookRunId = randomUUID();
@@ -178,13 +187,14 @@ export const triggerKibanaNodeUpgrade = async (nodeId: string, clusterId: string
 				playbookPath: "playbooks/main.yml",
 				inventoryPath: "ansible_inventory.ini",
 				variables: {
-					elk_version: clusterInfo.targetVersion,
+					elk_version: clusterUpgradeJob.targetVersion,
 					es_username: clusterInfo.elastic.username,
 					es_password: clusterInfo.elastic.password,
 					elasticsearch_uri: clusterInfo.elastic.url,
 					cluster_type: ClusterType.KIBANA,
 					playbook_run_id: playbookRunId,
 					playbook_run_type: "UPGRADE",
+					current_version: clusterUpgradeJob.currentVersion,
 				},
 			})
 			.then(() => {

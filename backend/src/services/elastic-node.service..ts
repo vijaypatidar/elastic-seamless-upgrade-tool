@@ -7,6 +7,7 @@ import { ansibleRunnerService } from "./ansible-runner.service";
 import { ClusterType, NodeStatus } from "../enums";
 import { randomUUID } from "crypto";
 import { NotificationEventType, notificationService, NotificationType } from "./notification.service";
+import { clusterUpgradeJobService } from "./cluster-upgrade-job.service";
 
 export const createOrUpdateElasticNode = async (elasticNode: IElasticNode): Promise<IElasticNodeDocument> => {
 	const nodeId = elasticNode.nodeId;
@@ -133,10 +134,11 @@ export const triggerNodeUpgrade = async (nodeId: string, clusterId: string) => {
 			return false;
 		}
 		const clusterInfo = await getClusterInfoById(clusterId);
+		const clusterUpgradeJob = await clusterUpgradeJobService.getActiveClusterUpgradeJobByClusterId(clusterId);
 		const pathToKey = clusterInfo.pathToKey ? clusterInfo.pathToKey : "";
 
 		await ansibleInventoryService.createAnsibleInventory([node], { pathToKey, sshUser: clusterInfo.sshUser });
-		if (!clusterInfo.targetVersion || !clusterInfo.elastic.username || !clusterInfo.elastic.password) {
+		if (!clusterUpgradeJob.targetVersion || !clusterInfo.elastic.username || !clusterInfo.elastic.password) {
 			return false;
 		}
 		const playbookRunId = randomUUID();
@@ -146,13 +148,14 @@ export const triggerNodeUpgrade = async (nodeId: string, clusterId: string) => {
 				playbookPath: "playbooks/main.yml",
 				inventoryPath: "ansible_inventory.ini",
 				variables: {
-					elk_version: clusterInfo.targetVersion,
+					elk_version: clusterUpgradeJob.targetVersion,
 					es_username: clusterInfo.elastic.username,
 					es_password: clusterInfo.elastic.password,
 					elasticsearch_uri: clusterInfo.elastic.url,
 					cluster_type: ClusterType.ELASTIC,
 					playbook_run_id: playbookRunId,
 					playbook_run_type: "UPGRADE",
+					current_version: clusterUpgradeJob.currentVersion,
 				},
 			})
 			.then(() => {
@@ -182,10 +185,11 @@ export const triggerNodeUpgrade = async (nodeId: string, clusterId: string) => {
 export const triggerUpgradeAll = async (nodes: IElasticNode[], clusterId: string) => {
 	try {
 		const clusterInfo = await getClusterInfoById(clusterId);
+		const clusterUpgradeJob = await clusterUpgradeJobService.getActiveClusterUpgradeJobByClusterId(clusterId);
 		const pathToKey = clusterInfo.pathToKey ? clusterInfo.pathToKey : "";
 
 		await ansibleInventoryService.createAnsibleInventory(nodes, { pathToKey, sshUser: clusterInfo.sshUser });
-		if (!clusterInfo.targetVersion || !clusterInfo.elastic.username || !clusterInfo.elastic.password) {
+		if (!clusterUpgradeJob.targetVersion || !clusterInfo.elastic.username || !clusterInfo.elastic.password) {
 			return false;
 		}
 		const playbookRunId = randomUUID();
@@ -195,13 +199,14 @@ export const triggerUpgradeAll = async (nodes: IElasticNode[], clusterId: string
 				playbookPath: "playbooks/main.yml",
 				inventoryPath: "ansible_inventory.ini",
 				variables: {
-					elk_version: clusterInfo.targetVersion,
+					elk_version: clusterUpgradeJob.targetVersion,
 					es_username: clusterInfo.elastic.username,
 					es_password: clusterInfo.elastic.password,
 					elasticsearch_uri: clusterInfo.elastic.url,
 					cluster_type: ClusterType.ELASTIC,
 					playbook_run_id: playbookRunId,
 					playbook_run_type: "UPGRADE",
+					current_version: clusterUpgradeJob.currentVersion,
 				},
 			})
 			.then(() => {

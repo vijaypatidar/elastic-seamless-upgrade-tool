@@ -38,6 +38,4 @@ const NodePrecheckRunSchema: Schema<INodePrecheckRunDocument> = new Schema<INode
 	{ timestamps: true }
 );
 
-const NodePrecheckRun = mongoose.model<INodePrecheckRunDocument>("NodePrecheckRun", NodePrecheckRunSchema);
-
-export default NodePrecheckRun;
+export const NodePrecheckRun = mongoose.model<INodePrecheckRunDocument>("node-precheck-runs", NodePrecheckRunSchema);

@@ -29,6 +29,7 @@ import { NodeStatus, PrecheckStatus } from "../enums";
 import { clusterMonitorService } from "../services/cluster-monitor.service";
 import { getLatestRunsByPrecheck, getMergedPrecheckStatus, runPrecheck } from "../services/precheck-runs.service";
 import { createSSHPrivateKeyFile } from "../utils/ssh-utils";
+import { clusterUpgradeJobService } from "../services/cluster-upgrade-job.service";
 
 export const healthCheck = async (req: Request, res: Response) => {
 	try {
@@ -76,7 +77,6 @@ export const addOrUpdateClusterDetail = async (req: Request, res: Response) => {
 			},
 			clusterId: clusterId,
 			certificateIds: req.body.certificateIds,
-			targetVersion: req.body.targetVersion,
 			infrastructureType: req.body.infrastructureType,
 			pathToKey: keyPath,
 			key: sshKey,
@@ -115,6 +115,7 @@ export const getUpgradeDetails = async (req: Request, res: Response) => {
 		const client = await ElasticClient.buildClient(clusterId);
 		const kibanaClient = await KibanaClient.buildClient(clusterId);
 		const clusterInfo = await getClusterInfoById(clusterId);
+		const clusterUpgradeJob = await clusterUpgradeJobService.getLatestClusterUpgradeJobByClusterId(clusterId);
 
 		const kibanaUrl = clusterInfo.kibana?.url;
 
@@ -135,7 +136,7 @@ export const getUpgradeDetails = async (req: Request, res: Response) => {
 			logger.info(`Prechecks initiated successfully for cluster '${clusterId}' with Playbook Run ID '${runId}'.`);
 		}
 
-		const isKibanaUpgraded = kibanaVersion === clusterInfo.targetVersion ? true : false;
+		const isKibanaUpgraded = kibanaVersion === clusterUpgradeJob?.targetVersion ? true : false;
 		//verifying upgradability
 
 		const isESUpgraded = elasticNodes.filter((item) => item.status !== NodeStatus.UPGRADED).length === 0;
@@ -169,11 +170,6 @@ export const getElasticDeprecationInfo = async (req: Request, res: Response) => 
 	try {
 		const clusterId = req.params.clusterId;
 		const deprecations = (await getElasticsearchDeprecation(clusterId)).deprecations;
-
-		// const upgradeInfo = await client
-		//   .getClient()
-		//   .migration.getFeatureUpgradeStatus();
-		// logger.info('upgrade Info', upgradeInfo);    //need to discuss what if feature upgrades are present
 		res.status(200).send(deprecations);
 	} catch (err: any) {
 		logger.info(err);
@@ -311,12 +307,17 @@ export const getNodeInfo = async (req: Request, res: Response) => {
 	}
 };
 
-export const addOrUpdateTargetVersion = async (req: Request, res: Response) => {
+export const createClusterUpgradeJob = async (req: Request, res: Response) => {
 	const { clusterId } = req.params;
 	const { version } = req.body;
 	try {
-		const clusterInfo = await getClusterInfoById(clusterId);
-		await createOrUpdateClusterInfo({ ...clusterInfo, targetVersion: version });
+		const elasticClient = await ElasticClient.buildClient(clusterId);
+		const currentVersion = await elasticClient.getElasticsearchVersion();
+		await clusterUpgradeJobService.createClusterUpgradeJob({
+			clusterId: clusterId,
+			currentVersion: currentVersion,
+			targetVersion: version,
+		});
 		await updateNode({ clusterId: clusterId }, { status: NodeStatus.AVAILABLE });
 		res.status(201).send({
 			message: `Target version set succesfully`,
@@ -380,7 +381,6 @@ export const verfiyCluster = async (req: Request, res: Response) => {
 								: null,
 							clusterId: clusters[0].clusterId ?? null,
 							certificateIds: clusters[0].certificateIds ?? null,
-							targetVersion: clusters[0].targetVersion ?? null,
 							infrastructureType: clusters[0].infrastructureType ?? null,
 							pathToKey: clusters[0].key ?? null,
 							sshUser: clusters[0].sshUser,

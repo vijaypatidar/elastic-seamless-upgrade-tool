@@ -2,8 +2,8 @@ import { ElasticClient } from "../clients/elastic.client";
 import { KibanaClient } from "../clients/kibana.client";
 import logger from "../logger/logger";
 import { getPrechecksGroupedByNode } from "./precheck-runs.service";
-import { getClusterInfoById } from "./cluster-info.service";
 import { getBreakingChanges } from "../utils/breaking-changes-utils";
+import { clusterUpgradeJobService } from "./cluster-upgrade-job.service";
 
 const getESDeprecationsMdReport = async (clusterId: string): Promise<string> => {
 	const elasticClient = await ElasticClient.buildClient(clusterId);
@@ -59,7 +59,7 @@ export const generatePrecheckReportMdContent = async (clusterId: string): Promis
 	const {
 		version: { number: currentVersion },
 	} = await elasticClient.getClient().info();
-	const { targetVersion } = await getClusterInfoById(clusterId);
+	const { targetVersion } = await clusterUpgradeJobService.getActiveClusterUpgradeJobByClusterId(clusterId);
 	const prechecksGroupedByNode = await getPrechecksGroupedByNode(clusterId);
 	let md = `# 📋 Elasticsearch Pre-check Report\n\n`;
 	md += `Generated on: ${new Date().toISOString()}\n\n`;

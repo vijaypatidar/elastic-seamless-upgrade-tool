@@ -1,0 +1,52 @@
+import { AppError, NotFoundError } from "../errors";
+import { ClusterUpgradeJob, IClusterUpgradeJob } from "../models/cluster-upgrade-job.model";
+class ClusterUpgradeJobService {
+	async getActiveClusterUpgradeJobByClusterId(clusterId: string): Promise<IClusterUpgradeJob> {
+		const job = await ClusterUpgradeJob.findOne({ clusterId, status: { $ne: "completed" } });
+		if (!job) {
+			throw new NotFoundError(`No upgrade job found for clusterId: ${clusterId}`);
+		}
+		return job;
+	}
+
+	async getLatestClusterUpgradeJobByClusterId(clusterId: string): Promise<IClusterUpgradeJob | null> {
+		return await ClusterUpgradeJob.findOne({ clusterId }).sort({ createdAt: -1 });
+	}
+
+	async getClusterUpgradeJobByJobId(jobId: string): Promise<IClusterUpgradeJob> {
+		const job = await ClusterUpgradeJob.findOne({ jobId: jobId });
+		if (!job) {
+			throw new NotFoundError(`No upgrade job found for jobId: ${jobId}`);
+		}
+		return job;
+	}
+
+	async createClusterUpgradeJob(jobData: Omit<IClusterUpgradeJob, "jobId" | "status">): Promise<IClusterUpgradeJob> {
+		const existingJob = await ClusterUpgradeJob.findOne({
+			clusterId: jobData.clusterId,
+			status: { $ne: "completed" },
+		});
+		if (existingJob) {
+			throw new AppError(`An active upgrade job already exists for clusterId: ${jobData.clusterId}`, 400);
+		}
+		const newJob = new ClusterUpgradeJob(jobData);
+		return await newJob.save();
+	}
+
+	async updateClusterUpgradeJob(
+		identifier: Record<string, any>,
+		updatedJobValues: Partial<IClusterUpgradeJob>
+	): Promise<IClusterUpgradeJob> {
+		const updatedJob = await ClusterUpgradeJob.findOneAndUpdate(
+			identifier,
+			{ $set: updatedJobValues },
+			{ new: true }
+		);
+		if (!updatedJob) {
+			throw new NotFoundError(`Cluster upgrade job with identifier ${JSON.stringify(identifier)} not found`);
+		}
+		return updatedJob;
+	}
+}
+
+export const clusterUpgradeJobService = new ClusterUpgradeJobService();
