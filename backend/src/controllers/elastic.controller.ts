@@ -1,5 +1,5 @@
 import { ElasticClient } from "../clients/elastic.client";
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import fs from "fs";
 import logger from "../logger/logger";
 import { IClusterInfo, IElasticInfo, IKibanaInfo } from "../models/cluster-info.model";
@@ -307,7 +307,7 @@ export const getNodeInfo = async (req: Request, res: Response) => {
 	}
 };
 
-export const createClusterUpgradeJob = async (req: Request, res: Response) => {
+export const createClusterUpgradeJob = async (req: Request, res: Response, next: NextFunction) => {
 	const { clusterId } = req.params;
 	const { version } = req.body;
 	try {
@@ -323,8 +323,7 @@ export const createClusterUpgradeJob = async (req: Request, res: Response) => {
 			message: `Target version set succesfully`,
 		});
 	} catch (error: any) {
-		logger.error("Unable to add target version: ", error);
-		res.status(500).send({ err: error.message });
+		next(error);
 	}
 };
 

@@ -1,4 +1,4 @@
-import { AppError, NotFoundError } from "../errors";
+import { AppError, ConflictError, NotFoundError } from "../errors";
 import { ClusterUpgradeJob, IClusterUpgradeJob } from "../models/cluster-upgrade-job.model";
 class ClusterUpgradeJobService {
 	async getActiveClusterUpgradeJobByClusterId(clusterId: string): Promise<IClusterUpgradeJob> {
@@ -27,7 +27,7 @@ class ClusterUpgradeJobService {
 			status: { $ne: "completed" },
 		});
 		if (existingJob) {
-			throw new AppError(`An active upgrade job already exists for clusterId: ${jobData.clusterId}`, 400);
+			throw new ConflictError(`An active upgrade job already exists for clusterId: ${jobData.clusterId}`);
 		}
 		const newJob = new ClusterUpgradeJob(jobData);
 		return await newJob.save();

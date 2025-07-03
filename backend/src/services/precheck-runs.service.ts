@@ -194,7 +194,7 @@ export const runPrecheck = async (nodes: IElasticNode[], clusterId: string) => {
 			startedAt: startedAt,
 			status: PrecheckStatus.PENDING,
 			logs: [],
-			clusterId: clusterId,
+			clusterUpgradeJobId: clusterUpgradeJob.jobId,
 		}))
 		.map((precheck) => {
 			return PRECHECK_CONFIG.map(({ id: precheckId }) => ({

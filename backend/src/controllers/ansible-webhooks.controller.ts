@@ -13,11 +13,6 @@ import {
 import { updateRunStatus } from "../services/precheck-runs.service";
 import { NotificationEventType, notificationService } from "../services/notification.service";
 
-interface HostInfoUpgrade {
-	ip: string;
-	name: string;
-	progress: number;
-}
 interface HostInfoPrecheck {
 	ip: string;
 	name: string;

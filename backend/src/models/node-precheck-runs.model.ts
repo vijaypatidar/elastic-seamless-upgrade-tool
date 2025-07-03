@@ -8,7 +8,7 @@ export interface INodePrecheckRun {
 	precheckId: string;
 	precheckRunId: string;
 	startedAt: Date;
-	clusterId: string;
+	clusterUpgradeJobId: string;
 	endAt?: Date;
 	status: PrecheckStatus;
 	logs: string[];
@@ -21,7 +21,7 @@ const NodePrecheckRunSchema: Schema<INodePrecheckRunDocument> = new Schema<INode
 		ip: { type: String, required: true },
 		precheckId: { type: String, required: true },
 		precheckRunId: { type: String, required: true },
-		clusterId: { type: String, required: true },
+		clusterUpgradeJobId: { type: String, required: true },
 		startedAt: { type: Date, required: true },
 		endAt: { type: Date, required: false },
 		logs: { type: [String], required: true },
