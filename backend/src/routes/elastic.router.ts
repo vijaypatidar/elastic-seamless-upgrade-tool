@@ -5,7 +5,6 @@ import {
 	getElasticDeprecationInfo,
 	getNodesInfo,
 	healthCheck,
-	getLogsStream,
 	getKibanaDeprecationsInfo,
 	getValidSnapshots,
 	uploadCertificates,
@@ -55,8 +54,6 @@ router.post("/:clusterId/upgrade-all", handleUpgradeAll);
 router.post("/:clusterId/nodes/upgrade-kibana", handleKibanaUpgrades);
 
 router.get("/:clusterId/info", getClusterDetails);
-
-router.get("/:clusterId/nodes/:nodeId/logs/stream", getLogsStream);
 
 router.post("/certificates/upload", upload.array("files"), uploadCertificates);
 
