@@ -17,13 +17,13 @@ import {
 	getKibanaNodesInfo,
 	handleKibanaUpgrades,
 	handleUpgradeAll,
-} from "../controllers/elastic-controller";
+} from "../controllers/elastic.controller";
 import {
 	runAllPrecheksHandler,
 	runPrechekByNodeIdHandler,
 	getPrecheckRunByClusterIdHandler,
 	getPrecheckReportByClusterId,
-} from "../controllers/prechecks-controller";
+} from "../controllers/prechecks.controller";
 
 const router = Router();
 
