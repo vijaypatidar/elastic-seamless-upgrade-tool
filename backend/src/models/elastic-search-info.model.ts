@@ -18,7 +18,6 @@ export interface IElasticSearchInfo {
 	unassignedShards: number;
 	initializingShards: number;
 	relocatingShards: number;
-	underUpgradation: boolean;
 	lastSyncedAt: Date;
 	adaptiveReplicationEnabled: boolean;
 }
@@ -42,7 +41,6 @@ const ElasticSearchInfoSchema: Schema<IElasticSearchInfoDocument> = new Schema<I
 		unassignedShards: { type: Number, required: true },
 		initializingShards: { type: Number, required: true },
 		relocatingShards: { type: Number, required: true },
-		underUpgradation: { type: Boolean, required: true },
 		lastSyncedAt: { type: Date, required: true },
 		totalIndices: { type: Number, required: true },
 		adaptiveReplicationEnabled: { type: Boolean },

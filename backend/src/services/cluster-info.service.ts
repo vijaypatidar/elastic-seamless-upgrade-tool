@@ -244,6 +244,8 @@ export const getClusterInfo = async (clusterId: string) => {
 		infrastructureType: clusterInfo?.infrastructureType ?? null,
 		targetVersion: clusterUpgradeJob ? clusterUpgradeJob.targetVersion : null,
 		possibleUpgradeVersions: possibleUpgradeVersions ?? null,
-		underUpgradation: clusterUpgradeJob ? clusterUpgradeJob.status === ClusterUpgradeJobStatus.IN_PROGRESS : false,
+		underUpgradation:
+			clusterUpgradeJob &&
+			[(ClusterUpgradeJobStatus.IN_PROGRESS, ClusterUpgradeJobStatus.PENDING)].includes(clusterUpgradeJob.status),
 	};
 };

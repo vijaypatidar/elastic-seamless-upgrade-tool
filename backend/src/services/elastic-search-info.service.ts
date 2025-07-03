@@ -33,20 +33,7 @@ export const syncElasticSearchInfo = async (clusterId: string) => {
 			setting.transient?.["search.adaptive_replica_selection"] ??
 			setting.persistent?.["search.adaptive_replica_selection"] ??
 			setting.defaults?.["search.adaptive_replica_selection"];
-		const nodes = await getAllElasticNodes(clusterId);
-		let underUpgradation = false;
-		let upgradeComplete = true;
-		nodes.forEach((node: IElasticNode) => {
-			if (node.status !== NodeStatus.AVAILABLE) {
-				underUpgradation = true;
-			}
-			if (node.status !== NodeStatus.UPGRADED) {
-				upgradeComplete = false;
-			}
-		});
-		if (upgradeComplete) {
-			underUpgradation = false;
-		}
+
 		const masterNodes = await client.getMasterNodes();
 		const elasticSearchInfo: IElasticSearchInfo = {
 			clusterName: clusterDetails?.cluster_name ?? null,
@@ -65,7 +52,6 @@ export const syncElasticSearchInfo = async (clusterId: string) => {
 			clusterId: clusterId,
 			adaptiveReplicationEnabled: adaptiveReplicaEnabled,
 			totalIndices: indicesResponse.length,
-			underUpgradation: underUpgradation,
 			lastSyncedAt: new Date(),
 			currentMasterNode: masterNodes.filter((node) => node).map((node) => `${node.node}/${node.id}`)[0],
 		};

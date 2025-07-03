@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import { AppError, ConflictError, NotFoundError } from "../errors";
 import { ClusterUpgradeJob, IClusterUpgradeJob } from "../models/cluster-upgrade-job.model";
 class ClusterUpgradeJobService {
@@ -29,7 +30,15 @@ class ClusterUpgradeJobService {
 		if (existingJob) {
 			throw new ConflictError(`An active upgrade job already exists for clusterId: ${jobData.clusterId}`);
 		}
-		const newJob = new ClusterUpgradeJob(jobData);
+		const newJob = new ClusterUpgradeJob({
+			jobId: randomUUID(),
+			clusterId: jobData.clusterId,
+			currentVersion: jobData.currentVersion,
+			targetVersion: jobData.targetVersion,
+			status: "pending",
+			createdAt: new Date(),
+			updatedAt: new Date(),
+		});
 		return await newJob.save();
 	}
 
