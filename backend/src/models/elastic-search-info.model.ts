@@ -48,6 +48,10 @@ const ElasticSearchInfoSchema: Schema<IElasticSearchInfoDocument> = new Schema<I
 	{ timestamps: true }
 );
 
-const ElasticSearchInfo = mongoose.model<IElasticSearchInfo>("ElasticSearchInfo", ElasticSearchInfoSchema);
+const ElasticSearchInfo = mongoose.model<IElasticSearchInfo>(
+	"ElasticSearchInfo",
+	ElasticSearchInfoSchema,
+	"elastic-search-infos"
+);
 
 export default ElasticSearchInfo;
