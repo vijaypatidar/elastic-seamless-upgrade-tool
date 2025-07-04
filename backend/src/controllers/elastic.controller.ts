@@ -13,14 +13,7 @@ import {
 	verifyElasticCredentials,
 	verifyKibanaCredentials,
 } from "../services/cluster-info.service";
-import {
-	getAllElasticNodes,
-	getElasticNodeById,
-	syncNodeData,
-	triggerNodeUpgrade,
-	triggerUpgradeAll,
-	updateNode,
-} from "../services/elastic-node.service.";
+import { getAllElasticNodes, getElasticNodeById, syncNodeData, updateNode } from "../services/elastic-node.service.";
 import { KibanaClient } from "../clients/kibana.client";
 import path from "path";
 import { normalizeNodeUrl } from "../utils/utlity.functions";
@@ -30,6 +23,7 @@ import { clusterMonitorService } from "../services/cluster-monitor.service";
 import { getLatestRunsByPrecheck, getMergedPrecheckStatus, runPrecheck } from "../services/precheck-runs.service";
 import { createSSHPrivateKeyFile } from "../utils/ssh-utils";
 import { clusterUpgradeJobService } from "../services/cluster-upgrade-job.service";
+import { triggerElasticNodeUpgrade, triggerElasticNodesUpgrade } from "../services/cluster-upgrade.service";
 
 export const healthCheck = async (req: Request, res: Response) => {
 	try {
@@ -248,7 +242,7 @@ export const handleUpgrades = async (req: Request, res: Response) => {
 			return;
 		}
 		nodes.forEach((nodeId: string) => {
-			const triggered = triggerNodeUpgrade(nodeId, clusterId);
+			const triggered = triggerElasticNodeUpgrade(nodeId, clusterId);
 			if (!triggered) {
 				res.status(400).send({ err: "Upgrade failed node not available" });
 			} else {
@@ -451,7 +445,7 @@ export const handleUpgradeAll = async (req: Request, res: Response) => {
 		res.status(400).send({ err: "Cannot trigger upgrade all as there is failed node" });
 	}
 	try {
-		await triggerUpgradeAll(nodesToBeUpgraded, clusterId);
+		await triggerElasticNodesUpgrade(nodesToBeUpgraded, clusterId);
 		res.status(200).send({ message: "Upgradation triggered" });
 	} catch (err: any) {
 		logger.error("Error performing upgrade:", err);
