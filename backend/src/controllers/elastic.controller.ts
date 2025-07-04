@@ -17,13 +17,17 @@ import { getAllElasticNodes, getElasticNodeById, syncNodeData, updateNode } from
 import { KibanaClient } from "../clients/kibana.client";
 import path from "path";
 import { normalizeNodeUrl } from "../utils/utlity.functions";
-import { createKibanaNodes, getKibanaNodes, triggerKibanaNodeUpgrade } from "../services/kibana-node.service";
+import { createKibanaNodes, getKibanaNodes } from "../services/kibana-node.service";
 import { NodeStatus, PrecheckStatus } from "../enums";
 import { clusterMonitorService } from "../services/cluster-monitor.service";
 import { getLatestRunsByPrecheck, getMergedPrecheckStatus, runPrecheck } from "../services/precheck-runs.service";
 import { createSSHPrivateKeyFile } from "../utils/ssh-utils";
 import { clusterUpgradeJobService } from "../services/cluster-upgrade-job.service";
-import { triggerElasticNodeUpgrade, triggerElasticNodesUpgrade } from "../services/cluster-upgrade.service";
+import {
+	triggerElasticNodeUpgrade,
+	triggerElasticNodesUpgrade,
+	triggerKibanaNodeUpgrade,
+} from "../services/cluster-upgrade.service";
 
 export const healthCheck = async (req: Request, res: Response) => {
 	try {

@@ -8,6 +8,7 @@ import { randomUUID } from "crypto";
 import { NotificationEventType, notificationService, NotificationType } from "./notification.service";
 import { clusterUpgradeJobService } from "./cluster-upgrade-job.service";
 import { getElasticNodeById } from "./elastic-node.service.";
+import { getKibanaNodeById } from "./kibana-node.service";
 
 export const triggerElasticNodeUpgrade = async (nodeId: string, clusterId: string) => {
 	try {
@@ -110,5 +111,61 @@ export const triggerElasticNodesUpgrade = async (nodes: IElasticNode[], clusterI
 	} catch (error: any) {
 		logger.error(`Error performing upgrade for nodes:  ${nodes} because of ${error.message}`);
 		throw new Error(`Error performing upgrade for nodes:  ${nodes}`);
+	}
+};
+
+export const triggerKibanaNodeUpgrade = async (nodeId: string, clusterId: string) => {
+	try {
+		const node = await getKibanaNodeById(nodeId);
+		if (!node) {
+			logger.error(`Kibana node not found for [nodeId:${nodeId}]`);
+			return;
+		}
+		const clusterInfo = await getClusterInfoById(clusterId);
+		const clusterUpgradeJob = await clusterUpgradeJobService.getActiveClusterUpgradeJobByClusterId(clusterId);
+		const pathToKey = clusterInfo.pathToKey ? clusterInfo.pathToKey : ""; //Should be stored in clusterInfo
+		await ansibleInventoryService.createAnsibleInventoryForKibana([node], {
+			pathToKey,
+			sshUser: clusterInfo.sshUser,
+		});
+		if (!clusterInfo.elastic.username || !clusterInfo.elastic.password) {
+			return;
+		}
+		const playbookRunId = randomUUID();
+
+		ansibleRunnerService
+			.runPlaybook({
+				playbookPath: "playbooks/main.yml",
+				inventoryPath: "ansible_inventory.ini",
+				variables: {
+					elk_version: clusterUpgradeJob.targetVersion,
+					es_username: clusterInfo.elastic.username,
+					es_password: clusterInfo.elastic.password,
+					elasticsearch_uri: clusterInfo.elastic.url,
+					cluster_type: ClusterType.KIBANA,
+					playbook_run_id: playbookRunId,
+					playbook_run_type: "UPGRADE",
+					current_version: clusterUpgradeJob.currentVersion,
+				},
+			})
+			.then(() => {
+				notificationService.sendNotification({
+					type: NotificationEventType.NOTIFICATION,
+					title: "Upgrade Successful",
+					message: "Kibana node has been successfully upgraded to the target version.",
+					notificationType: NotificationType.SUCCESS,
+				});
+			})
+			.catch(() => {
+				notificationService.sendNotification({
+					type: NotificationEventType.NOTIFICATION,
+					title: "Upgrade Failed",
+					message:
+						"An error occurred while upgrading the kibana node. Please check the logs for more details.",
+					notificationType: NotificationType.ERROR,
+				});
+			});
+	} catch (error) {
+		logger.error(`Error performing upgrade for node with id ${nodeId}`);
 	}
 };
