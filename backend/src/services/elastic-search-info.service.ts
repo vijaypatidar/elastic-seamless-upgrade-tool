@@ -1,9 +1,7 @@
 import { ElasticClient } from "../clients/elastic.client";
 import ElasticSearchInfo, { IElasticSearchInfo, IElasticSearchInfoDocument } from "../models/elastic-search-info.model";
-import { getAllElasticNodes } from "./elastic-node.service.";
-import { IElasticNode } from "../models/elastic-node.model";
 import logger from "../logger/logger";
-import { clusterStatus, NodeStatus } from "../enums";
+import { clusterStatus } from "../enums";
 
 export const createOrUpdateElasticSearchInfo = async (
 	elasticSearchInfo: IElasticSearchInfo

@@ -61,7 +61,4 @@ const ClusterInfoSchema: Schema<IClusterInfoDocument> = new Schema<IClusterInfoD
 	{ timestamps: true }
 );
 
-// Create the model
-const ClusterInfo = mongoose.model<IClusterInfoDocument>("ClusterInfo", ClusterInfoSchema);
-
-export default ClusterInfo;
+export const ClusterInfo = mongoose.model<IClusterInfoDocument>("ClusterInfo", ClusterInfoSchema, "cluster-infos");

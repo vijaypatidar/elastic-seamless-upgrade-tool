@@ -32,7 +32,10 @@ const ClusterUpgradeJobSchema: Schema<IClusterUpgradeJobDocument> = new Schema<I
 	{ timestamps: true }
 );
 
+ClusterUpgradeJobSchema.index({ clusterId: 1, currentVersion: 1 }, { unique: true });
+
 export const ClusterUpgradeJob = mongoose.model<IClusterUpgradeJobDocument>(
-	"cluster-upgrade-jobs",
-	ClusterUpgradeJobSchema
+	"ClusterUpgradeJob",
+	ClusterUpgradeJobSchema,
+	"cluster-upgrade-jobs"
 );

@@ -1,6 +1,7 @@
 import { ElasticClient } from "../clients/elastic.client";
 import { DeprecationCounts, DeprecationSetting } from "../interfaces";
-import ClusterInfo, {
+import {
+	ClusterInfo,
 	IClusterInfo,
 	IClusterInfoDocument,
 	IElasticInfo,

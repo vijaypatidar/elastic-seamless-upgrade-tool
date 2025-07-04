@@ -1,5 +1,4 @@
 import axios from "axios";
-import KibanaNode, { IKibanaNode, IKibanaNodeDocument } from "../models/kibana-node.model";
 import logger from "../logger/logger";
 import { getClusterInfoById } from "./cluster-info.service";
 import { IClusterInfo } from "../models/cluster-info.model";
@@ -9,6 +8,7 @@ import { ClusterType, NodeStatus } from "../enums";
 import { randomUUID } from "crypto";
 import { NotificationEventType, notificationService, NotificationType } from "./notification.service";
 import { clusterUpgradeJobService } from "./cluster-upgrade-job.service";
+import { ClusterNode, ClusterNodeType, IClusterNodeDocument, IKibanaNode } from "../models/cluster-node.model";
 
 export interface KibanaConfig {
 	name: string;
@@ -53,7 +53,7 @@ const getKibanaNodeDetails = async (
 
 export const createKibanaNodes = async (kibanaConfigs: KibanaConfig[], clusterId: string): Promise<void> => {
 	const clusterInfo: IClusterInfo = await getClusterInfoById(clusterId);
-	KibanaNode.collection.deleteMany({ clusterID: clusterId });
+	ClusterNode.collection.deleteMany({ clusterID: clusterId, type: ClusterNodeType.KIBANA });
 	for (const kibanaConfig of kibanaConfigs) {
 		try {
 			const { version, os, roles } = await getKibanaNodeDetails(
@@ -74,6 +74,7 @@ export const createKibanaNodes = async (kibanaConfigs: KibanaConfig[], clusterId
 				os,
 				progress,
 				status,
+				type: ClusterNodeType.KIBANA,
 			};
 
 			try {
@@ -86,11 +87,15 @@ export const createKibanaNodes = async (kibanaConfigs: KibanaConfig[], clusterId
 			} catch (error) {
 				logger.debug(`No active upgrade job found:`, error);
 			}
-			await KibanaNode.findOneAndUpdate({ nodeId: kibanaNode.nodeId }, kibanaNode, {
-				new: true,
-				runValidators: true,
-				upsert: true,
-			});
+			await ClusterNode.findOneAndUpdate(
+				{ nodeId: kibanaNode.nodeId, type: ClusterNodeType.KIBANA },
+				kibanaNode,
+				{
+					new: true,
+					runValidators: true,
+					upsert: true,
+				}
+			);
 		} catch (error) {
 			console.error(`Error processing Kibana node ${kibanaConfig.ip}:`, error);
 		}
@@ -99,7 +104,7 @@ export const createKibanaNodes = async (kibanaConfigs: KibanaConfig[], clusterId
 
 export const getKibanaNodes = async (clusterId: string) => {
 	try {
-		const kibanaNodes = await KibanaNode.find({ clusterId: clusterId });
+		const kibanaNodes = await ClusterNode.find({ clusterId: clusterId, type: ClusterNodeType.KIBANA });
 		return kibanaNodes;
 	} catch (error) {
 		throw new Error("Unable to fetch kibana nodes");
@@ -109,10 +114,10 @@ export const getKibanaNodes = async (clusterId: string) => {
 export const updateKibanaNodeStatus = async (
 	nodeId: string,
 	newStatus: string
-): Promise<IKibanaNodeDocument | null> => {
+): Promise<IClusterNodeDocument | null> => {
 	try {
-		const updatedNode = await KibanaNode.findOneAndUpdate(
-			{ nodeId },
+		const updatedNode = await ClusterNode.findOneAndUpdate(
+			{ nodeId, type: ClusterNodeType.KIBANA },
 			{ status: newStatus },
 			{ new: true, runValidators: true }
 		);
@@ -129,8 +134,8 @@ export const updateKibanaNodeStatus = async (
 
 export const updateKibanaNodeProgress = async (nodeId: string, progress: number) => {
 	try {
-		const updatedNode = await KibanaNode.findOneAndUpdate(
-			{ nodeId },
+		const updatedNode = await ClusterNode.findOneAndUpdate(
+			{ nodeId, type: ClusterNodeType.KIBANA },
 			{ progress: progress },
 			{ new: true, runValidators: true }
 		);
@@ -148,7 +153,11 @@ export const updateKibanaNodeProgress = async (nodeId: string, progress: number)
 
 export const updateKibanaNode = async (identifier: Record<string, any>, updatedNodeValues: Partial<IKibanaNode>) => {
 	try {
-		const updatedNode = await KibanaNode.findOneAndUpdate(identifier, { $set: updatedNodeValues }, { new: true });
+		const updatedNode = await ClusterNode.findOneAndUpdate(
+			{ ...identifier, type: ClusterNodeType.KIBANA },
+			{ $set: updatedNodeValues },
+			{ new: true }
+		);
 		if (!updatedNode) {
 			throw new Error(`Node with identifier ${identifier} not found`);
 		}
@@ -158,8 +167,8 @@ export const updateKibanaNode = async (identifier: Record<string, any>, updatedN
 };
 
 export const getKibanaNodeById = async (nodeId: string): Promise<IKibanaNode | null> => {
-	const kibanaNode = await KibanaNode.findOne({ nodeId: nodeId });
-	if (!kibanaNode) return null;
+	const kibanaNode = await ClusterNode.findOne({ nodeId: nodeId, type: ClusterNodeType.KIBANA });
+	if (!kibanaNode || kibanaNode.type !== ClusterNodeType.KIBANA) return null;
 	return kibanaNode;
 };
 
@@ -222,7 +231,7 @@ export const triggerKibanaNodeUpgrade = async (nodeId: string, clusterId: string
 export const syncKibanaNodes = async (clusterId: string) => {
 	const clusterInfo: IClusterInfo = await getClusterInfoById(clusterId);
 	try {
-		const kibanaNodes = await KibanaNode.find({ clusterId: clusterId });
+		const kibanaNodes = await ClusterNode.find({ clusterId: clusterId, type: ClusterNodeType.KIBANA });
 		for (const kibanaNode of kibanaNodes) {
 			const { version, os, roles } = await getKibanaNodeDetails(
 				`http://${kibanaNode.ip}:5601`,
@@ -232,11 +241,15 @@ export const syncKibanaNodes = async (clusterId: string) => {
 			kibanaNode.version = version;
 			kibanaNode.os = os;
 			kibanaNode.roles = roles;
-			await KibanaNode.findOneAndUpdate({ nodeId: kibanaNode.nodeId }, kibanaNode, {
-				new: true,
-				runValidators: true,
-				upsert: true,
-			});
+			await ClusterNode.findOneAndUpdate(
+				{ nodeId: kibanaNode.nodeId, type: ClusterNodeType.KIBANA },
+				kibanaNode,
+				{
+					new: true,
+					runValidators: true,
+					upsert: true,
+				}
+			);
 		}
 	} catch (error: any) {
 		throw new Error(`Unable to sync kibana nodes ${error.message}`);
