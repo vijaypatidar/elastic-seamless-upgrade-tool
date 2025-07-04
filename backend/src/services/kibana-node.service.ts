@@ -124,27 +124,3 @@ export const getKibanaNodeById = async (nodeId: string): Promise<IKibanaNode | n
 	if (!kibanaNode || kibanaNode.type !== ClusterNodeType.KIBANA) return null;
 	return kibanaNode;
 };
-
-export const syncKibanaNodes = async (clusterId: string) => {
-	const kibanaClient = await KibanaClient.buildClient(clusterId);
-	try {
-		const kibanaNodes = await ClusterNode.find({ clusterId: clusterId, type: ClusterNodeType.KIBANA });
-		for (const kibanaNode of kibanaNodes) {
-			const { version, os, roles } = await kibanaClient.getKibanaNodeDetails();
-			kibanaNode.version = version;
-			kibanaNode.os = os;
-			kibanaNode.roles = roles;
-			await ClusterNode.findOneAndUpdate(
-				{ nodeId: kibanaNode.nodeId, type: ClusterNodeType.KIBANA },
-				kibanaNode,
-				{
-					new: true,
-					runValidators: true,
-					upsert: true,
-				}
-			);
-		}
-	} catch (error: any) {
-		throw new Error(`Unable to sync kibana nodes ${error.message}`);
-	}
-};

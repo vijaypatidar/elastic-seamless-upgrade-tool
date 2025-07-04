@@ -10,12 +10,12 @@ import {
 import { MigrationDeprecationsDeprecation } from "@elastic/elasticsearch/lib/api/types";
 import { DeprecationDetail, KibanaClient } from "../clients/kibana.client";
 import { ElasticClusterBaseRequest } from "..";
-import { getElasticSearchInfo, syncElasticSearchInfo } from "./elastic-search-info.service";
+import { getElasticSearchInfo } from "./elastic-search-info.service";
 import { getPossibleUpgrades } from "../utils/upgrade.versions";
 import { createSSHPrivateKeyFile, sshFilefileExists } from "../utils/ssh-utils";
 import { clusterUpgradeJobService } from "./cluster-upgrade-job.service";
-import logger from "../logger/logger";
 import { ClusterUpgradeJobStatus } from "../models/cluster-upgrade-job.model";
+import { syncElasticSearchInfo } from "./sync.service";
 
 const cache: Record<string, IClusterInfo | null> = {};
 
