@@ -6,10 +6,10 @@ import { NodePrecheckRun, INodePrecheckRun, INodePrecheckRunDocument } from "../
 import { ansibleInventoryService } from "./ansible-inventory.service";
 import { ansibleRunnerService } from "./ansible-runner.service";
 import { getClusterInfoById } from "./cluster-info.service";
-import { IElasticNode } from "../models/elastic-node.model";
 import { NotFoundError } from "../errors";
 import { UpdateQuery } from "mongoose";
 import { clusterUpgradeJobService } from "./cluster-upgrade-job.service";
+import { IElasticNode } from "../models/cluster-node.model";
 
 export interface PrecheckRunJob {
 	precheckId: string;

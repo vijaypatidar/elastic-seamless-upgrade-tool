@@ -1,6 +1,6 @@
 import { ElasticClient } from "../clients/elastic.client";
 import logger from "../logger/logger";
-import ElasticNode, { IElasticNode, IElasticNodeDocument } from "../models/elastic-node.model";
+import { ClusterNode, IElasticNode, IClusterNodeDocument, ClusterNodeType } from "../models/cluster-node.model";
 import { getClusterInfoById } from "./cluster-info.service";
 import { ansibleInventoryService } from "./ansible-inventory.service";
 import { ansibleRunnerService } from "./ansible-runner.service";
@@ -9,10 +9,10 @@ import { randomUUID } from "crypto";
 import { NotificationEventType, notificationService, NotificationType } from "./notification.service";
 import { clusterUpgradeJobService } from "./cluster-upgrade-job.service";
 
-export const createOrUpdateElasticNode = async (elasticNode: IElasticNode): Promise<IElasticNodeDocument> => {
+export const createOrUpdateElasticNode = async (elasticNode: IElasticNode): Promise<IClusterNodeDocument> => {
 	const nodeId = elasticNode.nodeId;
-	const data = await ElasticNode.findOneAndUpdate(
-		{ nodeId: nodeId },
+	const data = await ClusterNode.findOneAndUpdate(
+		{ nodeId: nodeId, type: ClusterNodeType.ELASTIC },
 		{ ...elasticNode },
 		{ new: true, upsert: true, runValidators: true }
 	);
@@ -20,8 +20,8 @@ export const createOrUpdateElasticNode = async (elasticNode: IElasticNode): Prom
 };
 
 export const getElasticNodeById = async (nodeId: string): Promise<IElasticNode | null> => {
-	const elasticNode = await ElasticNode.findOne({ nodeId: nodeId });
-	if (!elasticNode) return null;
+	const elasticNode = await ClusterNode.findOne({ nodeId: nodeId, type: ClusterNodeType.ELASTIC });
+	if (!elasticNode || elasticNode.type === ClusterNodeType.KIBANA) return null;
 	return elasticNode;
 };
 
@@ -31,8 +31,8 @@ export const getAllElasticNodes = async (clusterId: string): Promise<IElasticNod
 	} catch (error) {
 		logger.error("Unable to sync with Elastic search instance! Maybe the connection is breaked");
 	} finally {
-		const elasticNodes = await ElasticNode.find({ clusterId: clusterId });
-		return elasticNodes;
+		const elasticNodes = await ClusterNode.find({ clusterId: clusterId, type: ClusterNodeType.ELASTIC });
+		return elasticNodes as IElasticNode[];
 	}
 };
 
@@ -55,15 +55,16 @@ export const syncNodeData = async (clusterId: string) => {
 				progress: 0,
 				isMaster: masterNodes.some((master) => master.id === key),
 				status: NodeStatus.AVAILABLE,
+				type: ClusterNodeType.ELASTIC,
 			})
 		);
 		for (const node of elasticNodes) {
-			const existingNode = await ElasticNode.findOne({ nodeId: node.nodeId });
+			const existingNode = await ClusterNode.findOne({ nodeId: node.nodeId, type: ClusterNodeType.ELASTIC });
 			if (existingNode) {
 				node.status = existingNode.status;
 				node.progress = existingNode.progress;
 			}
-			await ElasticNode.findOneAndUpdate({ nodeId: node.nodeId }, node, {
+			await ClusterNode.findOneAndUpdate({ nodeId: node.nodeId, type: ClusterNodeType.ELASTIC }, node, {
 				new: true,
 				runValidators: true,
 				upsert: true,
@@ -77,10 +78,10 @@ export const syncNodeData = async (clusterId: string) => {
 export const updateNodeStatus = async (
 	identifier: Record<string, any>,
 	newStatus: string
-): Promise<IElasticNodeDocument | null> => {
+): Promise<IClusterNodeDocument | null> => {
 	try {
-		const updatedNode = await ElasticNode.findOneAndUpdate(
-			identifier,
+		const updatedNode = await ClusterNode.findOneAndUpdate(
+			{ ...identifier, type: ClusterNodeType.ELASTIC },
 			{ status: newStatus },
 			{ new: true, runValidators: true }
 		);
@@ -99,7 +100,11 @@ export const updateNodeStatus = async (
 
 export const updateNode = async (identifier: Record<string, any>, updatedNodeValues: Partial<IElasticNode>) => {
 	try {
-		const updatedNode = await ElasticNode.findOneAndUpdate(identifier, { $set: updatedNodeValues }, { new: true });
+		const updatedNode = await ClusterNode.findOneAndUpdate(
+			{ ...identifier, type: ClusterNodeType.ELASTIC },
+			{ $set: updatedNodeValues },
+			{ new: true }
+		);
 		if (!updatedNode) {
 			throw new Error(`Node with identfier ${identifier} not found`);
 		}
@@ -110,7 +115,7 @@ export const updateNode = async (identifier: Record<string, any>, updatedNodeVal
 
 export const updateNodeProgress = async (identifier: Record<string, any>, progress: number) => {
 	try {
-		const updatedNode = await ElasticNode.findOneAndUpdate(
+		const updatedNode = await ClusterNode.findOneAndUpdate(
 			identifier,
 			{ progress: progress },
 			{ new: true, runValidators: true }
