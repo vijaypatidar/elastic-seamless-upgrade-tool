@@ -3,12 +3,12 @@ import { IElasticNode } from "../models/cluster-node.model";
 import { getClusterInfoById } from "./cluster-info.service";
 import { ansibleInventoryService } from "./ansible-inventory.service";
 import { ansibleRunnerService } from "./ansible-runner.service";
-import { ClusterType } from "../enums";
+import { ClusterType, NodeStatus } from "../enums";
 import { randomUUID } from "crypto";
 import { NotificationEventType, notificationService, NotificationType } from "./notification.service";
 import { clusterUpgradeJobService } from "./cluster-upgrade-job.service";
 import { getElasticNodeById } from "./elastic-node.service.";
-import { getKibanaNodeById } from "./kibana-node.service";
+import { getKibanaNodeById, updateKibanaNode, updateKibanaNodeStatus } from "./kibana-node.service";
 
 export const triggerElasticNodeUpgrade = async (nodeId: string, clusterId: string) => {
 	try {
@@ -150,7 +150,8 @@ export const triggerKibanaNodeUpgrade = async (nodeId: string, clusterId: string
 					current_version: clusterUpgradeJob.currentVersion,
 				},
 			})
-			.then(() => {
+			.then(async () => {
+				await updateKibanaNodeStatus(nodeId, NodeStatus.UPGRADED);
 				notificationService.sendNotification({
 					type: NotificationEventType.NOTIFICATION,
 					title: "Upgrade Successful",
@@ -158,7 +159,8 @@ export const triggerKibanaNodeUpgrade = async (nodeId: string, clusterId: string
 					notificationType: NotificationType.SUCCESS,
 				});
 			})
-			.catch(() => {
+			.catch(async () => {
+				await updateKibanaNodeStatus(nodeId, NodeStatus.FAILED);
 				notificationService.sendNotification({
 					type: NotificationEventType.NOTIFICATION,
 					title: "Upgrade Failed",

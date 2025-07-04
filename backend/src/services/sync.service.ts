@@ -10,8 +10,8 @@ import { clusterUpgradeJobService } from "./cluster-upgrade-job.service";
 import { ClusterUpgradeJobStatus } from "../models/cluster-upgrade-job.model";
 
 export const syncKibanaNodes = async (clusterId: string) => {
-	const kibanaClient = await KibanaClient.buildClient(clusterId);
 	try {
+		const kibanaClient = await KibanaClient.buildClient(clusterId);
 		const kibanaNodes = await ClusterNode.find({ clusterId: clusterId, type: ClusterNodeType.KIBANA });
 		for (const kibanaNode of kibanaNodes) {
 			const { version, os, roles } = await kibanaClient.getKibanaNodeDetails();
@@ -29,8 +29,7 @@ export const syncKibanaNodes = async (clusterId: string) => {
 			);
 		}
 	} catch (error: any) {
-		logger.error(`Error syncing Kibana nodes: ${error.message}`);
-		throw new Error(`Error syncing Kibana nodes ${error.message}`);
+		logger.debug(`Error syncing Kibana nodes for cluster ${clusterId}:`, error.message);
 	}
 };
 
@@ -94,12 +93,13 @@ const syncClusterUpgradeJobStatus = async (clusterId: string) => {
 	}
 };
 
-notificationService.addNotificationListner((event) => {
+notificationService.addNotificationListner(async (event) => {
 	if (
 		event.type === NotificationEventType.NOTIFICATION &&
 		event.notificationType === NotificationType.SUCCESS &&
 		event.clusterId
 	) {
-		syncClusterUpgradeJobStatus(event.clusterId);
+		await syncKibanaNodes(event.clusterId);
+		await syncClusterUpgradeJobStatus(event.clusterId);
 	}
 });

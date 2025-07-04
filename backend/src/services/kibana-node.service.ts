@@ -66,7 +66,7 @@ export const getKibanaNodes = async (clusterId: string) => {
 
 export const updateKibanaNodeStatus = async (
 	nodeId: string,
-	newStatus: string
+	newStatus: NodeStatus
 ): Promise<IClusterNodeDocument | null> => {
 	try {
 		const updatedNode = await ClusterNode.findOneAndUpdate(
