@@ -1,7 +1,5 @@
-import axios from "axios";
 import logger from "../logger/logger";
 import { getClusterInfoById } from "./cluster-info.service";
-import { IClusterInfo } from "../models/cluster-info.model";
 import { ansibleInventoryService } from "./ansible-inventory.service";
 import { ansibleRunnerService } from "./ansible-runner.service";
 import { ClusterType, NodeStatus } from "../enums";
@@ -9,58 +7,19 @@ import { randomUUID } from "crypto";
 import { NotificationEventType, notificationService, NotificationType } from "./notification.service";
 import { clusterUpgradeJobService } from "./cluster-upgrade-job.service";
 import { ClusterNode, ClusterNodeType, IClusterNodeDocument, IKibanaNode } from "../models/cluster-node.model";
+import { KibanaClient } from "../clients/kibana.client";
 
 export interface KibanaConfig {
 	name: string;
 	ip: string;
 }
 
-const getKibanaNodeDetails = async (
-	kibanaUrl: string,
-	username: string | undefined,
-	password: string | undefined
-): Promise<{ version: string; os: Record<string, any>; roles: string[] }> => {
-	try {
-		// Get Kibana status and details from the /api/status endpoint
-		const response = await axios.get(`${kibanaUrl}/api/status`, {
-			headers: {
-				"kbn-xsrf": "true",
-			},
-			auth: {
-				username: username || "",
-				password: password || "",
-			},
-		});
-
-		const version = response.data.version.number;
-		const os = response?.data?.os?.platform
-			? {
-					name: response.data.os.platform,
-					version: response.data.os.platformRelease,
-				}
-			: {
-					name: "Linux",
-					version: "linux-6.8.0-1021-aws",
-				};
-		const roles = ["kibana"];
-
-		return { version, os, roles };
-	} catch (error) {
-		console.error("Error getting Kibana node details:", error);
-		throw error;
-	}
-};
-
 export const createKibanaNodes = async (kibanaConfigs: KibanaConfig[], clusterId: string): Promise<void> => {
-	const clusterInfo: IClusterInfo = await getClusterInfoById(clusterId);
+	const kibanaClient = await KibanaClient.buildClient(clusterId);
 	ClusterNode.collection.deleteMany({ clusterID: clusterId, type: ClusterNodeType.KIBANA });
 	for (const kibanaConfig of kibanaConfigs) {
 		try {
-			const { version, os, roles } = await getKibanaNodeDetails(
-				`http://${kibanaConfig.ip}:5601`,
-				clusterInfo.kibana?.username,
-				clusterInfo.kibana?.password
-			);
+			const { version, os, roles } = await kibanaClient.getKibanaNodeDetails();
 			const nodeId = `node-${kibanaConfig.ip}`;
 			const progress = 0;
 			const status: NodeStatus = NodeStatus.AVAILABLE;
@@ -104,8 +63,7 @@ export const createKibanaNodes = async (kibanaConfigs: KibanaConfig[], clusterId
 
 export const getKibanaNodes = async (clusterId: string) => {
 	try {
-		const kibanaNodes = await ClusterNode.find({ clusterId: clusterId, type: ClusterNodeType.KIBANA });
-		return kibanaNodes;
+		return await ClusterNode.find({ clusterId: clusterId, type: ClusterNodeType.KIBANA });
 	} catch (error) {
 		throw new Error("Unable to fetch kibana nodes");
 	}
@@ -229,15 +187,11 @@ export const triggerKibanaNodeUpgrade = async (nodeId: string, clusterId: string
 };
 
 export const syncKibanaNodes = async (clusterId: string) => {
-	const clusterInfo: IClusterInfo = await getClusterInfoById(clusterId);
+	const kibanaClient = await KibanaClient.buildClient(clusterId);
 	try {
 		const kibanaNodes = await ClusterNode.find({ clusterId: clusterId, type: ClusterNodeType.KIBANA });
 		for (const kibanaNode of kibanaNodes) {
-			const { version, os, roles } = await getKibanaNodeDetails(
-				`http://${kibanaNode.ip}:5601`,
-				clusterInfo.kibana?.username,
-				clusterInfo.kibana?.password
-			);
+			const { version, os, roles } = await kibanaClient.getKibanaNodeDetails();
 			kibanaNode.version = version;
 			kibanaNode.os = os;
 			kibanaNode.roles = roles;
