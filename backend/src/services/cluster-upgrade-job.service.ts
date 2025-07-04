@@ -1,7 +1,8 @@
 import { randomUUID } from "crypto";
-import { AppError, ConflictError, NotFoundError } from "../errors";
+import { ConflictError, NotFoundError } from "../errors";
 import { ClusterUpgradeJob, IClusterUpgradeJob } from "../models/cluster-upgrade-job.model";
 import { ClusterNode } from "../models/cluster-node.model";
+import { NodeStatus } from "../enums";
 class ClusterUpgradeJobService {
 	async getActiveClusterUpgradeJobByClusterId(clusterId: string): Promise<IClusterUpgradeJob> {
 		const job = await ClusterUpgradeJob.findOne({ clusterId, status: { $ne: "completed" } });
@@ -41,7 +42,10 @@ class ClusterUpgradeJobService {
 			updatedAt: new Date(),
 		});
 		await newJob.save();
-		await ClusterNode.updateMany({ clusterId: jobData.clusterId }, { $set: { status: "pending", progress: 0 } });
+		await ClusterNode.updateMany(
+			{ clusterId: jobData.clusterId },
+			{ $set: { status: NodeStatus.AVAILABLE, progress: 0 } }
+		);
 		return newJob;
 	}
 
