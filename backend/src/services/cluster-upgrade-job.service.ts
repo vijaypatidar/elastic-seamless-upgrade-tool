@@ -50,7 +50,7 @@ class ClusterUpgradeJobService {
 	}
 
 	async updateClusterUpgradeJob(
-		identifier: Record<string, any>,
+		identifier: Partial<IClusterUpgradeJob>,
 		updatedJobValues: Partial<IClusterUpgradeJob>
 	): Promise<IClusterUpgradeJob> {
 		const updatedJob = await ClusterUpgradeJob.findOneAndUpdate(

@@ -2,9 +2,12 @@ import { ClusterNode, ClusterNodeType } from "../models/cluster-node.model";
 import { KibanaClient } from "../clients/kibana.client";
 import logger from "../logger/logger";
 import { IElasticSearchInfo } from "../models/elastic-search-info.model";
-import { clusterStatus } from "../enums";
+import { clusterStatus, NodeStatus } from "../enums";
 import { ElasticClient } from "../clients/elastic.client";
 import { createOrUpdateElasticSearchInfo } from "./elastic-search-info.service";
+import { NotificationEventType, notificationService, NotificationType } from "./notification.service";
+import { clusterUpgradeJobService } from "./cluster-upgrade-job.service";
+import { ClusterUpgradeJobStatus } from "../models/cluster-upgrade-job.model";
 
 export const syncKibanaNodes = async (clusterId: string) => {
 	const kibanaClient = await KibanaClient.buildClient(clusterId);
@@ -69,3 +72,34 @@ export const syncElasticSearchInfo = async (clusterId: string) => {
 		throw new Error("Unable to sync with Elastic search instance! Maybe the connection is breaked");
 	}
 };
+
+const syncClusterUpgradeJobStatus = async (clusterId: string) => {
+	try {
+		const job = await clusterUpgradeJobService.getActiveClusterUpgradeJobByClusterId(clusterId);
+		if (!(job.status === ClusterUpgradeJobStatus.COMPLETED || job.status === ClusterUpgradeJobStatus.FAILED)) {
+			const nodes = await ClusterNode.find({ clusterId: clusterId });
+			const isUpgraded = nodes
+				.map((node) => node.status === NodeStatus.AVAILABLE && job.targetVersion === node.version)
+				.reduce((acc, curr) => acc && curr, true);
+			if (isUpgraded) {
+				job.status = ClusterUpgradeJobStatus.COMPLETED;
+				clusterUpgradeJobService.updateClusterUpgradeJob(
+					{ jobId: job.jobId },
+					{ status: ClusterUpgradeJobStatus.COMPLETED }
+				);
+			}
+		}
+	} catch (error) {
+		logger.debug(`No active upgrade job found for cluster ${clusterId}:`, error);
+	}
+};
+
+notificationService.addNotificationListner((event) => {
+	if (
+		event.type === NotificationEventType.NOTIFICATION &&
+		event.notificationType === NotificationType.SUCCESS &&
+		event.clusterId
+	) {
+		syncClusterUpgradeJobStatus(event.clusterId);
+	}
+});

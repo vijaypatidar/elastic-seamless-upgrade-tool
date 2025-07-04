@@ -29,6 +29,7 @@ export interface GeneralNotificationEvent {
 	notificationType: NotificationType;
 	message: string;
 	title: string;
+	clusterId?: string | undefined;
 }
 
 export type NotificationEvent =

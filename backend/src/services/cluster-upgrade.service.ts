@@ -47,6 +47,7 @@ export const triggerElasticNodeUpgrade = async (nodeId: string, clusterId: strin
 					title: "Upgrade Successful",
 					message: "Node has been successfully upgraded to the target version.",
 					notificationType: NotificationType.SUCCESS,
+					clusterId: clusterId,
 				});
 			})
 			.catch(() => {
@@ -98,6 +99,7 @@ export const triggerElasticNodesUpgrade = async (nodes: IElasticNode[], clusterI
 					title: "Upgrade Successful",
 					message: "All nodes have been successfully upgraded to the target version.",
 					notificationType: NotificationType.SUCCESS,
+					clusterId: clusterId,
 				});
 			})
 			.catch(() => {
@@ -163,6 +165,7 @@ export const triggerKibanaNodeUpgrade = async (nodeId: string, clusterId: string
 					message:
 						"An error occurred while upgrading the kibana node. Please check the logs for more details.",
 					notificationType: NotificationType.ERROR,
+					clusterId: clusterId,
 				});
 			});
 	} catch (error) {
