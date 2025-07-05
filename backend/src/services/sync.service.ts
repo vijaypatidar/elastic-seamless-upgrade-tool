@@ -71,7 +71,7 @@ const syncClusterUpgradeJobStatus = async (clusterId: string) => {
 	try {
 		const job = await clusterUpgradeJobService.getActiveClusterUpgradeJobByClusterId(clusterId);
 		if (!(job.status === ClusterUpgradeJobStatus.COMPLETED || job.status === ClusterUpgradeJobStatus.FAILED)) {
-			const nodes = await clusterNodeService.getNodes(clusterId, ClusterNodeType.ELASTIC);
+			const nodes = await clusterNodeService.getNodes(clusterId);
 			const isUpgraded = nodes
 				.map((node) => node.status === NodeStatus.UPGRADED && job.targetVersion === node.version)
 				.reduce((acc, curr) => acc && curr, true);
