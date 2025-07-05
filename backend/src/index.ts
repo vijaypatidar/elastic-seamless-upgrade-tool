@@ -71,5 +71,6 @@ io.on("connection", (socket: Socket) => {
 connectDB().then(() => {
 	server.listen(PORT, async () => {
 		logger.info(`Server is running at http://localhost:${PORT}`);
+		syncClusterUpgradeJobStatus("cluster-id"); // Replace 'cluster-id' with the actual cluster ID
 	});
 });
