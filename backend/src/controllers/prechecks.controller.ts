@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express";
 import { getPrechecksGroupedByNode, runPrecheck } from "../services/precheck-runs.service";
-import { generatePrecheckReportMdContent } from "../services/precheck-report.service";
+import { precheckReportService } from "../services/precheck-report.service";
 import { NotFoundError } from "../errors";
 import { clusterNodeService, getAllElasticNodes } from "../services/cluster-node.service";
 
@@ -42,7 +42,7 @@ export const getPrecheckReportByClusterId = async (
 ) => {
 	const { clusterId } = req.params;
 	try {
-		const content = await generatePrecheckReportMdContent(clusterId);
+		const content = await precheckReportService.generatePrecheckReportMdContent(clusterId);
 		res.setHeader("Content-Disposition", `attachment; filename="precheck-report.md"`);
 		res.setHeader("Content-Type", "text/markdown");
 		res.send(content);
