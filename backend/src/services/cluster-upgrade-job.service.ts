@@ -3,10 +3,12 @@ import { ConflictError, NotFoundError } from "../errors";
 import { ClusterUpgradeJob, IClusterUpgradeJob } from "../models/cluster-upgrade-job.model";
 import { ClusterNode } from "../models/cluster-node.model";
 import { NodeStatus } from "../enums";
+import logger from "../logger/logger";
 class ClusterUpgradeJobService {
 	async getActiveClusterUpgradeJobByClusterId(clusterId: string): Promise<IClusterUpgradeJob> {
 		const job = await ClusterUpgradeJob.findOne({ clusterId, status: { $ne: "completed" } });
 		if (!job) {
+			logger.error(`No active upgrade job found for clusterId: ${clusterId}`);
 			throw new NotFoundError(`No upgrade job found for clusterId: ${clusterId}`);
 		}
 		return job;
@@ -19,6 +21,7 @@ class ClusterUpgradeJobService {
 	async getClusterUpgradeJobByJobId(jobId: string): Promise<IClusterUpgradeJob> {
 		const job = await ClusterUpgradeJob.findOne({ jobId: jobId });
 		if (!job) {
+			logger.error(`No upgrade job found for jobId: ${jobId}`);
 			throw new NotFoundError(`No upgrade job found for jobId: ${jobId}`);
 		}
 		return job;
@@ -30,6 +33,7 @@ class ClusterUpgradeJobService {
 			status: { $ne: "completed" },
 		});
 		if (existingJob) {
+			logger.error(`An active upgrade job already exists for clusterId: ${jobData.clusterId}`);
 			throw new ConflictError(`An active upgrade job already exists for clusterId: ${jobData.clusterId}`);
 		}
 		const newJob = new ClusterUpgradeJob({
@@ -42,6 +46,7 @@ class ClusterUpgradeJobService {
 			updatedAt: new Date(),
 		});
 		await newJob.save();
+		// Reset the status and progress of all nodes in the cluster
 		await ClusterNode.updateMany(
 			{ clusterId: jobData.clusterId },
 			{ $set: { status: NodeStatus.AVAILABLE, progress: 0 } }
