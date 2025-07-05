@@ -1,11 +1,10 @@
-import { ClusterNode, ClusterNodeType, IElasticNode } from "../models/cluster-node.model";
+import { ClusterNodeType, IElasticNode } from "../models/cluster-node.model";
 import { KibanaClient } from "../clients/kibana.client";
 import logger from "../logger/logger";
 import { IElasticSearchInfo } from "../models/elastic-search-info.model";
 import { clusterStatus, NodeStatus } from "../enums";
 import { ElasticClient } from "../clients/elastic.client";
 import { createOrUpdateElasticSearchInfo } from "./elastic-search-info.service";
-import { NotificationEventType, notificationService, NotificationType } from "./notification.service";
 import { clusterUpgradeJobService } from "./cluster-upgrade-job.service";
 import { ClusterUpgradeJobStatus } from "../models/cluster-upgrade-job.model";
 import { clusterNodeService } from "./cluster-node.service";
@@ -67,36 +66,19 @@ export const syncElasticSearchInfo = async (clusterId: string) => {
 	}
 };
 
-const syncClusterUpgradeJobStatus = async (clusterId: string) => {
+export const syncClusterUpgradeJobStatus = async (clusterId: string) => {
 	try {
 		const job = await clusterUpgradeJobService.getActiveClusterUpgradeJobByClusterId(clusterId);
 		if (!(job.status === ClusterUpgradeJobStatus.COMPLETED || job.status === ClusterUpgradeJobStatus.FAILED)) {
-			const nodes = await clusterNodeService.getNodes(clusterId);
-			const isUpgraded = nodes
-				.map((node) => node.status === NodeStatus.UPGRADED && job.targetVersion === node.version)
-				.reduce((acc, curr) => acc && curr, true);
+			const isUpgraded = await clusterNodeService.isClusterNodesUpgraded(clusterId, job.targetVersion);
 			if (isUpgraded) {
-				clusterUpgradeJobService.updateClusterUpgradeJob(
-					{ jobId: job.jobId },
-					{ status: ClusterUpgradeJobStatus.COMPLETED }
-				);
+				clusterUpgradeJobService.clusterUpgradeJobCompleted(job.jobId);
 			}
 		}
 	} catch (error) {
 		logger.debug(`No active upgrade job found for cluster ${clusterId}:`, error);
 	}
 };
-
-notificationService.addNotificationListner(async (event) => {
-	if (
-		event.type === NotificationEventType.NOTIFICATION &&
-		event.notificationType === NotificationType.SUCCESS &&
-		event.clusterId
-	) {
-		await syncKibanaNodes(event.clusterId);
-		await syncClusterUpgradeJobStatus(event.clusterId);
-	}
-});
 
 export const syncElasticNodesData = async (clusterId: string) => {
 	try {

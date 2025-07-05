@@ -1,7 +1,6 @@
 import { randomUUID } from "crypto";
 import { ConflictError, NotFoundError } from "../errors";
-import { ClusterUpgradeJob, IClusterUpgradeJob } from "../models/cluster-upgrade-job.model";
-import { ClusterNode } from "../models/cluster-node.model";
+import { ClusterUpgradeJob, ClusterUpgradeJobStatus, IClusterUpgradeJob } from "../models/cluster-upgrade-job.model";
 import { NodeStatus } from "../enums";
 import logger from "../logger/logger";
 import { clusterNodeService } from "./cluster-node.service";
@@ -65,6 +64,10 @@ class ClusterUpgradeJobService {
 			throw new NotFoundError(`Cluster upgrade job with identifier ${JSON.stringify(identifier)} not found`);
 		}
 		return updatedJob;
+	}
+
+	async clusterUpgradeJobCompleted(jobId: string): Promise<void> {
+		await this.updateClusterUpgradeJob({ jobId: jobId }, { status: ClusterUpgradeJobStatus.COMPLETED });
 	}
 }
 

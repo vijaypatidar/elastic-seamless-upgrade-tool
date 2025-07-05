@@ -113,6 +113,14 @@ class ClusterNodeService {
 		});
 	}
 
+	async isClusterNodesUpgraded(clusterId: string, targetVersion: string): Promise<boolean> {
+		const nodes = await this.getNodes(clusterId);
+		const isUpgraded = nodes
+			.map((node) => node.status === NodeStatus.UPGRADED && targetVersion === node.version)
+			.reduce((acc, curr) => acc && curr, true);
+		return isUpgraded;
+	}
+
 	private async getNodeById(nodeId: string, type: ClusterNodeType): Promise<IClusterNode | null> {
 		return await ClusterNode.findOne({ nodeId: nodeId });
 	}
