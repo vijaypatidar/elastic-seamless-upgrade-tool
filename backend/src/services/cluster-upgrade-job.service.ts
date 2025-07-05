@@ -4,6 +4,7 @@ import { ClusterUpgradeJob, IClusterUpgradeJob } from "../models/cluster-upgrade
 import { ClusterNode } from "../models/cluster-node.model";
 import { NodeStatus } from "../enums";
 import logger from "../logger/logger";
+import { clusterNodeService } from "./cluster-node.service";
 class ClusterUpgradeJobService {
 	async getActiveClusterUpgradeJobByClusterId(clusterId: string): Promise<IClusterUpgradeJob> {
 		const job = await ClusterUpgradeJob.findOne({ clusterId, status: { $ne: "completed" } });
@@ -47,10 +48,11 @@ class ClusterUpgradeJobService {
 		});
 		await newJob.save();
 		// Reset the status and progress of all nodes in the cluster
-		await ClusterNode.updateMany(
+		await clusterNodeService.updateNodesPartially(
 			{ clusterId: jobData.clusterId },
-			{ $set: { status: NodeStatus.AVAILABLE, progress: 0 } }
+			{ status: NodeStatus.AVAILABLE, progress: 0 }
 		);
+		logger.info(`Created new cluster upgrade job with ID: ${newJob.jobId} for clusterId: ${jobData.clusterId}`);
 		return newJob;
 	}
 

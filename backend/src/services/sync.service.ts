@@ -122,7 +122,6 @@ export const syncElasticNodesData = async (clusterId: string) => {
 		);
 		for (const node of elasticNodes) {
 			const existingNode = await clusterNodeService.getElasticNodeById(node.nodeId);
-			// const existingNode = await ClusterNode.findOne({ nodeId: node.nodeId, type: ClusterNodeType.ELASTIC });
 			if (existingNode) {
 				node.status = existingNode.status;
 				node.progress = existingNode.progress;
