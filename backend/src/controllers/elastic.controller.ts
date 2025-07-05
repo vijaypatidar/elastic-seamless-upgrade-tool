@@ -13,11 +13,11 @@ import {
 	verifyElasticCredentials,
 	verifyKibanaCredentials,
 } from "../services/cluster-info.service";
-import { getAllElasticNodes, getElasticNodeById, syncNodeData, updateNode } from "../services/elastic-node.service.";
+import { getAllElasticNodes, syncNodeData } from "../services/elastic-node.service.";
 import { KibanaClient } from "../clients/kibana.client";
 import path from "path";
 import { normalizeNodeUrl } from "../utils/utlity.functions";
-import { createKibanaNodes, getKibanaNodes } from "../services/kibana-node.service";
+import { createKibanaNodes } from "../services/kibana-node.service";
 import { NodeStatus, PrecheckStatus } from "../enums";
 import { clusterMonitorService } from "../services/cluster-monitor.service";
 import { getLatestRunsByPrecheck, getMergedPrecheckStatus, runPrecheck } from "../services/precheck-runs.service";
@@ -28,6 +28,8 @@ import {
 	triggerElasticNodesUpgrade,
 	triggerKibanaNodeUpgrade,
 } from "../services/cluster-upgrade.service";
+import { clusterNodeService } from "../services/cluster-node.service";
+import { ClusterNodeType } from "../models/cluster-node.model";
 
 export const healthCheck = async (req: Request, res: Response) => {
 	try {
@@ -297,7 +299,7 @@ export const uploadCertificates = async (req: Request, res: Response) => {
 export const getNodeInfo = async (req: Request, res: Response) => {
 	const { nodeId } = req.params;
 	try {
-		const data = await getElasticNodeById(nodeId);
+		const data = await clusterNodeService.getElasticNodeById(nodeId);
 		res.send(data);
 	} catch (error: any) {
 		logger.error("Error fetching node details:", error);
@@ -316,7 +318,7 @@ export const createClusterUpgradeJob = async (req: Request, res: Response, next:
 			currentVersion: currentVersion,
 			targetVersion: version,
 		});
-		await updateNode({ clusterId: clusterId }, { status: NodeStatus.AVAILABLE });
+		await clusterNodeService.updateNodesPartially({ clusterId: clusterId }, { status: NodeStatus.AVAILABLE });
 		res.status(201).send({
 			message: `Target version set succesfully`,
 		});
@@ -401,7 +403,7 @@ export const verfiyCluster = async (req: Request, res: Response) => {
 export const getKibanaNodesInfo = async (req: Request, res: Response) => {
 	try {
 		const clusterId = req.params.clusterId;
-		const kibanaNodes = await getKibanaNodes(clusterId);
+		const kibanaNodes = await clusterNodeService.getNodes(clusterId, ClusterNodeType.KIBANA);
 		res.send(kibanaNodes);
 	} catch (error: any) {
 		logger.error("Error fetching kibana node details:", error);

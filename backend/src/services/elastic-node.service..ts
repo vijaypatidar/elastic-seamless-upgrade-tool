@@ -1,23 +1,8 @@
 import { ElasticClient } from "../clients/elastic.client";
 import logger from "../logger/logger";
-import { ClusterNode, IElasticNode, IClusterNodeDocument, ClusterNodeType } from "../models/cluster-node.model";
+import { ClusterNode, IElasticNode, ClusterNodeType } from "../models/cluster-node.model";
 import { NodeStatus } from "../enums";
-
-export const createOrUpdateElasticNode = async (elasticNode: IElasticNode): Promise<IClusterNodeDocument> => {
-	const nodeId = elasticNode.nodeId;
-	const data = await ClusterNode.findOneAndUpdate(
-		{ nodeId: nodeId, type: ClusterNodeType.ELASTIC },
-		{ ...elasticNode },
-		{ new: true, upsert: true, runValidators: true }
-	);
-	return data;
-};
-
-export const getElasticNodeById = async (nodeId: string): Promise<IElasticNode | null> => {
-	const elasticNode = await ClusterNode.findOne({ nodeId: nodeId, type: ClusterNodeType.ELASTIC });
-	if (!elasticNode || elasticNode.type === ClusterNodeType.KIBANA) return null;
-	return elasticNode;
-};
+import { clusterNodeService } from "./cluster-node.service";
 
 export const getAllElasticNodes = async (clusterId: string): Promise<IElasticNode[]> => {
 	try {
@@ -53,7 +38,8 @@ export const syncNodeData = async (clusterId: string) => {
 			})
 		);
 		for (const node of elasticNodes) {
-			const existingNode = await ClusterNode.findOne({ nodeId: node.nodeId, type: ClusterNodeType.ELASTIC });
+			const existingNode = await clusterNodeService.getElasticNodeById(node.nodeId);
+			// const existingNode = await ClusterNode.findOne({ nodeId: node.nodeId, type: ClusterNodeType.ELASTIC });
 			if (existingNode) {
 				node.status = existingNode.status;
 				node.progress = existingNode.progress;
@@ -66,62 +52,5 @@ export const syncNodeData = async (clusterId: string) => {
 		}
 	} catch (error) {
 		logger.error("Error syncing nodes from Elasticsearch:", error);
-	}
-};
-
-export const updateNodeStatus = async (
-	identifier: Record<string, any>,
-	newStatus: string
-): Promise<IClusterNodeDocument | null> => {
-	try {
-		const updatedNode = await ClusterNode.findOneAndUpdate(
-			{ ...identifier, type: ClusterNodeType.ELASTIC },
-			{ status: newStatus },
-			{ new: true, runValidators: true }
-		);
-
-		if (!updatedNode) {
-			logger.debug(`Node with identifier ${identifier} not found.`);
-			return null;
-		}
-
-		return updatedNode;
-	} catch (error: any) {
-		console.error(`Error updating status for node ${identifier}: ${error.message}`);
-		throw error;
-	}
-};
-
-export const updateNode = async (identifier: Record<string, any>, updatedNodeValues: Partial<IElasticNode>) => {
-	try {
-		const updatedNode = await ClusterNode.findOneAndUpdate(
-			{ ...identifier, type: ClusterNodeType.ELASTIC },
-			{ $set: updatedNodeValues },
-			{ new: true }
-		);
-		if (!updatedNode) {
-			throw new Error(`Node with identfier ${identifier} not found`);
-		}
-	} catch (error) {
-		throw new Error(`Error updating node: ${error}`);
-	}
-};
-
-export const updateNodeProgress = async (identifier: Record<string, any>, progress: number) => {
-	try {
-		const updatedNode = await ClusterNode.findOneAndUpdate(
-			identifier,
-			{ progress: progress },
-			{ new: true, runValidators: true }
-		);
-
-		if (!updatedNode) {
-			logger.debug(`Node with identifier ${identifier} not found.`);
-			return null;
-		}
-		return updatedNode;
-	} catch (error: any) {
-		console.error(`Error updating progress for node ${identifier}: ${error.message}`);
-		throw error;
 	}
 };

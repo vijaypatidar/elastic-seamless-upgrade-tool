@@ -14,13 +14,10 @@ export const syncKibanaNodes = async (clusterId: string) => {
 		const kibanaClient = await KibanaClient.buildClient(clusterId);
 		const kibanaNodes = await ClusterNode.find({ clusterId: clusterId, type: ClusterNodeType.KIBANA });
 		for (const kibanaNode of kibanaNodes) {
-			const { version, os, roles } = await kibanaClient.getKibanaNodeDetails();
-			kibanaNode.version = version;
-			kibanaNode.os = os;
-			kibanaNode.roles = roles;
+			const { version } = await kibanaClient.getKibanaNodeDetails(kibanaNode.ip);
 			await ClusterNode.findOneAndUpdate(
 				{ nodeId: kibanaNode.nodeId, type: ClusterNodeType.KIBANA },
-				kibanaNode,
+				{ version: version },
 				{
 					new: true,
 					runValidators: true,

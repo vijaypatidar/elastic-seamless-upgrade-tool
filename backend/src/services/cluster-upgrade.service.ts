@@ -7,12 +7,11 @@ import { ClusterType, NodeStatus } from "../enums";
 import { randomUUID } from "crypto";
 import { NotificationEventType, notificationService, NotificationType } from "./notification.service";
 import { clusterUpgradeJobService } from "./cluster-upgrade-job.service";
-import { getElasticNodeById } from "./elastic-node.service.";
-import { getKibanaNodeById, updateKibanaNode, updateKibanaNodeStatus } from "./kibana-node.service";
+import { clusterNodeService } from "./cluster-node.service";
 
 export const triggerElasticNodeUpgrade = async (nodeId: string, clusterId: string) => {
 	try {
-		const node = await getElasticNodeById(nodeId);
+		const node = await clusterNodeService.getElasticNodeById(nodeId);
 		if (!node) {
 			return false;
 		}
@@ -118,7 +117,7 @@ export const triggerElasticNodesUpgrade = async (nodes: IElasticNode[], clusterI
 
 export const triggerKibanaNodeUpgrade = async (nodeId: string, clusterId: string) => {
 	try {
-		const node = await getKibanaNodeById(nodeId);
+		const node = await clusterNodeService.getKibanaNodeById(nodeId);
 		if (!node) {
 			logger.error(`Kibana node not found for [nodeId:${nodeId}]`);
 			return;
@@ -151,7 +150,10 @@ export const triggerKibanaNodeUpgrade = async (nodeId: string, clusterId: string
 				},
 			})
 			.then(async () => {
-				await updateKibanaNodeStatus(nodeId, NodeStatus.UPGRADED);
+				await clusterNodeService.updateNodesPartially(
+					{ nodeId: nodeId },
+					{ status: NodeStatus.UPGRADED, progress: 100, version: clusterUpgradeJob.targetVersion }
+				);
 				notificationService.sendNotification({
 					type: NotificationEventType.NOTIFICATION,
 					title: "Upgrade Successful",
@@ -160,7 +162,7 @@ export const triggerKibanaNodeUpgrade = async (nodeId: string, clusterId: string
 				});
 			})
 			.catch(async () => {
-				await updateKibanaNodeStatus(nodeId, NodeStatus.FAILED);
+				await clusterNodeService.updateNodesPartially({ nodeId: nodeId }, { status: NodeStatus.FAILED });
 				notificationService.sendNotification({
 					type: NotificationEventType.NOTIFICATION,
 					title: "Upgrade Failed",

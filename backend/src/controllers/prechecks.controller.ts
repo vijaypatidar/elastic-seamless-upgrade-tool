@@ -1,8 +1,9 @@
 import { NextFunction, Request, Response } from "express";
-import { getAllElasticNodes, getElasticNodeById } from "../services/elastic-node.service.";
+import { getAllElasticNodes } from "../services/elastic-node.service.";
 import { getPrechecksGroupedByNode, runPrecheck } from "../services/precheck-runs.service";
 import { generatePrecheckReportMdContent } from "../services/precheck-report.service";
 import { NotFoundError } from "../errors";
+import { clusterNodeService } from "../services/cluster-node.service";
 
 export const runAllPrecheksHandler = async (req: Request, res: Response) => {
 	const { clusterId } = req.params;
@@ -14,7 +15,7 @@ export const runAllPrecheksHandler = async (req: Request, res: Response) => {
 export const runPrechekByNodeIdHandler = async (req: Request, res: Response, next: NextFunction) => {
 	try {
 		const { clusterId, nodeId } = req.params;
-		const node = await getElasticNodeById(nodeId);
+		const node = await clusterNodeService.getElasticNodeById(nodeId);
 		if (!node) {
 			throw new NotFoundError("Node not found");
 		}

@@ -46,9 +46,9 @@ export class KibanaClient {
 		return response.data?.version?.number;
 	}
 
-	async getKibanaNodeDetails(): Promise<{ version: string; os: Record<string, any>; roles: string[] }> {
+	async getKibanaNodeDetails(nodeIp: string): Promise<{ version: string; os: Record<string, any>; roles: string[] }> {
 		try {
-			const response = await axios.get(`${this.config.url}/api/status`, {
+			const response = await axios.get(`http://${nodeIp}:5601/api/status`, {
 				headers: {
 					Authorization: this.getAuthDetail(),
 					"kbn-xsrf": "true",
