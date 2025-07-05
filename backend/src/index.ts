@@ -12,6 +12,7 @@ import { connectDB } from "./databases/db";
 import { NotificationEvent, NotificationListner, notificationService } from "./services/notification.service";
 import { routeNotFoundMiddleware } from "./middlewares/route-not-found.middleware";
 import { errorMiddleware } from "./middlewares/error.middleware";
+import { syncClusterUpgradeJobStatus } from "./services/sync.service";
 
 const app = express();
 const server = http.createServer(app);
@@ -70,5 +71,6 @@ io.on("connection", (socket: Socket) => {
 connectDB().then(() => {
 	server.listen(PORT, async () => {
 		logger.info(`Server is running at http://localhost:${PORT}`);
+		syncClusterUpgradeJobStatus("cluster-id"); // Replace 'cluster-id' with the actual cluster ID
 	});
 });

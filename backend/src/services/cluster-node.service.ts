@@ -77,14 +77,18 @@ export const getAllElasticNodes = async (clusterId: string): Promise<IElasticNod
 	} catch (error) {
 		logger.error("Unable to sync with Elastic search instance! Maybe the connection is breaked");
 	} finally {
-		const elasticNodes = await ClusterNode.find({ clusterId: clusterId, type: ClusterNodeType.ELASTIC });
+		const elasticNodes = await clusterNodeService.getNodes(clusterId, ClusterNodeType.ELASTIC);
 		return elasticNodes as IElasticNode[];
 	}
 };
 
 class ClusterNodeService {
 	async getNodes(clusterId: string, type?: ClusterNodeType): Promise<IClusterNodeDocument[]> {
-		return await ClusterNode.find({ clusterId: clusterId, type: type });
+		const query: any = { clusterId: clusterId };
+		if (type != null) {
+			query.type = type;
+		}
+		return await ClusterNode.find(query);
 	}
 
 	async getElasticNodeById(nodeId: string): Promise<IElasticNode | null> {
