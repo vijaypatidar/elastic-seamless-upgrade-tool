@@ -1,9 +1,8 @@
 import { NextFunction, Request, Response } from "express";
-import { getAllElasticNodes } from "../services/elastic-node.service.";
 import { getPrechecksGroupedByNode, runPrecheck } from "../services/precheck-runs.service";
 import { generatePrecheckReportMdContent } from "../services/precheck-report.service";
 import { NotFoundError } from "../errors";
-import { clusterNodeService } from "../services/cluster-node.service";
+import { clusterNodeService, getAllElasticNodes } from "../services/cluster-node.service";
 
 export const runAllPrecheksHandler = async (req: Request, res: Response) => {
 	const { clusterId } = req.params;

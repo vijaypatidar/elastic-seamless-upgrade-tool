@@ -1,4 +1,4 @@
-import { ClusterNode, ClusterNodeType } from "../models/cluster-node.model";
+import { ClusterNode, ClusterNodeType, IElasticNode } from "../models/cluster-node.model";
 import { KibanaClient } from "../clients/kibana.client";
 import logger from "../logger/logger";
 import { IElasticSearchInfo } from "../models/elastic-search-info.model";
@@ -8,6 +8,7 @@ import { createOrUpdateElasticSearchInfo } from "./elastic-search-info.service";
 import { NotificationEventType, notificationService, NotificationType } from "./notification.service";
 import { clusterUpgradeJobService } from "./cluster-upgrade-job.service";
 import { ClusterUpgradeJobStatus } from "../models/cluster-upgrade-job.model";
+import { clusterNodeService } from "./cluster-node.service";
 
 export const syncKibanaNodes = async (clusterId: string) => {
 	try {
@@ -100,3 +101,43 @@ notificationService.addNotificationListner(async (event) => {
 		await syncClusterUpgradeJobStatus(event.clusterId);
 	}
 });
+
+export const syncElasticNodesData = async (clusterId: string) => {
+	try {
+		const client = await ElasticClient.buildClient(clusterId);
+		const response: any = await client.getClient().nodes.info({
+			filter_path: "nodes.*.name,nodes.*.roles,nodes.*.os.name,nodes.*.os.version,nodes.*.version,nodes.*.ip",
+		});
+		const masterNodes = await client.getMasterNodes();
+		const elasticNodes: IElasticNode[] | null = Object.entries(response.nodes).map(
+			([key, value]: [string, any]) => ({
+				nodeId: key,
+				clusterId: clusterId,
+				ip: value.ip,
+				name: value.name,
+				version: value.version,
+				roles: value.roles,
+				os: value.os,
+				progress: 0,
+				isMaster: masterNodes.some((master) => master.id === key),
+				status: NodeStatus.AVAILABLE,
+				type: ClusterNodeType.ELASTIC,
+			})
+		);
+		for (const node of elasticNodes) {
+			const existingNode = await clusterNodeService.getElasticNodeById(node.nodeId);
+			// const existingNode = await ClusterNode.findOne({ nodeId: node.nodeId, type: ClusterNodeType.ELASTIC });
+			if (existingNode) {
+				node.status = existingNode.status;
+				node.progress = existingNode.progress;
+			}
+			await ClusterNode.findOneAndUpdate({ nodeId: node.nodeId, type: ClusterNodeType.ELASTIC }, node, {
+				new: true,
+				runValidators: true,
+				upsert: true,
+			});
+		}
+	} catch (error) {
+		logger.error("Error syncing nodes from Elasticsearch:", error);
+	}
+};

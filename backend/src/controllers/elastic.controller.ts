@@ -13,23 +13,18 @@ import {
 	verifyElasticCredentials,
 	verifyKibanaCredentials,
 } from "../services/cluster-info.service";
-import { getAllElasticNodes, syncNodeData } from "../services/elastic-node.service.";
 import { KibanaClient } from "../clients/kibana.client";
 import path from "path";
 import { normalizeNodeUrl } from "../utils/utlity.functions";
-import { createKibanaNodes } from "../services/kibana-node.service";
 import { NodeStatus, PrecheckStatus } from "../enums";
 import { clusterMonitorService } from "../services/cluster-monitor.service";
 import { getLatestRunsByPrecheck, getMergedPrecheckStatus, runPrecheck } from "../services/precheck-runs.service";
 import { createSSHPrivateKeyFile } from "../utils/ssh-utils";
 import { clusterUpgradeJobService } from "../services/cluster-upgrade-job.service";
-import {
-	triggerElasticNodeUpgrade,
-	triggerElasticNodesUpgrade,
-	triggerKibanaNodeUpgrade,
-} from "../services/cluster-upgrade.service";
-import { clusterNodeService } from "../services/cluster-node.service";
+import { clusterUpgradeService } from "../services/cluster-upgrade.service";
+import { clusterNodeService, createKibanaNodes, getAllElasticNodes } from "../services/cluster-node.service";
 import { ClusterNodeType } from "../models/cluster-node.model";
+import { syncElasticNodesData } from "../services/sync.service";
 
 export const healthCheck = async (req: Request, res: Response) => {
 	try {
@@ -102,7 +97,7 @@ export const addOrUpdateClusterDetail = async (req: Request, res: Response) => {
 			message: result.isNew ? "Cluster info saved" : "Cluster info updated",
 			clusterId: result.clusterId,
 		}).status(201);
-		await syncNodeData(clusterId);
+		await syncElasticNodesData(clusterId);
 	} catch (err: any) {
 		logger.info(err);
 		res.status(400).send({ err: err.message });
@@ -248,7 +243,7 @@ export const handleUpgrades = async (req: Request, res: Response) => {
 			return;
 		}
 		nodes.forEach((nodeId: string) => {
-			const triggered = triggerElasticNodeUpgrade(nodeId, clusterId);
+			const triggered = clusterUpgradeService.triggerElasticNodeUpgrade(nodeId, clusterId);
 			if (!triggered) {
 				res.status(400).send({ err: "Upgrade failed node not available" });
 			} else {
@@ -416,7 +411,7 @@ export const handleKibanaUpgrades = async (req: Request, res: Response) => {
 	const { nodes } = req.body;
 	try {
 		nodes.forEach((nodeId: string) => {
-			triggerKibanaNodeUpgrade(nodeId, clusterId);
+			clusterUpgradeService.triggerKibanaNodeUpgrade(nodeId, clusterId);
 		});
 		res.status(200).send({ message: "Upgradation triggered" });
 	} catch (err: any) {
@@ -451,7 +446,7 @@ export const handleUpgradeAll = async (req: Request, res: Response) => {
 		res.status(400).send({ err: "Cannot trigger upgrade all as there is failed node" });
 	}
 	try {
-		await triggerElasticNodesUpgrade(nodesToBeUpgraded, clusterId);
+		await clusterUpgradeService.triggerElasticNodesUpgrade(nodesToBeUpgraded, clusterId);
 		res.status(200).send({ message: "Upgradation triggered" });
 	} catch (err: any) {
 		logger.error("Error performing upgrade:", err);
