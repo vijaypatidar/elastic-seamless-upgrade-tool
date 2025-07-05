@@ -13,16 +13,13 @@ import { clusterNodeService } from "./cluster-node.service";
 export const syncKibanaNodes = async (clusterId: string) => {
 	try {
 		const kibanaClient = await KibanaClient.buildClient(clusterId);
-		const kibanaNodes = await ClusterNode.find({ clusterId: clusterId, type: ClusterNodeType.KIBANA });
+		const kibanaNodes = await clusterNodeService.getNodes(clusterId, ClusterNodeType.KIBANA);
 		for (const kibanaNode of kibanaNodes) {
 			const { version } = await kibanaClient.getKibanaNodeDetails(kibanaNode.ip);
-			await ClusterNode.findOneAndUpdate(
+			clusterNodeService.updateNodesPartially(
 				{ nodeId: kibanaNode.nodeId, type: ClusterNodeType.KIBANA },
-				{ version: version },
 				{
-					new: true,
-					runValidators: true,
-					upsert: true,
+					version: version,
 				}
 			);
 		}
@@ -74,12 +71,11 @@ const syncClusterUpgradeJobStatus = async (clusterId: string) => {
 	try {
 		const job = await clusterUpgradeJobService.getActiveClusterUpgradeJobByClusterId(clusterId);
 		if (!(job.status === ClusterUpgradeJobStatus.COMPLETED || job.status === ClusterUpgradeJobStatus.FAILED)) {
-			const nodes = await ClusterNode.find({ clusterId: clusterId });
+			const nodes = await clusterNodeService.getNodes(clusterId, ClusterNodeType.ELASTIC);
 			const isUpgraded = nodes
 				.map((node) => node.status === NodeStatus.UPGRADED && job.targetVersion === node.version)
 				.reduce((acc, curr) => acc && curr, true);
 			if (isUpgraded) {
-				job.status = ClusterUpgradeJobStatus.COMPLETED;
 				clusterUpgradeJobService.updateClusterUpgradeJob(
 					{ jobId: job.jobId },
 					{ status: ClusterUpgradeJobStatus.COMPLETED }
@@ -131,11 +127,7 @@ export const syncElasticNodesData = async (clusterId: string) => {
 				node.status = existingNode.status;
 				node.progress = existingNode.progress;
 			}
-			await ClusterNode.findOneAndUpdate({ nodeId: node.nodeId, type: ClusterNodeType.ELASTIC }, node, {
-				new: true,
-				runValidators: true,
-				upsert: true,
-			});
+			await clusterNodeService.createOrUpdateNode(node);
 		}
 	} catch (error) {
 		logger.error("Error syncing nodes from Elasticsearch:", error);

@@ -160,6 +160,7 @@ class ClusterUpgradeService {
 						title: "Upgrade Successful",
 						message: "Kibana node has been successfully upgraded to the target version.",
 						notificationType: NotificationType.SUCCESS,
+						clusterId: clusterId,
 					});
 				})
 				.catch(async () => {

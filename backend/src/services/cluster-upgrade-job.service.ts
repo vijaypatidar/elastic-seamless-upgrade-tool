@@ -53,11 +53,7 @@ class ClusterUpgradeJobService {
 		identifier: Partial<IClusterUpgradeJob>,
 		updatedJobValues: Partial<IClusterUpgradeJob>
 	): Promise<IClusterUpgradeJob> {
-		const updatedJob = await ClusterUpgradeJob.findOneAndUpdate(
-			identifier,
-			{ $set: updatedJobValues },
-			{ new: true }
-		);
+		const updatedJob = await ClusterUpgradeJob.findOneAndUpdate(identifier, { $set: updatedJobValues });
 		if (!updatedJob) {
 			throw new NotFoundError(`Cluster upgrade job with identifier ${JSON.stringify(identifier)} not found`);
 		}
