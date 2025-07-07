@@ -14,3 +14,7 @@
 - id: elasticsearch_cluster_health_check
   name: Cluster Health Check
   playbookPath: playbooks/pre_checks/cluster-status.ansible.yml
+
+- id: elasticsearch_version_check
+  name: Elasticsearch Version Check
+  playbookPath: playbooks/pre_checks/elasticsearch-version-check.ansible.yml

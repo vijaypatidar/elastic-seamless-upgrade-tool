@@ -1,0 +1,31 @@
+- hosts: all
+  any_errors_fatal: true
+  gather_facts: true
+  vars:
+      precheck_id: elasticsearch_version_check
+
+  tasks:
+      - name: Get current version
+        uri:
+            url: "{{ es_host_protocol }}://localhost:{{ es_http_port }}"
+            method: GET
+            url_username: "{{ es_username }}"
+            url_password: "{{ es_password }}"
+            validate_certs: false
+        register: version_found
+        retries: 10
+        delay: 10
+        until: version_found.status == 200
+
+      - name: Display Current Elasticsearch Version
+        debug:
+            msg: >-
+                Precheck [{{ precheck_id }}] - Elasticsearch version: {{ version_found.json.version.number }}
+                on host: {{ inventory_hostname }}
+
+      - name: Fail if Elasticsearch version does not match the expected version
+        fail:
+            msg: >-
+                Precheck [{{ precheck_id }}] failed on host {{ inventory_hostname }}. 
+                Expected: {{ current_version }}, Found: {{ version_found.json.version.number }}
+        when: version_found.json.version.number != current_version
