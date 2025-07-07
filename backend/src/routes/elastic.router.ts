@@ -5,26 +5,25 @@ import {
 	getElasticDeprecationInfo,
 	getNodesInfo,
 	healthCheck,
-	getLogsStream,
 	getKibanaDeprecationsInfo,
 	getValidSnapshots,
 	uploadCertificates,
 	getUpgradeDetails,
 	handleUpgrades,
 	getNodeInfo,
-	addOrUpdateTargetVersion,
+	createClusterUpgradeJob,
 	verifySshKey,
 	verfiyCluster,
 	getKibanaNodesInfo,
 	handleKibanaUpgrades,
 	handleUpgradeAll,
-} from "../controllers/elastic-controller";
+} from "../controllers/elastic.controller";
 import {
 	runAllPrecheksHandler,
 	runPrechekByNodeIdHandler,
 	getPrecheckRunByClusterIdHandler,
 	getPrecheckReportByClusterId,
-} from "../controllers/prechecks-controller";
+} from "../controllers/prechecks.controller";
 
 const router = Router();
 
@@ -32,7 +31,7 @@ import multer from "multer";
 
 const upload = multer({ dest: "uploads/" });
 
-router.post("/:clusterId/add-version", addOrUpdateTargetVersion);
+router.post("/:clusterId/upgrade-job", createClusterUpgradeJob);
 
 router.get("/:clusterId/health", healthCheck);
 
@@ -55,8 +54,6 @@ router.post("/:clusterId/upgrade-all", handleUpgradeAll);
 router.post("/:clusterId/nodes/upgrade-kibana", handleKibanaUpgrades);
 
 router.get("/:clusterId/info", getClusterDetails);
-
-router.get("/:clusterId/nodes/:nodeId/logs/stream", getLogsStream);
 
 router.post("/certificates/upload", upload.array("files"), uploadCertificates);
 
