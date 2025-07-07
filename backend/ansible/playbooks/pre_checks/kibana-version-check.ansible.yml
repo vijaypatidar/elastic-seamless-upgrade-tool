@@ -7,18 +7,18 @@
       kibana_port: 5601
 
   tasks:
-      - name: Get current Kibana version
+      - name: Get current Kibana version with Authorization header
         uri:
-            url: "{{ kibana_host_protocol }}://localhost:{{ kibana_port }}/api/status"
+            url: "http://{{ inventory_hostname }}:{{ kibana_port }}/api/status"
             method: GET
-            url_username: "{{ es_username }}"
-            url_password: "{{ es_password }}"
             headers:
-                kbn-xsrf: "true"
+                Authorization: "Basic {{ kibana_auth }}"
             validate_certs: false
+        vars:
+            kibana_auth: "{{ (es_username ~ ':' ~ es_password) | b64encode }}"
         register: kibana_response
-        retries: 10
-        delay: 10
+        retries: 2
+        delay: 5
         until: kibana_response.status == 200
 
       - name: Display Current Kibana Version
