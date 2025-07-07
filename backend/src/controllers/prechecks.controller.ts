@@ -2,11 +2,11 @@ import { NextFunction, Request, Response } from "express";
 import { getPrechecksGroupedByNode, runPrecheck } from "../services/precheck-runs.service";
 import { precheckReportService } from "../services/precheck-report.service";
 import { NotFoundError } from "../errors";
-import { clusterNodeService, getAllElasticNodes } from "../services/cluster-node.service";
+import { clusterNodeService } from "../services/cluster-node.service";
 
 export const runAllPrecheksHandler = async (req: Request, res: Response) => {
 	const { clusterId } = req.params;
-	const nodes = await getAllElasticNodes(clusterId);
+	const nodes = await clusterNodeService.getNodes(clusterId);
 	const runId = await runPrecheck(nodes, clusterId);
 	res.send({ message: "Prechecks started", runId });
 };

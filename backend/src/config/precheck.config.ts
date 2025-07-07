@@ -1,9 +1,11 @@
+import { ClusterNodeType } from "../models/cluster-node.model";
 import { loadYaml } from "../utils/yaml-utils";
 
 export interface PrecheckConfig {
 	id: string;
 	name: string;
 	playbookPath: string;
+	nodeTypes: ClusterNodeType[];
 }
 export const PRECHECK_CONFIG: PrecheckConfig[] = loadYaml("prechecks.yaml");
 
