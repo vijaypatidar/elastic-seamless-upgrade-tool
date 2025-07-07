@@ -3,6 +3,8 @@
   gather_facts: true
   vars:
       precheck_id: elasticsearch_version_check
+      es_host_protocol: "https"
+      es_http_port: 9200
 
   tasks:
       - name: Get current version
