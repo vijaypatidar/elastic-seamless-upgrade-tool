@@ -9,7 +9,7 @@ import { getClusterInfoById } from "./cluster-info.service";
 import { NotFoundError } from "../errors";
 import { UpdateQuery } from "mongoose";
 import { clusterUpgradeJobService } from "./cluster-upgrade-job.service";
-import { IElasticNode } from "../models/cluster-node.model";
+import { IClusterNode, IElasticNode } from "../models/cluster-node.model";
 
 export interface PrecheckRunJob {
 	precheckId: string;
@@ -180,7 +180,7 @@ export const updateNodePrecheckRuns = async (
 	}
 };
 
-export const runPrecheck = async (nodes: IElasticNode[], clusterId: string) => {
+export const runPrecheck = async (nodes: IClusterNode[], clusterId: string) => {
 	const runId = randomUUID();
 	const clusterInfo = await getClusterInfoById(clusterId);
 	if (!clusterInfo.pathToKey) {
@@ -199,12 +199,15 @@ export const runPrecheck = async (nodes: IElasticNode[], clusterId: string) => {
 			status: PrecheckStatus.PENDING,
 			logs: [],
 			clusterUpgradeJobId: clusterUpgradeJob.jobId,
+			nodeType: node.type,
 		}))
-		.map((precheck) => {
-			return PRECHECK_CONFIG.map(({ id: precheckId }) => ({
-				...precheck,
-				precheckId,
-			}));
+		.map((nodePrecheckRun) => {
+			return PRECHECK_CONFIG.filter((precheck) => precheck.nodeTypes.includes(nodePrecheckRun.nodeType)).map(
+				({ id: precheckId }) => ({
+					...nodePrecheckRun,
+					precheckId,
+				})
+			);
 		})
 		.flat();
 	await NodePrecheckRun.insertMany(precheckRuns);
