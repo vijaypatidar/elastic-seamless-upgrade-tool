@@ -1,9 +1,9 @@
 import { ElasticClient } from "../clients/elastic.client";
 import { KibanaClient } from "../clients/kibana.client";
 import logger from "../logger/logger";
-import { getPrechecksGroupedByNode } from "./precheck-runs.service";
 import { getBreakingChanges } from "../utils/breaking-changes-utils";
 import { clusterUpgradeJobService } from "./cluster-upgrade-job.service";
+import { precheckService } from "./precheck.service";
 
 class PrecheckReportService {
 	async generatePrecheckReportMdContent(clusterId: string): Promise<string> {
@@ -12,7 +12,8 @@ class PrecheckReportService {
 			version: { number: currentVersion },
 		} = await elasticClient.getClient().info();
 		const { targetVersion } = await clusterUpgradeJobService.getActiveClusterUpgradeJobByClusterId(clusterId);
-		const prechecksGroupedByNode = await getPrechecksGroupedByNode(clusterId);
+		const groupedPrechecks = await precheckService.getGroupedPrecheckByClusterId(clusterId);
+		const prechecksGroupedByNode = groupedPrechecks.node;
 		let md = `# 📋 Elasticsearch Pre-check Report\n\n`;
 		md += `Generated on: ${new Date().toISOString()}\n\n`;
 
@@ -21,6 +22,36 @@ class PrecheckReportService {
 		md += `|-----------|----|--------|\n`;
 		prechecksGroupedByNode.forEach((node) => {
 			md += `| ${node.name} | ${node.ip} | ${node.status} |\n`;
+		});
+
+		md += `\n## 🔍 Detailed Pre-checks\n`;
+
+		prechecksGroupedByNode.forEach((node) => {
+			md += `\n### 🖥️ ${node.name} (${node.ip})\n`;
+
+			md += `| Check | Status | Duration (s) |\n`;
+			md += `|-------|--------|---------------|\n`;
+
+			node.prechecks.forEach((check) => {
+				md += `| ${check.name} | ${check.status} | ${check.duration} |\n`;
+			});
+
+			md += `\n<details><summary>Show Logs</summary>\n\n`;
+			node.prechecks.forEach((check) => {
+				md += `#### ${check.name}\n`;
+				const logs = check.logs.length > 0 ? check.logs : ["N/A"];
+				md += "```\n" + logs.join("\n") + "\n```\n";
+			});
+			md += `</details>\n`;
+		});
+
+		md = md + "\n\n";
+
+		md += `## ✅ Index Summary\n`;
+		md += `| Index Name | Status |\n`;
+		md += `|-----------|--------|\n`;
+		groupedPrechecks.index.forEach((precheck) => {
+			md += `| ${precheck.name} | | ${precheck.status} |\n`;
 		});
 
 		md += `\n## 🔍 Detailed Pre-checks\n`;

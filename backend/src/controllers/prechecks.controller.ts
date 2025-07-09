@@ -1,34 +1,22 @@
 import { NextFunction, Request, Response } from "express";
-import { getPrechecksGroupedByNode, runPrecheck } from "../services/precheck-runs.service";
 import { precheckReportService } from "../services/precheck-report.service";
-import { NotFoundError } from "../errors";
 import { clusterNodeService } from "../services/cluster-node.service";
+import { precheckRunner } from "../prechecks/precheck-runner";
+import { clusterUpgradeJobService } from "../services/cluster-upgrade-job.service";
+import { precheckService } from "../services/precheck.service";
 
 export const runAllPrecheksHandler = async (req: Request, res: Response) => {
 	const { clusterId } = req.params;
 	const nodes = await clusterNodeService.getNodes(clusterId);
-	const runId = await runPrecheck(nodes, clusterId);
-	res.send({ message: "Prechecks started", runId });
-};
-
-export const runPrechekByNodeIdHandler = async (req: Request, res: Response, next: NextFunction) => {
-	try {
-		const { clusterId, nodeId } = req.params;
-		const node = await clusterNodeService.getElasticNodeById(nodeId);
-		if (!node) {
-			throw new NotFoundError("Node not found");
-		}
-		const runId = await runPrecheck([node], clusterId);
-		res.send({ message: "Prechecks started", runId });
-	} catch (err: any) {
-		next(err);
-	}
+	const job = await clusterUpgradeJobService.getActiveClusterUpgradeJobByClusterId(clusterId);
+	precheckRunner.runAll(job.jobId);
+	res.send({ message: "Prechecks started" });
 };
 
 export const getPrecheckRunByClusterIdHandler = async (req: Request, res: Response, next: NextFunction) => {
 	const { clusterId } = req.params;
 	try {
-		const response = await getPrechecksGroupedByNode(clusterId);
+		const response = await precheckService.getGroupedPrecheckByClusterId(clusterId);
 		res.send(response);
 	} catch (err: any) {
 		next(err);

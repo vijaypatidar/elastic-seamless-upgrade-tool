@@ -7,7 +7,6 @@ on:
             - main
             - hpf-32-necessary-changes-for-release
     pull_request:
-        types: [labeled]
         branches:
             - main
             - develop
@@ -32,7 +31,7 @@ jobs:
             - name: Set Docker tag
               id: set-tag
               run: |
-                  if [[ "${{ github.event_name }}" == "pull_request" && "${{ github.event.label.name }}" == "dev" ]]; then
+                  if [[ "${{ github.event_name }}" == "pull_request" ]]; then
                     echo "tag=dev" >> "$GITHUB_OUTPUT"
                   elif [[ "${{ github.event_name }}" == "create" && "${{ github.event.ref_type }}" == "tag" ]]; then
                     echo "tag=${{ github.event.ref }}" >> "$GITHUB_OUTPUT"
@@ -63,7 +62,7 @@ jobs:
             - name: Set Docker tag
               id: set-tag
               run: |
-                  if [[ "${{ github.event_name }}" == "pull_request" && "${{ github.event.label.name }}" == "dev" ]]; then
+                  if [[ "${{ github.event_name }}" == "pull_request" ]]; then
                     echo "tag=dev" >> "$GITHUB_OUTPUT"
                   elif [[ "${{ github.event_name }}" == "create" && "${{ github.event.ref_type }}" == "tag" ]]; then
                     echo "tag=${{ github.event.ref }}" >> "$GITHUB_OUTPUT"
