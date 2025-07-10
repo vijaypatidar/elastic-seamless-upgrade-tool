@@ -1,4 +1,4 @@
-import { ElasticClient } from "../clients/elastic.client";
+import { ElasticClient, elasticClientManager } from "../clients/elastic.client";
 import { NextFunction, Request, Response } from "express";
 import fs from "fs";
 import logger from "../logger/logger";
@@ -26,11 +26,12 @@ import { ClusterNodeType } from "../models/cluster-node.model";
 import { syncElasticNodesData } from "../services/sync.service";
 import { precheckRunner } from "../prechecks/precheck-runner";
 import { precheckGroupService } from "../services/precheck-group.service";
+import { randomUUID } from "crypto";
 
 export const healthCheck = async (req: Request, res: Response) => {
 	try {
 		const clusterId = req.params.clusterId;
-		const client = await ElasticClient.buildClient(clusterId);
+		const client = await elasticClientManager.getClient(clusterId);
 		const health = await client.getClusterhealth();
 		res.send(health);
 	} catch (err: any) {
@@ -53,12 +54,22 @@ export const getClusterDetails = async (req: Request, res: Response) => {
 
 export const addOrUpdateClusterDetail = async (req: Request, res: Response) => {
 	try {
-		const clusterId = "cluster-id";
-		const elastic: IElasticInfo = req.body.elastic;
-		const kibana: IKibanaInfo = req.body.kibana;
-		const kibanaConfigs = req.body.kibanaConfigs;
-
-		const sshKey = req.body.key;
+		const body = req.body;
+		const getClusterId = async (clusterId: string | undefined) => {
+			if (clusterId) {
+				const existingCluster = await getClusterInfoById(clusterId);
+				if (existingCluster && existingCluster.elastic.url !== body.elastic.url) {
+					return randomUUID();
+				}
+				return clusterId;
+			}
+			return randomUUID();
+		};
+		const clusterId = await getClusterId(body.clusterId);
+		const elastic: IElasticInfo = body.elastic;
+		const kibana: IKibanaInfo = body.kibana;
+		const kibanaConfigs = body.kibanaConfigs;
+		const sshKey = body.key;
 
 		const keyPath = createSSHPrivateKeyFile(sshKey);
 
