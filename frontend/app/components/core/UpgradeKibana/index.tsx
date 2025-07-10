@@ -125,7 +125,6 @@ function UpgradeKibana({ clusterType }: TUpgradeKibana) {
 	}
 
 	const performUpgrade = async (nodeId: string) => {
-		const clusterId = LocalStorageHandler.getItem(StorageManager.CLUSTER_ID)
 		console.log("triggered")
 		await axiosJSON
 			.post(`/api/elastic/clusters/${clusterId}/nodes/upgrade-kibana`, {
