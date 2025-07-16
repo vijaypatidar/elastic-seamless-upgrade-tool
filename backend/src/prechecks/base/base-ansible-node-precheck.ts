@@ -1,3 +1,4 @@
+import { BadRequestError, NotFoundError } from "../../errors";
 import { ClusterNodeType } from "../../models/cluster-node.model";
 import { ansibleInventoryService } from "../../services/ansible-inventory.service";
 import { ansibleRunnerService } from "../../services/ansible-runner.service";
@@ -18,10 +19,13 @@ export abstract class BaseAnsibleNodePrecheck extends BaseNodePrecheck {
 	) {
 		const { cluster, upgradeJob, precheckGroupId, context } = request;
 		const { elastic } = cluster;
+		if (!cluster.pathToKey) {
+			throw new BadRequestError("SSH Key not found");
+		}
 		const precheckConfig = this.getPrecheckConfig();
-		const inventoryPath = ansibleInventoryService.createInventoryForNode({
+		const inventoryPath = await ansibleInventoryService.createInventoryForNode({
 			node: context.node,
-			keyFilename: `SSH_key.pem`,
+			pathToKey: cluster.pathToKey,
 			sshUser: request.cluster.sshUser,
 		});
 		const { playbookPath, variables } = playbookOptions;
