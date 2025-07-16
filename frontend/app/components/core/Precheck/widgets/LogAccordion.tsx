@@ -98,10 +98,10 @@ function LogAccordion({
 						fontWeight="500"
 						lineHeight="20px"
 					>
-						{status === "PENDING" || status === "RUNNING" ? (
+						{status === PrecheckStatus.PENDING || status === PrecheckStatus.RUNNING ? (
 							<Spinner color="default" variant="simple" classNames={{ wrapper: "size-4 text-inherit" }} />
-						) : status === "COMPLETED" ? (
-							<TickCircle size="20px" color="currentColor" variant="Bold" />
+						) : status === PrecheckStatus.COMPLETED ? (
+							<TickCircle size="20px" color="#4cdb9d" variant="Bold" />
 						) : (
 							<Warning2 size="20px" color="#E75547" variant="Bold" />
 						)}

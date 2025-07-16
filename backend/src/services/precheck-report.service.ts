@@ -1,6 +1,5 @@
 import { ElasticClient } from "../clients/elastic.client";
 import { KibanaClient } from "../clients/kibana.client";
-import { PrecheckStatus } from "../enums";
 import logger from "../logger/logger";
 import { getBreakingChanges } from "../utils/breaking-changes-utils";
 import { clusterUpgradeJobService } from "./cluster-upgrade-job.service";
@@ -8,11 +7,8 @@ import { precheckService } from "./precheck.service";
 
 class PrecheckReportService {
 	async generatePrecheckReportMdContent(clusterId: string): Promise<string> {
-		const elasticClient = await ElasticClient.buildClient(clusterId);
-		const {
-			version: { number: currentVersion },
-		} = await elasticClient.getClient().info();
-		const { targetVersion } = await clusterUpgradeJobService.getActiveClusterUpgradeJobByClusterId(clusterId);
+		const { targetVersion, currentVersion } =
+			await clusterUpgradeJobService.getActiveClusterUpgradeJobByClusterId(clusterId);
 		const groupedPrechecks = await precheckService.getGroupedPrecheckByClusterId(clusterId);
 		const prechecksGroupedByNode = groupedPrechecks.node;
 		let md = `# 📋 Elasticsearch Pre-check Report\n\n`;

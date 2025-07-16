@@ -201,7 +201,7 @@ const PrecheckGroup = ({ groups, label }: { groups: (TNodeData | TIndexData)[]; 
 										lineHeight="normal"
 										letterSpacing="0.12px"
 									>
-										Nodes
+										{label.includes("Node") ? "Nodes" : "Indexes"}
 									</Typography>
 									<Box className="flex flex-col gap-[6px] overflow-scroll scrollbar-hide min-w-[282px]">
 										{groups.map((item, index) => {
@@ -231,7 +231,7 @@ const PrecheckGroup = ({ groups, label }: { groups: (TNodeData | TIndexData)[]; 
 	)
 }
 
-const ClusterPrecheckGroup = ({ prechecks }: { prechecks: TPrecheck[] }) => {
+const PrechecksGroup = ({ prechecks, label }: { prechecks: TPrecheck[]; label: string }) => {
 	return (
 		<>
 			<Box className="flex gap-4 h-auto">
@@ -246,7 +246,7 @@ const ClusterPrecheckGroup = ({ prechecks }: { prechecks: TPrecheck[] }) => {
 									lineHeight="normal"
 									letterSpacing="0.16px"
 								>
-									Cluster Prechecks
+									{label}
 								</Typography>
 							</Box>
 						</Box>
@@ -267,9 +267,12 @@ function Precheck() {
 
 	const getPrecheck = async () => {
 		try {
-			const response = await axiosJSON.get<{ index: TIndexData[]; node: TNodeData[]; cluster: TPrecheck[] }>(
-				`/api/elastic/clusters/${clusterId}/prechecks`
-			)
+			const response = await axiosJSON.get<{
+				index: TIndexData[]
+				node: TNodeData[]
+				cluster: TPrecheck[]
+				breakingChanges: TPrecheck[]
+			}>(`/api/elastic/clusters/${clusterId}/prechecks`)
 			return response.data
 		} catch (err: any) {
 			toast.error(err?.response?.data?.message ?? StringManager.GENERIC_ERROR)
@@ -310,9 +313,10 @@ function Precheck() {
 		<>
 			{data ? (
 				<>
-					<ClusterPrecheckGroup prechecks={data?.cluster} />
+					<PrechecksGroup prechecks={data?.cluster} label="Cluster Prechecks" />
 					<PrecheckGroup groups={data?.node} label="Node Prechecks" />
 					<PrecheckGroup groups={data?.index} label="Index Prechecks" />
+					<PrechecksGroup prechecks={data?.breakingChanges} label="Breaking changes" />
 				</>
 			) : (
 				<PrecheckNotTriggered refetch={refetch} />
