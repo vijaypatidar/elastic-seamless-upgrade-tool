@@ -30,7 +30,7 @@ export const getPrecheckRunByClusterIdHandler = async (req: Request, res: Respon
 				id: change.url,
 				name: `${change.title} (v${change.version})`,
 				logs: [change.description],
-				status: PrecheckStatus.COMPLETED,
+				status: PrecheckStatus.FAILED,
 			})),
 		});
 	} catch (err: any) {
