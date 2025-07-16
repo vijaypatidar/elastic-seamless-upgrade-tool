@@ -20,7 +20,10 @@ class ClusterUpgradeService {
 			const clusterUpgradeJob = await clusterUpgradeJobService.getActiveClusterUpgradeJobByClusterId(clusterId);
 			const pathToKey = clusterInfo.pathToKey ? clusterInfo.pathToKey : "";
 
-			await ansibleInventoryService.createAnsibleInventory([node], { pathToKey, sshUser: clusterInfo.sshUser });
+			const inventoryPath = await ansibleInventoryService.createInventory([node], {
+				pathToKey,
+				sshUser: clusterInfo.sshUser,
+			});
 			if (!clusterUpgradeJob.targetVersion || !clusterInfo.elastic.username || !clusterInfo.elastic.password) {
 				return false;
 			}
@@ -29,7 +32,7 @@ class ClusterUpgradeService {
 			ansibleRunnerService
 				.runPlaybook({
 					playbookPath: "playbooks/main.yml",
-					inventoryPath: "ansible_inventory.ini",
+					inventoryPath: inventoryPath,
 					variables: {
 						elk_version: clusterUpgradeJob.targetVersion,
 						es_username: clusterInfo.elastic.username,
@@ -72,7 +75,10 @@ class ClusterUpgradeService {
 			const clusterUpgradeJob = await clusterUpgradeJobService.getActiveClusterUpgradeJobByClusterId(clusterId);
 			const pathToKey = clusterInfo.pathToKey ? clusterInfo.pathToKey : "";
 
-			await ansibleInventoryService.createAnsibleInventory(nodes, { pathToKey, sshUser: clusterInfo.sshUser });
+			const inventoryPath = await ansibleInventoryService.createInventory(nodes, {
+				pathToKey,
+				sshUser: clusterInfo.sshUser,
+			});
 			if (!clusterUpgradeJob.targetVersion || !clusterInfo.elastic.username || !clusterInfo.elastic.password) {
 				return false;
 			}
@@ -81,7 +87,7 @@ class ClusterUpgradeService {
 			ansibleRunnerService
 				.runPlaybook({
 					playbookPath: "playbooks/main.yml",
-					inventoryPath: "ansible_inventory.ini",
+					inventoryPath: inventoryPath,
 					variables: {
 						elk_version: clusterUpgradeJob.targetVersion,
 						es_username: clusterInfo.elastic.username,
@@ -126,7 +132,7 @@ class ClusterUpgradeService {
 			const clusterInfo = await getClusterInfoById(clusterId);
 			const clusterUpgradeJob = await clusterUpgradeJobService.getActiveClusterUpgradeJobByClusterId(clusterId);
 			const pathToKey = clusterInfo.pathToKey ? clusterInfo.pathToKey : ""; //Should be stored in clusterInfo
-			await ansibleInventoryService.createAnsibleInventoryForKibana([node], {
+			const inventoryPath = await ansibleInventoryService.createInventory([node], {
 				pathToKey,
 				sshUser: clusterInfo.sshUser,
 			});
@@ -138,7 +144,7 @@ class ClusterUpgradeService {
 			ansibleRunnerService
 				.runPlaybook({
 					playbookPath: "playbooks/main.yml",
-					inventoryPath: "ansible_inventory.ini",
+					inventoryPath: inventoryPath,
 					variables: {
 						elk_version: clusterUpgradeJob.targetVersion,
 						es_username: clusterInfo.elastic.username,
