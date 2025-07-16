@@ -75,39 +75,39 @@ export function convertBreakingChangesToMarkdown(changes: FlattenedChange[]): st
  * @param targetVersion Version in x.y.z format (e.g., 8.6.0)
  * @returns Flattened array of breaking changes with metadata
  */
-export function getBreakingChangesBetweenVersions(
-	data: VersionEntry[],
-	currentVersion: string,
-	targetVersion: string
-): FlattenedChange[] {
-	return data
-		.filter((entry) => {
-			const entryVersion = semver.coerce(entry.version);
-			return (
-				entryVersion &&
-				semver.gt(entryVersion.version, currentVersion) &&
-				semver.lte(entryVersion.version, targetVersion)
-			);
-		})
-		.flatMap((entry) => {
-			return (entry.breaking_changes || []).flatMap((changeGroup) =>
-				changeGroup.changes.map((change) => ({
-					version: entry.version,
-					url: entry.url,
-					category: changeGroup.category,
-					...change,
-				}))
-			);
-		});
+export function getBreakingChangesBetweenVersions(currentVersion: string, targetVersion: string): FlattenedChange[] {
+	const data: VersionEntry[] = loadYaml("breaking-changes.yaml");
+	if (Array.isArray(data)) {
+		return data
+			.filter((entry) => {
+				const entryVersion = semver.coerce(entry.version);
+				return (
+					entryVersion &&
+					semver.gt(entryVersion.version, currentVersion) &&
+					semver.lte(entryVersion.version, targetVersion)
+				);
+			})
+			.flatMap((entry) => {
+				return (entry.breaking_changes || []).flatMap((changeGroup) =>
+					changeGroup.changes.map((change) => ({
+						version: entry.version,
+						url: entry.url,
+						category: changeGroup.category,
+						...change,
+					}))
+				);
+			})
+			.map((item: any) => ({
+				...item,
+				title: item.setting || item.issue || item.name || item.change || item.feature || "Unnamed Change",
+			}));
+	} else {
+		console.error("YAML root is not an array");
+		return [];
+	}
 }
 
 export const getBreakingChanges = async (current: string, target: string) => {
-	const parsedData = loadYaml("breaking-changes.yaml");
-	if (Array.isArray(parsedData)) {
-		const changes = getBreakingChangesBetweenVersions(parsedData, current, target);
-		return convertBreakingChangesToMarkdown(changes);
-	} else {
-		console.error("YAML root is not an array");
-		return "";
-	}
+	const changes = getBreakingChangesBetweenVersions(current, target);
+	return convertBreakingChangesToMarkdown(changes);
 };
