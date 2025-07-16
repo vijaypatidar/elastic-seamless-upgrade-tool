@@ -16,6 +16,7 @@ import { FileDescriptorLimitPrecheck } from "./concrete/node/file-descriptor-lim
 import { MappedFieldCountPrecheck } from "./concrete/index/mapped-field-count-precheck";
 import { CustomPluginsListPrecheck } from "./concrete/node/custom-plugins-list-precheck";
 import { IngestLoadPrecheck } from "./concrete/node/ingest-load-precheck";
+import { ClusterAllocationSettingPrecheck } from "./concrete/cluster/cluster-allocation-setting.precheck";
 
 class PrecheckRegistry {
 	private prechecks: BasePrecheck[] = [];
@@ -39,6 +40,7 @@ precheckRegistry.register(new ClusterHealthPrecheck());
 precheckRegistry.register(new NoRelocatingShardsPrecheck());
 precheckRegistry.register(new MasterEligibleNodesPrecheck());
 precheckRegistry.register(new EvenShardDistributionPrecheck());
+precheckRegistry.register(new ClusterAllocationSettingPrecheck());
 
 // Node Level
 precheckRegistry.register(new ElasticVersionPrecheck());
