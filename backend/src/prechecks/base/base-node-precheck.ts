@@ -1,5 +1,4 @@
 import { PrecheckStatus } from "../../enums";
-import logger from "../../logger/logger";
 import { ClusterNodeType, IClusterNode } from "../../models/cluster-node.model";
 import { INodePrecheck, Precheck } from "../../models/precheck.model";
 import { clusterNodeService } from "../../services/cluster-node.service";
@@ -66,7 +65,7 @@ export abstract class BaseNodePrecheck extends BasePrecheck<PrecheckConfig, Node
 		);
 	}
 
-	async preExecute(request: PrecheckExecutionRequest): Promise<void> {
+	async schedule(request: PrecheckExecutionRequest): Promise<void> {
 		const nodes = await this.getNodes(request.cluster.clusterId);
 		const config = this.getPrecheckConfig();
 		await Precheck.insertMany(
