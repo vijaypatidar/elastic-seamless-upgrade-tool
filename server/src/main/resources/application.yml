@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: NextGen Seamless Upgrade
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres
+    username: vijay
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+
+app:
+  ansible:
+    playbooks-directory: /
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html

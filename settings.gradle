@@ -1,0 +1,4 @@
+rootProject.name = 'elastic-seamless-upgrade-tool'
+
+include 'frontend'
+include 'server'
