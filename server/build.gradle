@@ -57,7 +57,7 @@ jib {
 bootJar {
     // Include Vite build output in the final Spring Boot JAR
     dependsOn ':frontend:build'
-    from("../frontend/dist") {
+    from("../frontend/build/client") {
         into "BOOT-INF/classes/static" // Place files in Spring Boot's static directory
     }
 }
