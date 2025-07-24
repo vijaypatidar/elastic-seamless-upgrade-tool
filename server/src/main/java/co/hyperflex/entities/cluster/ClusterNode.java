@@ -1,31 +1,51 @@
 package co.hyperflex.entities.cluster;
 
-import co.hyperflex.entities.upgrade.ClusterNodeUpgradeStatus;
+import co.hyperflex.entities.NodeStatus;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import java.time.Instant;
 import java.util.List;
+import java.util.Map;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.Field;
 
+@Document(collection = "cluster-nodes")
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type", visible = true)
+@JsonSubTypes({
+    @JsonSubTypes.Type(value = ElasticNode.class, name = "ELASTIC"),
+    @JsonSubTypes.Type(value = KibanaNode.class, name = "KIBANA")
+})
+public abstract class ClusterNode {
 
-public class ClusterNode {
+  @Id
   private String id;
 
+  private String clusterId;
 
   private String name;
 
-  private String ip;
-
   private String version;
+
+  private String ip;
 
   private List<String> roles;
 
-  private ClusterNodeType type;
-
-  private Cluster cluster;
+  private Map<String, Object> os;
 
   private int progress;
 
-  private ClusterNodeUpgradeStatus status;
+  private NodeStatus status;
 
-  private String os;
+  private ClusterNodeType type;
 
+  private int rank;
+
+  @Field("createdAt")
+  private Instant createdAt;
+
+  @Field("updatedAt")
+  private Instant updatedAt;
 
   public String getId() {
     return id;
@@ -33,6 +53,14 @@ public class ClusterNode {
 
   public void setId(String id) {
     this.id = id;
+  }
+
+  public String getClusterId() {
+    return clusterId;
+  }
+
+  public void setClusterId(String clusterId) {
+    this.clusterId = clusterId;
   }
 
   public String getName() {
@@ -43,20 +71,20 @@ public class ClusterNode {
     this.name = name;
   }
 
-  public String getIp() {
-    return ip;
-  }
-
-  public void setIp(String ip) {
-    this.ip = ip;
-  }
-
   public String getVersion() {
     return version;
   }
 
   public void setVersion(String version) {
     this.version = version;
+  }
+
+  public String getIp() {
+    return ip;
+  }
+
+  public void setIp(String ip) {
+    this.ip = ip;
   }
 
   public List<String> getRoles() {
@@ -67,6 +95,30 @@ public class ClusterNode {
     this.roles = roles;
   }
 
+  public Map<String, Object> getOs() {
+    return os;
+  }
+
+  public void setOs(Map<String, Object> os) {
+    this.os = os;
+  }
+
+  public Integer getProgress() {
+    return progress;
+  }
+
+  public void setProgress(Integer progress) {
+    this.progress = progress;
+  }
+
+  public NodeStatus getStatus() {
+    return status;
+  }
+
+  public void setStatus(NodeStatus status) {
+    this.status = status;
+  }
+
   public ClusterNodeType getType() {
     return type;
   }
@@ -75,35 +127,27 @@ public class ClusterNode {
     this.type = type;
   }
 
-  public Cluster getCluster() {
-    return cluster;
+  public int getRank() {
+    return rank;
   }
 
-  public void setCluster(Cluster cluster) {
-    this.cluster = cluster;
+  public void setRank(int rank) {
+    this.rank = rank;
   }
 
-  public int getProgress() {
-    return progress;
+  public Instant getCreatedAt() {
+    return createdAt;
   }
 
-  public void setProgress(int progress) {
-    this.progress = progress;
+  public void setCreatedAt(Instant createdAt) {
+    this.createdAt = createdAt;
   }
 
-  public ClusterNodeUpgradeStatus getStatus() {
-    return status;
+  public Instant getUpdatedAt() {
+    return updatedAt;
   }
 
-  public void setStatus(ClusterNodeUpgradeStatus status) {
-    this.status = status;
-  }
-
-  public String getOs() {
-    return os;
-  }
-
-  public void setOs(String os) {
-    this.os = os;
+  public void setUpdatedAt(Instant updatedAt) {
+    this.updatedAt = updatedAt;
   }
 }

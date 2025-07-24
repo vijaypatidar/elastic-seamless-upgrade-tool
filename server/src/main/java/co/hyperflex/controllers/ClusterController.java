@@ -41,14 +41,14 @@ public class ClusterController {
 
   @GetMapping("/{clusterId}")
   public GetClusterResponse getCluster(@PathVariable String clusterId) {
-    return null;
+    return clusterService.getClusterById(clusterId);
   }
 
   @GetMapping("/{clusterId}/nodes")
   public List<GetClusterNodeResponse> getAllClusters(@PathVariable String clusterId,
                                                      @RequestParam(required = false)
                                                      ClusterNodeType type) {
-    return List.of();
+    return clusterService.getNodes(clusterId, type);
   }
 
 }

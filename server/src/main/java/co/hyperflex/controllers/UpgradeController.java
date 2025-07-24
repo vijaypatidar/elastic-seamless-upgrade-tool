@@ -6,7 +6,7 @@ import co.hyperflex.clients.KibanaClient;
 import co.hyperflex.clients.KibanaClientProvider;
 import co.hyperflex.dtos.upgrades.ClusterNodeUpgradeRequest;
 import co.hyperflex.entities.cluster.ClusterNode;
-import co.hyperflex.entities.cluster.ClusterNodeType;
+import co.hyperflex.entities.cluster.KibanaNode;
 import co.hyperflex.upgrader.planner.UpgradePlanBuilder;
 import co.hyperflex.upgrader.tasks.Configuration;
 import co.hyperflex.upgrader.tasks.Context;
@@ -43,9 +43,8 @@ public class UpgradeController {
   @PostMapping
   SseEmitter upgrade(@RequestBody ClusterNodeUpgradeRequest upgradeRequest) throws IOException {
     SseEmitter sseEmitter = new SseEmitter();
-    ClusterNode clusterNode = new ClusterNode();
+    ClusterNode clusterNode = new KibanaNode();
     clusterNode.setIp("44.202.236.240");
-    clusterNode.setType(ClusterNodeType.KIBANA);
 
     Logger logger = LoggerFactory.getLogger(UpgradeController.class);
 
@@ -77,7 +76,8 @@ public class UpgradeController {
             sseEmitter.send(String.format("Task [taskId: %s] [Sequence: %s] failed with result %s",
                 task.getId(), seq, result));
           } catch (IOException ignored) {
-            logger.warn("Exception while sending upgrade request to task {}", task.getId(), ignored);
+            logger.warn("Exception while sending upgrade request to task {}", task.getId(),
+                ignored);
           }
           logger.error("Task [taskId: {}] [Sequence: {}] failed with result {}", task.getId(), seq,
               result);

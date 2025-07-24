@@ -1,7 +1,9 @@
 package co.hyperflex.entities.cluster;
 
 import java.util.List;
+import org.springframework.data.mongodb.core.mapping.Document;
 
+@Document(collection = "clusters")
 public class Cluster {
 
   private String id;
