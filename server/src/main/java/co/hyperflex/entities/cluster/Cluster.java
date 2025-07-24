@@ -1,20 +1,9 @@
 package co.hyperflex.entities.cluster;
 
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
 import java.util.List;
 
-@Entity
-@Table(name = "clusters")
 public class Cluster {
 
-  @Id
-  @GeneratedValue(strategy = GenerationType.UUID)
   private String id;
   private String name;
   private String url;
@@ -22,7 +11,6 @@ public class Cluster {
   private String username;
   private String password;
 
-  @OneToMany(mappedBy = "cluster", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<ClusterNode> nodes;
 
 

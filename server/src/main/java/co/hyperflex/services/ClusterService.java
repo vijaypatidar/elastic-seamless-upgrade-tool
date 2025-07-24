@@ -7,7 +7,6 @@ import co.hyperflex.entities.cluster.ClusterNode;
 import co.hyperflex.mappers.ClusterMapper;
 import co.hyperflex.repositories.ClusterNodeRepository;
 import co.hyperflex.repositories.ClusterRepository;
-import jakarta.transaction.Transactional;
 import java.util.List;
 import org.springframework.stereotype.Service;
 
@@ -24,11 +23,9 @@ public class ClusterService {
     this.clusterMapper = clusterMapper;
   }
 
-  @Transactional
   public AddClusterResponse add(final AddClusterRequest request) {
     final Cluster cluster = this.clusterMapper.toEntity(request);
 
-    clusterRepository.save(cluster);
 
     final List<ClusterNode> clusterNodes = request.kibanaNodes()
         .stream()
@@ -38,7 +35,6 @@ public class ClusterService {
           return node;
         }).toList();
 
-    clusterNodeRepository.saveAll(clusterNodes);
 
     return new AddClusterResponse(cluster.getId());
   }
