@@ -1,7 +1,7 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="NextGenSeamlessUpgrade" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
     <option name="FRAME_DEACTIVATION_UPDATE_POLICY" value="UpdateClassesAndResources" />
-    <module name="nextgen-seamless-upgrade.backend.main" />
+    <module name="elastic-seamless-upgrade-tool.server.main" />
     <option name="SPRING_BOOT_MAIN_CLASS" value="com.hyperflex.NextGenSeamlessUpgrade" />
     <method v="2">
       <option name="Make" enabled="true" />

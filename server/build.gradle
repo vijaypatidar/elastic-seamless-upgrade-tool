@@ -35,6 +35,10 @@ dependencies {
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    //elastic
+    implementation 'co.elastic.clients:elasticsearch-java:8.18.0'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.0'
 }
 
 jib {
@@ -44,7 +48,7 @@ jib {
     to {
         image = 'nextgen-seamless-upgrade'
     }
-    container{
+    container {
         mainClass = 'com.hyperflex.NextGenSeamlessUpgrade'
         jvmFlags = []
         ports = ["8080"]
