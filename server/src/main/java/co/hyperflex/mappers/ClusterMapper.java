@@ -7,6 +7,7 @@ import co.hyperflex.entities.cluster.Cluster;
 import co.hyperflex.entities.cluster.ClusterNode;
 import co.hyperflex.entities.cluster.ClusterNodeType;
 import co.hyperflex.entities.cluster.KibanaNode;
+import co.hyperflex.entities.cluster.SelfManagedCluster;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
@@ -15,7 +16,7 @@ import org.springframework.stereotype.Component;
 public class ClusterMapper {
 
   public Cluster toEntity(AddClusterRequest request) {
-    Cluster cluster = new Cluster();
+    Cluster cluster = new SelfManagedCluster();
     cluster.setName(request.name());
     cluster.setElasticUrl(request.url());
     cluster.setUsername(request.username());

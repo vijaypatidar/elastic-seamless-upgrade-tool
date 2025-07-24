@@ -18,3 +18,7 @@ management:
   health:
     elasticsearch:
       enabled: false
+
+seamless:
+  output:
+    dir: "output"

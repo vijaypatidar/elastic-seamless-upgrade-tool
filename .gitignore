@@ -43,3 +43,4 @@ bin/
 *.DS_Store
 **/.DS_Store
 server/src/main/resources/static/**
+output/
