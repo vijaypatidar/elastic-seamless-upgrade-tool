@@ -1,6 +1,5 @@
 package co.hyperflex.entities.cluster;
 
-import java.util.List;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "clusters")
@@ -8,13 +7,19 @@ public class Cluster {
 
   private String id;
   private String name;
-  private String url;
+  private String elasticUrl;
   private String kibanaUrl;
   private String username;
   private String password;
+  private ClusterType clusterType;
 
-  private List<ClusterNode> nodes;
+  public ClusterType getClusterType() {
+    return clusterType;
+  }
 
+  public void setClusterType(ClusterType clusterType) {
+    this.clusterType = clusterType;
+  }
 
   public String getId() {
     return id;
@@ -32,12 +37,12 @@ public class Cluster {
     this.name = name;
   }
 
-  public String getUrl() {
-    return url;
+  public String getElasticUrl() {
+    return elasticUrl;
   }
 
-  public void setUrl(String url) {
-    this.url = url;
+  public void setElasticUrl(String elasticUrl) {
+    this.elasticUrl = elasticUrl;
   }
 
   public String getKibanaUrl() {
@@ -64,11 +69,4 @@ public class Cluster {
     this.password = password;
   }
 
-  public List<ClusterNode> getNodes() {
-    return nodes;
-  }
-
-  public void setNodes(List<ClusterNode> nodes) {
-    this.nodes = nodes;
-  }
 }

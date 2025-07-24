@@ -4,7 +4,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/v1/clusters/{clusterId}/upgrades")
-public class ClusterUpgradeController {
+@RequestMapping("/api/v1/clusters/{clusterId}/prechecks")
+public class PrecheckController {
+
 
 }

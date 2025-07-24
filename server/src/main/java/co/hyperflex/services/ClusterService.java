@@ -53,7 +53,7 @@ public class ClusterService {
       return new GetClusterResponse(
           clusterId,
           cluster.getName(),
-          cluster.getUrl(),
+          cluster.getElasticUrl(),
           cluster.getKibanaUrl(),
           cluster.getUsername(),
           null

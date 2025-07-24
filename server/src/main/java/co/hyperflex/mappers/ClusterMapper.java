@@ -17,7 +17,7 @@ public class ClusterMapper {
   public Cluster toEntity(AddClusterRequest request) {
     Cluster cluster = new Cluster();
     cluster.setName(request.name());
-    cluster.setUrl(request.url());
+    cluster.setElasticUrl(request.url());
     cluster.setUsername(request.username());
     cluster.setKibanaUrl(request.kibanaUrl());
     cluster.setPassword(request.password());

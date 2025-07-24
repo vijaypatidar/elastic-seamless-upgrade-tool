@@ -4,7 +4,7 @@ import co.hyperflex.clients.ElasticClient;
 import co.hyperflex.clients.ElasticsearchClientProvider;
 import co.hyperflex.clients.KibanaClient;
 import co.hyperflex.clients.KibanaClientProvider;
-import co.hyperflex.dtos.upgrades.ClusterNodeUpgradeRequest;
+import co.hyperflex.dtos.upgrades.ClusterUpgradeRequest;
 import co.hyperflex.entities.cluster.ClusterNode;
 import co.hyperflex.entities.cluster.KibanaNode;
 import co.hyperflex.upgrader.planner.UpgradePlanBuilder;
@@ -41,7 +41,7 @@ public class UpgradeController {
 
 
   @PostMapping
-  SseEmitter upgrade(@RequestBody ClusterNodeUpgradeRequest upgradeRequest) throws IOException {
+  SseEmitter upgrade(@RequestBody ClusterUpgradeRequest upgradeRequest) throws IOException {
     SseEmitter sseEmitter = new SseEmitter();
     ClusterNode clusterNode = new KibanaNode();
     clusterNode.setIp("44.202.236.240");

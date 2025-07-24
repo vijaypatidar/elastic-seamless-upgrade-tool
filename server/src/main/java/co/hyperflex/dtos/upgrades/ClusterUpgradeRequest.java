@@ -1,6 +1,6 @@
 package co.hyperflex.dtos.upgrades;
 
-public class ClusterNodeUpgradeRequest {
+public class ClusterUpgradeRequest {
   private String clusterId;
   private String nodeId;
   private boolean retry = false;
