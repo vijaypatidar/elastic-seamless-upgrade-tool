@@ -4,7 +4,6 @@
   gather_facts: no
 
   tasks:
-  
       - name: Validate ELK Version
         fail: msg="Invalid ELK Version"
         when: elk_version is undefined or not elk_version is match("\d+\.\d+\.\d+")
@@ -30,10 +29,17 @@
               uri:
                   url: http://localhost:5601/api/kibana/settings
                   method: GET
-                  url_username: "{{ es_username }}"
-                  url_password: "{{ es_password }}"
+                  url_username: "{{ es_username | default(omit) }}"
+                  url_password: "{{ es_password | default(omit) }}"
+                  headers: >-
+                      {{
+                        {
+                          'Authorization': 'ApiKey ' + es_api_key
+                        } if es_api_key is defined else omit
+                      }}
                   validate_certs: false
-                  force_basic_auth: true
+                  force_basic_auth: "{{ false if es_api_key is defined else true }}"
+
               register: response
               until: "'kbn_name' in response and response.status == 200"
               retries: 30
@@ -43,12 +49,18 @@
               uri:
                   url: http://localhost:5601/api/kibana/settings
                   method: POST
-                  url_username: "{{ es_username }}"
-                  url_password: "{{ es_password }}"
+                  url_username: "{{ es_username | default(omit) }}"
+                  url_password: "{{ es_password | default(omit) }}"
+                  headers: >-
+                      {{
+                        dict({
+                          'kbn-version': elk_version,
+                          'Authorization': 'ApiKey ' + es_api_key
+                        }) if es_api_key is defined else {
+                          'kbn-version': elk_version
+                        }
+                      }}
                   validate_certs: false
-                  force_basic_auth: true
                   body_format: json
+                  force_basic_auth: "{{ false if es_api_key is defined else true }}"
                   body: "{{ set_default_index }}"
-                  headers:
-                      "kbn-version": "{{ elk_version }}"
-        when: version_found.stdout is version_compare(elk_version, '<')
