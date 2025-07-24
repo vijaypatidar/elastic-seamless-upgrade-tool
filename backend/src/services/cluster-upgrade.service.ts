@@ -25,9 +25,7 @@ class ClusterUpgradeService {
 				pathToKey,
 				sshUser: clusterInfo.sshUser,
 			});
-			if (!clusterUpgradeJob.targetVersion || !clusterInfo.elastic.username || !clusterInfo.elastic.password) {
-				return false;
-			}
+
 			const playbookRunId = randomUUID();
 
 			ansibleRunnerService
@@ -38,6 +36,7 @@ class ClusterUpgradeService {
 						elk_version: clusterUpgradeJob.targetVersion,
 						es_username: clusterInfo.elastic.username,
 						es_password: clusterInfo.elastic.password,
+						es_api_key: clusterInfo.elastic.apiKey,
 						elasticsearch_uri: clusterInfo.elastic.url,
 						cluster_type: ClusterType.ELASTIC,
 						playbook_run_id: playbookRunId,
@@ -81,9 +80,7 @@ class ClusterUpgradeService {
 				sshUser: clusterInfo.sshUser,
 				nodes: nodes,
 			});
-			if (!clusterUpgradeJob.targetVersion || !clusterInfo.elastic.username || !clusterInfo.elastic.password) {
-				return false;
-			}
+
 			const playbookRunId = randomUUID();
 
 			ansibleRunnerService
@@ -94,6 +91,7 @@ class ClusterUpgradeService {
 						elk_version: clusterUpgradeJob.targetVersion,
 						es_username: clusterInfo.elastic.username,
 						es_password: clusterInfo.elastic.password,
+						es_api_key: clusterInfo.elastic.apiKey,
 						elasticsearch_uri: clusterInfo.elastic.url,
 						cluster_type: ClusterType.ELASTIC,
 						playbook_run_id: playbookRunId,
@@ -139,9 +137,7 @@ class ClusterUpgradeService {
 				sshUser: clusterInfo.sshUser,
 				node: node,
 			});
-			if (!clusterInfo.elastic.username || !clusterInfo.elastic.password) {
-				return;
-			}
+
 			const playbookRunId = randomUUID();
 
 			ansibleRunnerService
@@ -152,6 +148,7 @@ class ClusterUpgradeService {
 						elk_version: clusterUpgradeJob.targetVersion,
 						es_username: clusterInfo.elastic.username,
 						es_password: clusterInfo.elastic.password,
+						es_api_key: clusterInfo.elastic.apiKey,
 						elasticsearch_uri: clusterInfo.elastic.url,
 						cluster_type: ClusterType.KIBANA,
 						playbook_run_id: playbookRunId,

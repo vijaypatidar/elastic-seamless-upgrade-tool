@@ -24,7 +24,7 @@ export class MasterEligibleNodesPrecheck extends BaseClusterPrecheck {
 
 		this.addLog(request, `Found ${masterCount} master-eligible node(s) out of ${totalNodes} total node(s).`);
 
-		const isSmallCluster = totalNodes < 3;
+		const isSmallCluster = totalNodes <= 3;
 
 		if (isSmallCluster) {
 			this.addLog(
