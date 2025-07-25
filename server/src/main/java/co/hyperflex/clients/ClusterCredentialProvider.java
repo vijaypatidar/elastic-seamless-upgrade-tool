@@ -1,28 +1,32 @@
 package co.hyperflex.clients;
 
+import co.hyperflex.exceptions.NotFoundException;
+import co.hyperflex.repositories.ClusterRepository;
 import java.util.Base64;
+import java.util.Optional;
 import org.apache.http.Header;
 import org.apache.http.message.BasicHeader;
 import org.springframework.stereotype.Component;
 
 @Component
 public class ClusterCredentialProvider {
+  private final ClusterRepository clusterRepository;
+
+  public ClusterCredentialProvider(ClusterRepository clusterRepository) {
+    this.clusterRepository = clusterRepository;
+  }
+
   public Header getAuthHeader(String clusterId) {
-    String apiKey = "TFNzWExKZ0JwZ0w0WjN3RVlLeUM6Q2pNRXdIVUxSMXVxNWs3ckhoUDN4QQ==";
-
-    Header authHeader;
-    Object username = "elastic";
-    Object password = null;
-
-    if (apiKey != null && !apiKey.isBlank()) {
-      authHeader = new BasicHeader("Authorization", "ApiKey " + apiKey);
-    } else if (username != null && password != null) {
-      String encodedCreds = Base64.getEncoder()
-          .encodeToString((username + ":" + password).getBytes());
-      authHeader = new BasicHeader("Authorization", "Basic " + encodedCreds);
-    } else {
-      throw new IllegalArgumentException("Either apiKey or username/password must be provided");
-    }
-    return authHeader;
+    return clusterRepository.findById(clusterId).map(cluster -> {
+      if (!Optional.ofNullable(cluster.getApiKey()).orElse("").isEmpty()) {
+        return new BasicHeader("Authorization", "ApiKey " + cluster.getApiKey());
+      } else if (cluster.getUsername() != null && cluster.getPassword() != null) {
+        String encodedCred = Base64.getEncoder()
+            .encodeToString((cluster.getUsername() + ":" + cluster.getPassword()).getBytes());
+        return new BasicHeader("Authorization", "Basic " + encodedCred);
+      } else {
+        throw new IllegalArgumentException("Either apiKey or username/password must be provided");
+      }
+    }).orElseThrow(() -> new NotFoundException("Cluster not found"));
   }
 }

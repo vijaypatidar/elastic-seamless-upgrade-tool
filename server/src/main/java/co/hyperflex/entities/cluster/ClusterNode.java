@@ -1,11 +1,10 @@
 package co.hyperflex.entities.cluster;
 
-import co.hyperflex.entities.NodeStatus;
+import co.hyperflex.entities.upgrade.NodeUpgradeStatus;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
@@ -31,11 +30,11 @@ public abstract class ClusterNode {
 
   private List<String> roles;
 
-  private Map<String, Object> os;
+  private OperatingSystemInfo os;
 
   private int progress;
 
-  private NodeStatus status;
+  private NodeUpgradeStatus status;
 
   private ClusterNodeType type;
 
@@ -95,27 +94,27 @@ public abstract class ClusterNode {
     this.roles = roles;
   }
 
-  public Map<String, Object> getOs() {
+  public OperatingSystemInfo getOs() {
     return os;
   }
 
-  public void setOs(Map<String, Object> os) {
+  public void setOs(OperatingSystemInfo os) {
     this.os = os;
   }
 
-  public Integer getProgress() {
+  public int getProgress() {
     return progress;
   }
 
-  public void setProgress(Integer progress) {
+  public void setProgress(int progress) {
     this.progress = progress;
   }
 
-  public NodeStatus getStatus() {
+  public NodeUpgradeStatus getStatus() {
     return status;
   }
 
-  public void setStatus(NodeStatus status) {
+  public void setStatus(NodeUpgradeStatus status) {
     this.status = status;
   }
 
