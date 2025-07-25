@@ -1,11 +1,11 @@
 package co.hyperflex.controllers;
 
-import co.hyperflex.dtos.AddClusterRequest;
-import co.hyperflex.dtos.AddClusterResponse;
-import co.hyperflex.dtos.GetClusterNodeResponse;
-import co.hyperflex.dtos.GetClusterResponse;
-import co.hyperflex.dtos.UpdateClusterRequest;
-import co.hyperflex.dtos.UpdateClusterResponse;
+import co.hyperflex.dtos.clusters.AddClusterRequest;
+import co.hyperflex.dtos.clusters.AddClusterResponse;
+import co.hyperflex.dtos.clusters.GetClusterNodeResponse;
+import co.hyperflex.dtos.clusters.GetClusterResponse;
+import co.hyperflex.dtos.clusters.UpdateClusterRequest;
+import co.hyperflex.dtos.clusters.UpdateClusterResponse;
 import co.hyperflex.entities.cluster.ClusterNodeType;
 import co.hyperflex.services.ClusterService;
 import jakarta.validation.Valid;
@@ -37,7 +37,12 @@ public class ClusterController {
   @PutMapping("/{clusterId}")
   public UpdateClusterResponse updateCluster(@Valid @RequestBody UpdateClusterRequest request,
                                              @PathVariable String clusterId) {
-    return new UpdateClusterResponse();
+    return clusterService.updateCluster(clusterId, request);
+  }
+
+  @GetMapping("")
+  public List<GetClusterResponse> getClusters() {
+    return clusterService.getClusters();
   }
 
   @GetMapping("/{clusterId}")
@@ -46,7 +51,7 @@ public class ClusterController {
   }
 
   @GetMapping("/{clusterId}/nodes")
-  public List<GetClusterNodeResponse> getAllClusters(@PathVariable String clusterId,
+  public List<GetClusterNodeResponse> getClusterNodes(@PathVariable String clusterId,
                                                      @RequestParam(required = false)
                                                      ClusterNodeType type) {
     return clusterService.getNodes(clusterId, type);

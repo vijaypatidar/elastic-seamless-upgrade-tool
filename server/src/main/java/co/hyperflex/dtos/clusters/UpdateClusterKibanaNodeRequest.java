@@ -1,4 +1,4 @@
-package co.hyperflex.dtos;
+package co.hyperflex.dtos.clusters;
 
 /**
  * Represents a request to update a Kibana node in a cluster.

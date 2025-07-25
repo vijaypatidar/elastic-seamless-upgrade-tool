@@ -1,4 +1,4 @@
-package co.hyperflex.dtos;
+package co.hyperflex.dtos.clusters;
 
 import co.hyperflex.entities.cluster.ClusterNodeType;
 import co.hyperflex.entities.upgrade.NodeUpgradeStatus;

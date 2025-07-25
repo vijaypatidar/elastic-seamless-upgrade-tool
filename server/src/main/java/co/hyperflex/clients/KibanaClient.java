@@ -5,9 +5,11 @@ import org.springframework.web.client.RestTemplate;
 public class KibanaClient {
 
   private final RestTemplate restTemplate;
+  private final String kibanaUrl;
 
-  public KibanaClient(RestTemplate restTemplate) {
+  public KibanaClient(RestTemplate restTemplate, String kibanaUrl) {
     this.restTemplate = restTemplate;
+    this.kibanaUrl = kibanaUrl;
   }
 
   public boolean isKibanaReady(String host) {

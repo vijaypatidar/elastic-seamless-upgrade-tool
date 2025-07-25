@@ -22,7 +22,7 @@ public class SettingService {
   }
 
   public UpdateSettingResponse updateSetting(UpdateSettingRequest request) {
-    Setting setting = settingRepository.findById("settings").orElseGet(null);
+    Setting setting = settingRepository.findById("settings").orElse(new Setting());
     setting.setNotificationWebhookUrl(request.notificationWebhookUrl());
     settingRepository.save(setting);
     return new UpdateSettingResponse(request.notificationWebhookUrl());

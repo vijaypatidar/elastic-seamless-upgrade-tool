@@ -1,15 +1,20 @@
 package co.hyperflex.services;
 
-import co.hyperflex.dtos.AddClusterRequest;
-import co.hyperflex.dtos.AddClusterResponse;
-import co.hyperflex.dtos.GetClusterNodeResponse;
-import co.hyperflex.dtos.GetClusterResponse;
+import co.hyperflex.dtos.clusters.AddClusterRequest;
+import co.hyperflex.dtos.clusters.AddClusterResponse;
+import co.hyperflex.dtos.clusters.AddSelfManagedClusterRequest;
+import co.hyperflex.dtos.clusters.GetClusterKibanaNodeResponse;
+import co.hyperflex.dtos.clusters.GetClusterNodeResponse;
+import co.hyperflex.dtos.clusters.GetClusterResponse;
+import co.hyperflex.dtos.clusters.UpdateClusterRequest;
+import co.hyperflex.dtos.clusters.UpdateClusterResponse;
 import co.hyperflex.entities.cluster.Cluster;
 import co.hyperflex.entities.cluster.ClusterNode;
 import co.hyperflex.entities.cluster.ClusterNodeType;
 import co.hyperflex.mappers.ClusterMapper;
 import co.hyperflex.repositories.ClusterNodeRepository;
 import co.hyperflex.repositories.ClusterRepository;
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
@@ -32,15 +37,17 @@ public class ClusterService {
 
     clusterRepository.save(cluster);
 
-    final List<ClusterNode> clusterNodes = request.kibanaNodes()
-        .stream()
-        .map(kibanaNodeRequest -> {
-          ClusterNode node = clusterMapper.toNodeEntity(kibanaNodeRequest);
-          node.setClusterId(cluster.getId());
-          return node;
-        }).toList();
+    if (request instanceof AddSelfManagedClusterRequest selfManagedRequest) {
+      final List<ClusterNode> clusterNodes = selfManagedRequest.getKibanaNodes()
+          .stream()
+          .map(kibanaNodeRequest -> {
+            ClusterNode node = clusterMapper.toNodeEntity(kibanaNodeRequest);
+            node.setClusterId(cluster.getId());
+            return node;
+          }).toList();
 
-    clusterNodeRepository.saveAll(clusterNodes);
+      clusterNodeRepository.saveAll(clusterNodes);
+    }
 
     return new AddClusterResponse(cluster.getId());
   }
@@ -50,14 +57,11 @@ public class ClusterService {
     if (optionalCluster.isPresent()) {
       Cluster cluster = optionalCluster.get();
       List<ClusterNode> nodes = clusterNodeRepository.findByClusterId(clusterId);
-      return new GetClusterResponse(
-          clusterId,
-          cluster.getName(),
-          cluster.getElasticUrl(),
-          cluster.getKibanaUrl(),
-          cluster.getUsername(),
-          null
-      );
+      List<GetClusterKibanaNodeResponse> kibanaNodes = nodes.stream()
+          .filter(node -> node.getType() == ClusterNodeType.KIBANA)
+          .map(node -> new GetClusterKibanaNodeResponse(node.getId(), node.getName(), node.getIp()))
+          .toList();
+      return clusterMapper.toGetClusterResponse(cluster, kibanaNodes);
     }
     return null;
   }
@@ -69,5 +73,14 @@ public class ClusterService {
     }
     return clusterNodeRepository.findByClusterIdAndType(clusterId, type).stream()
         .map(clusterMapper::toGetClusterNodeResponse).toList();
+  }
+
+  public UpdateClusterResponse updateCluster(String clusterId,
+                                             @Valid UpdateClusterRequest request) {
+    return null;
+  }
+
+  public List<GetClusterResponse> getClusters() {
+    return null;
   }
 }

@@ -10,7 +10,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document(collection = "settings")
 public class Setting {
   @Id
-  private String id;
+  private String id = "settings";
 
   @Nullable
   private String notificationWebhookUrl;
