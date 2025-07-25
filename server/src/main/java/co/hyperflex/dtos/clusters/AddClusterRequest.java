@@ -20,7 +20,7 @@ public abstract class AddClusterRequest {
   private ClusterType type;
 
   @NotNull
-  private String url;
+  private String elasticUrl;
 
   @NotNull
   private String kibanaUrl;
@@ -50,12 +50,12 @@ public abstract class AddClusterRequest {
     this.type = type;
   }
 
-  public String getUrl() {
-    return url;
+  public String getElasticUrl() {
+    return elasticUrl;
   }
 
-  public void setUrl(String url) {
-    this.url = url;
+  public void setElasticUrl(String elasticUrl) {
+    this.elasticUrl = elasticUrl;
   }
 
   public String getKibanaUrl() {

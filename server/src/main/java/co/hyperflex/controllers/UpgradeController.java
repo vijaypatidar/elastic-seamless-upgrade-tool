@@ -4,14 +4,22 @@ import co.hyperflex.clients.ElasticClient;
 import co.hyperflex.clients.ElasticsearchClientProvider;
 import co.hyperflex.clients.KibanaClient;
 import co.hyperflex.clients.KibanaClientProvider;
+import co.hyperflex.dtos.ClusterInfoResponse;
+import co.hyperflex.dtos.upgrades.ClusterNodeUpgradeRequest;
+import co.hyperflex.dtos.upgrades.ClusterNodeUpgradeResponse;
 import co.hyperflex.dtos.upgrades.ClusterUpgradeRequest;
+import co.hyperflex.dtos.upgrades.ClusterUpgradeResponse;
+import co.hyperflex.dtos.upgrades.CreateClusterUpgradeJobRequest;
+import co.hyperflex.dtos.upgrades.CreateClusterUpgradeJobResponse;
 import co.hyperflex.entities.cluster.ClusterNode;
 import co.hyperflex.entities.cluster.KibanaNode;
+import co.hyperflex.services.ClusterUpgradeService;
 import co.hyperflex.upgrader.planner.UpgradePlanBuilder;
 import co.hyperflex.upgrader.tasks.Configuration;
 import co.hyperflex.upgrader.tasks.Context;
 import co.hyperflex.upgrader.tasks.Task;
 import co.hyperflex.upgrader.tasks.TaskResult;
+import jakarta.validation.Valid;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -19,6 +27,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,16 +42,42 @@ public class UpgradeController {
   private final ExecutorService executor = Executors.newFixedThreadPool(1);
   private final ElasticsearchClientProvider elasticsearchClientProvider;
   private final KibanaClientProvider kibanaClientProvider;
+  private final ClusterUpgradeService clusterUpgradeService;
 
   public UpgradeController(ElasticsearchClientProvider elasticsearchClientProvider,
-                           KibanaClientProvider kibanaClientProvider) {
+                           KibanaClientProvider kibanaClientProvider,
+                           ClusterUpgradeService clusterUpgradeService) {
     this.elasticsearchClientProvider = elasticsearchClientProvider;
     this.kibanaClientProvider = kibanaClientProvider;
+    this.clusterUpgradeService = clusterUpgradeService;
   }
 
 
+  @PostMapping("/jobs")
+  public CreateClusterUpgradeJobResponse clusterUpgradeJob(
+      @Valid @RequestBody CreateClusterUpgradeJobRequest request) {
+    return clusterUpgradeService.createClusterUpgradeJob(request);
+  }
+
+  @PostMapping("/nodes")
+  public ClusterNodeUpgradeResponse clusterNodeUpgrade(
+      @Valid @RequestBody ClusterNodeUpgradeRequest request) {
+    return clusterUpgradeService.upgradeNode(request);
+  }
+
+  @PostMapping("/clusters/{clusterId}")
+  public ClusterUpgradeResponse clusterUpgrade(
+      @PathVariable String clusterId) {
+    return clusterUpgradeService.upgrade(clusterId);
+  }
+
+  @GetMapping("/{clusterId}/info")
+  public ClusterInfoResponse clusterInfo(@PathVariable String clusterId) {
+    return clusterUpgradeService.upgradeInfo(clusterId);
+  }
+
   @PostMapping
-  SseEmitter upgrade(@RequestBody ClusterUpgradeRequest upgradeRequest) throws IOException {
+  SseEmitter upgrade(@Valid @RequestBody ClusterUpgradeRequest upgradeRequest) throws IOException {
     SseEmitter sseEmitter = new SseEmitter();
     ClusterNode clusterNode = new KibanaNode();
     clusterNode.setIp("44.202.236.240");
