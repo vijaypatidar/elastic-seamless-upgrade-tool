@@ -24,7 +24,7 @@
 - `POST /api/elastic/clusters/:clusterId/prechecks`
 - `GET /api/elastic/clusters/:clusterId/prechecks`
 - `GET /api/elastic/clusters/:clusterId/prechecks/report`
-- `GET /api/elastic/clusters/verify`
+- `GET /api/elastic/clusters/verify` ❌
 
 ## Settings Routes (base: /api/settings)
 

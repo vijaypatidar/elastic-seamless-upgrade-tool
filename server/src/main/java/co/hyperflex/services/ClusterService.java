@@ -81,6 +81,8 @@ public class ClusterService {
   }
 
   public List<GetClusterResponse> getClusters() {
-    return null;
+    return clusterRepository.findAll().stream()
+        .map(cluster -> clusterMapper.toGetClusterResponse(cluster, null))
+        .toList();
   }
 }

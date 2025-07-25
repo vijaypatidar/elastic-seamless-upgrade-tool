@@ -10,19 +10,21 @@ import org.springframework.data.mongodb.core.mapping.Document;
 /**
  * Base Precheck class with polymorphic serialization.
  */
-@Document(collection = "prechecks")
+@Document(collection = "precheck-runs")
 @JsonTypeInfo(
     use = JsonTypeInfo.Id.NAME,
     include = JsonTypeInfo.As.EXISTING_PROPERTY,
     property = "type",
     visible = true
 )
-@JsonSubTypes({@JsonSubTypes.Type(value = ClusterPrecheck.class, name = "CLUSTER"),
-    @JsonSubTypes.Type(value = NodePrecheck.class, name = "NODE"),
-    @JsonSubTypes.Type(value = IndexPrecheck.class, name = "INDEX")})
-public abstract class Precheck {
+@JsonSubTypes({@JsonSubTypes.Type(value = ClusterPrecheckRun.class, name = "CLUSTER"),
+    @JsonSubTypes.Type(value = NodePrecheckRun.class, name = "NODE"),
+    @JsonSubTypes.Type(value = IndexPrecheckRun.class, name = "INDEX")})
+public abstract class PrecheckRun {
   @Id
   private String id;
+
+  private String precheckId;
 
   private String name;
 
@@ -41,7 +43,6 @@ public abstract class Precheck {
   private Date startedAt;
 
   private Date endAt;
-
 
   public String getId() {
     return id;
@@ -117,6 +118,14 @@ public abstract class Precheck {
 
   public Date getEndAt() {
     return endAt;
+  }
+
+  public String getPrecheckId() {
+    return precheckId;
+  }
+
+  public void setPrecheckId(String precheckId) {
+    this.precheckId = precheckId;
   }
 
   public void setEndAt(Date endAt) {
