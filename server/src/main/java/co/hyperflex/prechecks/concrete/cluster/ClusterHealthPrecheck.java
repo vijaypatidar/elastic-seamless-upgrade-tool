@@ -1,7 +1,7 @@
 package co.hyperflex.prechecks.concrete.cluster;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch.cat.HealthResponse;
+import co.elastic.clients.elasticsearch.cat.health.HealthRecord;
 import co.hyperflex.prechecks.contexts.ClusterContext;
 import co.hyperflex.prechecks.core.BaseClusterPrecheck;
 import co.hyperflex.prechecks.core.PrecheckLogger;
@@ -22,8 +22,8 @@ public class ClusterHealthPrecheck extends BaseClusterPrecheck {
     PrecheckLogger logger = context.getLogger();
 
     try {
-      HealthResponse health = client.cat().health();
-      String status = health.toString(); // e.g., "green", "yellow", "red"
+      HealthRecord health = client.cat().health().valueBody().get(0);
+      String status = health.status();
       boolean isHealthy = "green".equalsIgnoreCase(status);
 
       String message = String.format("Cluster health status: '%s'. Expected: 'green'.", status);

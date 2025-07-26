@@ -4,5 +4,6 @@ public enum NodeUpgradeStatus {
   AVAILABLE,
   UNAVAILABLE,
   UPGRADING,
-  FAILED
+  FAILED,
+  UPGRADED,
 }
