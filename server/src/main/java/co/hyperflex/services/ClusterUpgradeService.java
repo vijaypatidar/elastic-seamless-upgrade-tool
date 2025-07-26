@@ -9,6 +9,7 @@ import co.hyperflex.dtos.upgrades.ClusterNodeUpgradeResponse;
 import co.hyperflex.dtos.upgrades.ClusterUpgradeResponse;
 import co.hyperflex.dtos.upgrades.CreateClusterUpgradeJobRequest;
 import co.hyperflex.dtos.upgrades.CreateClusterUpgradeJobResponse;
+import co.hyperflex.entities.precheck.PrecheckStatus;
 import co.hyperflex.entities.upgrade.ClusterUpgradeJob;
 import co.hyperflex.entities.upgrade.ClusterUpgradeStatus;
 import co.hyperflex.exceptions.ConflictException;
@@ -70,6 +71,15 @@ public class ClusterUpgradeService {
   }
 
   public ClusterInfoResponse upgradeInfo(String clusterId) {
-    return null;
+    return new ClusterInfoResponse(
+        new ClusterInfoResponse.Elastic(
+            true,
+            new ClusterInfoResponse.Deprecations(1, 2),
+            new ClusterInfoResponse.Elastic.SnapshotWrapper(null, null),
+            null
+        ),
+        new ClusterInfoResponse.Kibana(true, new ClusterInfoResponse.Deprecations(1, 1)),
+        new ClusterInfoResponse.Precheck(PrecheckStatus.PASSED)
+    );
   }
 }

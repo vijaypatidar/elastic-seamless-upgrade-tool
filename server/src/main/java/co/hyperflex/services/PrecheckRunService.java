@@ -133,7 +133,7 @@ public class PrecheckRunService {
       duration = precheckRun.getEndAt().getTime() - precheckRun.getStartedAt().getTime();
     }
     return new GetClusterPrecheckEntry(
-        precheckRun.getPrecheckId(),
+        precheckRun.getId(),
         precheckRun.getName(),
         precheckRun.getStatus(),
         precheckRun.getLogs(),

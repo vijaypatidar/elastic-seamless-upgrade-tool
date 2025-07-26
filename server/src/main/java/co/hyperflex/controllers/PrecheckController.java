@@ -4,6 +4,7 @@ import co.hyperflex.dtos.prechecks.GetGroupedPrecheckResponseModels;
 import co.hyperflex.dtos.prechecks.PrecheckRerunRequest;
 import co.hyperflex.dtos.prechecks.PrecheckScheduleResponse;
 import co.hyperflex.prechecks.scheduler.PrecheckSchedulerService;
+import co.hyperflex.services.PrecheckReportService;
 import co.hyperflex.services.PrecheckRunService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,11 +20,14 @@ public class PrecheckController {
 
   private final PrecheckSchedulerService scheduler;
   private final PrecheckRunService precheckRunService;
+  private final PrecheckReportService precheckReportService;
 
   public PrecheckController(PrecheckSchedulerService scheduler,
-                            PrecheckRunService precheckRunService) {
+                            PrecheckRunService precheckRunService,
+                            PrecheckReportService precheckReportService) {
     this.scheduler = scheduler;
     this.precheckRunService = precheckRunService;
+    this.precheckReportService = precheckReportService;
   }
 
   @PostMapping("")
@@ -42,6 +46,11 @@ public class PrecheckController {
   public GetGroupedPrecheckResponseModels.GetGroupedPrecheckResponse getGroupedPrechecks(
       @PathVariable String clusterId) {
     return precheckRunService.getGroupedPrecheckByClusterId(clusterId);
+  }
+
+  @GetMapping("/report")
+  public String getReport(@PathVariable String clusterId) {
+    return precheckReportService.generatePrecheckReportMdContent(clusterId);
   }
 
 
