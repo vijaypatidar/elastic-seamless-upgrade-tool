@@ -13,17 +13,24 @@ import co.hyperflex.dtos.clusters.GetClusterNodeResponse;
 import co.hyperflex.dtos.clusters.GetClusterResponse;
 import co.hyperflex.dtos.clusters.UpdateClusterRequest;
 import co.hyperflex.dtos.clusters.UpdateClusterResponse;
+import co.hyperflex.dtos.clusters.UpdateElasticCloudClusterRequest;
+import co.hyperflex.dtos.clusters.UpdateSelfManagedClusterRequest;
 import co.hyperflex.entities.cluster.Cluster;
 import co.hyperflex.entities.cluster.ClusterNode;
 import co.hyperflex.entities.cluster.ClusterNodeType;
+import co.hyperflex.entities.cluster.ElasticCloudCluster;
 import co.hyperflex.entities.cluster.ElasticNode;
 import co.hyperflex.entities.cluster.OperatingSystemInfo;
+import co.hyperflex.entities.cluster.SelfManagedCluster;
+import co.hyperflex.entities.cluster.SshInfo;
 import co.hyperflex.entities.upgrade.NodeUpgradeStatus;
+import co.hyperflex.exceptions.BadRequestException;
+import co.hyperflex.exceptions.NotFoundException;
 import co.hyperflex.mappers.ClusterMapper;
 import co.hyperflex.repositories.ClusterNodeRepository;
 import co.hyperflex.repositories.ClusterRepository;
+import co.hyperflex.utils.HashUtil;
 import co.hyperflex.utils.NodeRoleRankerUtils;
-import jakarta.validation.Valid;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
@@ -53,13 +60,13 @@ public class ClusterService {
   public AddClusterResponse add(final AddClusterRequest request) {
     final Cluster cluster = this.clusterMapper.toEntity(request);
     clusterRepository.save(cluster);
-    List<ClusterNode> nodes = buildClusterNodes(cluster);
-    clusterNodeRepository.saveAll(nodes);
+    syncElasticNodes(cluster);
     if (request instanceof AddSelfManagedClusterRequest selfManagedRequest) {
       final List<ClusterNode> clusterNodes = selfManagedRequest.getKibanaNodes()
           .stream()
           .map(kibanaNodeRequest -> {
             ClusterNode node = clusterMapper.toNodeEntity(kibanaNodeRequest);
+            node.setId(HashUtil.generateHash(cluster.getId() + ":" + node.getIp()));
             node.setClusterId(cluster.getId());
             return node;
           }).toList();
@@ -68,6 +75,50 @@ public class ClusterService {
     }
 
     return new AddClusterResponse(cluster.getId());
+  }
+
+  public UpdateClusterResponse updateCluster(String clusterId,
+                                             UpdateClusterRequest request) {
+    Cluster cluster = clusterRepository.findById(clusterId)
+        .orElseThrow(() -> new co.hyperflex.exceptions.NotFoundException(
+            "Cluster not found with id: " + clusterId));
+
+    cluster.setName(request.getName());
+    cluster.setElasticUrl(request.getElasticUrl());
+    cluster.setKibanaUrl(request.getKibanaUrl());
+    cluster.setUsername(request.getUsername());
+    cluster.setApiKey(request.getApiKey());
+    cluster.setPassword(request.getPassword());
+
+
+    if (request instanceof UpdateSelfManagedClusterRequest selfManagedRequest
+        && cluster instanceof SelfManagedCluster selfManagedCluster) {
+      selfManagedCluster.setSshInfo(
+          new SshInfo(selfManagedRequest.getSshUsername(), selfManagedRequest.getSshKey()));
+
+      if (selfManagedRequest.getKibanaNodes() != null
+          && !selfManagedRequest.getKibanaNodes().isEmpty()) {
+        final List<ClusterNode> clusterNodes = selfManagedRequest.getKibanaNodes()
+            .stream()
+            .map(kibanaNodeRequest -> {
+              ClusterNode node = clusterMapper.toNodeEntity(kibanaNodeRequest);
+              node.setClusterId(cluster.getId());
+              node.setId(HashUtil.generateHash(cluster.getId() + ":" + node.getIp()));
+              return node;
+            }).toList();
+        clusterNodeRepository.saveAll(clusterNodes);
+      }
+
+    } else if (request instanceof UpdateElasticCloudClusterRequest elasticCloudRequest
+        && cluster instanceof ElasticCloudCluster elasticCloudCluster) {
+      elasticCloudCluster.setDeploymentId(elasticCloudRequest.getDeploymentId());
+    } else {
+      throw new BadRequestException("Invalid request");
+    }
+
+    clusterRepository.save(cluster);
+    syncElasticNodes(cluster);
+    return new UpdateClusterResponse();
   }
 
   public GetClusterResponse getClusterById(String clusterId) {
@@ -81,7 +132,7 @@ public class ClusterService {
           .toList();
       return clusterMapper.toGetClusterResponse(cluster, kibanaNodes);
     }
-    return null;
+    throw new NotFoundException("Cluster not found with id: " + clusterId);
   }
 
   public List<GetClusterNodeResponse> getNodes(String clusterId, ClusterNodeType type) {
@@ -91,11 +142,6 @@ public class ClusterService {
     }
     return clusterNodeRepository.findByClusterIdAndType(clusterId, type).stream()
         .map(clusterMapper::toGetClusterNodeResponse).toList();
-  }
-
-  public UpdateClusterResponse updateCluster(String clusterId,
-                                             @Valid UpdateClusterRequest request) {
-    return null;
   }
 
   public List<GetClusterResponse> getClusters() {
@@ -112,7 +158,7 @@ public class ClusterService {
         .toList();
   }
 
-  private List<ClusterNode> buildClusterNodes(Cluster cluster) {
+  private void syncElasticNodes(Cluster cluster) {
 
     try {
       ElasticsearchClient client =
@@ -161,7 +207,7 @@ public class ClusterService {
         clusterNodes.add(node);
       }
 
-      return clusterNodes;
+      clusterNodeRepository.saveAll(clusterNodes);
 
     } catch (IOException e) {
       log.error("Error syncing nodes from Elasticsearch:", e);

@@ -40,7 +40,8 @@ public class ClusterController {
   }
 
   @PutMapping("/{clusterId}")
-  public UpdateClusterResponse updateCluster(@Valid @RequestBody UpdateClusterRequest request,
+  public UpdateClusterResponse updateCluster(@Valid @RequestBody
+                                               UpdateClusterRequest request,
                                              @PathVariable String clusterId) {
     return clusterService.updateCluster(clusterId, request);
   }

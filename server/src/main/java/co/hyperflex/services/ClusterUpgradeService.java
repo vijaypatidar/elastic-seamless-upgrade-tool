@@ -23,6 +23,8 @@ import co.hyperflex.exceptions.ConflictException;
 import co.hyperflex.repositories.ClusterNodeRepository;
 import co.hyperflex.repositories.ClusterRepository;
 import co.hyperflex.repositories.ClusterUpgradeJobRepository;
+import co.hyperflex.services.notifications.NotificationService;
+import co.hyperflex.services.notifications.UpgradeProgressChangeEvent;
 import co.hyperflex.upgrader.planner.UpgradePlanBuilder;
 import co.hyperflex.upgrader.tasks.Configuration;
 import co.hyperflex.upgrader.tasks.Context;
@@ -47,6 +49,7 @@ public class ClusterUpgradeService {
   private final ClusterRepository clusterRepository;
   private final KibanaClientProvider kibanaClientProvider;
   private final ClusterUpgradeJobService clusterUpgradeJobService;
+  private final NotificationService notificationService;
   private final ExecutorService executorService = Executors.newFixedThreadPool(1);
   private final Lock lock = new ReentrantLock();
 
@@ -55,13 +58,15 @@ public class ClusterUpgradeService {
                                ClusterNodeRepository clusterNodeRepository,
                                ClusterRepository clusterRepository,
                                KibanaClientProvider kibanaClientProvider,
-                               ClusterUpgradeJobService clusterUpgradeJobService) {
+                               ClusterUpgradeJobService clusterUpgradeJobService,
+                               NotificationService notificationService) {
     this.clusterUpgradeJobRepository = clusterUpgradeJobRepository;
     this.elasticsearchClientProvider = elasticsearchClientProvider;
     this.clusterNodeRepository = clusterNodeRepository;
     this.clusterRepository = clusterRepository;
     this.kibanaClientProvider = kibanaClientProvider;
     this.clusterUpgradeJobService = clusterUpgradeJobService;
+    this.notificationService = notificationService;
   }
 
   public CreateClusterUpgradeJobResponse createClusterUpgradeJob(
@@ -141,6 +146,10 @@ public class ClusterUpgradeService {
         KibanaClient kibanaClient = kibanaClientProvider.getClient(cluster);
 
         for (ClusterNode node : nodes) {
+          if (NodeUpgradeStatus.UPGRADED == node.getStatus()) {
+            log.info("Skipping node with [NodeId: {}] as its already updated", node.getId());
+            continue;
+          }
           Configuration config = new Configuration(9300, 9200, cluster.getSshInfo().username(),
               "/Users/vijay/Projects/elastic-seamless-upgrade-tool/backend/ansible/ssh-keys/SSH_key.pem",
               clusterUpgradeJob.getTargetVersion());
@@ -150,31 +159,38 @@ public class ClusterUpgradeService {
 
           List<Task> tasks = upgradePlanBuilder.buildPlanFor(node);
           double seq = 0.0;
-
+          node.setStatus(NodeUpgradeStatus.UPGRADING);
           updateNodeProgress(node, 0);
 
           for (Task task : tasks) {
-            TaskResult result = task.run(context);
-            System.out.println(result);
-            if (!result.isSuccess()) {
-              log.error("Task [taskId: {}] [Sequence: {}] failed with result {}", task.getId(),
-                  seq, result);
-              node.setStatus(NodeUpgradeStatus.FAILED);
+            try {
+              TaskResult result = task.run(context);
+              System.out.println(result);
+              log.info("Task [taskId: {}] [Sequence: {}] [Success: {}]  Result: {}", task.getId(),
+                  seq, result.isSuccess(), result);
+              if (!result.isSuccess()) {
+                node.setStatus(NodeUpgradeStatus.FAILED);
+                updateNodeProgress(node, (int) ((seq / tasks.size()) * 100));
+                throw new RuntimeException(result.getMessage());
+              }
+              seq++;
               updateNodeProgress(node, (int) ((seq / tasks.size()) * 100));
-              throw new RuntimeException(result.getMessage());
+              Thread.sleep(2000);
+            } finally {
+              notificationService.sendNotification(new UpgradeProgressChangeEvent());
             }
-            updateNodeProgress(node, (int) ((seq / tasks.size()) * 100));
-            Thread.sleep(5000);
-            seq++;
           }
 
+          node.setVersion(config.targetVersion());
           node.setStatus(NodeUpgradeStatus.UPGRADED);
           updateNodeProgress(node, 100);
+          notificationService.sendNotification(new UpgradeProgressChangeEvent());
 
         }
       } catch (Exception e) {
-        log.error("Cluster upgrade failed", e);
+        log.error("[ClusterId: {}] Cluster upgrade failed", cluster.getId(), e);
       } finally {
+        notificationService.sendNotification(new UpgradeProgressChangeEvent());
         lock.unlock();
       }
     });

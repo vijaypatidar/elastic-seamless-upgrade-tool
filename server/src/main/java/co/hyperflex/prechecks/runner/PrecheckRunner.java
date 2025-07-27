@@ -14,7 +14,8 @@ import co.hyperflex.prechecks.core.BaseNodePrecheck;
 import co.hyperflex.prechecks.core.Precheck;
 import co.hyperflex.prechecks.registry.PrecheckRegistry;
 import co.hyperflex.repositories.PrecheckRunRepository;
-import co.hyperflex.services.RealtimeUpdateService;
+import co.hyperflex.services.notifications.NotificationService;
+import co.hyperflex.services.notifications.PrecheckProgressChangeEvent;
 import jakarta.annotation.PostConstruct;
 import java.util.Date;
 import java.util.List;
@@ -32,15 +33,15 @@ public class PrecheckRunner {
   private final ExecutorService executor;
   private final PrecheckRegistry precheckRegistry;
   private final PrecheckContextResolver precheckContextResolver;
-  private final RealtimeUpdateService realtimeUpdateService;
+  private final NotificationService notificationService;
 
   public PrecheckRunner(PrecheckRunRepository precheckRunRepository,
                         PrecheckRegistry precheckRegistry,
                         PrecheckContextResolver precheckContextResolver,
-                        RealtimeUpdateService realtimeUpdateService) {
+                        NotificationService notificationService) {
     this.precheckRunRepository = precheckRunRepository;
     this.precheckContextResolver = precheckContextResolver;
-    this.realtimeUpdateService = realtimeUpdateService;
+    this.notificationService = notificationService;
     this.executor = Executors.newFixedThreadPool(10);
     this.precheckRegistry = precheckRegistry;
   }
@@ -134,7 +135,7 @@ public class PrecheckRunner {
       record.getLogs().add(e.getMessage());
       precheckRunRepository.save(record);
     } finally {
-      realtimeUpdateService.notifyStatusChange(record.getId(), record.getStatus().name());
+      notificationService.sendNotification(new PrecheckProgressChangeEvent());
     }
   }
 }

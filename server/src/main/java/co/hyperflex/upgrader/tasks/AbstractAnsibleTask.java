@@ -31,7 +31,7 @@ public abstract class AbstractAnsibleTask implements Task {
     command.add(config.sshUser());
     command.add("--private-key");
     command.add(config.sshKeyPath());
-    command.add("-e 'ansible_ssh_common_args=\"-o StrictHostKeyChecking=no\"'");
+    command.add("-e 'ansible_ssh_common_args=-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'");
     if (cmd.isUseBecome()) {
       command.add("-b");
     }

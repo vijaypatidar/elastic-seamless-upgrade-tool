@@ -18,7 +18,6 @@ import co.hyperflex.entities.cluster.KibanaNode;
 import co.hyperflex.entities.cluster.SelfManagedCluster;
 import co.hyperflex.entities.cluster.SshInfo;
 import java.util.List;
-import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -52,12 +51,12 @@ public class ClusterMapper {
 
   public ClusterNode toNodeEntity(AddClusterKibanaNodeRequest request) {
     ClusterNode node = new KibanaNode();
-    node.setId(UUID.randomUUID().toString());
     node.setName(request.name());
     node.setIp(request.ip());
     node.setVersion("7.17.0");
     node.setRoles(List.of("kibana"));
     node.setType(ClusterNodeType.KIBANA);
+    //todo
     return node;
   }
 
