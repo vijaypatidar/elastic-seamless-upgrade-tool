@@ -1,10 +1,10 @@
 package co.hyperflex.utils;
 
-import java.util.Set;
+import java.util.List;
 
 public class NodeRoleRankerUtils {
 
-  public static int getNodeRankByRoles(Set<String> roles, boolean isActiveMaster) {
+  public static int getNodeRankByRoles(List<String> roles, boolean isActiveMaster) {
     boolean isMaster = roles.contains("master");
     boolean isData = roles.stream().anyMatch(role -> role.startsWith("data"));
     boolean isIngest = roles.contains("ingest");
