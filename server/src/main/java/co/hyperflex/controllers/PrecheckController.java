@@ -1,6 +1,6 @@
 package co.hyperflex.controllers;
 
-import co.hyperflex.dtos.prechecks.GetGroupedPrecheckResponseModels;
+import co.hyperflex.dtos.prechecks.GetGroupedPrecheckResponse;
 import co.hyperflex.dtos.prechecks.PrecheckRerunRequest;
 import co.hyperflex.dtos.prechecks.PrecheckScheduleResponse;
 import co.hyperflex.prechecks.scheduler.PrecheckSchedulerService;
@@ -43,8 +43,7 @@ public class PrecheckController {
   }
 
   @GetMapping("")
-  public GetGroupedPrecheckResponseModels.GetGroupedPrecheckResponse getGroupedPrechecks(
-      @PathVariable String clusterId) {
+  public GetGroupedPrecheckResponse getGroupedPrechecks(@PathVariable String clusterId) {
     return precheckRunService.getGroupedPrecheckByClusterId(clusterId);
   }
 

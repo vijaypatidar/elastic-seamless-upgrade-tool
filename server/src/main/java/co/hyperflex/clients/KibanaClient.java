@@ -36,4 +36,16 @@ public class KibanaClient {
   public RestTemplate getRestTemplate() {
     return restTemplate;
   }
+
+  public String getKibanaVersion() {
+    return null;
+  }
+
+  public String getKibanaUrl() {
+    return kibanaUrl;
+  }
+
+  public String getSnapshotCreationPageUrl() {
+    return kibanaUrl + "/app/management/data/snapshot_restore/snapshots";
+  }
 }

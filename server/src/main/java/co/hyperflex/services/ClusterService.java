@@ -10,6 +10,7 @@ import co.elastic.clients.elasticsearch.nodes.NodesInfoResponse;
 import co.elastic.clients.elasticsearch.nodes.info.NodeInfo;
 import co.hyperflex.clients.ElasticClient;
 import co.hyperflex.clients.ElasticsearchClientProvider;
+import co.hyperflex.dtos.GetDeprecationsResponse;
 import co.hyperflex.dtos.clusters.AddClusterRequest;
 import co.hyperflex.dtos.clusters.AddClusterResponse;
 import co.hyperflex.dtos.clusters.AddSelfManagedClusterRequest;
@@ -29,18 +30,17 @@ import co.hyperflex.entities.cluster.ElasticNode;
 import co.hyperflex.entities.cluster.OperatingSystemInfo;
 import co.hyperflex.entities.cluster.SelfManagedCluster;
 import co.hyperflex.entities.cluster.SshInfo;
-import co.hyperflex.entities.upgrade.ClusterUpgradeStatus;
 import co.hyperflex.entities.upgrade.NodeUpgradeStatus;
 import co.hyperflex.exceptions.BadRequestException;
 import co.hyperflex.exceptions.NotFoundException;
 import co.hyperflex.mappers.ClusterMapper;
 import co.hyperflex.repositories.ClusterNodeRepository;
 import co.hyperflex.repositories.ClusterRepository;
-import co.hyperflex.repositories.ClusterUpgradeJobRepository;
 import co.hyperflex.utils.HashUtil;
 import co.hyperflex.utils.NodeRoleRankerUtils;
 import co.hyperflex.utils.UpgradePathUtils;
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -57,17 +57,20 @@ public class ClusterService {
   private final ClusterNodeRepository clusterNodeRepository;
   private final ClusterMapper clusterMapper;
   private final ElasticsearchClientProvider elasticsearchClientProvider;
-  private final ClusterUpgradeJobRepository clusterUpgradeJobRepository;
+  private final ClusterUpgradeJobService clusterUpgradeJobService;
+  private final SshKeyService sshKeyService;
 
   public ClusterService(ClusterRepository clusterRepository,
                         ClusterNodeRepository clusterNodeRepository, ClusterMapper clusterMapper,
                         ElasticsearchClientProvider elasticsearchClientProvider,
-                        ClusterUpgradeJobRepository clusterUpgradeJobRepository) {
+                        ClusterUpgradeJobService clusterUpgradeJobService,
+                        SshKeyService sshKeyService) {
     this.clusterRepository = clusterRepository;
     this.clusterNodeRepository = clusterNodeRepository;
     this.clusterMapper = clusterMapper;
     this.elasticsearchClientProvider = elasticsearchClientProvider;
-    this.clusterUpgradeJobRepository = clusterUpgradeJobRepository;
+    this.clusterUpgradeJobService = clusterUpgradeJobService;
+    this.sshKeyService = sshKeyService;
   }
 
   public AddClusterResponse add(final AddClusterRequest request) {
@@ -106,8 +109,10 @@ public class ClusterService {
 
     if (request instanceof UpdateSelfManagedClusterRequest selfManagedRequest
         && cluster instanceof SelfManagedCluster selfManagedCluster) {
+      String file =
+          sshKeyService.createSSHPrivateKeyFile(selfManagedRequest.getSshKey(), "SSH_key.pem");
       selfManagedCluster.setSshInfo(
-          new SshInfo(selfManagedRequest.getSshUsername(), selfManagedRequest.getSshKey()));
+          new SshInfo(selfManagedRequest.getSshUsername(), selfManagedRequest.getSshKey(), file));
 
       if (selfManagedRequest.getKibanaNodes() != null
           && !selfManagedRequest.getKibanaNodes().isEmpty()) {
@@ -149,11 +154,31 @@ public class ClusterService {
   }
 
   public List<GetClusterNodeResponse> getNodes(String clusterId, ClusterNodeType type) {
+    List<ClusterNode> clusterNodes;
+
     if (type == null) {
-      return clusterNodeRepository.findByClusterId(clusterId).stream()
-          .map(clusterMapper::toGetClusterNodeResponse).toList();
+      clusterNodes = clusterNodeRepository.findByClusterId(clusterId);
+    } else {
+      clusterNodes = clusterNodeRepository.findByClusterIdAndType(clusterId, type);
     }
-    return clusterNodeRepository.findByClusterIdAndType(clusterId, type).stream()
+
+    int minNonUpgradedNodeRank = clusterNodes.stream()
+        .filter(node -> node.getStatus() != NodeUpgradeStatus.UPGRADED)
+        .mapToInt(ClusterNode::getRank)
+        .min()
+        .orElse(Integer.MAX_VALUE);
+
+    boolean isUpgrading =
+        clusterNodes.stream().anyMatch(node -> node.getStatus() == NodeUpgradeStatus.UPGRADING);
+
+    return clusterNodes.stream()
+        .peek(node ->
+            node.setUpgradable(
+                node.getStatus() != NodeUpgradeStatus.UPGRADED
+                    && !isUpgrading
+                    && node.getRank() <= minNonUpgradedNodeRank)
+        )
+        .sorted(Comparator.comparingInt(ClusterNode::getRank))
         .map(clusterMapper::toGetClusterNodeResponse).toList();
   }
 
@@ -175,8 +200,7 @@ public class ClusterService {
     Cluster cluster = clusterRepository.getCluster(clusterId);
     ElasticClient elasticClient = elasticsearchClientProvider.getClient(cluster);
     ElasticsearchClient client = elasticClient.getElasticsearchClient();
-    boolean noUpgradeJob = clusterUpgradeJobRepository.findByClusterIdAndStatusIsNot(clusterId,
-        ClusterUpgradeStatus.UPDATED).isEmpty();
+    boolean upgradeJobExists = clusterUpgradeJobService.clusterUpgradeJobExists(clusterId);
     try {
       InfoResponse info = client.info();
       HealthResponse health = client.cluster().health();
@@ -203,7 +227,7 @@ public class ClusterService {
           cluster.getType().name(),
           info.version().number(),
           UpgradePathUtils.getPossibleUpgrades(info.version().number()),
-          noUpgradeJob
+          !upgradeJobExists
       );
 
     } catch (IOException e) {
@@ -263,6 +287,7 @@ public class ClusterService {
         clusterNodes.add(node);
       }
 
+
       clusterNodeRepository.saveAll(clusterNodes);
 
     } catch (IOException e) {
@@ -271,4 +296,22 @@ public class ClusterService {
     }
   }
 
+  public boolean isNodesUpgraded(String clusterId, ClusterNodeType clusterNodeType) {
+    return getNodes(clusterId, clusterNodeType).stream().map(GetClusterNodeResponse::status)
+        .map(status -> NodeUpgradeStatus.UPGRADED == status)
+        .reduce(true, Boolean::equals);
+  }
+
+  public List<GetDeprecationsResponse> getKibanaDeprecations(String clusterId) {
+    return getElasticDeprecations(clusterId);
+  }
+
+  public List<GetDeprecationsResponse> getElasticDeprecations(String clusterId) {
+    return List.of(new GetDeprecationsResponse(
+        "The \"xpack.reporting.roles\" setting is deprecated",
+        "The default mechanism for Reporting privileges will work differently in future versions.",
+        "warning",
+        List.of("Set \"xpack.reporting.roles.enabled\" to \"false\" in kibana.yml.")
+    ));
+  }
 }

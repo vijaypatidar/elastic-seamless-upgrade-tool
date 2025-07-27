@@ -17,19 +17,29 @@ import co.hyperflex.entities.cluster.ElasticNode;
 import co.hyperflex.entities.cluster.KibanaNode;
 import co.hyperflex.entities.cluster.SelfManagedCluster;
 import co.hyperflex.entities.cluster.SshInfo;
+import co.hyperflex.services.SshKeyService;
+import co.hyperflex.utils.NodeRoleRankerUtils;
 import java.util.List;
 import org.springframework.stereotype.Component;
 
 @Component
 public class ClusterMapper {
 
+  private final SshKeyService sshKeyService;
+
+  public ClusterMapper(SshKeyService sshKeyService) {
+    this.sshKeyService = sshKeyService;
+  }
+
   public Cluster toEntity(AddClusterRequest request) {
     final Cluster cluster = switch (request) {
       case AddSelfManagedClusterRequest selfManagedRequest -> {
         SelfManagedCluster selfManagedCluster = new SelfManagedCluster();
+        String file =
+            sshKeyService.createSSHPrivateKeyFile(selfManagedRequest.getSshKey(), "SSH_key.pem");
         selfManagedCluster.setSshInfo(new SshInfo(
             selfManagedRequest.getSshUsername(),
-            selfManagedRequest.getSshKey()));
+            selfManagedRequest.getSshKey(), file));
         yield selfManagedCluster;
       }
       case AddElasticCloudClusterRequest elasticCloudRequest -> {
@@ -56,6 +66,7 @@ public class ClusterMapper {
     node.setVersion("7.17.0");
     node.setRoles(List.of("kibana"));
     node.setType(ClusterNodeType.KIBANA);
+    node.setRank(NodeRoleRankerUtils.getNodeRankByRoles(node.getRoles(), false));
     //todo
     return node;
   }
@@ -67,6 +78,8 @@ public class ClusterMapper {
         GetSelfManagedClusterResponse selfManagedClusterResponse =
             new GetSelfManagedClusterResponse();
         selfManagedClusterResponse.setKibanaNodes(kibanaNodes);
+        selfManagedClusterResponse.setSshKey(selfManagedCluster.getSshInfo().key());
+        selfManagedClusterResponse.setSshUsername(selfManagedCluster.getSshInfo().username());
         yield selfManagedClusterResponse;
       }
       case ElasticCloudCluster elasticCloudCluster -> {
@@ -101,7 +114,8 @@ public class ClusterMapper {
         node.getProgress(),
         node.getStatus(),
         node.getOs(),
-        node instanceof ElasticNode elasticNode && elasticNode.isMaster()
+        node instanceof ElasticNode elasticNode && elasticNode.isMaster(),
+        node.isUpgradable()
     );
   }
 

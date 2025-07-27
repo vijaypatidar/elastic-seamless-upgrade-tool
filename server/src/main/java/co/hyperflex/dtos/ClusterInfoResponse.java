@@ -2,7 +2,6 @@ package co.hyperflex.dtos;
 
 import co.hyperflex.entities.precheck.PrecheckStatus;
 import jakarta.validation.constraints.NotNull;
-import java.time.Instant;
 
 public record ClusterInfoResponse(
     @NotNull Elastic elastic,
@@ -12,18 +11,11 @@ public record ClusterInfoResponse(
   public record Elastic(
       boolean isUpgradable,
       Deprecations deprecations,
-      SnapshotWrapper snapshot,
-      String creationPage
+      SnapshotWrapper snapshot
   ) {
     public record SnapshotWrapper(
-        Snapshot snapshot,
+        GetElasticsearchSnapshotResponse snapshot,
         String creationPage
-    ) {
-    }
-
-    public record Snapshot(
-        Instant createdAt,
-        String name
     ) {
     }
   }

@@ -1,10 +1,10 @@
 package co.hyperflex.services;
 
-import co.hyperflex.dtos.prechecks.GetGroupedPrecheckResponseModels;
-import co.hyperflex.dtos.prechecks.GetGroupedPrecheckResponseModels.GetClusterPrecheckEntry;
-import co.hyperflex.dtos.prechecks.GetGroupedPrecheckResponseModels.GetIndexPrecheckGroup;
-import co.hyperflex.dtos.prechecks.GetGroupedPrecheckResponseModels.GetNodePrecheckGroup;
-import co.hyperflex.dtos.prechecks.GetGroupedPrecheckResponseModels.GetPrecheckEntry;
+import co.hyperflex.dtos.prechecks.GetClusterPrecheckEntry;
+import co.hyperflex.dtos.prechecks.GetGroupedPrecheckResponse;
+import co.hyperflex.dtos.prechecks.GetIndexPrecheckGroup;
+import co.hyperflex.dtos.prechecks.GetNodePrecheckGroup;
+import co.hyperflex.dtos.prechecks.GetPrecheckEntry;
 import co.hyperflex.dtos.prechecks.PrecheckRerunRequest;
 import co.hyperflex.entities.precheck.ClusterPrecheckRun;
 import co.hyperflex.entities.precheck.IndexPrecheckRun;
@@ -43,75 +43,52 @@ public class PrecheckRunService {
     this.precheckMapper = precheckMapper;
   }
 
-  public GetGroupedPrecheckResponseModels.GetGroupedPrecheckResponse getGroupedPrecheckByClusterId(
-      String clusterId) {
+  public GetGroupedPrecheckResponse getGroupedPrecheckByClusterId(String clusterId) {
 
     return precheckGroupRepository.findFirstByClusterIdOrderByCreatedAtDesc(clusterId)
         .map(precheckGroup -> {
           List<PrecheckRun> precheckRuns =
               precheckRunRepository.findByPrecheckGroupId(precheckGroup.getId());
 
-          Map<String, List<GetPrecheckEntry>> nodePrechecks = precheckRuns.stream()
-              .filter(pr -> pr instanceof NodePrecheckRun)
-              .map(pr -> (NodePrecheckRun) pr)
-              .collect(Collectors.groupingBy(
-                  pr -> pr.getNode().getId(),
-                  Collectors.mapping(precheckMapper::toPrecheckEntry, Collectors.toList())
-              ));
+          Map<String, List<GetPrecheckEntry>> nodePrechecks =
+              precheckRuns.stream().filter(pr -> pr instanceof NodePrecheckRun)
+                  .map(pr -> (NodePrecheckRun) pr).collect(
+                      Collectors.groupingBy(pr -> pr.getNode().getId(),
+                          Collectors.mapping(precheckMapper::toPrecheckEntry, Collectors.toList())));
 
-          Map<String, List<GetPrecheckEntry>> indexPrechecks = precheckRuns.stream()
-              .filter(pr -> pr instanceof IndexPrecheckRun)
-              .map(pr -> (IndexPrecheckRun) pr)
-              .collect(Collectors.groupingBy(
-                  pr -> pr.getIndex().getName(),
-                  Collectors.mapping(precheckMapper::toPrecheckEntry, Collectors.toList())
-              ));
+          Map<String, List<GetPrecheckEntry>> indexPrechecks =
+              precheckRuns.stream().filter(pr -> pr instanceof IndexPrecheckRun)
+                  .map(pr -> (IndexPrecheckRun) pr).collect(
+                      Collectors.groupingBy(pr -> pr.getIndex().getName(),
+                          Collectors.mapping(precheckMapper::toPrecheckEntry, Collectors.toList())));
 
-          List<GetClusterPrecheckEntry> clusterPrechecks = precheckRuns.stream()
-              .filter(pr -> pr instanceof ClusterPrecheckRun)
-              .map(precheckMapper::toClusterPrecheckEntry)
-              .toList();
+          List<GetClusterPrecheckEntry> clusterPrechecks =
+              precheckRuns.stream().filter(pr -> pr instanceof ClusterPrecheckRun)
+                  .map(precheckMapper::toClusterPrecheckEntry).toList();
 
-          List<GetNodePrecheckGroup> nodeGroups = nodePrechecks.entrySet().stream()
-              .map(entry -> {
-                NodePrecheckRun.NodeInfo nodeInfo = ((NodePrecheckRun) precheckRuns.stream()
-                    .filter(pr -> pr instanceof NodePrecheckRun && ((NodePrecheckRun) pr).getNode()
-                        .getId().equals(entry.getKey()))
-                    .findFirst()
-                    .orElseThrow()).getNode();
-                PrecheckStatus status = entry.getValue().stream()
-                    .anyMatch(p -> PrecheckStatus.FAILED == p.status()) ? PrecheckStatus.FAILED :
-                    PrecheckStatus.PASSED;
-                return new GetNodePrecheckGroup(
-                    nodeInfo.getId(),
-                    nodeInfo.getIp(),
-                    nodeInfo.getName(),
-                    status,
-                    entry.getValue()
-                );
-              })
-              .toList();
+          List<GetNodePrecheckGroup> nodeGroups = nodePrechecks.entrySet().stream().map(entry -> {
+            NodePrecheckRun.NodeInfo nodeInfo = ((NodePrecheckRun) precheckRuns.stream().filter(
+                    pr -> pr instanceof NodePrecheckRun nodePrecheckRun
+                        && nodePrecheckRun.getNode().getId().equals(entry.getKey())).findFirst()
+                .orElseThrow()).getNode();
+            PrecheckStatus status =
+                entry.getValue().stream().anyMatch(p -> PrecheckStatus.FAILED == p.status())
+                    ? PrecheckStatus.FAILED : PrecheckStatus.PASSED;
+            return new GetNodePrecheckGroup(nodeInfo.getId(), nodeInfo.getIp(), nodeInfo.getName(),
+                status, entry.getValue());
+          }).toList();
 
-          List<GetIndexPrecheckGroup> indexGroups = indexPrechecks.entrySet().stream()
-              .map(entry -> {
-                PrecheckStatus status = entry.getValue().stream()
-                    .anyMatch(p -> PrecheckStatus.FAILED == p.status()) ? PrecheckStatus.FAILED :
-                    PrecheckStatus.PASSED;
-                return new GetIndexPrecheckGroup(
-                    entry.getKey(),
-                    entry.getKey(),
-                    status,
-                    entry.getValue()
-                );
-              })
-              .toList();
+          List<GetIndexPrecheckGroup> indexGroups =
+              indexPrechecks.entrySet().stream().map(entry -> {
+                PrecheckStatus status =
+                    entry.getValue().stream().anyMatch(p -> PrecheckStatus.FAILED == p.status())
+                        ? PrecheckStatus.FAILED : PrecheckStatus.PASSED;
+                return new GetIndexPrecheckGroup(entry.getKey(), entry.getKey(), status,
+                    entry.getValue());
+              }).toList();
 
-          return new GetGroupedPrecheckResponseModels.GetGroupedPrecheckResponse(
-              nodeGroups,
-              clusterPrechecks,
-              indexGroups,
-              Collections.emptyList()
-          );
+          return new GetGroupedPrecheckResponse(nodeGroups, clusterPrechecks, indexGroups,
+              Collections.emptyList());
         })
         .orElseThrow(() -> new NotFoundException("No PrecheckRun found for cluster: " + clusterId));
   }
@@ -137,9 +114,7 @@ public class PrecheckRunService {
 
     Query query = new Query(new Criteria().orOperator(criteriaList)
         .andOperator(Criteria.where("precheckGroupId").is(precheckGroupId)));
-    Update update = new Update()
-        .set("status", PrecheckStatus.PENDING)
-        .set("startedAt", null)
+    Update update = new Update().set("status", PrecheckStatus.PENDING).set("startedAt", null)
         .set("endAt", null);
     mongoTemplate.updateMulti(query, update, PrecheckRun.class);
   }

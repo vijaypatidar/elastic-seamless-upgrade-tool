@@ -6,6 +6,7 @@ import co.hyperflex.dtos.upgrades.ClusterNodeUpgradeResponse;
 import co.hyperflex.dtos.upgrades.ClusterUpgradeResponse;
 import co.hyperflex.dtos.upgrades.CreateClusterUpgradeJobRequest;
 import co.hyperflex.dtos.upgrades.CreateClusterUpgradeJobResponse;
+import co.hyperflex.services.ClusterUpgradeJobService;
 import co.hyperflex.services.ClusterUpgradeService;
 import jakarta.validation.Valid;
 import java.util.concurrent.ExecutorService;
@@ -25,16 +26,19 @@ public class UpgradeController {
   private static final Logger logger = LoggerFactory.getLogger(UpgradeController.class);
   private final ExecutorService executor = Executors.newFixedThreadPool(1);
   private final ClusterUpgradeService clusterUpgradeService;
+  private final ClusterUpgradeJobService createClusterUpgradeJob;
 
-  public UpgradeController(ClusterUpgradeService clusterUpgradeService) {
+  public UpgradeController(ClusterUpgradeService clusterUpgradeService,
+                           ClusterUpgradeJobService createClusterUpgradeJob) {
     this.clusterUpgradeService = clusterUpgradeService;
+    this.createClusterUpgradeJob = createClusterUpgradeJob;
   }
 
 
   @PostMapping("/jobs")
   public CreateClusterUpgradeJobResponse clusterUpgradeJob(
       @Valid @RequestBody CreateClusterUpgradeJobRequest request) {
-    return clusterUpgradeService.createClusterUpgradeJob(request);
+    return createClusterUpgradeJob.createClusterUpgradeJob(request);
   }
 
   @PostMapping("/nodes")

@@ -1,8 +1,10 @@
 package co.hyperflex.controllers;
 
+import co.hyperflex.dtos.GetDeprecationsResponse;
 import co.hyperflex.dtos.clusters.AddClusterRequest;
 import co.hyperflex.dtos.clusters.AddClusterResponse;
 import co.hyperflex.dtos.clusters.ClusterOverviewResponse;
+import co.hyperflex.dtos.clusters.ClusterVerifyResponse;
 import co.hyperflex.dtos.clusters.GetClusterNodeResponse;
 import co.hyperflex.dtos.clusters.GetClusterResponse;
 import co.hyperflex.dtos.clusters.UpdateClusterRequest;
@@ -64,7 +66,7 @@ public class ClusterController {
     return clusterService.getNodes(clusterId, type);
   }
 
-  @PostMapping(value = "/{clusterId}/upload", consumes = "multipart/form-data")
+  @PostMapping(value = "/certificates/upload", consumes = "multipart/form-data")
   public UploadCertificateResponse uploadCertificate(@RequestParam("files") MultipartFile[] files,
                                                      @PathVariable String clusterId) {
     return certificatesService.uploadCertificate(files, clusterId);
@@ -73,5 +75,25 @@ public class ClusterController {
   @GetMapping("{clusterId}/overview")
   public ClusterOverviewResponse getClusterOverview(@PathVariable String clusterId) {
     return clusterService.getClusterOverview(clusterId);
+  }
+
+  @GetMapping("/verify")
+  public ClusterVerifyResponse verify() {
+    List<GetClusterResponse> clusters = getClusters();
+    if (clusters.isEmpty()) {
+      return new ClusterVerifyResponse(false, null);
+    } else {
+      return new ClusterVerifyResponse(true, clusters.getLast());
+    }
+  }
+
+  @GetMapping("/{clusterId}/deprecations/kibana")
+  public List<GetDeprecationsResponse> getDeprecations(@PathVariable String clusterId) {
+    return clusterService.getKibanaDeprecations(clusterId);
+  }
+
+  @GetMapping("/{clusterId}/deprecations/elastic-search")
+  public List<GetDeprecationsResponse> getElasticDeprecations(@PathVariable String clusterId) {
+    return clusterService.getElasticDeprecations(clusterId);
   }
 }

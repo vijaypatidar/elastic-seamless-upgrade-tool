@@ -89,6 +89,7 @@ public class PrecheckRunner {
     try {
       record.setStatus(PrecheckStatus.RUNNING);
       record.setStartedAt(new Date());
+      record.getLogs().clear();
       precheckRunRepository.save(record);
 
       PrecheckContext context = precheckContextResolver.resolveContext(record);

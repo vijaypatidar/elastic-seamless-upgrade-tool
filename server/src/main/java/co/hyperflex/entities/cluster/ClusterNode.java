@@ -34,11 +34,13 @@ public abstract class ClusterNode {
 
   private int progress;
 
-  private NodeUpgradeStatus status;
+  private NodeUpgradeStatus status = NodeUpgradeStatus.AVAILABLE;
 
   private ClusterNodeType type;
 
   private int rank;
+
+  private boolean upgradable = false;
 
   @Field("createdAt")
   private Instant createdAt;
@@ -148,5 +150,13 @@ public abstract class ClusterNode {
 
   public void setUpdatedAt(Instant updatedAt) {
     this.updatedAt = updatedAt;
+  }
+
+  public boolean isUpgradable() {
+    return upgradable;
+  }
+
+  public void setUpgradable(boolean upgradable) {
+    this.upgradable = upgradable;
   }
 }

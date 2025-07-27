@@ -7,45 +7,43 @@ import co.hyperflex.clients.ElasticClient;
 import co.hyperflex.clients.ElasticsearchClientProvider;
 import co.hyperflex.clients.KibanaClient;
 import co.hyperflex.clients.KibanaClientProvider;
-import co.hyperflex.dtos.prechecks.GetGroupedPrecheckResponseModels;
+import co.hyperflex.dtos.prechecks.GetGroupedPrecheckResponse;
+import co.hyperflex.dtos.prechecks.GetPrecheckEntry;
 import co.hyperflex.entities.upgrade.ClusterUpgradeJob;
-import co.hyperflex.entities.upgrade.ClusterUpgradeStatus;
-import co.hyperflex.exceptions.NotFoundException;
-import co.hyperflex.repositories.ClusterUpgradeJobRepository;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
 public class PrecheckReportService {
 
-  private final ClusterUpgradeJobRepository clusterUpgradeJobRepository;
+  private static final Logger log = LoggerFactory.getLogger(PrecheckReportService.class);
+  private final ClusterUpgradeJobService clusterUpgradeJobService;
   private final PrecheckRunService precheckRunService;
   private final KibanaClientProvider kibanaClientProvider;
   private final ElasticsearchClientProvider elasticsearchClientProvider;
 
-  public PrecheckReportService(ClusterUpgradeJobRepository clusterUpgradeJobRepository,
+  public PrecheckReportService(ClusterUpgradeJobService clusterUpgradeJobService,
                                PrecheckRunService precheckRunService,
                                KibanaClientProvider kibanaClientProvider,
                                ElasticsearchClientProvider elasticsearchClientProvider) {
-    this.clusterUpgradeJobRepository = clusterUpgradeJobRepository;
+    this.clusterUpgradeJobService = clusterUpgradeJobService;
     this.precheckRunService = precheckRunService;
     this.kibanaClientProvider = kibanaClientProvider;
     this.elasticsearchClientProvider = elasticsearchClientProvider;
   }
 
   public String generatePrecheckReportMdContent(String clusterId) {
-    ClusterUpgradeJob job = clusterUpgradeJobRepository.findByClusterIdAndStatusIsNot(clusterId,
-            ClusterUpgradeStatus.UPDATED)
-        .stream().findAny()
-        .orElseThrow(() -> new NotFoundException("Cluster upgrade job not found"));
+    ClusterUpgradeJob job = clusterUpgradeJobService.getActiveJobByClusterId(clusterId);
     final String currentVersion = job.getCurrentVersion();
     final String targetVersion = job.getTargetVersion();
 
-    final GetGroupedPrecheckResponseModels.GetGroupedPrecheckResponse groupedPrechecks =
+    final GetGroupedPrecheckResponse groupedPrechecks =
         precheckRunService.getGroupedPrecheckByClusterId(clusterId);
 
     StringBuilder md = new StringBuilder();
@@ -65,13 +63,13 @@ public class PrecheckReportService {
       md.append(String.format("\n### 🖥️ %s (%s)\n", node.name(), node.ip()));
       md.append("| Check | Status | Duration (s) |\n");
       md.append("|-------|--------|---------------|\n");
-      for (GetGroupedPrecheckResponseModels.GetPrecheckEntry check : node.prechecks()) {
+      for (GetPrecheckEntry check : node.prechecks()) {
         md.append(
             String.format("| %s | %s | %s |\n", check.name(), check.status(), check.duration()));
       }
 
       md.append("\n<details><summary>Show Logs</summary>\n\n");
-      for (GetGroupedPrecheckResponseModels.GetPrecheckEntry check : node.prechecks()) {
+      for (GetPrecheckEntry check : node.prechecks()) {
         md.append("#### ").append(check.name()).append("\n");
         List<String> logs = check.logs() != null && !check.logs().isEmpty()
             ? check.logs()
@@ -169,7 +167,8 @@ public class PrecheckReportService {
       }
       return md.toString();
     } catch (IOException e) {
-      throw new RuntimeException(e);
+      log.error("Error while creating getting Elasticsearch Deprecations", e);
+      return "N/A";
     }
   }
 

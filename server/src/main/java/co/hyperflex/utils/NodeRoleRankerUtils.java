@@ -4,19 +4,23 @@ import java.util.List;
 
 public class NodeRoleRankerUtils {
 
-  public static int getNodeRankByRoles(List<String> roles, boolean isActiveMaster) {
+  public static int getNodeRankByRoles(List<String> nodeRoles, boolean isActiveMaster) {
+    final List<String>  roles = nodeRoles.stream().map(String::toLowerCase).toList();
     boolean isMaster = roles.contains("master");
     boolean isData = roles.stream().anyMatch(role -> role.startsWith("data"));
     boolean isIngest = roles.contains("ingest");
     boolean isML = roles.contains("ml");
     boolean isTransform = roles.contains("transform");
     boolean isRemote = roles.contains("remote_cluster_client");
+    boolean isKibana = roles.contains("kibana");
 
     // Coordinating-only: no special roles
     boolean isCoordinatingOnly =
         !isMaster && !isData && !isIngest && !isML && !isTransform && !isRemote;
 
-    if (isActiveMaster) {
+    if (isKibana) {
+      return 100; // Kibana must be upgraded after any elastic node
+    } else if (isActiveMaster) {
       return 60; // Active master node (upgrade last)
     } else if (isCoordinatingOnly) {
       return 10;           // coordinating-only node

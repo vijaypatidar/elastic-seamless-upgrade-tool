@@ -1,19 +1,20 @@
 package co.hyperflex.mappers;
 
-import co.hyperflex.dtos.prechecks.GetGroupedPrecheckResponseModels;
+import co.hyperflex.dtos.prechecks.GetClusterPrecheckEntry;
+import co.hyperflex.dtos.prechecks.GetPrecheckEntry;
 import co.hyperflex.entities.precheck.PrecheckRun;
 import org.springframework.stereotype.Service;
 
 @Service
 public class PrecheckMapper {
 
-  public GetGroupedPrecheckResponseModels.GetPrecheckEntry toPrecheckEntry(
+  public GetPrecheckEntry toPrecheckEntry(
       PrecheckRun precheckRun) {
     long duration = 0;
     if (precheckRun.getStartedAt() != null && precheckRun.getEndAt() != null) {
       duration = precheckRun.getEndAt().getTime() - precheckRun.getStartedAt().getTime();
     }
-    return new GetGroupedPrecheckResponseModels.GetPrecheckEntry(
+    return new GetPrecheckEntry(
         precheckRun.getId(),
         precheckRun.getName(),
         precheckRun.getStatus(),
@@ -22,13 +23,13 @@ public class PrecheckMapper {
     );
   }
 
-  public GetGroupedPrecheckResponseModels.GetClusterPrecheckEntry toClusterPrecheckEntry(
+  public GetClusterPrecheckEntry toClusterPrecheckEntry(
       PrecheckRun precheckRun) {
     long duration = 0;
     if (precheckRun.getStartedAt() != null && precheckRun.getEndAt() != null) {
       duration = precheckRun.getEndAt().getTime() - precheckRun.getStartedAt().getTime();
     }
-    return new GetGroupedPrecheckResponseModels.GetClusterPrecheckEntry(
+    return new GetClusterPrecheckEntry(
         precheckRun.getId(),
         precheckRun.getName(),
         precheckRun.getStatus(),

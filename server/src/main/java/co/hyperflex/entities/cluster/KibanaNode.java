@@ -6,5 +6,6 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 public class KibanaNode extends ClusterNode {
   public KibanaNode() {
     setType(ClusterNodeType.KIBANA);
+    setUpgradable(true);
   }
 }

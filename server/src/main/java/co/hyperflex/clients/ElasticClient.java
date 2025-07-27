@@ -7,12 +7,23 @@ import co.elastic.clients.elasticsearch.core.InfoResponse;
 import co.elastic.clients.elasticsearch.indices.ElasticsearchIndicesClient;
 import co.elastic.clients.elasticsearch.indices.GetIndexRequest;
 import co.elastic.clients.elasticsearch.indices.GetIndexResponse;
+import co.elastic.clients.elasticsearch.snapshot.GetRepositoryResponse;
+import co.elastic.clients.elasticsearch.snapshot.GetSnapshotResponse;
+import co.elastic.clients.elasticsearch.snapshot.SnapshotInfo;
 import co.elastic.clients.json.JsonData;
+import co.hyperflex.dtos.GetElasticsearchSnapshotResponse;
 import java.io.IOException;
+import java.util.Collections;
+import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ElasticClient {
+  private static final Logger LOG = LoggerFactory.getLogger(ElasticClient.class);
   private final ElasticsearchClient elasticsearchClient;
 
   public ElasticClient(ElasticsearchClient elasticsearchClient) {
@@ -70,5 +81,63 @@ public class ElasticClient {
     }
 
     return Boolean.parseBoolean(value);
+  }
+
+  public List<GetElasticsearchSnapshotResponse> getValidSnapshots() {
+    try {
+      GetRepositoryResponse repositoriesResponse =
+          getElasticsearchClient().snapshot().getRepository(r -> r);
+      Set<String> repositories = repositoriesResponse.result().keySet();
+
+      if (repositories.isEmpty()) {
+        return Collections.emptyList();
+      }
+
+      long now = System.currentTimeMillis();
+      long twentyFourHoursAgo = now - 24 * 60 * 60 * 1000;
+
+      List<GetElasticsearchSnapshotResponse> allValidSnapshots = new LinkedList<>();
+
+      for (String repository : repositories) {
+        try {
+          GetSnapshotResponse snapshotResponse = getElasticsearchClient().snapshot().get(req -> req
+              .repository(repository)
+              .snapshot(List.of("_all"))
+          );
+
+          List<SnapshotInfo> snapshots = snapshotResponse.snapshots();
+          if (snapshots == null || snapshots.isEmpty()) {
+            continue;
+          }
+
+          List<GetElasticsearchSnapshotResponse> validSnapshots = snapshots.stream()
+              .filter(s -> {
+                Long time = s.startTimeInMillis();
+                return time != null && time >= twentyFourHoursAgo && time <= now;
+              })
+              .map(s -> new GetElasticsearchSnapshotResponse(
+                  s.snapshot(),
+                  new Date(s.startTimeInMillis())
+              ))
+              .toList();
+
+          allValidSnapshots.addAll(validSnapshots);
+
+        } catch (Exception e) {
+          LOG.error("Error fetching snapshots for repository {}: {}", repository, e.getMessage(),
+              e);
+        }
+      }
+
+      if (allValidSnapshots.isEmpty()) {
+        LOG.info("No valid snapshots found within the last 24 hours.");
+      }
+
+      return allValidSnapshots;
+
+    } catch (Exception e) {
+      LOG.error("Error checking snapshot details:", e);
+      throw new RuntimeException("Failed to get valid snapshots", e);
+    }
   }
 }
