@@ -2,6 +2,7 @@ package co.hyperflex.controllers;
 
 import co.hyperflex.dtos.clusters.AddClusterRequest;
 import co.hyperflex.dtos.clusters.AddClusterResponse;
+import co.hyperflex.dtos.clusters.ClusterOverviewResponse;
 import co.hyperflex.dtos.clusters.GetClusterNodeResponse;
 import co.hyperflex.dtos.clusters.GetClusterResponse;
 import co.hyperflex.dtos.clusters.UpdateClusterRequest;
@@ -41,7 +42,7 @@ public class ClusterController {
 
   @PutMapping("/{clusterId}")
   public UpdateClusterResponse updateCluster(@Valid @RequestBody
-                                               UpdateClusterRequest request,
+                                             UpdateClusterRequest request,
                                              @PathVariable String clusterId) {
     return clusterService.updateCluster(clusterId, request);
   }
@@ -67,5 +68,10 @@ public class ClusterController {
   public UploadCertificateResponse uploadCertificate(@RequestParam("files") MultipartFile[] files,
                                                      @PathVariable String clusterId) {
     return certificatesService.uploadCertificate(files, clusterId);
+  }
+
+  @GetMapping("{clusterId}/overview")
+  public ClusterOverviewResponse getClusterOverview(@PathVariable String clusterId) {
+    return clusterService.getClusterOverview(clusterId);
   }
 }

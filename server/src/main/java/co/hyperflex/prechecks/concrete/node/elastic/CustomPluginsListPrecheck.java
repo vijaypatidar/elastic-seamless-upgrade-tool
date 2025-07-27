@@ -68,8 +68,8 @@ public class CustomPluginsListPrecheck extends BaseElasticNodePrecheck {
       }
 
       if (nodeInfo.plugins() == null || nodeInfo.plugins().isEmpty()) {
-        throw new RuntimeException(
-            "Plugins information for node [" + nodeInfo.name() + "] not found or invalid.");
+        logger.info("No plugins found for node with ID [" + nodeId + "].");
+        return;
       }
 
       List<String> installedPlugins = nodeInfo.plugins().stream()

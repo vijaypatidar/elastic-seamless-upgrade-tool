@@ -12,6 +12,7 @@ import co.hyperflex.entities.precheck.NodePrecheckRun;
 import co.hyperflex.entities.precheck.PrecheckRun;
 import co.hyperflex.entities.precheck.PrecheckStatus;
 import co.hyperflex.exceptions.NotFoundException;
+import co.hyperflex.mappers.PrecheckMapper;
 import co.hyperflex.repositories.PrecheckGroupRepository;
 import co.hyperflex.repositories.PrecheckRunRepository;
 import java.util.Collections;
@@ -31,13 +32,15 @@ public class PrecheckRunService {
   private final PrecheckRunRepository precheckRunRepository;
   private final PrecheckGroupRepository precheckGroupRepository;
   private final MongoTemplate mongoTemplate;
+  private final PrecheckMapper precheckMapper;
 
   public PrecheckRunService(PrecheckRunRepository precheckRunRepository,
                             PrecheckGroupRepository precheckGroupRepository,
-                            MongoTemplate mongoTemplate) {
+                            MongoTemplate mongoTemplate, PrecheckMapper precheckMapper) {
     this.precheckRunRepository = precheckRunRepository;
     this.precheckGroupRepository = precheckGroupRepository;
     this.mongoTemplate = mongoTemplate;
+    this.precheckMapper = precheckMapper;
   }
 
   public GetGroupedPrecheckResponseModels.GetGroupedPrecheckResponse getGroupedPrecheckByClusterId(
@@ -53,7 +56,7 @@ public class PrecheckRunService {
               .map(pr -> (NodePrecheckRun) pr)
               .collect(Collectors.groupingBy(
                   pr -> pr.getNode().getId(),
-                  Collectors.mapping(this::toPrecheckEntry, Collectors.toList())
+                  Collectors.mapping(precheckMapper::toPrecheckEntry, Collectors.toList())
               ));
 
           Map<String, List<GetPrecheckEntry>> indexPrechecks = precheckRuns.stream()
@@ -61,12 +64,12 @@ public class PrecheckRunService {
               .map(pr -> (IndexPrecheckRun) pr)
               .collect(Collectors.groupingBy(
                   pr -> pr.getIndex().getName(),
-                  Collectors.mapping(this::toPrecheckEntry, Collectors.toList())
+                  Collectors.mapping(precheckMapper::toPrecheckEntry, Collectors.toList())
               ));
 
           List<GetClusterPrecheckEntry> clusterPrechecks = precheckRuns.stream()
               .filter(pr -> pr instanceof ClusterPrecheckRun)
-              .map(this::toClusterPrecheckEntry)
+              .map(precheckMapper::toClusterPrecheckEntry)
               .toList();
 
           List<GetNodePrecheckGroup> nodeGroups = nodePrechecks.entrySet().stream()
@@ -113,35 +116,6 @@ public class PrecheckRunService {
         .orElseThrow(() -> new NotFoundException("No PrecheckRun found for cluster: " + clusterId));
   }
 
-  private GetPrecheckEntry toPrecheckEntry(PrecheckRun precheckRun) {
-    long duration = 0;
-    if (precheckRun.getStartedAt() != null && precheckRun.getEndAt() != null) {
-      duration = precheckRun.getEndAt().getTime() - precheckRun.getStartedAt().getTime();
-    }
-    return new GetPrecheckEntry(
-        precheckRun.getId(),
-        precheckRun.getName(),
-        precheckRun.getStatus(),
-        precheckRun.getLogs(),
-        duration
-    );
-  }
-
-  private GetClusterPrecheckEntry toClusterPrecheckEntry(PrecheckRun precheckRun) {
-    long duration = 0;
-    if (precheckRun.getStartedAt() != null && precheckRun.getEndAt() != null) {
-      duration = precheckRun.getEndAt().getTime() - precheckRun.getStartedAt().getTime();
-    }
-    return new GetClusterPrecheckEntry(
-        precheckRun.getId(),
-        precheckRun.getName(),
-        precheckRun.getStatus(),
-        precheckRun.getLogs(),
-        duration
-    );
-  }
-
-
   public void rerunPrechecks(String precheckGroupId, PrecheckRerunRequest request) {
     List<Criteria> criteriaList = new LinkedList<>();
 
@@ -161,7 +135,8 @@ public class PrecheckRunService {
       return; // nothing to update
     }
 
-    Query query = new Query(new Criteria().orOperator(criteriaList));
+    Query query = new Query(new Criteria().orOperator(criteriaList)
+        .andOperator(Criteria.where("precheckGroupId").is(precheckGroupId)));
     Update update = new Update()
         .set("status", PrecheckStatus.PENDING)
         .set("startedAt", null)

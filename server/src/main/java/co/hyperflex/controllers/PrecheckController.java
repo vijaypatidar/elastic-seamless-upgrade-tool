@@ -35,11 +35,11 @@ public class PrecheckController {
     return scheduler.schedule(clusterId);
   }
 
-  @PostMapping("/{precheckGroupId}/rerun")
+  @PostMapping("/rerun")
   public PrecheckScheduleResponse rerunCluster(@PathVariable String clusterId,
-                                               @PathVariable String precheckGroupId,
                                                @Valid @RequestBody PrecheckRerunRequest request) {
-    return scheduler.rerunPrechecks(precheckGroupId, request);
+
+    return scheduler.rerunPrechecks(clusterId, request);
   }
 
   @GetMapping("")

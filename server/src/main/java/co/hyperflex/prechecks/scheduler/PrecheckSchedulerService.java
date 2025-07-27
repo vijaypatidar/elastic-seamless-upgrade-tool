@@ -140,9 +140,12 @@ public class PrecheckSchedulerService {
     precheckRunRepository.saveAll(precheckRuns);
   }
 
-  public PrecheckScheduleResponse rerunPrechecks(String precheckGroupId,
+  public PrecheckScheduleResponse rerunPrechecks(String clusterId,
                                                  PrecheckRerunRequest request) {
-    precheckRunService.rerunPrechecks(precheckGroupId, request);
-    return new PrecheckScheduleResponse(precheckGroupId);
+    PrecheckGroup precheckGroup = precheckGroupRepository
+        .findFirstByClusterIdOrderByCreatedAtDesc(clusterId)
+        .orElseThrow();
+    precheckRunService.rerunPrechecks(precheckGroup.getId(), request);
+    return new PrecheckScheduleResponse(precheckGroup.getId());
   }
 }

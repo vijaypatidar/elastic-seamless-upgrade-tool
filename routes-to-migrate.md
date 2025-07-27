@@ -22,10 +22,10 @@
 - `POST /api/elastic/clusters/:clusterId/nodes/upgrade-kibana` ✅ (work diff now)
 - `POST /api/elastic/clusters/:clusterId/upgrade-all` ✅ (work diff now)
 - `GET /api/elastic/clusters/verify` ❌
-- `GET /api/elastic/clusters/:clusterId/info`
+- `GET /api/elastic/clusters/:clusterId/info` ✅ (use /overview)
   - This also adds the cluster in monitoring service for pulling data on backend
 - `GET /api/elastic/clusters/:clusterId/upgrade_info`
-- `GET /api/elastic/clusters/:clusterId/prechecks/report` 
+- `GET /api/elastic/clusters/:clusterId/prechecks/report`  
 
 ## Settings Routes (base: /api/settings)
 

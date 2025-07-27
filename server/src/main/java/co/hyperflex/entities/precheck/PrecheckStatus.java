@@ -4,6 +4,6 @@ public enum PrecheckStatus {
   PENDING,
   RUNNING,
   PASSED,
-  FAILED;
+  FAILED
 }
 

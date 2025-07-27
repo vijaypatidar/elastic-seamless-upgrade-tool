@@ -36,7 +36,6 @@ public class PrecheckRegistry {
     return prechecksByType.getOrDefault(type, List.of());
   }
 
-  @Deprecated
   public List<Precheck<?>> getClusterPrechecks() {
     return getByType(PrecheckType.CLUSTER);
   }

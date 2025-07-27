@@ -1,13 +1,19 @@
 package co.hyperflex.services;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch.cat.IndicesResponse;
+import co.elastic.clients.elasticsearch.cat.master.MasterRecord;
+import co.elastic.clients.elasticsearch.cluster.HealthResponse;
+import co.elastic.clients.elasticsearch.core.InfoResponse;
 import co.elastic.clients.elasticsearch.nodes.NodesInfoRequest;
 import co.elastic.clients.elasticsearch.nodes.NodesInfoResponse;
 import co.elastic.clients.elasticsearch.nodes.info.NodeInfo;
+import co.hyperflex.clients.ElasticClient;
 import co.hyperflex.clients.ElasticsearchClientProvider;
 import co.hyperflex.dtos.clusters.AddClusterRequest;
 import co.hyperflex.dtos.clusters.AddClusterResponse;
 import co.hyperflex.dtos.clusters.AddSelfManagedClusterRequest;
+import co.hyperflex.dtos.clusters.ClusterOverviewResponse;
 import co.hyperflex.dtos.clusters.GetClusterKibanaNodeResponse;
 import co.hyperflex.dtos.clusters.GetClusterNodeResponse;
 import co.hyperflex.dtos.clusters.GetClusterResponse;
@@ -23,19 +29,23 @@ import co.hyperflex.entities.cluster.ElasticNode;
 import co.hyperflex.entities.cluster.OperatingSystemInfo;
 import co.hyperflex.entities.cluster.SelfManagedCluster;
 import co.hyperflex.entities.cluster.SshInfo;
+import co.hyperflex.entities.upgrade.ClusterUpgradeStatus;
 import co.hyperflex.entities.upgrade.NodeUpgradeStatus;
 import co.hyperflex.exceptions.BadRequestException;
 import co.hyperflex.exceptions.NotFoundException;
 import co.hyperflex.mappers.ClusterMapper;
 import co.hyperflex.repositories.ClusterNodeRepository;
 import co.hyperflex.repositories.ClusterRepository;
+import co.hyperflex.repositories.ClusterUpgradeJobRepository;
 import co.hyperflex.utils.HashUtil;
 import co.hyperflex.utils.NodeRoleRankerUtils;
+import co.hyperflex.utils.UpgradePathUtils;
 import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -47,14 +57,17 @@ public class ClusterService {
   private final ClusterNodeRepository clusterNodeRepository;
   private final ClusterMapper clusterMapper;
   private final ElasticsearchClientProvider elasticsearchClientProvider;
+  private final ClusterUpgradeJobRepository clusterUpgradeJobRepository;
 
   public ClusterService(ClusterRepository clusterRepository,
                         ClusterNodeRepository clusterNodeRepository, ClusterMapper clusterMapper,
-                        ElasticsearchClientProvider elasticsearchClientProvider) {
+                        ElasticsearchClientProvider elasticsearchClientProvider,
+                        ClusterUpgradeJobRepository clusterUpgradeJobRepository) {
     this.clusterRepository = clusterRepository;
     this.clusterNodeRepository = clusterNodeRepository;
     this.clusterMapper = clusterMapper;
     this.elasticsearchClientProvider = elasticsearchClientProvider;
+    this.clusterUpgradeJobRepository = clusterUpgradeJobRepository;
   }
 
   public AddClusterResponse add(final AddClusterRequest request) {
@@ -158,15 +171,57 @@ public class ClusterService {
         .toList();
   }
 
-  private void syncElasticNodes(Cluster cluster) {
-
+  public ClusterOverviewResponse getClusterOverview(String clusterId) {
+    Cluster cluster = clusterRepository.getCluster(clusterId);
+    ElasticClient elasticClient = elasticsearchClientProvider.getClient(cluster);
+    ElasticsearchClient client = elasticClient.getElasticsearchClient();
+    boolean noUpgradeJob = clusterUpgradeJobRepository.findByClusterIdAndStatusIsNot(clusterId,
+        ClusterUpgradeStatus.UPDATED).isEmpty();
     try {
-      ElasticsearchClient client =
-          elasticsearchClientProvider.getClient(cluster).getElasticsearchClient();
+      InfoResponse info = client.info();
+      HealthResponse health = client.cluster().health();
+      IndicesResponse indices = client.cat().indices();
+      List<MasterRecord> activeMasters = elasticClient.getActiveMasters();
+      Boolean adaptiveReplicaEnabled = elasticClient.isAdaptiveReplicaEnabled();
+      return new ClusterOverviewResponse(
+          info.clusterName(),
+          info.clusterUuid(),
+          health.status().jsonValue(),
+          info.version().number(),
+          health.timedOut(),
+          health.numberOfDataNodes(),
+          health.numberOfNodes(),
+          activeMasters.size(),
+          activeMasters.stream().map(MasterRecord::id).collect(Collectors.joining(",")),
+          adaptiveReplicaEnabled,
+          indices.valueBody().size(),
+          health.activePrimaryShards(),
+          health.activeShards(),
+          health.unassignedShards(),
+          health.initializingShards(),
+          health.relocatingShards(),
+          cluster.getType().name(),
+          info.version().number(),
+          UpgradePathUtils.getPossibleUpgrades(info.version().number()),
+          noUpgradeJob
+      );
+
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private void syncElasticNodes(Cluster cluster) {
+    try {
+      ElasticClient elasticClient = elasticsearchClientProvider.getClient(cluster);
+      ElasticsearchClient client = elasticClient.getElasticsearchClient();
       NodesInfoRequest request = new NodesInfoRequest.Builder().build();
       NodesInfoResponse response = client.nodes().info(request);
       Map<String, NodeInfo> nodes = response.nodes();
       List<ClusterNode> clusterNodes = new LinkedList<>();
+
+      List<MasterRecord> activeMasters = elasticClient.getActiveMasters();
+
       for (Map.Entry<String, NodeInfo> entry : nodes.entrySet()) {
         String nodeId = entry.getKey();
         NodeInfo value = entry.getValue();
@@ -191,13 +246,14 @@ public class ClusterService {
         }
 
         node.setProgress(0);
-        boolean isMaster = false;
-        node.setMaster(isMaster);
+        boolean isActiveMaster =
+            activeMasters.stream().anyMatch(masterNode -> nodeId.equals(masterNode.id()));
+        node.setMaster(isActiveMaster);
         node.setStatus(NodeUpgradeStatus.AVAILABLE);
         node.setType(ClusterNodeType.ELASTIC);
-        node.setRank(NodeRoleRankerUtils.getNodeRankByRoles(node.getRoles(), isMaster));
+        node.setRank(NodeRoleRankerUtils.getNodeRankByRoles(node.getRoles(), isActiveMaster));
 
-        // 5. Sync with DB
+        // Sync with DB
         Optional<ClusterNode> existingNodeOpt = clusterNodeRepository.findById(nodeId);
         existingNodeOpt.ifPresent(existing -> {
           node.setStatus(existing.getStatus());
