@@ -42,7 +42,7 @@ public class PrecheckRunner {
     this.precheckRunRepository = precheckRunRepository;
     this.precheckContextResolver = precheckContextResolver;
     this.notificationService = notificationService;
-    this.executor = Executors.newFixedThreadPool(10);
+    this.executor = Executors.newFixedThreadPool(4);
     this.precheckRegistry = precheckRegistry;
   }
 
@@ -94,41 +94,43 @@ public class PrecheckRunner {
 
       PrecheckContext context = precheckContextResolver.resolveContext(record);
 
-      Precheck<?> precheck = precheckRegistry.getById(record.getPrecheckId())
-          .orElseThrow(
-              () -> new NotFoundException("Precheck not found: " + record.getPrecheckId()));
-
-      switch (record.getType()) {
-        case NODE -> {
-          if (precheck instanceof BaseNodePrecheck nodePrecheck) {
-            nodePrecheck.run((NodeContext) context);
-          } else {
-            throw new IllegalStateException(
-                "Precheck is not a NodePrecheck: " + precheck.getClass());
+      try {
+        Precheck<?> precheck = precheckRegistry.getById(record.getPrecheckId()).orElseThrow(
+            () -> new NotFoundException("Precheck not found: " + record.getPrecheckId()));
+        switch (record.getType()) {
+          case NODE -> {
+            if (precheck instanceof BaseNodePrecheck nodePrecheck) {
+              nodePrecheck.run((NodeContext) context);
+            } else {
+              throw new IllegalStateException(
+                  "Precheck is not a NodePrecheck: " + precheck.getClass());
+            }
           }
-        }
-        case INDEX -> {
-          if (precheck instanceof BaseIndexPrecheck indexPrecheck) {
-            indexPrecheck.run((IndexContext) context);
-          } else {
-            throw new IllegalStateException(
-                "Precheck is not an IndexPrecheck: " + precheck.getClass());
+          case INDEX -> {
+            if (precheck instanceof BaseIndexPrecheck indexPrecheck) {
+              indexPrecheck.run((IndexContext) context);
+            } else {
+              throw new IllegalStateException(
+                  "Precheck is not an IndexPrecheck: " + precheck.getClass());
+            }
           }
-        }
-        case CLUSTER -> {
-          if (precheck instanceof BaseClusterPrecheck clusterPrecheck) {
-            clusterPrecheck.run((ClusterContext) context);
-          } else {
-            throw new IllegalStateException(
-                "Precheck is not a ClusterPrecheck: " + precheck.getClass());
+          case CLUSTER -> {
+            if (precheck instanceof BaseClusterPrecheck clusterPrecheck) {
+              clusterPrecheck.run((ClusterContext) context);
+            } else {
+              throw new IllegalStateException(
+                  "Precheck is not a ClusterPrecheck: " + precheck.getClass());
+            }
           }
+          default ->
+              throw new IllegalArgumentException("Unknown precheck type: " + record.getType());
         }
-        default -> throw new IllegalArgumentException("Unknown precheck type: " + record.getType());
+        record.setStatus(PrecheckStatus.COMPLETED);
+        record.setEndAt(new Date());
+        precheckRunRepository.save(record);
+      } finally {
+        context.getElasticClient().getElasticsearchClient().close();
       }
-
-      record.setStatus(PrecheckStatus.COMPLETED);
-      record.setEndAt(new Date());
-      precheckRunRepository.save(record);
 
     } catch (Exception e) {
       record.setStatus(PrecheckStatus.FAILED);

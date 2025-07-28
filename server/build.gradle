@@ -40,13 +40,13 @@ dependencies {
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.0'
 }
 
-//bootJar {
-//    // Include Vite build output in the final Spring Boot JAR
-//    dependsOn ':frontend:build'
-//    from("../frontend/build/client") {
-//        into "BOOT-INF/classes/static" // Place files in Spring Boot's static directory
-//    }
-//}
-//
-//tasks.clean.dependsOn ':frontend:clean'
-//tasks.build.dependsOn ':frontend:build'
+bootJar {
+    // Include Vite build output in the final Spring Boot JAR
+    dependsOn ':frontend:build'
+    from("../frontend/build/client") {
+        into "BOOT-INF/classes/static" // Place files in Spring Boot's static directory
+    }
+}
+
+tasks.clean.dependsOn ':frontend:clean'
+tasks.build.dependsOn ':frontend:build'
