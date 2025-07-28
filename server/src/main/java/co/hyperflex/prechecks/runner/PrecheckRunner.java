@@ -126,7 +126,7 @@ public class PrecheckRunner {
         default -> throw new IllegalArgumentException("Unknown precheck type: " + record.getType());
       }
 
-      record.setStatus(PrecheckStatus.PASSED);
+      record.setStatus(PrecheckStatus.COMPLETED);
       record.setEndAt(new Date());
       precheckRunRepository.save(record);
 

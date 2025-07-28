@@ -108,7 +108,7 @@ function DeprecationLogs({ clusterType }: { clusterType: "ELASTIC" | "KIBANA" })
 		let response: any = []
 		await axiosJSON
 			.get(
-				`/api/elastic/clusters/${clusterId}/deprecations/${
+				`/clusters/${clusterId}/deprecations/${
 					clusterType === "ELASTIC" ? "elastic-search" : "kibana"
 				}`
 			)

@@ -135,7 +135,7 @@ public class ClusterUpgradeService {
 
       ClusterInfoResponse.Precheck precheck =
           new ClusterInfoResponse.Precheck(latestPrecheckGroup == null ? PrecheckStatus.PENDING :
-              latestPrecheckGroup.getStatus());
+              PrecheckStatus.COMPLETED);
 
       return new ClusterInfoResponse(
           elastic,

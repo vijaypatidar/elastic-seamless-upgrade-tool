@@ -12,10 +12,10 @@ function MainApp() {
 
 	const getCluster = async () => {
 		await axiosJSON
-			.get("/api/elastic/clusters/verify")
+			.get("/clusters/verify")
 			.then((res) => {
 				setClusterAdded(res?.data?.clusterAvailable)
-				setClusterId(res?.data?.clusterData?.clusterId)
+				setClusterId(res?.data?.cluster?.id)
 			})
 			.catch((err) => toast.error(err?.response?.data.err ?? StringManager.GENERIC_ERROR))
 	}

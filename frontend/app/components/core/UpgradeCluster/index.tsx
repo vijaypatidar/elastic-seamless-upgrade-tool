@@ -99,7 +99,7 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 	const getNodesInfo = async () => {
 		let response: any = []
 		await axiosJSON
-			.get(`/api/elastic/clusters/${clusterId}/nodes`)
+			.get(`/clusters/${clusterId}/nodes?type=ELASTIC`)
 			.then((res) => {
 				response = res.data.map((item: any) => ({
 					key: item.nodeId,
@@ -111,7 +111,7 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 					status: item.status,
 					progress: item.progress,
 					isMaster: item.isMaster,
-					disabled: item.disabled ? item.disabled : false,
+					disabled: !item.upgradable,
 				}))
 			})
 			.catch((err) => toast.error(err?.response?.data.err ?? StringManager.GENERIC_ERROR))
@@ -122,8 +122,9 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 	const performUpgrade = async (nodeId: string) => {
 		console.log("triggered")
 		await axiosJSON
-			.post(`/api/elastic/clusters/${clusterId}/nodes/upgrade`, {
-				nodes: [nodeId],
+			.post(`/upgrades/nodes`, {
+				nodes: nodeId,
+				clusterId: clusterId,
 			})
 			.then(() => {
 				refetch()

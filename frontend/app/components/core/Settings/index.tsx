@@ -52,7 +52,7 @@ function Settings({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: () 
 
 	const getSettings = async () => {
 		await axiosJSON
-			.get("/api/settings")
+			.get("/settings")
 			.then((res) => {
 				setInitialValues({
 					webhookURL: res?.data?.notificationWebhookUrl,
@@ -76,7 +76,7 @@ function Settings({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: () 
 		mutationKey: ["update-settings"],
 		mutationFn: async (values: any) => {
 			await axiosJSON
-				.post("/api/settings", {
+				.post("/settings", {
 					notificationWebhookUrl: values.webhookURL,
 				})
 				.then((res) => {
