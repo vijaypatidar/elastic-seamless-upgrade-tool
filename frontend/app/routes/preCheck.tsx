@@ -19,7 +19,7 @@ function PreCheckPage() {
 	const clusterId = useLocalStore((state: any) => state.clusterId)
 	const [isExportPending, setIsExportPending] = useState(false)
 	const reReunPrecheck = async () => {
-		await axiosJSON.post(`/api/elastic/clusters/${clusterId}/prechecks`).catch((err) => {
+		await axiosJSON.post(`/clusters/${clusterId}/prechecks`).catch((err) => {
 			toast.error(err?.response?.data.error ?? StringManager.GENERIC_ERROR)
 		})
 	}
@@ -31,7 +31,7 @@ function PreCheckPage() {
 	const handleExport = async () => {
 		setIsExportPending(true)
 		try {
-			const response = await axiosJSON.get(`/api/elastic/clusters/${clusterId}/prechecks/report`, {
+			const response = await axiosJSON.get(`/clusters/${clusterId}/prechecks/report`, {
 				responseType: "blob",
 			})
 			const blob = new Blob([response.data], { type: "text/markdown" })

@@ -73,7 +73,7 @@ public class PrecheckRunService {
                 .orElseThrow()).getNode();
             PrecheckStatus status =
                 entry.getValue().stream().anyMatch(p -> PrecheckStatus.FAILED == p.status())
-                    ? PrecheckStatus.FAILED : PrecheckStatus.PASSED;
+                    ? PrecheckStatus.FAILED : PrecheckStatus.COMPLETED;
             return new GetNodePrecheckGroup(nodeInfo.getId(), nodeInfo.getIp(), nodeInfo.getName(),
                 status, entry.getValue());
           }).toList();
@@ -82,7 +82,7 @@ public class PrecheckRunService {
               indexPrechecks.entrySet().stream().map(entry -> {
                 PrecheckStatus status =
                     entry.getValue().stream().anyMatch(p -> PrecheckStatus.FAILED == p.status())
-                        ? PrecheckStatus.FAILED : PrecheckStatus.PASSED;
+                        ? PrecheckStatus.FAILED : PrecheckStatus.COMPLETED;
                 return new GetIndexPrecheckGroup(entry.getKey(), entry.getKey(), status,
                     entry.getValue());
               }).toList();

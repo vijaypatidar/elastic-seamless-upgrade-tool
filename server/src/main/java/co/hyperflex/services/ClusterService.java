@@ -2,8 +2,8 @@ package co.hyperflex.services;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch.cat.IndicesResponse;
+import co.elastic.clients.elasticsearch.cat.health.HealthRecord;
 import co.elastic.clients.elasticsearch.cat.master.MasterRecord;
-import co.elastic.clients.elasticsearch.cluster.HealthResponse;
 import co.elastic.clients.elasticsearch.core.InfoResponse;
 import co.elastic.clients.elasticsearch.nodes.NodesInfoRequest;
 import co.elastic.clients.elasticsearch.nodes.NodesInfoResponse;
@@ -203,27 +203,27 @@ public class ClusterService {
     boolean upgradeJobExists = clusterUpgradeJobService.clusterUpgradeJobExists(clusterId);
     try {
       InfoResponse info = client.info();
-      HealthResponse health = client.cluster().health();
+      HealthRecord health = client.cat().health().valueBody().getFirst();
       IndicesResponse indices = client.cat().indices();
       List<MasterRecord> activeMasters = elasticClient.getActiveMasters();
       Boolean adaptiveReplicaEnabled = elasticClient.isAdaptiveReplicaEnabled();
       return new ClusterOverviewResponse(
           info.clusterName(),
           info.clusterUuid(),
-          health.status().jsonValue(),
+          health.status(),
           info.version().number(),
-          health.timedOut(),
-          health.numberOfDataNodes(),
-          health.numberOfNodes(),
+          false,
+          1,
+          1,
           activeMasters.size(),
           activeMasters.stream().map(MasterRecord::id).collect(Collectors.joining(",")),
           adaptiveReplicaEnabled,
           indices.valueBody().size(),
-          health.activePrimaryShards(),
-          health.activeShards(),
-          health.unassignedShards(),
-          health.initializingShards(),
-          health.relocatingShards(),
+          1,
+          1,
+          1,
+          1,
+          1,
           cluster.getType().name(),
           info.version().number(),
           UpgradePathUtils.getPossibleUpgrades(info.version().number()),

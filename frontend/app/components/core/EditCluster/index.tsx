@@ -94,20 +94,20 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 
 	const getCluster = async () => {
 		await axiosJSON
-			.get("/api/elastic/clusters/verify")
+			.get("/clusters/verify")
 			.then((res) => {
 				setInitialValues({
-					elasticUrl: res?.data?.clusterData?.elastic?.url,
-					kibanaUrl: res?.data?.clusterData?.kibana?.url,
-					authPref: res?.data?.clusterData?.elastic?.username ? "U/P" : "API_KEY",
-					username: res?.data?.clusterData?.elastic?.username,
-					password: res?.data?.clusterData?.elastic?.password,
-					apiKey: res?.data?.clusterData?.elastic?.apiKey,
-					sshUser: res?.data?.clusterData?.sshUser,
-					pathToSSH: res?.data?.clusterData?.pathToKey,
-					kibanaConfigs: res?.data?.clusterData?.kibanaConfigs,
+					elasticUrl: res?.data?.cluster?.elasticUrl,
+					kibanaUrl: res?.data?.cluster?.kibanaUrl,
+					authPref: res?.data?.cluster?.username ? "U/P" : "API_KEY",
+					username: res?.data?.cluster?.username,
+					password: res?.data?.cluster?.password,
+					apiKey: res?.data?.cluster?.apiKey,
+					sshUser: res?.data?.cluster?.sshUsername,
+					pathToSSH: res?.data?.cluster?.sshKey,
+					kibanaConfigs: res?.data?.cluster?.kibanaNodes,
 					certFiles:
-						res?.data?.clusterData?.certificateIds?.map((certId: string) => ({
+						res?.data?.cluster?.certificateIds?.map((certId: string) => ({
 							name: certId,
 							storedOnServer: true,
 						})) || [],
@@ -141,7 +141,7 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 			})
 			if (values.certFiles?.filter((cert: File | TExistingFile) => cert instanceof File).length !== 0) {
 				await axiosJSON
-					.post("/api/elastic/clusters/certificates/upload", formData, {
+					.post("/clusters/certificates/upload", formData, {
 						maxBodyLength: Infinity,
 						headers: {
 							"Content-Type": "multipart/form-data",
@@ -151,9 +151,11 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 					.catch((err) => toast.error(err?.response?.data.err ?? StringManager.GENERIC_ERROR))
 			}
 			await axiosJSON
-				.post("/api/elastic/clusters", {
-					elastic: { url: values.elasticUrl, username: values.username, password: values.password },
-					kibana: { url: values.kibanaUrl, username: values.username, password: values.password },
+				.post("clusters", {
+					elasticUrl: values.elasticUrl,
+					username: values.username,
+					password: values.password,
+					kibanaUrl:  values.kibanaUrl,
 					certificateIds: [
 						...values.certFiles
 							?.filter((cert: File | TExistingFile) => !(cert instanceof File))
@@ -161,13 +163,13 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 						...certIds,
 					],
 					sshUser: values.sshUser,
-					infrastructureType: "on-premise",
+					type: "SELF_MANAGED",
 					key: values.pathToSSH ?? "",
-					kibanaConfigs: values.kibanaConfigs,
+					kibanaNides: values.kibanaConfigs,
 					clusterId: clusterId,
 				})
 				.then((res) => {
-					setInfraType("on-premise")
+					setInfraType("SELF_MANAGED")
 					setClusterId(res?.data?.clusterId)
 					refetch()
 					resetForEditCluster()

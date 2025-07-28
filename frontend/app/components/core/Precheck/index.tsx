@@ -69,7 +69,7 @@ const PrecheckNotTriggered = ({ refetch }: { refetch: () => void }) => {
 
 	const reReunPrecheck = async () => {
 		await axiosJSON
-			.post(`/api/elastic/clusters/${clusterId}/prechecks`)
+			.post(`/clusters/${clusterId}/prechecks`)
 			.then(() => refetch())
 			.catch((err) => {
 				console.log("Err", err)
@@ -272,7 +272,7 @@ function Precheck() {
 				node: TNodeData[]
 				cluster: TPrecheck[]
 				breakingChanges: TPrecheck[]
-			}>(`/api/elastic/clusters/${clusterId}/prechecks`)
+			}>(`/clusters/${clusterId}/prechecks`)
 			return response.data
 		} catch (err: any) {
 			toast.error(err?.response?.data?.message ?? StringManager.GENERIC_ERROR)

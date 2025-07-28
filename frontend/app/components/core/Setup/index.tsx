@@ -65,7 +65,7 @@ function Setup() {
 			})
 			if (values.certFiles?.length !== 0) {
 				await axiosJSON
-					.post("/api/elastic/clusters/certificates/upload", formData, {
+					.post("/clusters/certificates/upload", formData, {
 						maxBodyLength: Infinity,
 						headers: {
 							"Content-Type": "multipart/form-data",
@@ -75,14 +75,14 @@ function Setup() {
 					.catch((err) => toast.error(err?.response?.data.err ?? StringManager.GENERIC_ERROR))
 			}
 			await axiosJSON
-				.post("/api/elastic/clusters", {
+				.post("/clusters", {
 					elastic: { url: creds.elasticUrl, username: creds.username, password: creds.password },
 					kibana: { url: creds.kibanaUrl, username: creds.username, password: creds.password },
 					certificateIds: certIds,
-					infrastructureType: infraType,
+					type: infraType,
 					sshUser: creds.sshUser,
-					key: creds.pathToSSH ?? "",
-					kibanaConfigs: creds.kibanaConfigs,
+					sshKey: creds.pathToSSH ?? "",
+					kibanaNodes: creds.kibanaConfigs,
 				})
 				.then((res) => {
 					setClusterAdded(true)
