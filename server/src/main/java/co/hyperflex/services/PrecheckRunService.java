@@ -1,0 +1,121 @@
+package co.hyperflex.services;
+
+import co.hyperflex.dtos.prechecks.GetClusterPrecheckEntry;
+import co.hyperflex.dtos.prechecks.GetGroupedPrecheckResponse;
+import co.hyperflex.dtos.prechecks.GetIndexPrecheckGroup;
+import co.hyperflex.dtos.prechecks.GetNodePrecheckGroup;
+import co.hyperflex.dtos.prechecks.GetPrecheckEntry;
+import co.hyperflex.dtos.prechecks.PrecheckRerunRequest;
+import co.hyperflex.entities.precheck.ClusterPrecheckRun;
+import co.hyperflex.entities.precheck.IndexPrecheckRun;
+import co.hyperflex.entities.precheck.NodePrecheckRun;
+import co.hyperflex.entities.precheck.PrecheckRun;
+import co.hyperflex.entities.precheck.PrecheckStatus;
+import co.hyperflex.exceptions.NotFoundException;
+import co.hyperflex.mappers.PrecheckMapper;
+import co.hyperflex.repositories.PrecheckGroupRepository;
+import co.hyperflex.repositories.PrecheckRunRepository;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
+import org.springframework.stereotype.Service;
+
+@Service
+public class PrecheckRunService {
+
+  private final PrecheckRunRepository precheckRunRepository;
+  private final PrecheckGroupRepository precheckGroupRepository;
+  private final MongoTemplate mongoTemplate;
+  private final PrecheckMapper precheckMapper;
+
+  public PrecheckRunService(PrecheckRunRepository precheckRunRepository,
+                            PrecheckGroupRepository precheckGroupRepository,
+                            MongoTemplate mongoTemplate, PrecheckMapper precheckMapper) {
+    this.precheckRunRepository = precheckRunRepository;
+    this.precheckGroupRepository = precheckGroupRepository;
+    this.mongoTemplate = mongoTemplate;
+    this.precheckMapper = precheckMapper;
+  }
+
+  public GetGroupedPrecheckResponse getGroupedPrecheckByClusterId(String clusterId) {
+
+    return precheckGroupRepository.findFirstByClusterIdOrderByCreatedAtDesc(clusterId)
+        .map(precheckGroup -> {
+          List<PrecheckRun> precheckRuns =
+              precheckRunRepository.findByPrecheckGroupId(precheckGroup.getId());
+
+          Map<String, List<GetPrecheckEntry>> nodePrechecks =
+              precheckRuns.stream().filter(pr -> pr instanceof NodePrecheckRun)
+                  .map(pr -> (NodePrecheckRun) pr).collect(
+                      Collectors.groupingBy(pr -> pr.getNode().getId(),
+                          Collectors.mapping(precheckMapper::toPrecheckEntry, Collectors.toList())));
+
+          Map<String, List<GetPrecheckEntry>> indexPrechecks =
+              precheckRuns.stream().filter(pr -> pr instanceof IndexPrecheckRun)
+                  .map(pr -> (IndexPrecheckRun) pr).collect(
+                      Collectors.groupingBy(pr -> pr.getIndex().getName(),
+                          Collectors.mapping(precheckMapper::toPrecheckEntry, Collectors.toList())));
+
+          List<GetClusterPrecheckEntry> clusterPrechecks =
+              precheckRuns.stream().filter(pr -> pr instanceof ClusterPrecheckRun)
+                  .map(precheckMapper::toClusterPrecheckEntry).toList();
+
+          List<GetNodePrecheckGroup> nodeGroups = nodePrechecks.entrySet().stream().map(entry -> {
+            NodePrecheckRun.NodeInfo nodeInfo = ((NodePrecheckRun) precheckRuns.stream().filter(
+                    pr -> pr instanceof NodePrecheckRun nodePrecheckRun
+                        && nodePrecheckRun.getNode().getId().equals(entry.getKey())).findFirst()
+                .orElseThrow()).getNode();
+            PrecheckStatus status =
+                entry.getValue().stream().anyMatch(p -> PrecheckStatus.FAILED == p.status())
+                    ? PrecheckStatus.FAILED : PrecheckStatus.PASSED;
+            return new GetNodePrecheckGroup(nodeInfo.getId(), nodeInfo.getIp(), nodeInfo.getName(),
+                status, entry.getValue());
+          }).toList();
+
+          List<GetIndexPrecheckGroup> indexGroups =
+              indexPrechecks.entrySet().stream().map(entry -> {
+                PrecheckStatus status =
+                    entry.getValue().stream().anyMatch(p -> PrecheckStatus.FAILED == p.status())
+                        ? PrecheckStatus.FAILED : PrecheckStatus.PASSED;
+                return new GetIndexPrecheckGroup(entry.getKey(), entry.getKey(), status,
+                    entry.getValue());
+              }).toList();
+
+          return new GetGroupedPrecheckResponse(nodeGroups, clusterPrechecks, indexGroups,
+              Collections.emptyList());
+        })
+        .orElseThrow(() -> new NotFoundException("No PrecheckRun found for cluster: " + clusterId));
+  }
+
+  public void rerunPrechecks(String precheckGroupId, PrecheckRerunRequest request) {
+    List<Criteria> criteriaList = new LinkedList<>();
+
+    if (request.precheckIds() != null && !request.precheckIds().isEmpty()) {
+      criteriaList.add(Criteria.where("_id").in(request.precheckIds()));
+    }
+
+    if (request.nodeIds() != null && !request.nodeIds().isEmpty()) {
+      criteriaList.add(Criteria.where("node.id").in(request.nodeIds()));
+    }
+
+    if (request.indexNames() != null && !request.indexNames().isEmpty()) {
+      criteriaList.add(Criteria.where("index.name").in(request.indexNames()));
+    }
+
+    if (criteriaList.isEmpty()) {
+      return; // nothing to update
+    }
+
+    Query query = new Query(new Criteria().orOperator(criteriaList)
+        .andOperator(Criteria.where("precheckGroupId").is(precheckGroupId)));
+    Update update = new Update().set("status", PrecheckStatus.PENDING).set("startedAt", null)
+        .set("endAt", null);
+    mongoTemplate.updateMulti(query, update, PrecheckRun.class);
+  }
+}
