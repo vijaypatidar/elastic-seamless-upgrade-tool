@@ -1,4 +1,6 @@
 type TCreds = {
+	type: string
+	name: string
 	elasticUrl: string
 	kibanaUrl: string
 	authPref: string | null
@@ -8,6 +10,7 @@ type TCreds = {
 	sshUser: string
 	pathToSSH?: string
 	kibanaConfigs: TKibanaConfigs[]
+	deploymentId?: string
 }
 
 type TKibanaConfigs = { name: string; ip: string }

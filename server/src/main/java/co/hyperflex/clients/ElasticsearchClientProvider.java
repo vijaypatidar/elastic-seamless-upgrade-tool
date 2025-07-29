@@ -2,7 +2,6 @@ package co.hyperflex.clients;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
-import co.elastic.clients.transport.ElasticsearchTransport;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
 import co.hyperflex.entities.cluster.Cluster;
 import co.hyperflex.exceptions.NotFoundException;
@@ -49,8 +48,7 @@ public class ElasticsearchClientProvider {
               credentialProvider.getAuthHeader(cluster)
           })
           .build();
-      ElasticsearchTransport transport =
-          new RestClientTransport(restClient, new JacksonJsonpMapper());
+      RestClientTransport transport = new RestClientTransport(restClient, new JacksonJsonpMapper());
       return new ElasticClient(new ElasticsearchClient(transport));
     } catch (Exception e) {
       throw new RuntimeException(e);

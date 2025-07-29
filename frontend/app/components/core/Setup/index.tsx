@@ -28,6 +28,8 @@ function Setup() {
 	// const { step, setStep } = useSessionStore((state: any) => ({ step: state.setupStep, setStep: state.setSetupStep }))
 
 	const [creds, setCreds] = useState<TCreds>({
+		type: infraType,
+		name:"Cluster1",
 		elasticUrl: "",
 		kibanaUrl: "",
 		authPref: null,
@@ -43,9 +45,10 @@ function Setup() {
 
 	const handleBackStep = () => setStep(step - 1)
 
-	const handleStepInfraSubmit = (value: string | number | null) => {
+	const handleStepInfraSubmit = (value: string | null) => {
 		if (value) {
 			setInfraType(value)
+			setCreds({...creds, type: value})
 			handleNextStep()
 		}
 	}
@@ -76,13 +79,18 @@ function Setup() {
 			}
 			await axiosJSON
 				.post("/clusters", {
-					elastic: { url: creds.elasticUrl, username: creds.username, password: creds.password },
-					kibana: { url: creds.kibanaUrl, username: creds.username, password: creds.password },
+					name: creds.name,
+					elasticUrl: creds.elasticUrl,
+					kibanaUrl: creds.kibanaUrl,
+					username: creds.username,
+					password: creds.password ,
 					certificateIds: certIds,
 					type: infraType,
-					sshUser: creds.sshUser,
+					sshUsername: creds.sshUser,
 					sshKey: creds.pathToSSH ?? "",
+					apiKey: creds.apiKey,
 					kibanaNodes: creds.kibanaConfigs,
+					deploymentId: creds.deploymentId
 				})
 				.then((res) => {
 					setClusterAdded(true)

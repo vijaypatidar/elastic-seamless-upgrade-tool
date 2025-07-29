@@ -1,6 +1,7 @@
 package co.hyperflex.services;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.ElasticsearchException;
 import co.elastic.clients.elasticsearch.cat.IndicesResponse;
 import co.elastic.clients.elasticsearch.cat.health.HealthRecord;
 import co.elastic.clients.elasticsearch.cat.master.MasterRecord;
@@ -207,27 +208,28 @@ public class ClusterService {
       IndicesResponse indices = client.cat().indices();
       List<MasterRecord> activeMasters = elasticClient.getActiveMasters();
       Boolean adaptiveReplicaEnabled = elasticClient.isAdaptiveReplicaEnabled();
+      var counts = elasticClient.getEntitiesCounts();
       return new ClusterOverviewResponse(
           info.clusterName(),
           info.clusterUuid(),
           health.status(),
           info.version().number(),
           false,
-          1,
-          1,
+          counts.dataNodes(),
+          counts.totalNodes(),
           activeMasters.size(),
           activeMasters.stream().map(MasterRecord::id).collect(Collectors.joining(",")),
           adaptiveReplicaEnabled,
           indices.valueBody().size(),
-          1,
-          1,
-          1,
-          1,
-          1,
+          counts.activePrimaryShards(),
+          counts.activeShards(),
+          counts.unassignedShards(),
+          counts.initializingShards(),
+          counts.relocatingShards(),
           cluster.getType().name(),
           info.version().number(),
           UpgradePathUtils.getPossibleUpgrades(info.version().number()),
-          !upgradeJobExists
+          upgradeJobExists
       );
 
     } catch (IOException e) {
@@ -290,7 +292,9 @@ public class ClusterService {
 
       clusterNodeRepository.saveAll(clusterNodes);
 
-    } catch (IOException e) {
+    } catch (ElasticsearchException e) {
+      throw new BadRequestException("Invalid credential");
+    } catch (Exception e) {
       log.error("Error syncing nodes from Elasticsearch:", e);
       throw new RuntimeException(e);
     }

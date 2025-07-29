@@ -42,6 +42,15 @@ app.use("/api/elastic/clusters", elasticRouter);
 app.use("/api/settings", settingsRouter);
 app.use("/webhook", webhookRouter);
 
+// Realtime update endpoint from server 
+app.post("/realtime-update", (req: Request, res: Response) => {
+	const body = req.body;
+	body && notificationService.sendNotification(body);
+	res.status(200).send({
+		message: "Notification sent successfully",
+	});
+});
+
 app.use(routeNotFoundMiddleware);
 // Centralised error handling
 app.use(errorMiddleware);

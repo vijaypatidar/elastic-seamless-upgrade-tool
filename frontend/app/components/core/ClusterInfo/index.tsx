@@ -139,7 +139,7 @@ function ClusterInfo() {
 									<Box className="relative">
 										<OutlinedBorderButton
 											{...bindTrigger(popupState)}
-											disabled={data?.underUpgradation}
+											disabled={data?.underUpgrade}
 										>
 											{isPending ? "Please wait..." : data?.targetVersion ?? "Upgrade available"}{" "}
 											<ArrowDown2 size="14px" color="#959595" />

@@ -4,8 +4,8 @@ import { useState } from "react"
 import { ConatinedButton } from "~/components/utilities/Buttons"
 import SelectionTile from "./widgets/SelectionTile"
 
-function Infrastructure({ onSubmit }: { onSubmit: (value: string | number | null) => void }) {
-	const [selected, setSelected] = useState<string | number | null>(null)
+function Infrastructure({ onSubmit }: { onSubmit: (value: string | null) => void }) {
+	const [selected, setSelected] = useState<string | null>(null)
 
 	const handleSubmit = () => {
 		onSubmit(selected)
@@ -27,18 +27,25 @@ function Infrastructure({ onSubmit }: { onSubmit: (value: string | number | null
 				<Box className="flex flex-col items-stretch gap-4 max-w-[515px] w-full">
 					<SelectionTile
 						Icon={CloudNotif}
-						label="On cloud"
-						isSelected={selected === "on-cloud"}
-						value="on-cloud"
-						onSelect={(value: string | number) => setSelected(value)}
-						comingSoon
+						label="On Elastic Cloud"
+						isSelected={selected === "ELASTIC_CLOUD"}
+						value="ELASTIC_CLOUD"
+						onSelect={(value: string) => setSelected(value)}
 					/>
 					<SelectionTile
 						Icon={Driver2}
-						label="On premise"
-						isSelected={selected === "on-premise"}
-						value="on-premise"
-						onSelect={(value: string | number) => setSelected(value)}
+						label="Self Managed"
+						isSelected={selected === "SELF_MANAGED"}
+						value="SELF_MANAGED"
+						onSelect={(value: string) => setSelected(value)}
+					/>
+					<SelectionTile
+						Icon={CloudNotif}
+						label="On cloud"
+						isSelected={selected === "on-cloud"}
+						value="on-cloud"
+						onSelect={(value: string) => setSelected(value)}
+						comingSoon
 					/>
 				</Box>
 				<Box className="flex justify-end">
