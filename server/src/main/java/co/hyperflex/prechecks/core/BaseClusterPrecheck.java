@@ -6,7 +6,7 @@ import co.hyperflex.prechecks.contexts.ClusterContext;
 public abstract class BaseClusterPrecheck implements Precheck<ClusterContext> {
 
   @Override
-  public PrecheckType getType() {
+  public final PrecheckType getType() {
     return PrecheckType.CLUSTER;
   }
 }

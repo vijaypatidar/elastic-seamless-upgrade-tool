@@ -6,8 +6,6 @@ import co.elastic.clients.elasticsearch.nodes.info.NodeInfo;
 import co.hyperflex.prechecks.contexts.NodeContext;
 import co.hyperflex.prechecks.core.BaseElasticNodePrecheck;
 import co.hyperflex.prechecks.core.PrecheckLogger;
-import co.hyperflex.repositories.PrecheckGroupRepository;
-import co.hyperflex.services.ClusterUpgradeJobService;
 import java.io.IOException;
 import java.util.Map;
 import org.springframework.stereotype.Component;
@@ -15,11 +13,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class ElasticVersionPrecheck extends BaseElasticNodePrecheck {
 
-  private final ClusterUpgradeJobService clusterUpgradeJobService;
 
-  public ElasticVersionPrecheck(PrecheckGroupRepository precheckGroupRepository,
-                                ClusterUpgradeJobService clusterUpgradeJobService) {
-    this.clusterUpgradeJobService = clusterUpgradeJobService;
+  public ElasticVersionPrecheck() {
   }
 
   @Override
@@ -31,9 +26,7 @@ public class ElasticVersionPrecheck extends BaseElasticNodePrecheck {
   public void run(NodeContext context) {
     String nodeId = context.getNode().getId();
 
-    String expectedVersion =
-        clusterUpgradeJobService.getActiveJobByClusterId(context.getCluster().getId())
-            .getCurrentVersion();
+    String expectedVersion = context.getClusterUpgradeJob().getCurrentVersion();
     ElasticsearchClient client = context.getElasticClient().getElasticsearchClient();
     PrecheckLogger logger = context.getLogger();
 

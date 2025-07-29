@@ -145,7 +145,7 @@ public class PrecheckSchedulerService {
     PrecheckGroup precheckGroup = precheckGroupRepository
         .findFirstByClusterIdOrderByCreatedAtDesc(clusterId)
         .orElseThrow();
-    precheckRunService.rerunPrechecks(precheckGroup.getId(), request);
+    precheckRunService.rerunPrechecks(precheckGroup, request);
     return new PrecheckScheduleResponse(precheckGroup.getId());
   }
 }

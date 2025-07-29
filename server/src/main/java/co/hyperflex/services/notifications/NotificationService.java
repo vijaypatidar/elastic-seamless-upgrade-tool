@@ -25,6 +25,9 @@ public class NotificationService {
     for (NotificationListener listener : listeners) {
       try {
         listener.onNotification(notification);
+        if (notification instanceof UpgradeProgressChangeEvent) {
+          listener.onNotification(new ClusterInfoChangeEvent());
+        }
       } catch (Exception e) {
         log.warn(e.getMessage());
       }
