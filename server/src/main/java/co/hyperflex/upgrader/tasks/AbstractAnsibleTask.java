@@ -3,9 +3,12 @@ package co.hyperflex.upgrader.tasks;
 import co.hyperflex.ansible.AnsibleAdHocCommand;
 import co.hyperflex.ansible.AnsibleService;
 import java.util.function.Consumer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class AbstractAnsibleTask implements Task {
 
+  private static final Logger logger = LoggerFactory.getLogger(AbstractAnsibleTask.class);
   private final AnsibleService ansibleService = new AnsibleService();
 
   protected TaskResult runAdHocCommand(AnsibleAdHocCommand cmd, Context context) {
@@ -22,6 +25,7 @@ public abstract class AbstractAnsibleTask implements Task {
       }
 
     } catch (Exception e) {
+      logger.error("Exception while running Ansible for host {}", cmd.getHostIp(), e);
       return TaskResult.failure("Exception while running Ansible: " + e.getMessage());
     }
   }

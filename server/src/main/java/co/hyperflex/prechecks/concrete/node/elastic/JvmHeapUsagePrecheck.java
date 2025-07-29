@@ -80,6 +80,7 @@ public class JvmHeapUsagePrecheck extends BaseElasticNodePrecheck {
       }
 
     } catch (IOException e) {
+      logger.error("Failed to get JVM stats for node: {}", nodeId, e);
       throw new RuntimeException("Failed to get JVM stats for node: " + nodeId, e);
     }
   }

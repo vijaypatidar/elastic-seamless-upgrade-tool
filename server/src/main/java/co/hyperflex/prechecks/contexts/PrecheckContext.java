@@ -3,6 +3,7 @@ package co.hyperflex.prechecks.contexts;
 import co.hyperflex.clients.ElasticClient;
 import co.hyperflex.clients.KibanaClient;
 import co.hyperflex.entities.cluster.Cluster;
+import co.hyperflex.entities.upgrade.ClusterUpgradeJob;
 import co.hyperflex.prechecks.core.PrecheckLogger;
 
 public abstract class PrecheckContext {
@@ -10,13 +11,15 @@ public abstract class PrecheckContext {
   private final ElasticClient elasticClient;
   private final KibanaClient kibanaClient;
   private final PrecheckLogger logger;
+  private final ClusterUpgradeJob clusterUpgradeJob;
 
   protected PrecheckContext(Cluster cluster, ElasticClient elasticClient, KibanaClient kibanaClient,
-                            PrecheckLogger logger) {
+                            PrecheckLogger logger, ClusterUpgradeJob clusterUpgradeJob) {
     this.cluster = cluster;
     this.elasticClient = elasticClient;
     this.kibanaClient = kibanaClient;
     this.logger = logger;
+    this.clusterUpgradeJob = clusterUpgradeJob;
   }
 
   public Cluster getCluster() {
@@ -33,5 +36,9 @@ public abstract class PrecheckContext {
 
   public PrecheckLogger getLogger() {
     return logger;
+  }
+
+  public ClusterUpgradeJob getClusterUpgradeJob() {
+    return clusterUpgradeJob;
   }
 }

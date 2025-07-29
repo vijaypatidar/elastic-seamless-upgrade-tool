@@ -30,6 +30,7 @@ public class DisableShardAllocationTask implements Task {
       }
       return TaskResult.success("Shard allocation disabled");
     } catch (IOException e) {
+      context.logger().error("Failed to disable shard allocation", e);
       throw new RuntimeException(e);
     }
   }

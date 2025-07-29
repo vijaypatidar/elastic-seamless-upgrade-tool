@@ -64,6 +64,7 @@ public class JvmHeapSettingsPrecheck extends BaseElasticNodePrecheck {
       }
 
     } catch (IOException e) {
+      logger.error("Failed to fetch JVM info for node: {}", nodeId, e);
       throw new RuntimeException("Failed to fetch JVM info for node: " + nodeId, e);
     }
   }

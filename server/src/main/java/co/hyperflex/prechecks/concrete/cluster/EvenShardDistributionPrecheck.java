@@ -72,6 +72,7 @@ public class EvenShardDistributionPrecheck extends BaseClusterPrecheck {
       }
 
     } catch (IOException e) {
+      logger.error("Failed to evaluate shard distribution", e);
       throw new RuntimeException("Failed to evaluate shard distribution", e);
     }
   }

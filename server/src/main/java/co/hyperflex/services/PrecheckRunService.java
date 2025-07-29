@@ -9,8 +9,10 @@ import co.hyperflex.dtos.prechecks.PrecheckRerunRequest;
 import co.hyperflex.entities.precheck.ClusterPrecheckRun;
 import co.hyperflex.entities.precheck.IndexPrecheckRun;
 import co.hyperflex.entities.precheck.NodePrecheckRun;
+import co.hyperflex.entities.precheck.PrecheckGroup;
 import co.hyperflex.entities.precheck.PrecheckRun;
 import co.hyperflex.entities.precheck.PrecheckStatus;
+import co.hyperflex.entities.precheck.PrecheckType;
 import co.hyperflex.exceptions.NotFoundException;
 import co.hyperflex.mappers.PrecheckMapper;
 import co.hyperflex.repositories.PrecheckGroupRepository;
@@ -93,7 +95,7 @@ public class PrecheckRunService {
         .orElseThrow(() -> new NotFoundException("No PrecheckRun found for cluster: " + clusterId));
   }
 
-  public void rerunPrechecks(String precheckGroupId, PrecheckRerunRequest request) {
+  public void rerunPrechecks(PrecheckGroup precheckGroup, PrecheckRerunRequest request) {
     List<Criteria> criteriaList = new LinkedList<>();
 
     if (request.precheckIds() != null && !request.precheckIds().isEmpty()) {
@@ -109,11 +111,11 @@ public class PrecheckRunService {
     }
 
     if (criteriaList.isEmpty()) {
-      return; // nothing to update
+      criteriaList.add(Criteria.where("type").is(PrecheckType.CLUSTER));
     }
 
     Query query = new Query(new Criteria().orOperator(criteriaList)
-        .andOperator(Criteria.where("precheckGroupId").is(precheckGroupId)));
+        .andOperator(Criteria.where("precheckGroupId").is(precheckGroup.getId())));
     Update update = new Update().set("status", PrecheckStatus.PENDING).set("startedAt", null)
         .set("endAt", null);
     mongoTemplate.updateMulti(query, update, PrecheckRun.class);

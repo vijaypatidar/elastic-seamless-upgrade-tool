@@ -6,7 +6,7 @@ import co.hyperflex.prechecks.contexts.NodeContext;
 public abstract class BaseNodePrecheck implements Precheck<NodeContext> {
 
   @Override
-  public PrecheckType getType() {
+  public final PrecheckType getType() {
     return PrecheckType.NODE;
   }
 }

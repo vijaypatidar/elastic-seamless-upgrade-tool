@@ -14,12 +14,15 @@ import org.apache.http.HttpHost;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.ssl.SSLContextBuilder;
 import org.elasticsearch.client.RestClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 
 @Component
 public class ElasticsearchClientProvider {
 
+  private final Logger logger = LoggerFactory.getLogger(ElasticsearchClientProvider.class);
   private final ClusterCredentialProvider credentialProvider;
   private final ClusterRepository clusterRepository;
 
@@ -51,6 +54,7 @@ public class ElasticsearchClientProvider {
       RestClientTransport transport = new RestClientTransport(restClient, new JacksonJsonpMapper());
       return new ElasticClient(new ElasticsearchClient(transport));
     } catch (Exception e) {
+      logger.error("Failed to create elasticsearch client for cluster {}", cluster.getId(), e);
       throw new RuntimeException(e);
     }
   }

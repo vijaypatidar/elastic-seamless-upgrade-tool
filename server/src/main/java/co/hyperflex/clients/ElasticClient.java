@@ -47,6 +47,7 @@ public class ElasticClient {
       return response.result().keySet().stream().filter(indexState -> !indexState.startsWith("."))
           .toList();
     } catch (IOException e) {
+      LOG.error("Failed to get indices", e);
       throw new RuntimeException(e);
     }
   }
@@ -59,29 +60,35 @@ public class ElasticClient {
     try {
       return getElasticsearchClient().info();
     } catch (IOException e) {
+      LOG.error("Failed to get cluster info", e);
       throw new RuntimeException(e);
     }
   }
 
   public Boolean isAdaptiveReplicaEnabled() throws IOException {
-    GetClusterSettingsResponse settings =
-        getElasticsearchClient().cluster().getSettings(b -> b.includeDefaults(true));
+    try {
+      GetClusterSettingsResponse settings =
+          getElasticsearchClient().cluster().getSettings(b -> b.includeDefaults(true));
 
-    Map<String, JsonData> transientSettings = settings.transient_();
-    Map<String, JsonData> persistentSettings = settings.persistent();
-    Map<String, JsonData> defaultSettings = settings.defaults();
+      Map<String, JsonData> transientSettings = settings.transient_();
+      Map<String, JsonData> persistentSettings = settings.persistent();
+      Map<String, JsonData> defaultSettings = settings.defaults();
 
-    String value = null;
+      String value = null;
 
-    if (transientSettings.containsKey("search.adaptive_replica_selection")) {
-      value = transientSettings.get("search.adaptive_replica_selection").to(String.class);
-    } else if (persistentSettings.containsKey("search.adaptive_replica_selection")) {
-      value = persistentSettings.get("search.adaptive_replica_selection").to(String.class);
-    } else if (defaultSettings.containsKey("search.adaptive_replica_selection")) {
-      value = defaultSettings.get("search.adaptive_replica_selection").to(String.class);
+      if (transientSettings.containsKey("search.adaptive_replica_selection")) {
+        value = transientSettings.get("search.adaptive_replica_selection").to(String.class);
+      } else if (persistentSettings.containsKey("search.adaptive_replica_selection")) {
+        value = persistentSettings.get("search.adaptive_replica_selection").to(String.class);
+      } else if (defaultSettings.containsKey("search.adaptive_replica_selection")) {
+        value = defaultSettings.get("search.adaptive_replica_selection").to(String.class);
+      }
+
+      return Boolean.parseBoolean(value);
+    } catch (IOException e) {
+      LOG.error("Failed to get adaptive replica settings", e);
+      throw e;
     }
-
-    return Boolean.parseBoolean(value);
   }
 
   public List<GetElasticsearchSnapshotResponse> getValidSnapshots() {

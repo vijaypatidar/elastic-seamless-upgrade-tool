@@ -42,6 +42,7 @@ public class NoRelocatingShardsPrecheck extends BaseClusterPrecheck {
       }
 
     } catch (IOException e) {
+      logger.error("Failed to check relocating shards", e);
       throw new RuntimeException("Failed to check relocating shards", e);
     }
   }

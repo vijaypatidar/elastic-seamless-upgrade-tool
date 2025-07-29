@@ -61,6 +61,7 @@ public class CertificatesService {
 
         ids.add(filename);
       } catch (IOException e) {
+        logger.error("Failed to upload certificate", e);
         throw new RuntimeException(e);
       }
     }

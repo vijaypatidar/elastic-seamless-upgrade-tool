@@ -68,6 +68,7 @@ public class FileDescriptorLimitPrecheck extends BaseElasticNodePrecheck {
       }
 
     } catch (IOException e) {
+      logger.error("Failed to retrieve file descriptor stats for node: {}", nodeId, e);
       throw new RuntimeException("Failed to retrieve file descriptor stats for node: " + nodeId, e);
     }
   }

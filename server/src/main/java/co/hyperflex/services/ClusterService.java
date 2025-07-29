@@ -233,6 +233,7 @@ public class ClusterService {
       );
 
     } catch (IOException e) {
+      log.error("Failed to get cluster overview for clusterId: {}", clusterId, e);
       throw new RuntimeException(e);
     }
   }

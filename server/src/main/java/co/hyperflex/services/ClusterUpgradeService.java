@@ -22,7 +22,9 @@ import co.hyperflex.prechecks.scheduler.PrecheckSchedulerService;
 import co.hyperflex.repositories.ClusterNodeRepository;
 import co.hyperflex.repositories.ClusterRepository;
 import co.hyperflex.repositories.PrecheckGroupRepository;
+import co.hyperflex.services.notifications.GeneralNotificationEvent;
 import co.hyperflex.services.notifications.NotificationService;
+import co.hyperflex.services.notifications.NotificationType;
 import co.hyperflex.services.notifications.UpgradeProgressChangeEvent;
 import co.hyperflex.upgrader.planner.UpgradePlanBuilder;
 import co.hyperflex.upgrader.tasks.Configuration;
@@ -126,7 +128,7 @@ public class ClusterUpgradeService {
       ClusterInfoResponse.Elastic elastic =
           new ClusterInfoResponse.Elastic(
               !isESUpgraded,
-              new ClusterInfoResponse.Deprecations(1, 2),
+              new ClusterInfoResponse.Deprecations(0, 0),
               new ClusterInfoResponse.Elastic.SnapshotWrapper(
                   snapshots.isEmpty() ? null : snapshots.getFirst(),
                   kibanaClient.getSnapshotCreationPageUrl()
@@ -135,7 +137,7 @@ public class ClusterUpgradeService {
 
       ClusterInfoResponse.Kibana kibana =
           new ClusterInfoResponse.Kibana(!isKibanaUpgraded && isESUpgraded,
-              new ClusterInfoResponse.Deprecations(1, 1));
+              new ClusterInfoResponse.Deprecations(0, 1));
 
       ClusterInfoResponse.Precheck precheck =
           new ClusterInfoResponse.Precheck(latestPrecheckGroup == null ? PrecheckStatus.PENDING :
@@ -146,6 +148,7 @@ public class ClusterUpgradeService {
           kibana,
           precheck);
     } catch (Exception e) {
+      log.error("Failed to get upgrade info for clusterId: {}", clusterId, e);
       throw new RuntimeException(e);
     }
   }
@@ -193,6 +196,9 @@ public class ClusterUpgradeService {
               if (!result.isSuccess()) {
                 node.setStatus(NodeUpgradeStatus.FAILED);
                 updateNodeProgress(node, (int) ((seq / tasks.size()) * 100));
+
+
+                notifyNodeUpgradeFailed(node);
                 throw new RuntimeException(result.getMessage());
               }
               seq++;
@@ -206,16 +212,87 @@ public class ClusterUpgradeService {
           node.setVersion(config.targetVersion());
           node.setStatus(NodeUpgradeStatus.UPGRADED);
           updateNodeProgress(node, 100);
-          notificationService.sendNotification(new UpgradeProgressChangeEvent());
-
+          notifyNodeUpgradedSuccessfully(cluster, node);
         }
+
+        if (nodes.size() > 1) {
+          notifyClusterUpgradedSuccessFully(cluster);
+        }
+
       } catch (Exception e) {
+        if (nodes.size() > 1) {
+          notifyClusterUpgradeFailed(cluster);
+        }
         log.error("[ClusterId: {}] Cluster upgrade failed", cluster.getId(), e);
       } finally {
         notificationService.sendNotification(new UpgradeProgressChangeEvent());
         lock.unlock();
       }
     });
+  }
+
+  private void notifyClusterUpgradedSuccessFully(SelfManagedCluster cluster) {
+    String clusterName = cluster.getName(); // Optional: include name if available
+
+    String message =
+        String.format("Cluster '%s' has been successfully upgraded to the target version.",
+            clusterName);
+    String subject = String.format("Cluster '%s' upgraded", clusterName);
+
+    notificationService.sendNotification(new GeneralNotificationEvent(
+        NotificationType.SUCCESS,
+        message,
+        subject,
+        cluster.getId()
+    ));
+    notificationService.sendNotification(new UpgradeProgressChangeEvent());
+
+  }
+
+  private void notifyClusterUpgradeFailed(SelfManagedCluster cluster) {
+    String clusterName = cluster.getName(); // Optional if available
+
+    String message = String.format(
+        "Cluster '%s' failed to upgrade to the target version. Please investigate the issue.",
+        clusterName);
+    String subject = String.format("Cluster '%s' upgrade failed", clusterName);
+
+    notificationService.sendNotification(new GeneralNotificationEvent(
+        NotificationType.ERROR,
+        message,
+        subject,
+        cluster.getId()
+    ));
+    notificationService.sendNotification(new UpgradeProgressChangeEvent());
+
+  }
+
+  private void notifyNodeUpgradeFailed(ClusterNode node) {
+    String message = String.format(
+        "Failed to upgrade node '%s' to the target version. Please check logs for details.",
+        node.getName());
+
+    notificationService.sendNotification(new GeneralNotificationEvent(
+        NotificationType.ERROR,
+        message,
+        String.format("Node '%s' upgrade failed", node.getName()),
+        node.getClusterId()
+    ));
+    notificationService.sendNotification(new UpgradeProgressChangeEvent());
+
+  }
+
+  private void notifyNodeUpgradedSuccessfully(SelfManagedCluster cluster, ClusterNode node) {
+    notificationService.sendNotification(new UpgradeProgressChangeEvent());
+    String message =
+        String.format("Node '%s' has been successfully upgraded to the target version.",
+            node.getName());
+    notificationService.sendNotification(new GeneralNotificationEvent(
+        NotificationType.SUCCESS,
+        message,
+        String.format("Node '%s' upgraded", node.getName()),
+        cluster.getId()
+    ));
   }
 
   private void updateNodeProgress(ClusterNode node, int progress) {

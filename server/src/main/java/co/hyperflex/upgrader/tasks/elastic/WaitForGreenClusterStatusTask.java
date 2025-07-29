@@ -30,6 +30,7 @@ public class WaitForGreenClusterStatusTask implements Task {
             MAX_RETRIES, RETRY_DELAY_MILLIS);
         Thread.sleep(RETRY_DELAY_MILLIS);
       } catch (InterruptedException | IOException e) {
+        logger.error("Failed to check cluster health", e);
         throw new RuntimeException(e);
       }
     }

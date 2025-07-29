@@ -3,19 +3,10 @@ package co.hyperflex.prechecks.concrete.node.kibana;
 import co.hyperflex.prechecks.contexts.NodeContext;
 import co.hyperflex.prechecks.core.BaseKibanaNodePrecheck;
 import co.hyperflex.prechecks.core.PrecheckLogger;
-import co.hyperflex.repositories.PrecheckGroupRepository;
-import co.hyperflex.services.ClusterUpgradeJobService;
 import org.springframework.stereotype.Component;
 
 @Component
 public class KibanaVersionPrecheck extends BaseKibanaNodePrecheck {
-
-  private final ClusterUpgradeJobService clusterUpgradeJobService;
-
-  public KibanaVersionPrecheck(PrecheckGroupRepository precheckGroupRepository,
-                               ClusterUpgradeJobService clusterUpgradeJobService) {
-    this.clusterUpgradeJobService = clusterUpgradeJobService;
-  }
 
   @Override
   public String getName() {
@@ -24,9 +15,7 @@ public class KibanaVersionPrecheck extends BaseKibanaNodePrecheck {
 
   @Override
   public void run(NodeContext context) {
-    String expectedVersion =
-        clusterUpgradeJobService.getActiveJobByClusterId(context.getCluster().getId())
-            .getCurrentVersion();
+    String expectedVersion = context.getClusterUpgradeJob().getCurrentVersion();
 
     String nodeIp = context.getNode().getIp();
     PrecheckLogger logger = context.getLogger();
