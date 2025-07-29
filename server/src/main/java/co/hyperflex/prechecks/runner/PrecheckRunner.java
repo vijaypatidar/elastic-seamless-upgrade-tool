@@ -50,6 +50,7 @@ public class PrecheckRunner {
   public void runNextBatch() {
     new Thread(() -> {
       while (true) {
+
         List<PrecheckRun> pendingPrecheckRuns =
             precheckRunRepository.findTop40ByStatus(PrecheckStatus.PENDING);
         if (pendingPrecheckRuns.isEmpty()) {
@@ -91,7 +92,7 @@ public class PrecheckRunner {
       record.setStartedAt(new Date());
       record.getLogs().clear();
       precheckRunRepository.save(record);
-
+      notificationService.sendNotification(new PrecheckProgressChangeEvent());
       PrecheckContext context = precheckContextResolver.resolveContext(record);
 
       try {

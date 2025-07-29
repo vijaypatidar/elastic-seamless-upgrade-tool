@@ -6,3 +6,6 @@ spring:
 app:
   ansible:
     playbooks-directory: /
+
+seamless:
+  legacy-backend: http://backend:3000
