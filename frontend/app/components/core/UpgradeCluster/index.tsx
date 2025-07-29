@@ -1,7 +1,7 @@
 import { Spinner, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from "@heroui/react"
 import { Box, Typography } from "@mui/material"
 import { useMutation, useQuery } from "@tanstack/react-query"
-import { CloseCircle, Flash, TickCircle, Warning2 } from "iconsax-react"
+import { CloseCircle, Danger, Flash, Refresh, TickCircle, Warning2 } from "iconsax-react"
 import { useCallback, useEffect, type Key } from "react"
 import { toast } from "sonner"
 import axiosJSON from "~/apis/http"
@@ -10,6 +10,7 @@ import StringManager from "~/constants/StringManager"
 import { useLocalStore } from "~/store/common"
 import { useSocketStore } from "~/store/socket"
 import ProgressBar from "./widgets/progress"
+import { cn } from "../../../lib/Utils"
 
 const UPGRADE_ENUM = {
 	completed: (
@@ -108,7 +109,7 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 					role: item.roles.join(","),
 					os: item.os.name,
 					version: item.version,
-					status: item.status,
+					status: item.status.toLowerCase(),
 					progress: item.progress,
 					isMaster: item.isMaster,
 					disabled: !item.upgradable,
@@ -198,7 +199,20 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 		} else if (row.status === "upgraded") {
 			return UPGRADE_ENUM["completed"]
 		} else {
-			return UPGRADE_ENUM["failed"]
+			return (
+				<Box className="flex justify-end">
+					<OutlinedBorderButton
+						onClick={() => {
+							PerformUpgrade(row.key)
+						}}
+						icon={Refresh}
+						filledIcon={Refresh}
+						disabled={row?.disabled || isPending}
+					>
+						Retry
+					</OutlinedBorderButton>
+				</Box>
+			)
 		}
 	}
 	const renderCell = useCallback(
@@ -209,13 +223,49 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 				case "node_name":
 					return row.node_name
 				case "ip":
-					return <span className="text-[#ADADAD]">{row.ip}</span>
+					return (
+						<span
+							className={cn({
+								"text-[#ADADAD]": row.status !== "upgraded",
+								"text[#E75547]": row.status !== "failed",
+							})}
+						>
+							{row.ip}
+						</span>
+					)
 				case "role":
-					return <span className="text-[#ADADAD]">{row.role}</span>
+					return (
+						<span
+							className={cn({
+								"text-[#ADADAD]": row.status !== "upgraded",
+								"text[#E75547]": row.status !== "failed",
+							})}
+						>
+							{row.role}
+						</span>
+					)
 				case "os":
-					return <span className="text-[#ADADAD]">{row.os}</span>
+					return (
+						<span
+							className={cn({
+								"text-[#ADADAD]": row.status !== "upgraded",
+								"text[#E75547]": row.status !== "failed",
+							})}
+						>
+							{row.os}
+						</span>
+					)
 				case "version":
-					return <span className="text-[#ADADAD]">{row.version}</span>
+					return (
+						<span
+							className={cn({
+								"text-[#ADADAD]": row.status !== "upgraded",
+								"text[#E75547]": row.status !== "failed",
+							})}
+						>
+							{row.version}
+						</span>
+					)
 				case "action":
 					return <Box className="flex justify-end">{getAction(row)}</Box>
 				default:
@@ -232,22 +282,39 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 					<Typography color="#FFF" fontSize="14px" fontWeight="600" lineHeight="22px">
 						Node Details
 					</Typography>
-					<OutlinedBorderButton
-						onClick={performUpgradeAll}
-						icon={Flash}
-						filledIcon={Flash}
-						disabled={
-							isPending ||
-							isLoading ||
-							(data &&
-								data.filter((item: any) => item.status !== "available" && item.status !== "upgraded")
-									.length > 0)
-						}
-						padding="8px 16px"
-						fontSize="13px"
-					>
-						Upgrade all
-					</OutlinedBorderButton>
+					<Box className="flex flex-row items-center gap-2">
+						{data?.filter((item: any) => item.status === "failed").length !== 0 ? (
+							<Typography
+								className="inline-flex gap-[6px] items-center"
+								color="#E87D65"
+								fontSize="14px"
+								fontWeight="500"
+								lineHeight="normal"
+							>
+								<Box className="size-[15px] inline">
+									<Danger color="currentColor" size="15px" />
+								</Box>
+								Failed to upgrade
+							</Typography>
+						) : null}
+						<OutlinedBorderButton
+							onClick={performUpgradeAll}
+							icon={Flash}
+							filledIcon={Flash}
+							disabled={
+								isPending ||
+								isLoading ||
+								(data &&
+									data.filter(
+										(item: any) => item.status !== "available" && item.status !== "upgraded"
+									).length > 0)
+							}
+							padding="8px 16px"
+							fontSize="13px"
+						>
+							Upgrade all
+						</OutlinedBorderButton>
+					</Box>
 				</Box>
 				<Box className="flex">
 					<Table
