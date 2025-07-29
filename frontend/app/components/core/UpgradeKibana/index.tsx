@@ -6,9 +6,7 @@ import { useCallback, useEffect, type Key } from "react"
 import { toast } from "sonner"
 import axiosJSON from "~/apis/http"
 import { OutlinedBorderButton } from "~/components/utilities/Buttons"
-import StorageManager from "~/constants/StorageManager"
 import StringManager from "~/constants/StringManager"
-import LocalStorageHandler from "~/lib/LocalHanlder"
 import { useLocalStore } from "~/store/common"
 import { useSocketStore } from "~/store/socket"
 import ProgressBar from "./widgets/progress"
@@ -105,13 +103,13 @@ function UpgradeKibana({ clusterType }: TUpgradeKibana) {
 			.get(`/clusters/${clusterId}/nodes?type=KIBANA`)
 			.then((res) => {
 				response = res.data.map((item: any) => ({
-					key: item.nodeId,
+					key: item.id,
 					node_name: item.name,
 					ip: item.ip,
 					role: item.roles.join(","),
-					os: item.os.name,
+					os: item?.os?.name,
 					version: item.version,
-					status: item.status.toLowerCase(),
+					status: item.status,
 					progress: item.progress,
 					isMaster: false,
 					disabled: !item.upgradable,
@@ -126,7 +124,7 @@ function UpgradeKibana({ clusterType }: TUpgradeKibana) {
 		console.log("triggered")
 		await axiosJSON
 			.post(`/upgrades/nodes`, {
-				nodes: nodeId,
+				nodeId: nodeId,
 				clusterId: clusterId,
 			})
 			.then((res) => {
@@ -166,8 +164,8 @@ function UpgradeKibana({ clusterType }: TUpgradeKibana) {
 					return (
 						<span
 							className={cn({
-								"text-[#ADADAD]": row.status !== "upgraded",
-								"text[#E75547]": row.status !== "failed",
+								"text-[#ADADAD]": row.status !== "UPGRADED",
+								"text[#E75547]": row.status !== "FAILED",
 							})}
 						>
 							{row.ip}
@@ -177,8 +175,8 @@ function UpgradeKibana({ clusterType }: TUpgradeKibana) {
 					return (
 						<span
 							className={cn({
-								"text-[#ADADAD]": row.status !== "upgraded",
-								"text[#E75547]": row.status !== "failed",
+								"text-[#ADADAD]": row.status !== "UPGRADED",
+								"text[#E75547]": row.status !== "FAILED",
 							})}
 						>
 							{row.role}
@@ -188,8 +186,8 @@ function UpgradeKibana({ clusterType }: TUpgradeKibana) {
 					return (
 						<span
 							className={cn({
-								"text-[#ADADAD]": row.status !== "upgraded",
-								"text[#E75547]": row.status !== "failed",
+								"text-[#ADADAD]": row.status !== "UPGRADED",
+								"text[#E75547]": row.status !== "FAILED",
 							})}
 						>
 							{row.os}
@@ -199,8 +197,8 @@ function UpgradeKibana({ clusterType }: TUpgradeKibana) {
 					return (
 						<span
 							className={cn({
-								"text-[#ADADAD]": row.status !== "upgraded",
-								"text[#E75547]": row.status !== "failed",
+								"text-[#ADADAD]": row.status !== "UPGRADED",
+								"text[#E75547]": row.status !== "FAILED",
 							})}
 						>
 							{row.version}
@@ -209,7 +207,7 @@ function UpgradeKibana({ clusterType }: TUpgradeKibana) {
 				case "action":
 					return (
 						<Box className="flex justify-end">
-							{row?.disabled ? (
+							{row?.disabled && row.status!='UPGRADED'? (
 								<Box
 									className="flex gap-1 items-center"
 									color="#EFC93D"
@@ -222,7 +220,7 @@ function UpgradeKibana({ clusterType }: TUpgradeKibana) {
 									</Box>
 									Upgrade other nodes first.
 								</Box>
-							) : row.status === "available" ? (
+							) : row.status === "AVAILABLE" ? (
 								<Box className="flex justify-end">
 									<OutlinedBorderButton
 										onClick={() => {
@@ -235,9 +233,9 @@ function UpgradeKibana({ clusterType }: TUpgradeKibana) {
 										Upgrade
 									</OutlinedBorderButton>
 								</Box>
-							) : row.status === "upgrading" ? (
+							) : row.status === "UPGRADING" ? (
 								<ProgressBar progress={row.progress ? row.progress : 0} />
-							) : row.status === "upgraded" ? (
+							) : row.status === "UPGRADED" ? (
 								UPGRADE_ENUM["completed"]
 							) : (
 								<Box className="flex justify-end">
@@ -270,7 +268,7 @@ function UpgradeKibana({ clusterType }: TUpgradeKibana) {
 						Node Details
 					</Typography>
 					<Box className="flex flex-row items-center gap-2">
-						{data?.filter((item: any) => item.status === "failed").length !== 0 ? (
+						{data?.filter((item: any) => item.status === "FAILED").length !== 0 ? (
 							<Typography
 								className="inline-flex gap-[6px] items-center"
 								color="#E87D65"

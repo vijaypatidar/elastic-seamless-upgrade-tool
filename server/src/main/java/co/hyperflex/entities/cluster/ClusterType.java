@@ -2,5 +2,13 @@ package co.hyperflex.entities.cluster;
 
 public enum ClusterType {
   ELASTIC_CLOUD,
-  SELF_MANAGED
+  SELF_MANAGED;
+
+  public String getDisplayName() {
+    return switch (this) {
+      case ELASTIC_CLOUD -> "Elastic Cloud";
+      case SELF_MANAGED -> "On-Prem/ Self managed Cluster";
+      default -> "UNKNOWN";
+    };
+  }
 }

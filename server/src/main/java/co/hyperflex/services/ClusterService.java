@@ -226,7 +226,7 @@ public class ClusterService {
           counts.unassignedShards(),
           counts.initializingShards(),
           counts.relocatingShards(),
-          cluster.getType().name(),
+          cluster.getType().getDisplayName(),
           info.version().number(),
           UpgradePathUtils.getPossibleUpgrades(info.version().number()),
           upgradeJobExists

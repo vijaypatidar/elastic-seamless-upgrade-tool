@@ -109,7 +109,7 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 					role: item.roles.join(","),
 					os: item.os.name,
 					version: item.version,
-					status: item.status.toLowerCase(),
+					status: item.status,
 					progress: item.progress,
 					isMaster: item.isMaster,
 					disabled: !item.upgradable,
@@ -164,7 +164,7 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 	})
 
 	const getAction = (row: TUpgradeRow) => {
-		if (row.disabled && row.status === "available") {
+		if (row.disabled && row.status === "AVAILABLE") {
 			return (
 				<Box
 					className="flex gap-1 items-center"
@@ -179,7 +179,7 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 					Upgrade other nodes first.
 				</Box>
 			)
-		} else if (row.status === "available") {
+		} else if (row.status === "AVAILABLE") {
 			return (
 				<Box className="flex justify-end">
 					<OutlinedBorderButton
@@ -194,9 +194,9 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 					</OutlinedBorderButton>
 				</Box>
 			)
-		} else if (row.status === "upgrading") {
+		} else if (row.status === "UPGRADING") {
 			return <ProgressBar progress={row.progress ? row.progress : 0} />
-		} else if (row.status === "upgraded") {
+		} else if (row.status === "UPGRADED") {
 			return UPGRADE_ENUM["completed"]
 		} else {
 			return (
@@ -226,8 +226,8 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 					return (
 						<span
 							className={cn({
-								"text-[#ADADAD]": row.status !== "upgraded",
-								"text[#E75547]": row.status !== "failed",
+								"text-[#ADADAD]": row.status !== "UPGRADED",
+								"text[#E75547]": row.status !== "FAILED",
 							})}
 						>
 							{row.ip}
@@ -237,8 +237,8 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 					return (
 						<span
 							className={cn({
-								"text-[#ADADAD]": row.status !== "upgraded",
-								"text[#E75547]": row.status !== "failed",
+								"text-[#ADADAD]": row.status !== "UPGRADED",
+								"text[#E75547]": row.status !== "FAILED",
 							})}
 						>
 							{row.role}
@@ -248,8 +248,8 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 					return (
 						<span
 							className={cn({
-								"text-[#ADADAD]": row.status !== "upgraded",
-								"text[#E75547]": row.status !== "failed",
+								"text-[#ADADAD]": row.status !== "UPGRADED",
+								"text[#E75547]": row.status !== "FAILED",
 							})}
 						>
 							{row.os}
@@ -259,8 +259,8 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 					return (
 						<span
 							className={cn({
-								"text-[#ADADAD]": row.status !== "upgraded",
-								"text[#E75547]": row.status !== "failed",
+								"text-[#ADADAD]": row.status !== "UPGRADED",
+								"text[#E75547]": row.status !== "FAILED",
 							})}
 						>
 							{row.version}
@@ -283,7 +283,7 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 						Node Details
 					</Typography>
 					<Box className="flex flex-row items-center gap-2">
-						{data?.filter((item: any) => item.status === "failed").length !== 0 ? (
+						{data?.filter((item: any) => item.status === "FAILED").length !== 0 ? (
 							<Typography
 								className="inline-flex gap-[6px] items-center"
 								color="#E87D65"
@@ -306,7 +306,7 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 								isLoading ||
 								(data &&
 									data.filter(
-										(item: any) => item.status !== "available" && item.status !== "upgraded"
+										(item: any) => item.status !== "AVAILABLE" && item.status !== "UPGRADED"
 									).length > 0)
 							}
 							padding="8px 16px"
