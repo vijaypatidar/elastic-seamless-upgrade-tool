@@ -148,6 +148,7 @@ public class ClusterUpgradeService {
           kibana,
           precheck);
     } catch (Exception e) {
+      log.error("Failed to get upgrade info for clusterId: {}", clusterId, e);
       throw new RuntimeException(e);
     }
   }

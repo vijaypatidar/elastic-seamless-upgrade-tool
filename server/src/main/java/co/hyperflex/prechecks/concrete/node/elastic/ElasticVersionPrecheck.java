@@ -53,6 +53,7 @@ public class ElasticVersionPrecheck extends BaseElasticNodePrecheck {
       }
 
     } catch (IOException e) {
+      logger.error("Failed to get version info for node: {}", nodeId, e);
       throw new RuntimeException("Failed to get version info for node: " + nodeId, e);
     }
   }

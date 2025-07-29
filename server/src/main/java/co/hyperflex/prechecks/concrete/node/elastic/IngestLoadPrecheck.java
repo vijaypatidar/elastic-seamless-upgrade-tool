@@ -68,6 +68,7 @@ public class IngestLoadPrecheck extends BaseElasticNodePrecheck {
       }
 
     } catch (IOException e) {
+      logger.error("Failed to check ingest load for node: {}", nodeId, e);
       throw new RuntimeException("Failed to check ingest load for node: " + nodeId, e);
     }
   }

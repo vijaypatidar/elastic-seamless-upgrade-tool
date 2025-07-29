@@ -74,6 +74,7 @@ public class UnassignedShardsPrecheck extends BaseIndexPrecheck {
         logger.info("Index [%s] has all shards in assigned and started state.", indexName);
       }
     } catch (IOException e) {
+      logger.error("Failed to check unassigned shards for index: {}", indexName, e);
       throw new RuntimeException("Failed to check unassigned shards for index: " + indexName, e);
     }
   }

@@ -88,6 +88,7 @@ public class MasterEligibleNodesPrecheck extends BaseClusterPrecheck {
       }
 
     } catch (IOException e) {
+      logger.error("Failed to fetch node information from cluster", e);
       throw new RuntimeException("Failed to fetch node information from cluster", e);
     }
   }

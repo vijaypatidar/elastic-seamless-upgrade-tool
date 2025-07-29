@@ -49,7 +49,8 @@ public class PrecheckContextResolver {
 
   public PrecheckContext resolveContext(PrecheckRun precheckRun) {
     String clusterId = precheckRun.getClusterId();
-    ClusterUpgradeJob clusterUpgradeJob = clusterUpgradeJobService.getActiveJobByClusterId(clusterId);
+    ClusterUpgradeJob clusterUpgradeJob =
+        clusterUpgradeJobService.getActiveJobByClusterId(clusterId);
     Cluster cluster = clusterRepository.findById(precheckRun.getClusterId()).orElseThrow(
         () -> new NotFoundException("Cluster not found: " + precheckRun.getClusterId()));
 

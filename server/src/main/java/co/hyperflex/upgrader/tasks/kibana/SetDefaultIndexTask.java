@@ -32,7 +32,7 @@ public class SetDefaultIndexTask implements Task {
       logger.info("Successfully set default index.");
       return TaskResult.success("Default index set.");
     } catch (Exception e) {
-      logger.error("Failed to set default index.");
+      logger.error("Failed to set default index.", e);
       return TaskResult.failure("Failed to set default index.");
     }
 

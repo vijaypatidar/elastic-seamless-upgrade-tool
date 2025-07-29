@@ -53,6 +53,7 @@ public class IndexFieldCountPrecheck extends BaseIndexPrecheck {
             indexName, fieldCount, fieldLimit);
       }
     } catch (IOException e) {
+      logger.error("Failed to get field count for index: {}", indexName, e);
       throw new RuntimeException(e);
     }
 

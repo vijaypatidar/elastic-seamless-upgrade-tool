@@ -37,7 +37,7 @@ public class AnsibleService {
 
       return process.waitFor();
     } catch (Exception e) {
-
+      logger.error("Failed to run ansible command", e);
       throw new RuntimeException(e);
     }
   }

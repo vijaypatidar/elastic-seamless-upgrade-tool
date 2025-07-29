@@ -26,6 +26,7 @@ public class KibanaClient {
       restTemplate.getForObject(url, String.class);
       return true;
     } catch (Exception e) {
+      logger.error("Failed to check if kibana is ready on host {}", host, e);
       return false;
     }
   }
@@ -35,6 +36,7 @@ public class KibanaClient {
     try {
       return restTemplate.getForObject(url, List.class);
     } catch (Exception e) {
+      logger.error("Failed to get deprecations from kibana", e);
       return List.of();
     }
   }

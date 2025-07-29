@@ -91,6 +91,7 @@ public class CustomPluginsListPrecheck extends BaseElasticNodePrecheck {
         );
       }
     } catch (IOException e) {
+      logger.error("Failed to check installed plugins for node: {}", nodeId, e);
       throw new RuntimeException("Failed to check installed plugins for node: " + nodeId, e);
     }
   }

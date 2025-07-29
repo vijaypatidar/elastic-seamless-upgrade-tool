@@ -59,6 +59,7 @@ public class PrecheckRunner {
             Thread.sleep(5000);
             continue;
           } catch (InterruptedException e) {
+            LOG.error("Precheck runner thread interrupted", e);
             throw new RuntimeException(e);
           }
         }
@@ -134,6 +135,7 @@ public class PrecheckRunner {
       }
 
     } catch (Exception e) {
+      LOG.error("Error executing precheck: {}", record.getId(), e);
       record.setStatus(PrecheckStatus.FAILED);
       record.setEndAt(new Date());
       record.getLogs().add(e.getMessage());

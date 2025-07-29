@@ -62,6 +62,7 @@ public class ClusterAllocationSettingPrecheck extends BaseClusterPrecheck {
       }
 
     } catch (IOException e) {
+      logger.error("Failed to fetch cluster settings", e);
       throw new RuntimeException("Failed to fetch cluster settings", e);
     }
   }
