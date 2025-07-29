@@ -1,7 +1,7 @@
-import { Skeleton, Tooltip } from "@heroui/react"
+import { Skeleton } from "@heroui/react"
 import { Box, Typography } from "@mui/material"
 import { useQuery } from "@tanstack/react-query"
-import { Camera, Flash, InfoCircle } from "iconsax-react"
+import { Camera, Flash } from "iconsax-react"
 import moment from "moment"
 import { useState } from "react"
 import { Link } from "react-router"
@@ -353,20 +353,18 @@ function UpgradeAssistant() {
 					</Box>
 					{infraType == "ELASTIC_CLOUD" ? (
 						<Box className="flex items-start">
-							<OutlinedBorderButton
-								component={Link}
-								to="/prechecks"
-								disabled={stepStatus["2"] === "NOTVISITED"}
-								borderRadius="50%"
-								sx={{ minWidth: "38px !important", minHeight: "38px !important", padding: "0px" }}
+							<a
+								target="_blank"
+								href={`https://cloud.elastic.co/deployments/${deploymentId}?show_upgrade=true`}
 							>
-								<a
-									target="_blank"
-									href={`https://cloud.elastic.co/deployments/${deploymentId}?show_upgrade=true`}
+								<OutlinedBorderButton
+									disabled={stepStatus["2"] === "NOTVISITED"}
+									borderRadius="50%"
+									sx={{ minWidth: "38px !important", minHeight: "38px !important", padding: "0px" }}
 								>
 									<FiArrowUpRight size="20px" color="#FFF" />
-								</a>
-							</OutlinedBorderButton>
+								</OutlinedBorderButton>
+							</a>
 						</Box>
 					) : (
 						<OutlinedBorderButton

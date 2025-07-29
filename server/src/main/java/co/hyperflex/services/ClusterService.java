@@ -11,6 +11,8 @@ import co.elastic.clients.elasticsearch.nodes.NodesInfoResponse;
 import co.elastic.clients.elasticsearch.nodes.info.NodeInfo;
 import co.hyperflex.clients.ElasticClient;
 import co.hyperflex.clients.ElasticsearchClientProvider;
+import co.hyperflex.clients.KibanaClient;
+import co.hyperflex.clients.KibanaClientProvider;
 import co.hyperflex.dtos.GetDeprecationsResponse;
 import co.hyperflex.dtos.clusters.AddClusterRequest;
 import co.hyperflex.dtos.clusters.AddClusterResponse;
@@ -28,6 +30,7 @@ import co.hyperflex.entities.cluster.ClusterNode;
 import co.hyperflex.entities.cluster.ClusterNodeType;
 import co.hyperflex.entities.cluster.ElasticCloudCluster;
 import co.hyperflex.entities.cluster.ElasticNode;
+import co.hyperflex.entities.cluster.KibanaNode;
 import co.hyperflex.entities.cluster.OperatingSystemInfo;
 import co.hyperflex.entities.cluster.SelfManagedCluster;
 import co.hyperflex.entities.cluster.SshInfo;
@@ -58,18 +61,21 @@ public class ClusterService {
   private final ClusterNodeRepository clusterNodeRepository;
   private final ClusterMapper clusterMapper;
   private final ElasticsearchClientProvider elasticsearchClientProvider;
+  private final KibanaClientProvider kibanaClientProvider;
   private final ClusterUpgradeJobService clusterUpgradeJobService;
   private final SshKeyService sshKeyService;
 
   public ClusterService(ClusterRepository clusterRepository,
                         ClusterNodeRepository clusterNodeRepository, ClusterMapper clusterMapper,
                         ElasticsearchClientProvider elasticsearchClientProvider,
+                        KibanaClientProvider kibanaClientProvider,
                         ClusterUpgradeJobService clusterUpgradeJobService,
                         SshKeyService sshKeyService) {
     this.clusterRepository = clusterRepository;
     this.clusterNodeRepository = clusterNodeRepository;
     this.clusterMapper = clusterMapper;
     this.elasticsearchClientProvider = elasticsearchClientProvider;
+    this.kibanaClientProvider = kibanaClientProvider;
     this.clusterUpgradeJobService = clusterUpgradeJobService;
     this.sshKeyService = sshKeyService;
   }
@@ -79,15 +85,15 @@ public class ClusterService {
     clusterRepository.save(cluster);
     syncElasticNodes(cluster);
     if (request instanceof AddSelfManagedClusterRequest selfManagedRequest) {
-      final List<ClusterNode> clusterNodes = selfManagedRequest.getKibanaNodes()
+      final List<KibanaNode> clusterNodes = selfManagedRequest.getKibanaNodes()
           .stream()
           .map(kibanaNodeRequest -> {
-            ClusterNode node = clusterMapper.toNodeEntity(kibanaNodeRequest);
+            KibanaNode node = clusterMapper.toNodeEntity(kibanaNodeRequest);
             node.setId(HashUtil.generateHash(cluster.getId() + ":" + node.getIp()));
             node.setClusterId(cluster.getId());
             return node;
           }).toList();
-
+      syncKibanaNodes((SelfManagedCluster) cluster, clusterNodes);
       clusterNodeRepository.saveAll(clusterNodes);
     }
 
@@ -111,20 +117,22 @@ public class ClusterService {
     if (request instanceof UpdateSelfManagedClusterRequest selfManagedRequest
         && cluster instanceof SelfManagedCluster selfManagedCluster) {
       String file =
-          sshKeyService.createSSHPrivateKeyFile(selfManagedRequest.getSshKey(), "SSH_key.pem");
+          sshKeyService.createSSHPrivateKeyFile(selfManagedRequest.getSshKey(),
+              selfManagedCluster.getId());
       selfManagedCluster.setSshInfo(
           new SshInfo(selfManagedRequest.getSshUsername(), selfManagedRequest.getSshKey(), file));
 
       if (selfManagedRequest.getKibanaNodes() != null
           && !selfManagedRequest.getKibanaNodes().isEmpty()) {
-        final List<ClusterNode> clusterNodes = selfManagedRequest.getKibanaNodes()
+        final List<KibanaNode> clusterNodes = selfManagedRequest.getKibanaNodes()
             .stream()
             .map(kibanaNodeRequest -> {
-              ClusterNode node = clusterMapper.toNodeEntity(kibanaNodeRequest);
+              KibanaNode node = clusterMapper.toNodeEntity(kibanaNodeRequest);
               node.setClusterId(cluster.getId());
               node.setId(HashUtil.generateHash(cluster.getId() + ":" + node.getIp()));
               return node;
             }).toList();
+        syncKibanaNodes(selfManagedCluster, clusterNodes);
         clusterNodeRepository.saveAll(clusterNodes);
       }
 
@@ -236,6 +244,15 @@ public class ClusterService {
       log.error("Failed to get cluster overview for clusterId: {}", clusterId, e);
       throw new RuntimeException(e);
     }
+  }
+
+  private void syncKibanaNodes(SelfManagedCluster cluster, List<KibanaNode> nodes) {
+    var kibanaClient = kibanaClientProvider.getClient(cluster);
+    nodes.forEach(node -> {
+      KibanaClient.KibanaNodeDetails details = kibanaClient.getKibanaNodeDetails(node.getIp());
+      node.setVersion(details.version());
+      node.setOs(details.os());
+    });
   }
 
   private void syncElasticNodes(Cluster cluster) {

@@ -59,15 +59,13 @@ public class ClusterMapper {
     return cluster;
   }
 
-  public ClusterNode toNodeEntity(AddClusterKibanaNodeRequest request) {
-    ClusterNode node = new KibanaNode();
+  public KibanaNode toNodeEntity(AddClusterKibanaNodeRequest request) {
+    KibanaNode node = new KibanaNode();
     node.setName(request.name());
     node.setIp(request.ip());
-    node.setVersion("7.17.0");
     node.setRoles(List.of("kibana"));
     node.setType(ClusterNodeType.KIBANA);
     node.setRank(NodeRoleRankerUtils.getNodeRankByRoles(node.getRoles(), false));
-    //todo
     return node;
   }
 
