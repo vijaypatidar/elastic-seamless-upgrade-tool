@@ -208,23 +208,24 @@ public class ClusterService {
       IndicesResponse indices = client.cat().indices();
       List<MasterRecord> activeMasters = elasticClient.getActiveMasters();
       Boolean adaptiveReplicaEnabled = elasticClient.isAdaptiveReplicaEnabled();
+      var counts = elasticClient.getEntitiesCounts();
       return new ClusterOverviewResponse(
           info.clusterName(),
           info.clusterUuid(),
           health.status(),
           info.version().number(),
           false,
-          1,
-          1,
+          counts.dataNodes(),
+          counts.totalNodes(),
           activeMasters.size(),
           activeMasters.stream().map(MasterRecord::id).collect(Collectors.joining(",")),
           adaptiveReplicaEnabled,
           indices.valueBody().size(),
-          1,
-          1,
-          1,
-          1,
-          1,
+          counts.activePrimaryShards(),
+          counts.activeShards(),
+          counts.unassignedShards(),
+          counts.initializingShards(),
+          counts.relocatingShards(),
           cluster.getType().name(),
           info.version().number(),
           UpgradePathUtils.getPossibleUpgrades(info.version().number()),

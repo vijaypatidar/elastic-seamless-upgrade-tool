@@ -19,6 +19,7 @@ import { FiArrowUpRight } from "react-icons/fi"
 
 function UpgradeAssistant() {
 	const clusterId = useLocalStore((state: any) => state.clusterId)
+	const infraType = useLocalStore((state: any) => state.infraType)
 	const { remainingTime, startTimer, resetTimer } = useCountdownTimer()
 	const setDeprecationChangesAllowed = useSafeRouteStore((state: any) => state.setDeprecationChangesAllowed)
 	const setElasticNodeUpgradeAllowed = useSafeRouteStore((state: any) => state.setElasticNodeUpgradeAllowed)
@@ -331,6 +332,7 @@ function UpgradeAssistant() {
 				internalBackground={step4Data?.internalBackground}
 				textColor={step4Data?.textColor}
 				stepValue={step4Data?.stepValue}
+				lastNode={infraType === "ELASTIC_CLOUD" ? true : false}
 			>
 				<Box className="flex flex-row gap-3 items-center rounded-[20px] justify-between w-full">
 					<Box className="flex flex-col gap-[6px]">
@@ -359,42 +361,44 @@ function UpgradeAssistant() {
 					</OutlinedBorderButton>
 				</Box>
 			</StepBox>
-			<StepBox
-				lastNode={true}
-				boxBackground={step5Data?.boxBackground}
-				background={step5Data?.background}
-				boxShadow={step5Data?.boxShadow}
-				internalBackground={step5Data?.internalBackground}
-				textColor={step5Data?.textColor}
-				stepValue={step5Data?.stepValue}
-			>
-				<Box className="flex flex-row gap-3 items-center rounded-[20px] justify-between w-full">
-					<Box className="flex flex-col gap-[6px]">
-						<Typography color="#FFF" fontSize="16px" fontWeight="600" lineHeight="normal">
-							Upgrade Kibana
-						</Typography>
-						<Typography
-							color="#6E6E6E"
-							fontSize="13px"
-							fontWeight="400"
-							lineHeight="20px"
-							letterSpacing="0.26px"
+			{infraType != "ELASTIC_CLOUD" && (
+				<StepBox
+					lastNode={true}
+					boxBackground={step5Data?.boxBackground}
+					background={step5Data?.background}
+					boxShadow={step5Data?.boxShadow}
+					internalBackground={step5Data?.internalBackground}
+					textColor={step5Data?.textColor}
+					stepValue={step5Data?.stepValue}
+				>
+					<Box className="flex flex-row gap-3 items-center rounded-[20px] justify-between w-full">
+						<Box className="flex flex-col gap-[6px]">
+							<Typography color="#FFF" fontSize="16px" fontWeight="600" lineHeight="normal">
+								Upgrade Kibana
+							</Typography>
+							<Typography
+								color="#6E6E6E"
+								fontSize="13px"
+								fontWeight="400"
+								lineHeight="20px"
+								letterSpacing="0.26px"
+							>
+								Once you've resolved all critical issues and verified that your applications are ready,
+								you can upgrade to Elastic 8.x. Be sure to back up your data again before upgrading.
+							</Typography>
+						</Box>
+						<OutlinedBorderButton
+							component={Link}
+							to="/kibana/upgrade"
+							disabled={step5Data?.isDisabled}
+							icon={Flash}
+							filledIcon={Flash}
 						>
-							Once you've resolved all critical issues and verified that your applications are ready, you
-							can upgrade to Elastic 8.x. Be sure to back up your data again before upgrading.
-						</Typography>
+							Upgrade
+						</OutlinedBorderButton>
 					</Box>
-					<OutlinedBorderButton
-						component={Link}
-						to="/kibana/upgrade"
-						disabled={step5Data?.isDisabled}
-						icon={Flash}
-						filledIcon={Flash}
-					>
-						Upgrade
-					</OutlinedBorderButton>
-				</Box>
-			</StepBox>
+				</StepBox>
+			)}
 			{stepStatus["5"] === "COMPLETED" ? (
 				<Box className="sticky bottom-0 z-50">
 					<Box

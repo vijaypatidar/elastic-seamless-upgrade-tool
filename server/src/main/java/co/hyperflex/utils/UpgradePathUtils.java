@@ -60,7 +60,7 @@ public class UpgradePathUtils {
       Map.entry("8.14", List.of("8.15.5", "8.16.4", "8.17.2")),
       Map.entry("8.15", List.of("8.16.4", "8.17.2")),
       Map.entry("8.16", List.of("8.17.2")),
-      Map.entry("8.17", List.of())
+      Map.entry("8.17", List.of("8.17.2"))
   );
 
   public static List<String> getPossibleUpgrades(String version) {

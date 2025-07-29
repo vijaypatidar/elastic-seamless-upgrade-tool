@@ -2,7 +2,10 @@ package co.hyperflex.clients;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch.cat.master.MasterRecord;
+import co.elastic.clients.elasticsearch.cluster.ClusterStatsResponse;
 import co.elastic.clients.elasticsearch.cluster.GetClusterSettingsResponse;
+import co.elastic.clients.elasticsearch.cluster.HealthResponse;
+import co.elastic.clients.elasticsearch.cluster.stats.ClusterNodeCount;
 import co.elastic.clients.elasticsearch.core.InfoResponse;
 import co.elastic.clients.elasticsearch.indices.ElasticsearchIndicesClient;
 import co.elastic.clients.elasticsearch.indices.GetIndexRequest;
@@ -11,6 +14,7 @@ import co.elastic.clients.elasticsearch.snapshot.GetRepositoryResponse;
 import co.elastic.clients.elasticsearch.snapshot.GetSnapshotResponse;
 import co.elastic.clients.elasticsearch.snapshot.SnapshotInfo;
 import co.elastic.clients.json.JsonData;
+import co.hyperflex.dtos.GetElasticNodeAndIndexCountsResponse;
 import co.hyperflex.dtos.GetElasticsearchSnapshotResponse;
 import java.io.IOException;
 import java.util.Collections;
@@ -40,10 +44,7 @@ public class ElasticClient {
 
     try {
       GetIndexResponse response = indices.get(request);
-      return response.result()
-          .keySet()
-          .stream()
-          .filter(indexState -> !indexState.startsWith("."))
+      return response.result().keySet().stream().filter(indexState -> !indexState.startsWith("."))
           .toList();
     } catch (IOException e) {
       throw new RuntimeException(e);
@@ -100,26 +101,19 @@ public class ElasticClient {
 
       for (String repository : repositories) {
         try {
-          GetSnapshotResponse snapshotResponse = getElasticsearchClient().snapshot().get(req -> req
-              .repository(repository)
-              .snapshot(List.of("_all"))
-          );
+          GetSnapshotResponse snapshotResponse = getElasticsearchClient().snapshot()
+              .get(req -> req.repository(repository).snapshot(List.of("_all")));
 
           List<SnapshotInfo> snapshots = snapshotResponse.snapshots();
           if (snapshots == null || snapshots.isEmpty()) {
             continue;
           }
 
-          List<GetElasticsearchSnapshotResponse> validSnapshots = snapshots.stream()
-              .filter(s -> {
-                Long time = s.startTimeInMillis();
-                return time != null && time >= twentyFourHoursAgo && time <= now;
-              })
-              .map(s -> new GetElasticsearchSnapshotResponse(
-                  s.snapshot(),
-                  new Date(s.startTimeInMillis())
-              ))
-              .toList();
+          List<GetElasticsearchSnapshotResponse> validSnapshots = snapshots.stream().filter(s -> {
+            Long time = s.startTimeInMillis();
+            return time != null && time >= twentyFourHoursAgo && time <= now;
+          }).map(s -> new GetElasticsearchSnapshotResponse(s.snapshot(),
+              new Date(s.startTimeInMillis()))).toList();
 
           allValidSnapshots.addAll(validSnapshots);
 
@@ -138,6 +132,34 @@ public class ElasticClient {
     } catch (Exception e) {
       LOG.error("Error checking snapshot details:", e);
       throw new RuntimeException("Failed to get valid snapshots", e);
+    }
+  }
+
+  public GetElasticNodeAndIndexCountsResponse getEntitiesCounts() {
+    try {
+      HealthResponse health = getElasticsearchClient().cluster().health();
+      int totalIndices = health.indices().size();
+      int activePrimaryShards = health.activePrimaryShards();
+      int activeShards = health.activeShards();
+      int unassignedShards = health.unassignedShards();
+      int initializingShards = health.initializingShards();
+      int relocatingShards = health.relocatingShards();
+      ClusterStatsResponse stats = getElasticsearchClient().cluster().stats();
+      ClusterNodeCount nodeCount = stats.nodes().count();
+      int totalNodes = nodeCount.total();
+      int dataNodes = nodeCount.data()
+          + nodeCount.dataCold()
+          + nodeCount.dataContent()
+          + nodeCount.dataHot()
+          + nodeCount.dataWarm();
+      int masterNodes = nodeCount.master();
+
+      return new GetElasticNodeAndIndexCountsResponse(dataNodes, totalNodes, masterNodes,
+          totalIndices, activePrimaryShards, activeShards, unassignedShards, initializingShards,
+          relocatingShards);
+    } catch (IOException e) {
+      LOG.error("Failed to get cluster stats", e);
+      throw new RuntimeException(e);
     }
   }
 }
