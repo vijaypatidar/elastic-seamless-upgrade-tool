@@ -123,7 +123,7 @@ public class ClusterUpgradeService {
 
       // Evaluate upgrade status
       boolean isESUpgraded = clusterService.isNodesUpgraded(clusterId, ClusterNodeType.ELASTIC);
-      boolean isKibanaUpgraded = clusterService.isNodesUpgraded(clusterId, ClusterNodeType.ELASTIC);
+      boolean isKibanaUpgraded = clusterService.isNodesUpgraded(clusterId, ClusterNodeType.KIBANA);
 
       ClusterInfoResponse.Elastic elastic =
           new ClusterInfoResponse.Elastic(
@@ -298,5 +298,6 @@ public class ClusterUpgradeService {
   private void updateNodeProgress(ClusterNode node, int progress) {
     node.setProgress(progress);
     clusterNodeRepository.save(node);
+    notificationService.sendNotification(new UpgradeProgressChangeEvent());
   }
 }

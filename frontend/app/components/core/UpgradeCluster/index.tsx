@@ -103,7 +103,7 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 			.get(`/clusters/${clusterId}/nodes?type=ELASTIC`)
 			.then((res) => {
 				response = res.data.map((item: any) => ({
-					key: item.nodeId,
+					key: item.id,
 					ip: item.ip,
 					node_name: item.name,
 					role: item.roles.join(","),
@@ -124,7 +124,7 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 		console.log("triggered")
 		await axiosJSON
 			.post(`/upgrades/nodes`, {
-				nodes: nodeId,
+				nodeId: nodeId,
 				clusterId: clusterId,
 			})
 			.then(() => {
@@ -137,7 +137,7 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 	}
 	const performUpgradeAll = async () => {
 		await axiosJSON
-			.post(`/api/elastic/clusters/${clusterId}/upgrade-all`)
+			.post(`/upgrades/clusters/${clusterId}`)
 			.then(() => {
 				refetch()
 				toast.success("Upgrade started")

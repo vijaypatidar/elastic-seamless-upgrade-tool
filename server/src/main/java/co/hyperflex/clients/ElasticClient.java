@@ -166,7 +166,18 @@ public class ElasticClient {
           relocatingShards);
     } catch (IOException e) {
       LOG.error("Failed to get cluster stats", e);
-      throw new RuntimeException(e);
+      return new GetElasticNodeAndIndexCountsResponse(
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+      );
+
     }
   }
 }
