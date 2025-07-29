@@ -1,6 +1,7 @@
 package co.hyperflex.services;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.ElasticsearchException;
 import co.elastic.clients.elasticsearch.cat.IndicesResponse;
 import co.elastic.clients.elasticsearch.cat.health.HealthRecord;
 import co.elastic.clients.elasticsearch.cat.master.MasterRecord;
@@ -227,7 +228,7 @@ public class ClusterService {
           cluster.getType().name(),
           info.version().number(),
           UpgradePathUtils.getPossibleUpgrades(info.version().number()),
-          !upgradeJobExists
+          upgradeJobExists
       );
 
     } catch (IOException e) {
@@ -290,7 +291,9 @@ public class ClusterService {
 
       clusterNodeRepository.saveAll(clusterNodes);
 
-    } catch (IOException e) {
+    } catch (ElasticsearchException e) {
+      throw new BadRequestException("Invalid credential");
+    } catch (Exception e) {
       log.error("Error syncing nodes from Elasticsearch:", e);
       throw new RuntimeException(e);
     }

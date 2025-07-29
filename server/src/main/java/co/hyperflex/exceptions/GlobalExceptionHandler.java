@@ -28,6 +28,6 @@ public class GlobalExceptionHandler {
     return ResponseEntity.badRequest().body(Map.of("errors", errorMessages));
   }
 
-  public record ErrorResponse(String error) {
+  public record ErrorResponse(String err) {
   }
 }

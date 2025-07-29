@@ -5,7 +5,7 @@ import java.util.List;
 public class NodeRoleRankerUtils {
 
   public static int getNodeRankByRoles(List<String> nodeRoles, boolean isActiveMaster) {
-    final List<String>  roles = nodeRoles.stream().map(String::toLowerCase).toList();
+    final List<String> roles = nodeRoles.stream().map(String::toLowerCase).toList();
     boolean isMaster = roles.contains("master");
     boolean isData = roles.stream().anyMatch(role -> role.startsWith("data"));
     boolean isIngest = roles.contains("ingest");

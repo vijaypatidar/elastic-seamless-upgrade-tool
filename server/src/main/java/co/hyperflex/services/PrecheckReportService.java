@@ -38,6 +38,18 @@ public class PrecheckReportService {
     this.elasticsearchClientProvider = elasticsearchClientProvider;
   }
 
+  private static Consumer<Deprecation> getDeprecationConsumer(StringBuilder md) {
+    return issue -> {
+      md.append("- **").append(issue.message()).append("**\n");
+      if (issue.details() != null) {
+        md.append("  - Details: ").append(issue.details()).append("\n");
+      }
+      if (issue.level() != null) {
+        md.append("  - Level: `").append(issue.level()).append("`\n");
+      }
+    };
+  }
+
   public String generatePrecheckReportMdContent(String clusterId) {
     ClusterUpgradeJob job = clusterUpgradeJobService.getActiveJobByClusterId(clusterId);
     final String currentVersion = job.getCurrentVersion();
@@ -170,18 +182,6 @@ public class PrecheckReportService {
       log.error("Error while creating getting Elasticsearch Deprecations", e);
       return "N/A";
     }
-  }
-
-  private static Consumer<Deprecation> getDeprecationConsumer(StringBuilder md) {
-    return issue -> {
-      md.append("- **").append(issue.message()).append("**\n");
-      if (issue.details() != null) {
-        md.append("  - Details: ").append(issue.details()).append("\n");
-      }
-      if (issue.level() != null) {
-        md.append("  - Level: `").append(issue.level()).append("`\n");
-      }
-    };
   }
 
   private String getKibanaDeprecationsMdReport(String clusterId) {

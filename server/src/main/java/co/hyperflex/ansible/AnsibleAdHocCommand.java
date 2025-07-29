@@ -1,4 +1,4 @@
-package co.hyperflex.upgrader.tasks;
+package co.hyperflex.ansible;
 
 import java.util.Map;
 
@@ -7,15 +7,16 @@ public class AnsibleAdHocCommand {
   private final String module;
   private final Map<String, Object> args;
   private final boolean useBecome;
-  private final String elkVersion;
+  private final String sshUser;
+  private final String sshKeyPath;
 
   private AnsibleAdHocCommand(Builder builder) {
     this.hostIp = builder.hostIp;
-
     this.module = builder.module;
     this.args = builder.args;
     this.useBecome = builder.useBecome;
-    this.elkVersion = builder.elkVersion;
+    this.sshUser = builder.sshUser;
+    this.sshKeyPath = builder.sshKeyPath;
   }
 
   public String getHostIp() {
@@ -35,16 +36,21 @@ public class AnsibleAdHocCommand {
     return useBecome;
   }
 
-  public String getElkVersion() {
-    return elkVersion;
+  public String getSshUser() {
+    return sshUser;
+  }
+
+  public String getSshKeyPath() {
+    return sshKeyPath;
   }
 
   public static class Builder {
+    public String sshKeyPath;
+    public String sshUser;
     private String hostIp;
     private String module;
     private Map<String, Object> args;
-    private boolean useBecome;
-    private String elkVersion;
+    private boolean useBecome = true;
 
     public Builder hostIp(String hostIp) {
       this.hostIp = hostIp;
@@ -66,8 +72,13 @@ public class AnsibleAdHocCommand {
       return this;
     }
 
-    public Builder elkVersion(String elkVersion) {
-      this.elkVersion = elkVersion;
+    public Builder sshUsername(String sshUsername) {
+      this.sshUser = sshUsername;
+      return this;
+    }
+
+    public Builder sshKeyPath(String sshKeyPath) {
+      this.sshKeyPath = sshKeyPath;
       return this;
     }
 
