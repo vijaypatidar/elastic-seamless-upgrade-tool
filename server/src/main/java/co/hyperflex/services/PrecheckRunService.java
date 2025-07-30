@@ -11,12 +11,15 @@ import co.hyperflex.entities.precheck.IndexPrecheckRun;
 import co.hyperflex.entities.precheck.NodePrecheckRun;
 import co.hyperflex.entities.precheck.PrecheckGroup;
 import co.hyperflex.entities.precheck.PrecheckRun;
+import co.hyperflex.entities.precheck.PrecheckSeverity;
 import co.hyperflex.entities.precheck.PrecheckStatus;
 import co.hyperflex.entities.precheck.PrecheckType;
 import co.hyperflex.exceptions.NotFoundException;
 import co.hyperflex.mappers.PrecheckMapper;
 import co.hyperflex.repositories.PrecheckGroupRepository;
 import co.hyperflex.repositories.PrecheckRunRepository;
+import co.hyperflex.repositories.projection.PrecheckStatusAndSeverityView;
+import jakarta.validation.constraints.NotNull;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -74,15 +77,16 @@ public class PrecheckRunService {
                         && nodePrecheckRun.getNode().getId().equals(entry.getKey())).findFirst()
                 .orElseThrow()).getNode();
 
-            PrecheckStatus status = getMergedPrecheckStatus(entry.getValue());
-
+            List<PrecheckStatus> statuses = entry.getValue().stream().map(GetPrecheckEntry::status).toList();
+            PrecheckStatus status = getMergedPrecheckStatus(statuses);
             return new GetNodePrecheckGroup(nodeInfo.getId(), nodeInfo.getIp(), nodeInfo.getName(),
                 status, entry.getValue());
           }).toList();
 
           List<GetIndexPrecheckGroup> indexGroups =
               indexPrechecks.entrySet().stream().map(entry -> {
-                PrecheckStatus status = getMergedPrecheckStatus(entry.getValue());
+                List<PrecheckStatus> statuses = entry.getValue().stream().map(GetPrecheckEntry::status).toList();
+                PrecheckStatus status = getMergedPrecheckStatus(statuses);
                 return new GetIndexPrecheckGroup(entry.getKey(), entry.getKey(), status,
                     entry.getValue());
               }).toList();
@@ -91,6 +95,15 @@ public class PrecheckRunService {
               Collections.emptyList());
         })
         .orElseThrow(() -> new NotFoundException("No PrecheckRun found for cluster: " + clusterId));
+  }
+
+  public PrecheckStatus getGroupStatus(@NotNull String groupId) {
+    List<PrecheckStatus> statuses = precheckRunRepository.findStatusAndSeverityByPrecheckGroupId(groupId)
+        .stream()
+        .filter(status -> status.status() != PrecheckStatus.FAILED && status.severity() != PrecheckSeverity.ERROR)
+        .map(PrecheckStatusAndSeverityView::status)
+        .toList();
+    return getMergedPrecheckStatus(statuses);
   }
 
   public void rerunPrechecks(PrecheckGroup precheckGroup, PrecheckRerunRequest request) {
@@ -119,22 +132,22 @@ public class PrecheckRunService {
     mongoTemplate.updateMulti(query, update, PrecheckRun.class);
   }
 
-  private PrecheckStatus getMergedPrecheckStatus(List<GetPrecheckEntry> precheckRuns) {
+  private PrecheckStatus getMergedPrecheckStatus(List<PrecheckStatus> statuses) {
     boolean hasCompleted = false;
     boolean hasPending = false;
     boolean hasRunning = false;
 
-    for (var run : precheckRuns) {
-      if (run.status() == PrecheckStatus.FAILED) {
+    for (var status : statuses) {
+      if (status == PrecheckStatus.FAILED) {
         return PrecheckStatus.FAILED;
       }
-      if (run.status() == PrecheckStatus.RUNNING) {
+      if (status == PrecheckStatus.RUNNING) {
         hasRunning = true;
       }
-      if (run.status() == PrecheckStatus.PENDING) {
+      if (status == PrecheckStatus.PENDING) {
         hasPending = true;
       }
-      if (run.status() == PrecheckStatus.COMPLETED) {
+      if (status == PrecheckStatus.COMPLETED) {
         hasCompleted = true;
       }
     }

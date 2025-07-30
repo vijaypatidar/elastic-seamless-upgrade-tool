@@ -78,7 +78,7 @@ function UpgradeAssistant() {
 
 				// Helper function to sum deprecations safely
 				const sumDeprecations = (type: string) =>
-					(elastic?.deprecations?.[type] ?? 1) + (kibana?.deprecations?.[type] ?? 1)
+					(elastic?.deprecationCounts?.[type] ?? 1) + (kibana?.deprecationCounts?.[type] ?? 1)
 
 				// Step 2 calculations
 				const criticalDeprecations = sumDeprecations("critical")
@@ -309,15 +309,15 @@ function UpgradeAssistant() {
 					<Box className="flex flex-row gap-8 flex-grow w-full" flexWrap={{ xs: "wrap", md: "nowrap" }}>
 						<DeprectedSettings
 							title="Elastic search"
-							criticalValue={data?.elastic?.deprecations.critical ?? "NaN"}
-							warningValue={data?.elastic?.deprecations.warning ?? "NaN"}
+							criticalValue={data?.elastic?.deprecationCounts.critical ?? "NaN"}
+							warningValue={data?.elastic?.deprecationCounts.warning ?? "NaN"}
 							isDisabled={step3Data?.isDisabled}
 							to="/elastic/deprecation-logs"
 						/>
 						<DeprectedSettings
 							title="Kibana"
-							criticalValue={data?.kibana?.deprecations.critical ?? "NaN"}
-							warningValue={data?.kibana?.deprecations.warning ?? "NaN"}
+							criticalValue={data?.kibana?.deprecationCounts.critical ?? "NaN"}
+							warningValue={data?.kibana?.deprecationCounts.warning ?? "NaN"}
 							isDisabled={step3Data?.isDisabled}
 							to="/kibana/deprecation-logs"
 						/>

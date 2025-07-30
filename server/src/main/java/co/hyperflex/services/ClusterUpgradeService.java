@@ -55,16 +55,14 @@ public class ClusterUpgradeService {
   private final DeprecationService deprecationService;
   private final ExecutorService executorService = Executors.newFixedThreadPool(1);
   private final Lock lock = new ReentrantLock();
+  private final PrecheckRunService precheckRunService;
 
-  public ClusterUpgradeService(ElasticsearchClientProvider elasticsearchClientProvider,
-                               ClusterNodeRepository clusterNodeRepository,
+  public ClusterUpgradeService(ElasticsearchClientProvider elasticsearchClientProvider, ClusterNodeRepository clusterNodeRepository,
                                ClusterService clusterService, ClusterRepository clusterRepository,
-                               KibanaClientProvider kibanaClientProvider,
-                               ClusterUpgradeJobService clusterUpgradeJobService,
-                               PrecheckGroupRepository precheckGroupRepository,
-                               NotificationService notificationService,
-                               PrecheckSchedulerService precheckSchedulerService,
-                               DeprecationService deprecationService) {
+                               KibanaClientProvider kibanaClientProvider, ClusterUpgradeJobService clusterUpgradeJobService,
+                               PrecheckGroupRepository precheckGroupRepository, NotificationService notificationService,
+                               PrecheckSchedulerService precheckSchedulerService, DeprecationService deprecationService,
+                               PrecheckRunService precheckRunService) {
     this.elasticsearchClientProvider = elasticsearchClientProvider;
     this.clusterNodeRepository = clusterNodeRepository;
     this.clusterService = clusterService;
@@ -75,14 +73,14 @@ public class ClusterUpgradeService {
     this.notificationService = notificationService;
     this.precheckSchedulerService = precheckSchedulerService;
     this.deprecationService = deprecationService;
+    this.precheckRunService = precheckRunService;
   }
 
   public ClusterNodeUpgradeResponse upgradeNode(ClusterNodeUpgradeRequest request) {
 
     Cluster cluster = clusterRepository.findById(request.clusterId()).orElseThrow();
     if (cluster instanceof SelfManagedCluster selfManagedCluster) {
-      ClusterUpgradeJob clusterUpgradeJob =
-          clusterUpgradeJobService.getActiveJobByClusterId(request.clusterId());
+      ClusterUpgradeJob clusterUpgradeJob = clusterUpgradeJobService.getActiveJobByClusterId(request.clusterId());
       ClusterNode clusterNode = clusterNodeRepository.findById(request.nodeId()).orElseThrow();
       upgradeNodes(selfManagedCluster, List.of(clusterNode), clusterUpgradeJob);
     } else {
@@ -94,8 +92,7 @@ public class ClusterUpgradeService {
   public ClusterUpgradeResponse upgrade(String clusterId) {
     Cluster cluster = clusterRepository.findById(clusterId).orElseThrow();
     if (cluster instanceof SelfManagedCluster selfManagedCluster) {
-      ClusterUpgradeJob clusterUpgradeJob =
-          clusterUpgradeJobService.getActiveJobByClusterId(clusterId);
+      ClusterUpgradeJob clusterUpgradeJob = clusterUpgradeJobService.getActiveJobByClusterId(clusterId);
       List<ClusterNode> clusterNodes = clusterNodeRepository.findByClusterId(clusterId);
       upgradeNodes(selfManagedCluster, clusterNodes, clusterUpgradeJob);
     } else {
@@ -111,22 +108,22 @@ public class ClusterUpgradeService {
       if (!upgradeJobExists) {
         throw new BadRequestException("Please set cluster target version");
       }
-      ElasticClient client =
-          elasticsearchClientProvider.getElasticsearchClientByClusterId(clusterId);
+      ElasticClient client = elasticsearchClientProvider.getElasticsearchClientByClusterId(clusterId);
       KibanaClient kibanaClient = kibanaClientProvider.getKibanaClientByClusterId(clusterId);
 
-      PrecheckGroup latestPrecheckGroup =
-          precheckGroupRepository.findFirstByClusterIdOrderByCreatedAtDesc(clusterId).orElse(null);
+      PrecheckGroup latestPrecheckGroup = precheckGroupRepository.findFirstByClusterIdOrderByCreatedAtDesc(clusterId).orElse(null);
+      PrecheckStatus precheckStatus = null;
       if (latestPrecheckGroup == null) {
         precheckSchedulerService.schedule(clusterId);
+        precheckStatus = PrecheckStatus.RUNNING;
+      } else {
+        precheckStatus = precheckRunService.getGroupStatus(latestPrecheckGroup.getId());
       }
 
       List<GetElasticsearchSnapshotResponse> snapshots = client.getValidSnapshots();
 
-      ClusterInfoResponse.DeprecationCounts kibanaDeprecationCounts =
-          deprecationService.getKibanaDeprecationCounts(clusterId);
-      ClusterInfoResponse.DeprecationCounts elasticDeprecationCounts =
-          deprecationService.getElasticDeprecationCounts(clusterId);
+      ClusterInfoResponse.DeprecationCounts kibanaDeprecationCounts = deprecationService.getKibanaDeprecationCounts(clusterId);
+      ClusterInfoResponse.DeprecationCounts elasticDeprecationCounts = deprecationService.getElasticDeprecationCounts(clusterId);
 
       // Evaluate upgrade status
       boolean isESUpgraded = clusterService.isNodesUpgraded(clusterId, ClusterNodeType.ELASTIC);
@@ -135,17 +132,13 @@ public class ClusterUpgradeService {
       boolean isElasticUpgradable = !isESUpgraded;
       boolean isKibanaUpgradable = !isKibanaUpgraded && isESUpgraded;
 
-      ClusterInfoResponse.Elastic elastic =
-          new ClusterInfoResponse.Elastic(isElasticUpgradable, elasticDeprecationCounts,
-              new ClusterInfoResponse.Elastic.SnapshotWrapper(
-                  snapshots.isEmpty() ? null : snapshots.getFirst(),
-                  kibanaClient.getSnapshotCreationPageUrl()));
+      ClusterInfoResponse.Elastic elastic = new ClusterInfoResponse.Elastic(isElasticUpgradable, elasticDeprecationCounts,
+          new ClusterInfoResponse.Elastic.SnapshotWrapper(snapshots.isEmpty() ? null : snapshots.getFirst(),
+              kibanaClient.getSnapshotCreationPageUrl()));
 
-      ClusterInfoResponse.Kibana kibana =
-          new ClusterInfoResponse.Kibana(isKibanaUpgradable, kibanaDeprecationCounts);
+      ClusterInfoResponse.Kibana kibana = new ClusterInfoResponse.Kibana(isKibanaUpgradable, kibanaDeprecationCounts);
 
-      ClusterInfoResponse.Precheck precheck = new ClusterInfoResponse.Precheck(
-          latestPrecheckGroup != null ? latestPrecheckGroup.getStatus() : PrecheckStatus.RUNNING);
+      ClusterInfoResponse.Precheck precheck = new ClusterInfoResponse.Precheck(precheckStatus);
 
       return new ClusterInfoResponse(elastic, kibana, precheck);
     } catch (Exception e) {
@@ -154,8 +147,7 @@ public class ClusterUpgradeService {
     }
   }
 
-  private void upgradeNodes(SelfManagedCluster cluster, List<ClusterNode> nodes,
-                            ClusterUpgradeJob clusterUpgradeJob) {
+  private void upgradeNodes(SelfManagedCluster cluster, List<ClusterNode> nodes, ClusterUpgradeJob clusterUpgradeJob) {
 
     executorService.submit(() -> {
       try {
@@ -169,8 +161,8 @@ public class ClusterUpgradeService {
             log.info("Skipping node with [NodeId: {}] as its already updated", node.getId());
             continue;
           }
-          Configuration config = new Configuration(9300, 9200, cluster.getSshInfo().username(),
-              cluster.getSshInfo().keyPath(), clusterUpgradeJob.getTargetVersion());
+          Configuration config = new Configuration(9300, 9200, cluster.getSshInfo().username(), cluster.getSshInfo().keyPath(),
+              clusterUpgradeJob.getTargetVersion());
           Context context = new Context(node, config, log, elasticClient, kibanaClient);
 
           UpgradePlanBuilder upgradePlanBuilder = new UpgradePlanBuilder();
@@ -182,12 +174,11 @@ public class ClusterUpgradeService {
 
           for (Task task : tasks) {
             try {
-              log.info("Task [taskId: {}] [Sequence: {}] [NodeIp: {}] Starting task", task.getId(),
-                  seq, node.getIp());
+              log.info("Task [taskId: {}] [Sequence: {}] [NodeIp: {}] Starting task", task.getId(), seq, node.getIp());
               TaskResult result = task.run(context);
               System.out.println(result);
-              log.info("Task [taskId: {}] [Sequence: {}] [NodeIp: {}] [Success: {}]  Result: {}",
-                  task.getId(), seq, node.getIp(), result.isSuccess(), result);
+              log.info("Task [taskId: {}] [Sequence: {}] [NodeIp: {}] [Success: {}]  Result: {}", task.getId(), seq, node.getIp(),
+                  result.isSuccess(), result);
               if (!result.isSuccess()) {
                 node.setStatus(NodeUpgradeStatus.FAILED);
                 updateNodeProgress(node, (int) ((seq / tasks.size()) * 100));
@@ -229,13 +220,10 @@ public class ClusterUpgradeService {
   private void notifyClusterUpgradedSuccessFully(SelfManagedCluster cluster) {
     String clusterName = cluster.getName(); // Optional: include name if available
 
-    String message =
-        String.format("Cluster '%s' has been successfully upgraded to the target version.",
-            clusterName);
+    String message = String.format("Cluster '%s' has been successfully upgraded to the target version.", clusterName);
     String subject = String.format("Cluster '%s' upgraded", clusterName);
 
-    notificationService.sendNotification(
-        new GeneralNotificationEvent(NotificationType.SUCCESS, message, subject, cluster.getId()));
+    notificationService.sendNotification(new GeneralNotificationEvent(NotificationType.SUCCESS, message, subject, cluster.getId()));
     notificationService.sendNotification(new UpgradeProgressChangeEvent());
 
   }
@@ -243,37 +231,30 @@ public class ClusterUpgradeService {
   private void notifyClusterUpgradeFailed(SelfManagedCluster cluster) {
     String clusterName = cluster.getName(); // Optional if available
 
-    String message = String.format(
-        "Cluster '%s' failed to upgrade to the target version. Please investigate the issue.",
-        clusterName);
+    String message = String.format("Cluster '%s' failed to upgrade to the target version. Please investigate the issue.", clusterName);
     String subject = String.format("Cluster '%s' upgrade failed", clusterName);
 
-    notificationService.sendNotification(
-        new GeneralNotificationEvent(NotificationType.ERROR, message, subject, cluster.getId()));
+    notificationService.sendNotification(new GeneralNotificationEvent(NotificationType.ERROR, message, subject, cluster.getId()));
     notificationService.sendNotification(new UpgradeProgressChangeEvent());
 
   }
 
   private void notifyNodeUpgradeFailed(ClusterNode node) {
-    String message = String.format(
-        "Failed to upgrade node '%s' to the target version. Please check logs for details.",
-        node.getName());
+    String message = String.format("Failed to upgrade node '%s' to the target version. Please check logs for details.", node.getName());
 
     notificationService.sendNotification(
-        new GeneralNotificationEvent(NotificationType.ERROR, message,
-            String.format("Node '%s' upgrade failed", node.getName()), node.getClusterId()));
+        new GeneralNotificationEvent(NotificationType.ERROR, message, String.format("Node '%s' upgrade failed", node.getName()),
+            node.getClusterId()));
     notificationService.sendNotification(new UpgradeProgressChangeEvent());
 
   }
 
   private void notifyNodeUpgradedSuccessfully(SelfManagedCluster cluster, ClusterNode node) {
     notificationService.sendNotification(new UpgradeProgressChangeEvent());
-    String message =
-        String.format("Node '%s' has been successfully upgraded to the target version.",
-            node.getName());
+    String message = String.format("Node '%s' has been successfully upgraded to the target version.", node.getName());
     notificationService.sendNotification(
-        new GeneralNotificationEvent(NotificationType.SUCCESS, message,
-            String.format("Node '%s' upgraded", node.getName()), cluster.getId()));
+        new GeneralNotificationEvent(NotificationType.SUCCESS, message, String.format("Node '%s' upgraded", node.getName()),
+            cluster.getId()));
   }
 
   private void updateNodeProgress(ClusterNode node, int progress) {
