@@ -55,7 +55,7 @@ function NodesLogs({
 		})
 	}
 
-	if (data?.index?.length === 0 && !isLoading) {
+	if (data?.node?.length === 0 && !isLoading) {
 		return (
 			<Box className="h-full p-px rounded-2xl w-full" sx={{ background: "radial-gradient(#6E687C, #1D1D1D)" }}>
 				<Box className="flex w-full h-full flex-col gap-[6px] p-4 bg-[#0D0D0D] rounded-[15px]">

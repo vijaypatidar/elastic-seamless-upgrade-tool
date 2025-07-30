@@ -29,7 +29,7 @@ function Setup() {
 
 	const [creds, setCreds] = useState<TCreds>({
 		type: infraType,
-		name:"Cluster1",
+		name:"",
 		elasticUrl: "",
 		kibanaUrl: "",
 		authPref: null,
