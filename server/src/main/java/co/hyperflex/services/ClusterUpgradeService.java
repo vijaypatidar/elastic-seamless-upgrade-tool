@@ -2,8 +2,8 @@ package co.hyperflex.services;
 
 import co.hyperflex.clients.ElasticClient;
 import co.hyperflex.clients.ElasticsearchClientProvider;
-import co.hyperflex.clients.KibanaClient;
-import co.hyperflex.clients.KibanaClientProvider;
+import co.hyperflex.clients.kibana.KibanaClient;
+import co.hyperflex.clients.kibana.KibanaClientProvider;
 import co.hyperflex.dtos.ClusterInfoResponse;
 import co.hyperflex.dtos.GetElasticsearchSnapshotResponse;
 import co.hyperflex.dtos.upgrades.ClusterNodeUpgradeRequest;

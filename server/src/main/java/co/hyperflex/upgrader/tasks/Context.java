@@ -1,7 +1,7 @@
 package co.hyperflex.upgrader.tasks;
 
 import co.hyperflex.clients.ElasticClient;
-import co.hyperflex.clients.KibanaClient;
+import co.hyperflex.clients.kibana.KibanaClient;
 import co.hyperflex.entities.cluster.ClusterNode;
 import org.slf4j.Logger;
 

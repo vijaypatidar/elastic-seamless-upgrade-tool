@@ -1,5 +1,6 @@
-package co.hyperflex.clients;
+package co.hyperflex.clients.kibana;
 
+import co.hyperflex.clients.ClusterCredentialProvider;
 import co.hyperflex.entities.cluster.Cluster;
 import co.hyperflex.exceptions.NotFoundException;
 import co.hyperflex.repositories.ClusterRepository;

@@ -1,7 +1,7 @@
 package co.hyperflex.prechecks.contexts;
 
 import co.hyperflex.clients.ElasticClient;
-import co.hyperflex.clients.KibanaClient;
+import co.hyperflex.clients.kibana.KibanaClient;
 import co.hyperflex.entities.cluster.Cluster;
 import co.hyperflex.entities.upgrade.ClusterUpgradeJob;
 import co.hyperflex.prechecks.core.PrecheckLogger;

@@ -11,8 +11,9 @@ import co.elastic.clients.elasticsearch.nodes.NodesInfoResponse;
 import co.elastic.clients.elasticsearch.nodes.info.NodeInfo;
 import co.hyperflex.clients.ElasticClient;
 import co.hyperflex.clients.ElasticsearchClientProvider;
-import co.hyperflex.clients.KibanaClient;
-import co.hyperflex.clients.KibanaClientProvider;
+import co.hyperflex.clients.kibana.KibanaClientProvider;
+import co.hyperflex.clients.kibana.dto.GetKibanaStatusResponse;
+import co.hyperflex.clients.kibana.dto.OsStats;
 import co.hyperflex.dtos.GetDeprecationsResponse;
 import co.hyperflex.dtos.clusters.AddClusterRequest;
 import co.hyperflex.dtos.clusters.AddClusterResponse;
@@ -249,9 +250,12 @@ public class ClusterService {
   private void syncKibanaNodes(SelfManagedCluster cluster, List<KibanaNode> nodes) {
     var kibanaClient = kibanaClientProvider.getClient(cluster);
     nodes.forEach(node -> {
-      KibanaClient.KibanaNodeDetails details = kibanaClient.getKibanaNodeDetails(node.getIp());
-      node.setVersion(details.version());
-      node.setOs(details.os());
+      GetKibanaStatusResponse details = kibanaClient.getKibanaNodeDetails(node.getIp());
+      OsStats os = details.metrics().os();
+      node.setVersion(details.version().number());
+      node.setOs(new OperatingSystemInfo(
+          os.platform(),
+          os.platformRelease()));
     });
   }
 

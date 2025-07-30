@@ -7,13 +7,14 @@ import co.hyperflex.prechecks.contexts.NodeContext;
 import co.hyperflex.prechecks.core.BaseElasticNodePrecheck;
 import co.hyperflex.prechecks.core.PrecheckLogger;
 import java.io.IOException;
+import java.util.Map;
 import org.springframework.stereotype.Component;
 
 @Component
-public class MemoryUsagePrecheck extends BaseElasticNodePrecheck {
+public class ElasticNodeCpuHealthPrecheck extends BaseElasticNodePrecheck {
   @Override
   public String getName() {
-    return "Memory Utilization check";
+    return "CPU Utilization check";
   }
 
   @Override
@@ -31,21 +32,16 @@ public class MemoryUsagePrecheck extends BaseElasticNodePrecheck {
         return;
       }
 
-      long totalMemory = nodeStats.os().mem().totalInBytes();
-      long freeMemory = nodeStats.os().mem().freeInBytes();
-      long usedMemory = totalMemory - freeMemory;
+      int cpuPercent = nodeStats.os().cpu().percent();
+      Map<String, Double> loadAvg = nodeStats.os().cpu().loadAverage();
 
-      int memoryPercent = (int) ((usedMemory * 100.0) / totalMemory);
-
-      long bitsInMB = 1024 * 1024;
-      logger.info("Memory - Total: %s MB, Free: %s MB, Utilised: %s", totalMemory / bitsInMB,
-          freeMemory / bitsInMB, memoryPercent);
-
-      if (memoryPercent > 80) {
-        logger.warn("Memory usage on node is %s", memoryPercent);
-        throw new RuntimeException("Memory usage check failed: current usage is " + memoryPercent
-            + ", which exceeds the threshold of 80%");
+      logger.info("CPU Utilization check completed for node: %s", nodeId);
+      logger.info("CPU Usage: " + cpuPercent + "%%");
+      if (cpuPercent > 80) {
+        throw new RuntimeException("CPU utilization check failed: current usage is " + cpuPercent
+            + "%, which exceeds the threshold of 80%");
       }
+
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
