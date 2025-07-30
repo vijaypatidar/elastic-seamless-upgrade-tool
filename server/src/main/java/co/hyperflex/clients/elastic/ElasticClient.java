@@ -1,4 +1,4 @@
-package co.hyperflex.clients;
+package co.hyperflex.clients.elastic;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch.cat.master.MasterRecord;
@@ -15,8 +15,10 @@ import co.elastic.clients.elasticsearch.snapshot.GetSnapshotResponse;
 import co.elastic.clients.elasticsearch.snapshot.SnapshotInfo;
 import co.elastic.clients.json.JsonData;
 import co.elastic.clients.util.ApiTypeHelper;
+import co.hyperflex.clients.elastic.dto.GetElasticDeprecationResponse;
 import co.hyperflex.dtos.GetElasticNodeAndIndexCountsResponse;
 import co.hyperflex.dtos.GetElasticsearchSnapshotResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
@@ -26,15 +28,23 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
+import org.elasticsearch.client.Request;
+import org.elasticsearch.client.Response;
+import org.elasticsearch.client.RestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ElasticClient {
   private static final Logger LOG = LoggerFactory.getLogger(ElasticClient.class);
   private final ElasticsearchClient elasticsearchClient;
+  private final RestClient restClient;
+  private final ObjectMapper objectMapper;
 
-  public ElasticClient(ElasticsearchClient elasticsearchClient) {
+  public ElasticClient(ElasticsearchClient elasticsearchClient, RestClient restClient,
+                       ObjectMapper objectMapper) {
+    this.restClient = restClient;
     this.elasticsearchClient = elasticsearchClient;
+    this.objectMapper = objectMapper;
   }
 
   public ElasticsearchClient getElasticsearchClient() {
@@ -166,6 +176,17 @@ public class ElasticClient {
     } catch (IOException e) {
       LOG.error("Failed to get cluster stats", e);
       throw new RuntimeException("Failed to get cluster stats", e);
+    }
+  }
+
+  public GetElasticDeprecationResponse getDeprecation() {
+    Request request = new Request("GET", "/_migration/deprecations");
+    try {
+      Response response = restClient.performRequest(request);
+      return objectMapper.createParser(response.getEntity().getContent())
+          .readValueAs(GetElasticDeprecationResponse.class);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
     }
   }
 }

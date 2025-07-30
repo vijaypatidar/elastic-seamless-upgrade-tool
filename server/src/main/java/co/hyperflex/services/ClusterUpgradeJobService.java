@@ -1,8 +1,8 @@
 package co.hyperflex.services;
 
 import co.elastic.clients.elasticsearch.core.InfoResponse;
-import co.hyperflex.clients.ElasticClient;
-import co.hyperflex.clients.ElasticsearchClientProvider;
+import co.hyperflex.clients.elastic.ElasticClient;
+import co.hyperflex.clients.elastic.ElasticsearchClientProvider;
 import co.hyperflex.dtos.upgrades.CreateClusterUpgradeJobRequest;
 import co.hyperflex.dtos.upgrades.CreateClusterUpgradeJobResponse;
 import co.hyperflex.entities.upgrade.ClusterUpgradeJob;

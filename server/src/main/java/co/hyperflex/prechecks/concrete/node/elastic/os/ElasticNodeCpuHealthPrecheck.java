@@ -2,7 +2,7 @@ package co.hyperflex.prechecks.concrete.node.elastic.os;
 
 import co.elastic.clients.elasticsearch.nodes.NodesStatsResponse;
 import co.elastic.clients.elasticsearch.nodes.Stats;
-import co.hyperflex.clients.ElasticClient;
+import co.hyperflex.clients.elastic.ElasticClient;
 import co.hyperflex.prechecks.contexts.NodeContext;
 import co.hyperflex.prechecks.core.BaseElasticNodePrecheck;
 import co.hyperflex.prechecks.core.PrecheckLogger;

@@ -3,17 +3,17 @@ package co.hyperflex.services;
 
 import co.elastic.clients.elasticsearch.migration.DeprecationsResponse;
 import co.elastic.clients.elasticsearch.migration.deprecations.Deprecation;
-import co.hyperflex.clients.ElasticClient;
-import co.hyperflex.clients.ElasticsearchClientProvider;
+import co.hyperflex.clients.elastic.ElasticClient;
+import co.hyperflex.clients.elastic.ElasticsearchClientProvider;
 import co.hyperflex.clients.kibana.KibanaClient;
 import co.hyperflex.clients.kibana.KibanaClientProvider;
+import co.hyperflex.clients.kibana.dto.GetKibanaDeprecationResponse;
 import co.hyperflex.dtos.prechecks.GetGroupedPrecheckResponse;
 import co.hyperflex.dtos.prechecks.GetPrecheckEntry;
 import co.hyperflex.entities.upgrade.ClusterUpgradeJob;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -83,9 +83,8 @@ public class PrecheckReportService {
       md.append("\n<details><summary>Show Logs</summary>\n\n");
       for (GetPrecheckEntry check : node.prechecks()) {
         md.append("#### ").append(check.name()).append("\n");
-        List<String> logs = check.logs() != null && !check.logs().isEmpty()
-            ? check.logs()
-            : List.of("N/A");
+        List<String> logs =
+            check.logs() != null && !check.logs().isEmpty() ? check.logs() : List.of("N/A");
         md.append("```\n").append(String.join("\n", logs)).append("\n```\n");
       }
       md.append("</details>\n");
@@ -112,9 +111,8 @@ public class PrecheckReportService {
       md.append("\n<details><summary>Show Logs</summary>\n\n");
       for (var check : index.prechecks()) {
         md.append("#### ").append(check.name()).append("\n");
-        List<String> logs = check.logs() != null && !check.logs().isEmpty()
-            ? check.logs()
-            : List.of("N/A");
+        List<String> logs =
+            check.logs() != null && !check.logs().isEmpty() ? check.logs() : List.of("N/A");
         md.append("```\n").append(String.join("\n", logs)).append("\n```\n");
       }
       md.append("</details>\n");
@@ -186,25 +184,26 @@ public class PrecheckReportService {
 
   private String getKibanaDeprecationsMdReport(String clusterId) {
     KibanaClient client = kibanaClientProvider.getKibanaClientByClusterId(clusterId);
-    List<Map<String, Object>> items = client.getDeprecations();
+    List<GetKibanaDeprecationResponse.Deprecation> deprecations =
+        client.getDeprecations().deprecations();
 
     StringBuilder md = new StringBuilder("## ⚠️ Kibana Deprecations\n\n");
 
-    if (items.isEmpty()) {
+    if (deprecations.isEmpty()) {
       md.append("N/A");
     } else {
-      for (Map<String, Object> item : items) {
-        md.append("- **").append(item.get("title")).append("**\n");
-        if (item.containsKey("message")) {
-          md.append("  - ").append(item.get("message")).append("\n");
+      for (var item : deprecations) {
+        md.append("- **").append(item.title()).append("**\n");
+        if (item.message() != null) {
+          md.append("  - ").append(item.message()).append("\n");
         }
-        if (item.containsKey("level")) {
-          md.append("  - Level: `").append(item.get("level")).append("`\n");
+        if (item.level() != null) {
+          md.append("  - Level: `").append(item.level()).append("`\n");
         }
 
-        Map<String, Object> correctiveActions = (Map<String, Object>) item.get("correctiveActions");
-        if (correctiveActions != null && correctiveActions.containsKey("manualSteps")) {
-          List<String> steps = (List<String>) correctiveActions.get("manualSteps");
+        GetKibanaDeprecationResponse.CorrectiveActions correctiveActions = item.correctiveActions();
+        if (correctiveActions != null && correctiveActions.manualSteps() != null) {
+          List<String> steps = correctiveActions.manualSteps();
           if (!steps.isEmpty()) {
             md.append("  - Manual Steps:\n");
             for (String step : steps) {

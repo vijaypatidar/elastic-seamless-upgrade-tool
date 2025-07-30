@@ -1,12 +1,10 @@
 package co.hyperflex.clients.kibana;
 
+import co.hyperflex.clients.kibana.dto.GetKibanaDeprecationResponse;
 import co.hyperflex.clients.kibana.dto.GetKibanaStatusResponse;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
@@ -32,17 +30,6 @@ public class KibanaClient {
     }
   }
 
-  public List<Map<String, Object>> getDeprecations() {
-    String url = kibanaUrl + "/api/upgrade_assistant/deprecations";
-    try {
-      return restClient.get().uri(url).retrieve().body(new ParameterizedTypeReference<>() {
-      });
-    } catch (Exception e) {
-      logger.error("Failed to get deprecations from kibana", e);
-      return List.of();
-    }
-  }
-
   public String getKibanaVersion(String nodeIp) {
     return getKibanaNodeDetails(nodeIp).version().number();
   }
@@ -51,11 +38,20 @@ public class KibanaClient {
     String url =
         Optional.ofNullable(nodeIp).map(ip -> String.format("http://%s:5601/api/status", ip))
             .orElse(kibanaUrl + "/api/status");
-
     try {
       return restClient.get().uri(url).retrieve().body(GetKibanaStatusResponse.class);
     } catch (RestClientException e) {
       logger.error("Error getting Kibana node details: {}", e.getMessage());
+      throw e;
+    }
+  }
+
+  public GetKibanaDeprecationResponse getDeprecations() {
+    String url = kibanaUrl + "/api/deprecations/";
+    try {
+      return restClient.get().uri(url).retrieve().body(GetKibanaDeprecationResponse.class);
+    } catch (RestClientException e) {
+      logger.error("Error getting Kibana deprecations: {}", e.getMessage());
       throw e;
     }
   }

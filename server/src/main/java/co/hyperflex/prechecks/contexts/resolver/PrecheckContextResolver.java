@@ -1,7 +1,7 @@
 package co.hyperflex.prechecks.contexts.resolver;
 
-import co.hyperflex.clients.ElasticClient;
-import co.hyperflex.clients.ElasticsearchClientProvider;
+import co.hyperflex.clients.elastic.ElasticClient;
+import co.hyperflex.clients.elastic.ElasticsearchClientProvider;
 import co.hyperflex.clients.kibana.KibanaClient;
 import co.hyperflex.clients.kibana.KibanaClientProvider;
 import co.hyperflex.entities.cluster.Cluster;

@@ -1,6 +1,6 @@
 package co.hyperflex.prechecks.contexts;
 
-import co.hyperflex.clients.ElasticClient;
+import co.hyperflex.clients.elastic.ElasticClient;
 import co.hyperflex.clients.kibana.KibanaClient;
 import co.hyperflex.entities.cluster.Cluster;
 import co.hyperflex.entities.upgrade.ClusterUpgradeJob;
