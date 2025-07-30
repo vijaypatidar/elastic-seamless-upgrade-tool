@@ -73,18 +73,16 @@ public class PrecheckRunService {
                     pr -> pr instanceof NodePrecheckRun nodePrecheckRun
                         && nodePrecheckRun.getNode().getId().equals(entry.getKey())).findFirst()
                 .orElseThrow()).getNode();
-            PrecheckStatus status =
-                entry.getValue().stream().anyMatch(p -> PrecheckStatus.FAILED == p.status())
-                    ? PrecheckStatus.FAILED : PrecheckStatus.COMPLETED;
+
+            PrecheckStatus status = getMergedPrecheckStatus(entry.getValue());
+
             return new GetNodePrecheckGroup(nodeInfo.getId(), nodeInfo.getIp(), nodeInfo.getName(),
                 status, entry.getValue());
           }).toList();
 
           List<GetIndexPrecheckGroup> indexGroups =
               indexPrechecks.entrySet().stream().map(entry -> {
-                PrecheckStatus status =
-                    entry.getValue().stream().anyMatch(p -> PrecheckStatus.FAILED == p.status())
-                        ? PrecheckStatus.FAILED : PrecheckStatus.COMPLETED;
+                PrecheckStatus status = getMergedPrecheckStatus(entry.getValue());
                 return new GetIndexPrecheckGroup(entry.getKey(), entry.getKey(), status,
                     entry.getValue());
               }).toList();
@@ -119,5 +117,34 @@ public class PrecheckRunService {
     Update update = new Update().set("status", PrecheckStatus.PENDING).set("startedAt", null)
         .set("endAt", null);
     mongoTemplate.updateMulti(query, update, PrecheckRun.class);
+  }
+
+  private PrecheckStatus getMergedPrecheckStatus(List<GetPrecheckEntry> precheckRuns) {
+    boolean hasCompleted = false;
+    boolean hasPending = false;
+    boolean hasRunning = false;
+
+    for (var run : precheckRuns) {
+      if (run.status() == PrecheckStatus.FAILED) {
+        return PrecheckStatus.FAILED;
+      }
+      if (run.status() == PrecheckStatus.RUNNING) {
+        hasRunning = true;
+      }
+      if (run.status() == PrecheckStatus.PENDING) {
+        hasPending = true;
+      }
+      if (run.status() == PrecheckStatus.COMPLETED) {
+        hasCompleted = true;
+      }
+    }
+
+    if ((hasPending && hasCompleted) || hasRunning) {
+      return PrecheckStatus.RUNNING;
+    }
+    if (hasPending) {
+      return PrecheckStatus.PENDING;
+    }
+    return PrecheckStatus.COMPLETED;
   }
 }

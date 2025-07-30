@@ -319,8 +319,7 @@ public class ClusterService {
 
   public boolean isNodesUpgraded(String clusterId, ClusterNodeType clusterNodeType) {
     return getNodes(clusterId, clusterNodeType).stream().map(GetClusterNodeResponse::status)
-        .map(status -> NodeUpgradeStatus.UPGRADED == status)
-        .reduce(true, Boolean::equals);
+        .noneMatch(status -> NodeUpgradeStatus.UPGRADED != status);
   }
 
   public List<GetDeprecationsResponse> getKibanaDeprecations(String clusterId) {

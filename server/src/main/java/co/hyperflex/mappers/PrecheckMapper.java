@@ -19,7 +19,7 @@ public class PrecheckMapper {
         precheckRun.getName(),
         precheckRun.getStatus(),
         precheckRun.getLogs(),
-        duration
+        duration + "ms"
     );
   }
 
