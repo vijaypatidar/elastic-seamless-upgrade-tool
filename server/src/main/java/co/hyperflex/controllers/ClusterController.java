@@ -13,6 +13,7 @@ import co.hyperflex.dtos.clusters.UploadCertificateResponse;
 import co.hyperflex.entities.cluster.ClusterNodeType;
 import co.hyperflex.services.CertificatesService;
 import co.hyperflex.services.ClusterService;
+import co.hyperflex.services.DeprecationService;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,10 +32,13 @@ public class ClusterController {
 
   private final ClusterService clusterService;
   private final CertificatesService certificatesService;
+  private final DeprecationService deprecationService;
 
-  public ClusterController(ClusterService clusterService, CertificatesService certificatesService) {
+  public ClusterController(ClusterService clusterService, CertificatesService certificatesService,
+                           DeprecationService deprecationService) {
     this.clusterService = clusterService;
     this.certificatesService = certificatesService;
+    this.deprecationService = deprecationService;
   }
 
   @PostMapping
@@ -89,11 +93,11 @@ public class ClusterController {
 
   @GetMapping("/{clusterId}/deprecations/kibana")
   public List<GetDeprecationsResponse> getDeprecations(@PathVariable String clusterId) {
-    return clusterService.getKibanaDeprecations(clusterId);
+    return deprecationService.getKibanaDeprecations(clusterId);
   }
 
   @GetMapping("/{clusterId}/deprecations/elastic-search")
   public List<GetDeprecationsResponse> getElasticDeprecations(@PathVariable String clusterId) {
-    return clusterService.getElasticDeprecations(clusterId);
+    return deprecationService.getElasticDeprecations(clusterId);
   }
 }
