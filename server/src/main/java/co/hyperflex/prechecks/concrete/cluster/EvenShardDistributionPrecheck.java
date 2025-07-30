@@ -34,9 +34,7 @@ public class EvenShardDistributionPrecheck extends BaseClusterPrecheck {
     PrecheckLogger logger = context.getLogger();
 
     try {
-      List<ShardsRecord> shards = client.cat().shards(s -> s
-          .h("node")
-      ).valueBody();
+      List<ShardsRecord> shards = client.cat().shards().valueBody();
 
       Map<String, Integer> shardCountByNode = new HashMap<>();
       for (ShardsRecord shard : shards) {

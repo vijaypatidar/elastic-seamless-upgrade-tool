@@ -9,8 +9,6 @@ import co.hyperflex.dtos.upgrades.CreateClusterUpgradeJobResponse;
 import co.hyperflex.services.ClusterUpgradeJobService;
 import co.hyperflex.services.ClusterUpgradeService;
 import jakarta.validation.Valid;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,7 +22,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/upgrades")
 public class UpgradeController {
   private static final Logger logger = LoggerFactory.getLogger(UpgradeController.class);
-  private final ExecutorService executor = Executors.newFixedThreadPool(1);
   private final ClusterUpgradeService clusterUpgradeService;
   private final ClusterUpgradeJobService createClusterUpgradeJob;
 

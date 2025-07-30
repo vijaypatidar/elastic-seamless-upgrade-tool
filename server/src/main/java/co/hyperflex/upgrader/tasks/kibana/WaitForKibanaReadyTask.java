@@ -1,6 +1,6 @@
 package co.hyperflex.upgrader.tasks.kibana;
 
-import co.hyperflex.clients.KibanaClient;
+import co.hyperflex.clients.kibana.KibanaClient;
 import co.hyperflex.upgrader.tasks.Context;
 import co.hyperflex.upgrader.tasks.Task;
 import co.hyperflex.upgrader.tasks.TaskResult;

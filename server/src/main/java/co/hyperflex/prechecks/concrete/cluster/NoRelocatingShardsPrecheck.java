@@ -24,8 +24,7 @@ public class NoRelocatingShardsPrecheck extends BaseClusterPrecheck {
 
     try {
 
-      List<ShardsRecord> shards =
-          client.cat().shards(s -> s.h("index", "shard", "state", "node")).valueBody();
+      List<ShardsRecord> shards = client.cat().shards().valueBody();
 
       List<ShardsRecord> relocatingShards =
           shards.stream().filter(s -> "RELOCATING".equalsIgnoreCase(s.state())).toList();

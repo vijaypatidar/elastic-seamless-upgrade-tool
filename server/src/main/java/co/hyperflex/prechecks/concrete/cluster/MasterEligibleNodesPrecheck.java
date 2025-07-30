@@ -23,9 +23,7 @@ public class MasterEligibleNodesPrecheck extends BaseClusterPrecheck {
     PrecheckLogger logger = context.getLogger();
 
     try {
-      List<NodesRecord> nodes = client.cat().nodes(n -> n
-          .h("name", "node.role")
-      ).valueBody();
+      List<NodesRecord> nodes = client.cat().nodes().valueBody();
 
       int totalNodes = nodes.size();
 

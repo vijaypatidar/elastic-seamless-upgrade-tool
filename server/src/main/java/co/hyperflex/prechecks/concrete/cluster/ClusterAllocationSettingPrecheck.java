@@ -41,10 +41,16 @@ public class ClusterAllocationSettingPrecheck extends BaseClusterPrecheck {
       Map<String, JsonData> transientSettings = settings.transient_();
       Map<String, JsonData> persistentSettings = settings.persistent();
 
-      String allocationSetting =
-          transientSettings.getOrDefault("cluster.routing.allocation.enable",
-              persistentSettings.getOrDefault("cluster.routing.allocation.enable",
-                  JsonData.of("all"))).toJson().toString();
+      String allocationSetting = "all";
+
+      String clusterRoutingAllocationEnable = "cluster.routing.allocation.enable";
+      if (transientSettings.containsKey(allocationSetting)) {
+        allocationSetting =
+            persistentSettings.get(clusterRoutingAllocationEnable).toJson().toString();
+      } else if (persistentSettings.containsKey(allocationSetting)) {
+        allocationSetting =
+            transientSettings.get(clusterRoutingAllocationEnable).toJson().toString();
+      }
 
       String message = String.format(
           "Current setting 'cluster.routing.allocation.enable' is '%s'.", allocationSetting);

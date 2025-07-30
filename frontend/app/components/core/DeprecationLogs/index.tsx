@@ -12,66 +12,12 @@ import {
 import { Box, Typography } from "@mui/material"
 import { useQuery } from "@tanstack/react-query"
 import { Alarm, SearchNormal1 } from "iconsax-react"
-import { useCallback, useState, type Key } from "react"
+import { type Key, useCallback, useState } from "react"
 import { FiAlertTriangle } from "react-icons/fi"
 import { toast } from "sonner"
 import axiosJSON from "~/apis/http"
 import StringManager from "~/constants/StringManager"
 import { useLocalStore } from "~/store/common"
-
-const rows = [
-	{
-		key: "1",
-		status: "CRITICAL",
-		issue: "Update the realm configuration in elasticsearch.yml to remove the 'order' setting and use the recommended configuration.",
-		issue_details:
-			"The 'xpack.security.authc.realms.native.native1' realm uses the deprecated 'order' setting, which will be removed in a future release.",
-		resolution:
-			"Update your kibana.yml or elasticsearch.yml (or other relevant settings) to the recommended configuration.",
-	},
-	{
-		key: "2",
-		status: "CRITICAL",
-		issue: `The default mechanism for Reporting privileges will work differently in future versions, which will affect the behavior of this cluster. Set "xpack.reporting.roles.enabled" to "false" to adopt the future behavior before upgrading.`,
-		issue_details:
-			"The 'xpack.security.authc.realms.native.native1' realm uses the deprecated 'order' setting, which will be removed in a future release.",
-		resolution:
-			"Update your kibana.yml or elasticsearch.yml (or other relevant settings) to the recommended configuration.",
-	},
-	{
-		key: "3",
-		status: "WARNING",
-		issue: "Update the realm configuration in elasticsearch.yml to remove the 'order' setting and use the recommended configuration.",
-		issue_details:
-			"The 'xpack.security.authc.realms.native.native1' realm uses the deprecated 'order' setting, which will be removed in a future release.",
-		resolution:
-			"Update your kibana.yml or elasticsearch.yml (or other relevant settings) to the recommended configuration.",
-	},
-	{
-		key: "4",
-		status: "WARNING",
-		issue: "Update the realm configuration in elasticsearch.yml to remove the 'order' setting and use the recommended configuration.",
-		issue_details: `The "xpack.reporting.roles" setting is deprecated`,
-		resolution: [
-			`Set "xpack.reporting.roles.enabled" to "false" in kibana.yml.`,
-			`Remove "xpack.reporting.roles.allow" in kibana.yml, if present.`,
-			`Go to Management > Security > Roles to create one or more roles that grant the Kibana application privilege for Reporting.`,
-			`Grant Reporting privileges to users by assigning one of the new roles.`,
-		],
-	},
-	{
-		key: "5",
-		status: "CRITICAL",
-		issue: "Admin",
-		issue_details: `The "xpack.reporting.roles" setting is deprecated`,
-		resolution: [
-			`Set "xpack.reporting.roles.enabled" to "false" in kibana.yml.`,
-			`Remove "xpack.reporting.roles.allow" in kibana.yml, if present.`,
-			`Go to Management > Security > Roles to create one or more roles that grant the Kibana application privilege for Reporting.`,
-			`Grant Reporting privileges to users by assigning one of the new roles.`,
-		],
-	},
-]
 
 const columns: TDeprecationColumn = [
 	{
@@ -93,8 +39,8 @@ const columns: TDeprecationColumn = [
 		width: 150,
 	},
 	{
-		key: "resolution",
-		label: "Resoltuion",
+		key: "resolutions",
+		label: "Resolutions",
 		align: "start",
 		width: 150,
 	},
@@ -105,26 +51,23 @@ function DeprecationLogs({ clusterType }: { clusterType: "ELASTIC" | "KIBANA" })
 	const [search, setSearch] = useState<string>("")
 
 	const getLogs = async () => {
-		let response: any = []
-		await axiosJSON
-			.get(
-				`/clusters/${clusterId}/deprecations/${
-					clusterType === "ELASTIC" ? "elastic-search" : "kibana"
-				}`
-			)
-			.then((res) => {
-				response = res.data?.map((item: any, index: number): TDeprecationRow => {
-					return {
-						key: String(index),
-						issue: item?.issue,
-						status: item?.type.toUpperCase(),
-						issue_details: item?.issueDetails,
-						resolution: item?.resolution,
-					}
-				})
+		try {
+			const response = await axiosJSON.get(`/clusters/${clusterId}/deprecations/${
+				clusterType === "ELASTIC" ? "elastic-search" : "kibana"
+			}`)
+			const deprecations = response.data
+			return deprecations?.map((item: any, index: number): TDeprecationRow => {
+				return {
+					key: String(index),
+					issue: item?.issue,
+					status: item?.type.toUpperCase(),
+					issue_details: item?.issueDetails,
+					resolutions: item?.resolutions,
+				}
 			})
-			.catch((err) => toast.error(err?.response?.data.err ?? StringManager.GENERIC_ERROR))
-		return response
+		} catch (err: any) {
+			toast.error(err?.response?.data.err ?? StringManager.GENERIC_ERROR)
+		}
 	}
 
 	const { data, isLoading, isRefetching, refetch } = useQuery({
@@ -165,18 +108,14 @@ function DeprecationLogs({ clusterType }: { clusterType: "ELASTIC" | "KIBANA" })
 				return row.issue
 			case "issue_details":
 				return row.issue_details
-			case "resolution":
-				if (typeof row.resolution === "string") {
-					return row.resolution
-				} else {
-					return row.resolution.map((item, index) => {
-						return (
-							<li key={index}>
-								<span className="relative -left-[5px]">{item}</span>
-							</li>
-						)
-					})
-				}
+			case "resolutions":
+				return row.resolutions.map((item, index) => {
+					return (
+						<li key={index}>
+							<span className="relative -left-[5px]">{item}</span>
+						</li>
+					)
+				})
 
 			default:
 				return cellValue
@@ -186,12 +125,7 @@ function DeprecationLogs({ clusterType }: { clusterType: "ELASTIC" | "KIBANA" })
 	const filteredData =
 		data?.filter((item: TDeprecationRow) => {
 			const searchL = search.toLowerCase()
-			let resCheck = false
-			if (typeof item.resolution === "object") {
-				resCheck = item.resolution?.some((res) => res.toLowerCase().includes(searchL))
-			} else {
-				resCheck = item.resolution.includes(searchL)
-			}
+			const resCheck = item.resolutions.includes(searchL)
 			return (
 				item.issue.toLowerCase().includes(searchL) ||
 				item.issue_details.toLowerCase().includes(searchL) ||
@@ -235,7 +169,8 @@ function DeprecationLogs({ clusterType }: { clusterType: "ELASTIC" | "KIBANA" })
 								fontWeight="500"
 								lineHeight="normal"
 							>
-								<Box className="min-h-2 min-w-2 w-min h-min rounded-[2px] bg-[#E87D65]" /> Critical:{" "}
+								<Box
+									className="min-h-2 min-w-2 w-min h-min rounded-[2px] bg-[#E87D65]" /> Critical:{" "}
 								{isLoading ? (
 									<Skeleton className="rounded-sm">
 										<Box height="16px" width="10px" />

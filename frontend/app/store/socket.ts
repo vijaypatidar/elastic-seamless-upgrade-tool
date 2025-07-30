@@ -1,10 +1,9 @@
-// src/store/socketStore.ts
-import { io, Socket } from "socket.io-client"
 import { create } from "zustand"
 import URLManager from "~/constants/URLManager"
+import { WebSocketClient } from "./websocket-client"
 
 type SocketStore = {
-	socket: Socket | null
+	socket: WebSocketClient | null
 	connect: () => void
 	disconnect: () => void
 	isConnected: boolean
@@ -15,9 +14,8 @@ export const useSocketStore = create<SocketStore>((set) => ({
 	isConnected: false,
 
 	connect: () => {
-		const socket = io(URLManager.SOCKET_BASE_URL, {
-			transports: ["websocket", "polling", "webtransport"],
-		})
+		const socket = new WebSocketClient(URLManager.SOCKET_BASE_URL)
+		socket.connect()
 
 		socket.on("connect", () => set({ isConnected: true }))
 		socket.on("disconnect", () => set({ isConnected: false }))

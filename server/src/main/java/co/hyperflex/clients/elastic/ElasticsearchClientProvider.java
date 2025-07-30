@@ -1,11 +1,13 @@
-package co.hyperflex.clients;
+package co.hyperflex.clients.elastic;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
+import co.hyperflex.clients.ClusterCredentialProvider;
 import co.hyperflex.entities.cluster.Cluster;
 import co.hyperflex.exceptions.NotFoundException;
 import co.hyperflex.repositories.ClusterRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.constraints.NotNull;
 import java.security.cert.X509Certificate;
 import javax.net.ssl.SSLContext;
@@ -25,11 +27,14 @@ public class ElasticsearchClientProvider {
   private final Logger logger = LoggerFactory.getLogger(ElasticsearchClientProvider.class);
   private final ClusterCredentialProvider credentialProvider;
   private final ClusterRepository clusterRepository;
+  private final ObjectMapper objectMapper;
 
   public ElasticsearchClientProvider(ClusterCredentialProvider credentialProvider,
-                                     ClusterRepository clusterRepository) {
+                                     ClusterRepository clusterRepository,
+                                     ObjectMapper objectMapper) {
     this.credentialProvider = credentialProvider;
     this.clusterRepository = clusterRepository;
+    this.objectMapper = objectMapper;
   }
 
   public ElasticClient getElasticsearchClientByClusterId(@NotNull String clusterId) {
@@ -52,7 +57,7 @@ public class ElasticsearchClientProvider {
           })
           .build();
       RestClientTransport transport = new RestClientTransport(restClient, new JacksonJsonpMapper());
-      return new ElasticClient(new ElasticsearchClient(transport));
+      return new ElasticClient(new ElasticsearchClient(transport), restClient, objectMapper);
     } catch (Exception e) {
       logger.error("Failed to create elasticsearch client for cluster {}", cluster.getId(), e);
       throw new RuntimeException(e);

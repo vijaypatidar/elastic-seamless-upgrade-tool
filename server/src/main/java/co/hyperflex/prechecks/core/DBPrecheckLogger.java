@@ -13,7 +13,6 @@ public class DBPrecheckLogger implements PrecheckLogger {
   }
 
   private void saveLog(String level, String message) {
-    // TODO we need to thing about it
     precheckRun.getLogs().add(String.format("[%s] %s", level, message));
   }
 

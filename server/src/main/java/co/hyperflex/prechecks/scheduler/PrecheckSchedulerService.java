@@ -1,7 +1,7 @@
 package co.hyperflex.prechecks.scheduler;
 
-import co.hyperflex.clients.ElasticClient;
-import co.hyperflex.clients.ElasticsearchClientProvider;
+import co.hyperflex.clients.elastic.ElasticClient;
+import co.hyperflex.clients.elastic.ElasticsearchClientProvider;
 import co.hyperflex.dtos.prechecks.PrecheckRerunRequest;
 import co.hyperflex.dtos.prechecks.PrecheckScheduleResponse;
 import co.hyperflex.entities.cluster.Cluster;

@@ -8,6 +8,6 @@ public record GetPrecheckEntry(
     String name,
     PrecheckStatus status,
     List<String> logs,
-    double duration
+    String duration
 ) {
 }
