@@ -5,7 +5,7 @@ on:
     push:
         branches:
             - main
-            - hpf-32-necessary-changes-for-release
+            - develop
     pull_request:
         branches:
             - main
