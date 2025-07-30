@@ -63,8 +63,8 @@ public class AnsibleService {
     command.add(cmd.getSshUser());
     command.add("--private-key");
     command.add(cmd.getSshKeyPath());
-    command.add(
-        "-e 'ansible_ssh_common_args=-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'");
+    command.add("-e");
+    command.add("ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'");
     command.add("-b");
 
     ProcessBuilder builder = new ProcessBuilder(command);

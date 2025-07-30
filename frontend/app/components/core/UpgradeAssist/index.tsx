@@ -1,7 +1,7 @@
-import { Skeleton, Tooltip } from "@heroui/react"
+import { Skeleton } from "@heroui/react"
 import { Box, Typography } from "@mui/material"
 import { useQuery } from "@tanstack/react-query"
-import { Camera, Flash, InfoCircle } from "iconsax-react"
+import { Camera, Flash } from "iconsax-react"
 import moment from "moment"
 import { useState } from "react"
 import { Link } from "react-router"
@@ -20,6 +20,7 @@ import { FiArrowUpRight } from "react-icons/fi"
 function UpgradeAssistant() {
 	const clusterId = useLocalStore((state: any) => state.clusterId)
 	const infraType = useLocalStore((state: any) => state.infraType)
+	const deploymentId = useLocalStore((state: any) => state.deploymentId)
 	const { remainingTime, startTimer, resetTimer } = useCountdownTimer()
 	const setDeprecationChangesAllowed = useSafeRouteStore((state: any) => state.setDeprecationChangesAllowed)
 	const setElasticNodeUpgradeAllowed = useSafeRouteStore((state: any) => state.setElasticNodeUpgradeAllowed)
@@ -350,15 +351,32 @@ function UpgradeAssistant() {
 							can upgrade to Elastic 8.x. Be sure to back up your data again before upgrading.
 						</Typography>
 					</Box>
-					<OutlinedBorderButton
-						component={Link}
-						to="/elastic/upgrade"
-						disabled={step4Data?.isDisabled}
-						icon={Flash}
-						filledIcon={Flash}
-					>
-						Upgrade
-					</OutlinedBorderButton>
+					{infraType == "ELASTIC_CLOUD" ? (
+						<Box className="flex items-start">
+							<a
+								target="_blank"
+								href={`https://cloud.elastic.co/deployments/${deploymentId}?show_upgrade=true`}
+							>
+								<OutlinedBorderButton
+									disabled={stepStatus["2"] === "NOTVISITED"}
+									borderRadius="50%"
+									sx={{ minWidth: "38px !important", minHeight: "38px !important", padding: "0px" }}
+								>
+									<FiArrowUpRight size="20px" color="#FFF" />
+								</OutlinedBorderButton>
+							</a>
+						</Box>
+					) : (
+						<OutlinedBorderButton
+							component={Link}
+							to="/elastic/upgrade"
+							disabled={step4Data?.isDisabled}
+							icon={Flash}
+							filledIcon={Flash}
+						>
+							Upgrade
+						</OutlinedBorderButton>
+					)}
 				</Box>
 			</StepBox>
 			{infraType != "ELASTIC_CLOUD" && (

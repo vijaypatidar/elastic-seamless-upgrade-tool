@@ -1,5 +1,6 @@
 import { Box, Typography } from "@mui/material"
 import { ArrowRight, CloudNotif, Driver2 } from "iconsax-react"
+import { SiKubernetes } from "react-icons/si"
 import { useState } from "react"
 import { ConatinedButton } from "~/components/utilities/Buttons"
 import SelectionTile from "./widgets/SelectionTile"
@@ -27,23 +28,23 @@ function Infrastructure({ onSubmit }: { onSubmit: (value: string | null) => void
 				<Box className="flex flex-col items-stretch gap-4 max-w-[515px] w-full">
 					<SelectionTile
 						Icon={CloudNotif}
-						label="On Elastic Cloud"
+						label="Elastic Cloud"
 						isSelected={selected === "ELASTIC_CLOUD"}
 						value="ELASTIC_CLOUD"
 						onSelect={(value: string) => setSelected(value)}
 					/>
 					<SelectionTile
 						Icon={Driver2}
-						label="Self Managed"
+						label="On-Prem/ Self managed Cluster"
 						isSelected={selected === "SELF_MANAGED"}
 						value="SELF_MANAGED"
 						onSelect={(value: string) => setSelected(value)}
 					/>
 					<SelectionTile
-						Icon={CloudNotif}
-						label="On cloud"
-						isSelected={selected === "on-cloud"}
-						value="on-cloud"
+						Icon={SiKubernetes}
+						label="Elastic on Kubernetes"
+						isSelected={selected === "ON_KUBERNETES"}
+						value="ON_KUBERNETES"
 						onSelect={(value: string) => setSelected(value)}
 						comingSoon
 					/>

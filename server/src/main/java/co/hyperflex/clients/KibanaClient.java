@@ -6,24 +6,25 @@ import java.util.Map;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
 
 public class KibanaClient {
 
   private static final Logger logger = LoggerFactory.getLogger(KibanaClient.class);
-  private final RestTemplate restTemplate;
+  private final RestClient restClient;
   private final String kibanaUrl;
 
-  public KibanaClient(RestTemplate restTemplate, String kibanaUrl) {
-    this.restTemplate = restTemplate;
+  public KibanaClient(RestClient restClient, String kibanaUrl) {
+    this.restClient = restClient;
     this.kibanaUrl = kibanaUrl;
   }
 
   public boolean isKibanaReady(String host) {
     String url = "http://" + host + ":5601/api/kibana/settings";
     try {
-      restTemplate.getForObject(url, String.class);
+      restClient.get().uri(url).retrieve().toBodilessEntity();
       return true;
     } catch (Exception e) {
       logger.error("Failed to check if kibana is ready on host {}", host, e);
@@ -34,46 +35,36 @@ public class KibanaClient {
   public List<Map<String, Object>> getDeprecations() {
     String url = kibanaUrl + "/api/upgrade_assistant/deprecations";
     try {
-      return restTemplate.getForObject(url, List.class);
+      return restClient.get().uri(url).retrieve().body(new ParameterizedTypeReference<>() {
+      });
     } catch (Exception e) {
       logger.error("Failed to get deprecations from kibana", e);
       return List.of();
     }
   }
 
-  public RestTemplate getRestTemplate() {
-    return restTemplate;
-  }
-
-  public String getKibanaVersion() {
-    return null;
-  }
-
   public String getKibanaVersion(String nodeIp) {
     return getKibanaNodeDetails(nodeIp).version;
   }
 
-  public KibanaNodeDetails getKibanaNodeDetails() {
-    return this.getKibanaNodeDetails(null);
-  }
-
   public KibanaNodeDetails getKibanaNodeDetails(String nodeIp) {
-
-    String url = Optional.ofNullable(nodeIp).map(ip ->
-        String.format("http://%s:5601/api/status", nodeIp)).orElse(this.kibanaUrl);
+    String url =
+        Optional.ofNullable(nodeIp).map(ip -> String.format("http://%s:5601/api/status", ip))
+            .orElse(kibanaUrl + "/api/status");
 
     try {
-      Map response = restTemplate.getForObject(url, Map.class);
+      Map<String, Object> response =
+          restClient.get().uri(url).retrieve().body(new ParameterizedTypeReference<>() {
+          });
 
-      // Extract fields
       String version = ((Map<String, String>) response.get("version")).get("number");
 
-      Map<String, Object> osMap = (Map<String, Object>) response.get("os");
-
       OperatingSystemInfo os = null;
-      if (osMap != null && osMap.containsKey("platform")) {
-        os = new OperatingSystemInfo(osMap.get("platform").toString(), osMap.get("name").toString(),
-            osMap.get("version").toString());
+      if (response.containsKey("metrics") && response.get("metrics") instanceof Map metrics) {
+        if (metrics.containsKey("os") && metrics.get("os") instanceof Map osMap) {
+          os = new OperatingSystemInfo(osMap.get("platform").toString(),
+              osMap.get("platformRelease").toString());
+        }
       }
 
       return new KibanaNodeDetails(version, os);
@@ -83,17 +74,14 @@ public class KibanaClient {
     }
   }
 
-  public String getKibanaUrl() {
-    return kibanaUrl;
-  }
-
   public String getSnapshotCreationPageUrl() {
     return kibanaUrl + "/app/management/data/snapshot_restore/snapshots";
   }
 
-  public record KibanaNodeDetails(
-      String version,
-      OperatingSystemInfo os
-  ) {
+  public RestClient getRestClient() {
+    return restClient;
+  }
+
+  public record KibanaNodeDetails(String version, OperatingSystemInfo os) {
   }
 }

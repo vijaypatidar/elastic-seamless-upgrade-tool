@@ -95,7 +95,7 @@ function Setup() {
 				.then((res) => {
 					setClusterAdded(true)
 					setStep(1)
-					setClusterId(res?.data?.clusterId)
+					setClusterId(res?.data?.id)
 					navigate("/cluster-overview")
 				})
 				.catch((err) => toast.error(err?.response?.data.err ?? StringManager.GENERIC_ERROR))
