@@ -171,7 +171,7 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 							.map((cert: TExistingFile) => cert.name),
 						...certIds,
 					],
-					sshUser: values.sshUser,
+					sshUsername: values.sshUser,
 					sshKey: values.pathToSSH ?? "",
 					kibanaNodes: values.kibanaConfigs
 				})

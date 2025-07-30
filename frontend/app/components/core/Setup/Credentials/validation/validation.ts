@@ -35,19 +35,19 @@ const validationSchema = Yup.object().shape({
 	}),
 
 	sshUser: Yup.string().when("type", {
-		is: "SELF_HOSTED",
+		is: "SELF_MANAGED",
 		then: (schema) => schema.required("Please enter SSH username."),
 		otherwise: (schema) => schema.notRequired(),
 	}),
 
 	pathToSSH: Yup.string().when("type", {
-		is: "SELF_HOSTED",
+		is: "SELF_MANAGED",
 		then: (schema) => schema.required("Please enter SSH key."),
 		otherwise: (schema) => schema.notRequired(),
 	}),
 
 	kibanaConfigs: Yup.array().when("type", {
-		is: "SELF_HOSTED",
+		is: "SELF_MANAGED",
 		then: (schema) =>
 			schema
 				.of(

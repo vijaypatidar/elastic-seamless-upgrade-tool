@@ -7,7 +7,7 @@ const validationSchema = Yup.object().shape({
 			.required("Please enter cluster name."),
 	type: Yup.string()
 		.required("Please select deployment type.")
-		.oneOf(["SELF_HOSTED", "ELASTIC_CLOUD"], "Invalid type selected."),
+		.oneOf(["SELF_MANAGED", "ELASTIC_CLOUD"], "Invalid type selected."),
 
 	elasticUrl: Yup.string()
 		.required("Please enter elastic url.")
@@ -35,19 +35,19 @@ const validationSchema = Yup.object().shape({
 	}),
 
 	sshUser: Yup.string().when("type", {
-		is: "SELF_HOSTED",
+		is: "SELF_MANAGED",
 		then: (schema) => schema.required("Please enter SSH username."),
 		otherwise: (schema) => schema.notRequired(),
 	}),
 
 	pathToSSH: Yup.string().when("type", {
-		is: "SELF_HOSTED",
+		is: "SELF_MANAGED",
 		then: (schema) => schema.required("Please enter SSH key."),
 		otherwise: (schema) => schema.notRequired(),
 	}),
 
 	kibanaConfigs: Yup.array().when("type", {
-		is: "SELF_HOSTED",
+		is: "SELF_MANAGED",
 		then: (schema) =>
 			schema.of(
 				Yup.object({
