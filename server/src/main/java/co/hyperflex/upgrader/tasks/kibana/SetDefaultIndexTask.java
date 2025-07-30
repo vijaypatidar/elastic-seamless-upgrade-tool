@@ -6,9 +6,7 @@ import co.hyperflex.upgrader.tasks.Task;
 import co.hyperflex.upgrader.tasks.TaskResult;
 import java.util.Map;
 import org.slf4j.Logger;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
+import org.springframework.core.ParameterizedTypeReference;
 
 public class SetDefaultIndexTask implements Task {
 
@@ -23,12 +21,15 @@ public class SetDefaultIndexTask implements Task {
     String url = "http://" + host + ":5601/api/kibana/settings";
     try {
       String requestBody = "{\"changes\":{\"defaultIndex\":\"syslog\"}}";
-      HttpHeaders headers = new HttpHeaders();
-      headers.setContentType(MediaType.APPLICATION_JSON);
-      headers.set("kbn-version", context.config().targetVersion());
-      HttpEntity<String> requestEntity = new HttpEntity<>(requestBody, headers);
-      Map<String, Object> res =
-          kibanaClient.getRestTemplate().postForObject(url, requestEntity, Map.class);
+
+      Map<String, Object> response = kibanaClient.getRestClient()
+          .post()
+          .uri(url)
+          .header("kbn-version", context.config().targetVersion())
+          .body(requestBody)
+          .retrieve()
+          .body(new ParameterizedTypeReference<>() {
+          });
       logger.info("Successfully set default index.");
       return TaskResult.success("Default index set.");
     } catch (Exception e) {

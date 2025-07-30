@@ -284,8 +284,7 @@ public class ClusterService {
         if (value.os() != null) {
           node.setOs(new OperatingSystemInfo(
               value.os().name(),
-              value.os().version(),
-              value.os().arch()
+              value.os().version()
           ));
         }
 

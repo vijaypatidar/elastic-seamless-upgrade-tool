@@ -14,6 +14,7 @@ import co.elastic.clients.elasticsearch.snapshot.GetRepositoryResponse;
 import co.elastic.clients.elasticsearch.snapshot.GetSnapshotResponse;
 import co.elastic.clients.elasticsearch.snapshot.SnapshotInfo;
 import co.elastic.clients.json.JsonData;
+import co.elastic.clients.util.ApiTypeHelper;
 import co.hyperflex.dtos.GetElasticNodeAndIndexCountsResponse;
 import co.hyperflex.dtos.GetElasticsearchSnapshotResponse;
 import java.io.IOException;
@@ -37,6 +38,7 @@ public class ElasticClient {
   }
 
   public ElasticsearchClient getElasticsearchClient() {
+    ApiTypeHelper.DANGEROUS_disableRequiredPropertiesCheck(true);
     return elasticsearchClient;
   }
 
@@ -163,18 +165,7 @@ public class ElasticClient {
           relocatingShards);
     } catch (IOException e) {
       LOG.error("Failed to get cluster stats", e);
-      return new GetElasticNodeAndIndexCountsResponse(
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0,
-          0
-      );
-
+      throw new RuntimeException("Failed to get cluster stats", e);
     }
   }
 }
