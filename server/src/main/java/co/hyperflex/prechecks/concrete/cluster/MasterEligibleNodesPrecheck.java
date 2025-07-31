@@ -2,6 +2,7 @@ package co.hyperflex.prechecks.concrete.cluster;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch.cat.nodes.NodesRecord;
+import co.hyperflex.entities.precheck.PrecheckSeverity;
 import co.hyperflex.prechecks.contexts.ClusterContext;
 import co.hyperflex.prechecks.core.BaseClusterPrecheck;
 import co.hyperflex.prechecks.core.PrecheckLogger;
@@ -15,6 +16,11 @@ public class MasterEligibleNodesPrecheck extends BaseClusterPrecheck {
   @Override
   public String getName() {
     return "Minimum number of master-eligible nodes";
+  }
+
+  @Override
+  public PrecheckSeverity getSeverity() {
+    return PrecheckSeverity.WARNING;
   }
 
   @Override
@@ -50,7 +56,7 @@ public class MasterEligibleNodesPrecheck extends BaseClusterPrecheck {
 
       if (masterCount % 2 == 0) {
         logger.warn(
-            "⚠️ Even number (%s) of master-eligible nodes detected. Consider using an "
+            "Even number (%s) of master-eligible nodes detected. Consider using an "
                 + "odd number (e.g., %s) to avoid split-brain scenarios.",
             masterCount,
             masterCount + 1

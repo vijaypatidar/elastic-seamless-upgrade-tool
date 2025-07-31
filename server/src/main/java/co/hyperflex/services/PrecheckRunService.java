@@ -109,6 +109,7 @@ public class PrecheckRunService {
                           breakingChange.getDescription(),
                           breakingChange.getUrl()
                       ),
+                      PrecheckSeverity.WARNING,
                       PrecheckStatus.FAILED
                   ))
                   .toList();

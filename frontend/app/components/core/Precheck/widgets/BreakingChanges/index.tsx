@@ -70,6 +70,7 @@ function BreakingChangesLogs({ data, isLoading = true }: { data: any; isLoading:
 											<NodeListItem
 												key={index}
 												status={change.status}
+												severity={change.severity}
 												name={change.name}
 												isSelected={true}
 												onClick={() => setSelectedCheck(change)}

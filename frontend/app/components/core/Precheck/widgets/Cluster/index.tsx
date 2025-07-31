@@ -99,6 +99,7 @@ function ClusterLogs({
 										<NodeListItem
 											key={index}
 											status={change.status}
+											severity={change.severity}
 											name={change.name}
 											isSelected={change.id === selectedPrecheck?.id}
 											onClick={() => setSelectedPrecheck(change)}

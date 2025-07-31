@@ -18,6 +18,7 @@ public class PrecheckMapper {
         precheckRun.getId(),
         precheckRun.getName(),
         precheckRun.getStatus(),
+        precheckRun.getSeverity(),
         precheckRun.getLogs(),
         duration + "ms"
     );
@@ -33,6 +34,7 @@ public class PrecheckMapper {
         precheckRun.getId(),
         precheckRun.getName(),
         precheckRun.getStatus(),
+        precheckRun.getSeverity(),
         precheckRun.getLogs(),
         duration
     );

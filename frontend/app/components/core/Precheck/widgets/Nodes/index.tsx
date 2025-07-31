@@ -106,6 +106,7 @@ function NodesLogs({
 							<NodeListItem
 								key={index}
 								status={node?.status}
+								severity={node?.severity}
 								isSelected={selectedNode?.nodeId === node.nodeId}
 								name={node?.name}
 								onClick={() => setSelectedNode(node)}
@@ -146,6 +147,7 @@ function NodesLogs({
 											key={index}
 											status={change.status}
 											name={change.name}
+											severity={change.severity}
 											isSelected={change.id === selectedPrecheck?.id}
 											onClick={() => setSelectedPrecheck(change)}
 											duration={`${change.duration}`}
