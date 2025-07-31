@@ -17,5 +17,6 @@ COPY --from=builder /app/server/build/libs/*.jar /app.jar
 
 # Copy Ansible files
 COPY backend/ansible /ansible
+COPY data/breaking-changes.json data/breaking-changes.json
 
 ENTRYPOINT ["java", "-Dspring.profiles.active=prod", "-jar", "app.jar"]

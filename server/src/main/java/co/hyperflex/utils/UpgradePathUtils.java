@@ -69,26 +69,11 @@ public class UpgradePathUtils {
     }
 
     return POSSIBLE_UPGRADES.keySet().stream()
-        .sorted(UpgradePathUtils::compareVersions)
-        .filter(v -> compareVersions(v, version) <= 0)
+        .sorted(VersionUtils.VERSION_COMPARATOR)
+        .filter(v -> VersionUtils.isVersionGt(v, version))
         .reduce((first, second) -> second)
         .map(POSSIBLE_UPGRADES::get)
         .orElse(List.of());
   }
 
-  private static int compareVersions(String a, String b) {
-    String[] partsA = a.split("\\.");
-    String[] partsB = b.split("\\.");
-
-    int maxLength = Math.max(partsA.length, partsB.length);
-    for (int i = 0; i < maxLength; i++) {
-      int version1 = i < partsA.length ? Integer.parseInt(partsA[i]) : 0;
-      int version2 = i < partsB.length ? Integer.parseInt(partsB[i]) : 0;
-
-      if (version1 != version2) {
-        return Integer.compare(version1, version2);
-      }
-    }
-    return 0;
-  }
 }
