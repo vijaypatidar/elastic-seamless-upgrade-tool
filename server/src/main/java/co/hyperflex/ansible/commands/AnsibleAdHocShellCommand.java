@@ -1,16 +1,14 @@
-package co.hyperflex.ansible;
+package co.hyperflex.ansible.commands;
 
-import java.util.Map;
-
-public class AnsibleAdHocYumCommand extends AnsibleAdHocCommand {
+public class AnsibleAdHocShellCommand extends AnsibleAdHocCommand {
   private final String hostIp;
-  private final String module = "ansible.builtin.yum";
-  private final Map<String, Object> args;
+  private final String module = "ansible.builtin.shell";
+  private final String args;
   private final boolean useBecome;
   private final String sshUser;
   private final String sshKeyPath;
 
-  private AnsibleAdHocYumCommand(Builder builder) {
+  private AnsibleAdHocShellCommand(Builder builder) {
     this.hostIp = builder.hostIp;
     this.args = builder.args;
     this.useBecome = builder.useBecome;
@@ -22,12 +20,11 @@ public class AnsibleAdHocYumCommand extends AnsibleAdHocCommand {
     return hostIp;
   }
 
-
   public String getModule() {
     return module;
   }
 
-  public Map<String, Object> getArgs() {
+  public String getArgs() {
     return args;
   }
 
@@ -48,7 +45,7 @@ public class AnsibleAdHocYumCommand extends AnsibleAdHocCommand {
     public String sshUser;
     private String hostIp;
     private String module;
-    private Map<String, Object> args;
+    private String args;
     private boolean useBecome = true;
 
     public Builder hostIp(String hostIp) {
@@ -56,7 +53,7 @@ public class AnsibleAdHocYumCommand extends AnsibleAdHocCommand {
       return this;
     }
 
-    public Builder args(Map<String, Object> args) {
+    public Builder args(String args) {
       this.args = args;
       return this;
     }
@@ -76,8 +73,8 @@ public class AnsibleAdHocYumCommand extends AnsibleAdHocCommand {
       return this;
     }
 
-    public AnsibleAdHocYumCommand build() {
-      return new AnsibleAdHocYumCommand(this);
+    public AnsibleAdHocShellCommand build() {
+      return new AnsibleAdHocShellCommand(this);
     }
   }
 }

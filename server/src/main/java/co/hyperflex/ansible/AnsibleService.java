@@ -1,5 +1,9 @@
 package co.hyperflex.ansible;
 
+import co.hyperflex.ansible.commands.AnsibleAdHocAptCommand;
+import co.hyperflex.ansible.commands.AnsibleAdHocCommand;
+import co.hyperflex.ansible.commands.AnsibleAdHocShellCommand;
+import co.hyperflex.ansible.commands.AnsibleAdHocSystemdCommand;
 import jakarta.validation.constraints.NotNull;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -56,6 +60,12 @@ public class AnsibleService {
       command.add("-a");
       String args =
           aptCommand.getArgs().entrySet().stream().map(entry -> entry.getKey() + "=" + entry.getValue())
+              .collect(Collectors.joining(" "));
+      command.add(args);
+    } else if (cmd instanceof AnsibleAdHocSystemdCommand systemdCommand && systemdCommand.getArgs() != null) {
+      command.add("-a");
+      String args =
+          systemdCommand.getArgs().entrySet().stream().map(entry -> entry.getKey() + "=" + entry.getValue())
               .collect(Collectors.joining(" "));
       command.add(args);
     } else if (cmd instanceof AnsibleAdHocShellCommand shellCommand && shellCommand.getArgs() != null) {

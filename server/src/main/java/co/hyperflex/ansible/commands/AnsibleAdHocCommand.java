@@ -1,4 +1,4 @@
-package co.hyperflex.ansible;
+package co.hyperflex.ansible.commands;
 
 public abstract class AnsibleAdHocCommand {
 

@@ -1,7 +1,7 @@
 package co.hyperflex.upgrader.tasks;
 
-import co.hyperflex.ansible.AnsibleAdHocCommand;
 import co.hyperflex.ansible.AnsibleService;
+import co.hyperflex.ansible.commands.AnsibleAdHocCommand;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -34,6 +34,7 @@ import co.hyperflex.entities.cluster.KibanaNode;
 import co.hyperflex.entities.cluster.OperatingSystemInfo;
 import co.hyperflex.entities.cluster.SelfManagedCluster;
 import co.hyperflex.entities.cluster.SshInfo;
+import co.hyperflex.entities.upgrade.ClusterUpgradeJob;
 import co.hyperflex.entities.upgrade.NodeUpgradeStatus;
 import co.hyperflex.exceptions.BadRequestException;
 import co.hyperflex.exceptions.NotFoundException;
@@ -209,7 +210,12 @@ public class ClusterService {
     Cluster cluster = clusterRepository.getCluster(clusterId);
     ElasticClient elasticClient = elasticsearchClientProvider.getClient(cluster);
     ElasticsearchClient client = elasticClient.getElasticsearchClient();
+    String targetVersion = null;
     boolean upgradeJobExists = clusterUpgradeJobService.clusterUpgradeJobExists(clusterId);
+    if (upgradeJobExists) {
+      ClusterUpgradeJob activeJobByClusterId = clusterUpgradeJobService.getActiveJobByClusterId(clusterId);
+      targetVersion = activeJobByClusterId.getTargetVersion();
+    }
     try {
       InfoResponse info = client.info();
       HealthRecord health = client.cat().health().valueBody().getFirst();
@@ -235,7 +241,7 @@ public class ClusterService {
           counts.initializingShards(),
           counts.relocatingShards(),
           cluster.getType().getDisplayName(),
-          info.version().number(),
+          targetVersion,
           UpgradePathUtils.getPossibleUpgrades(info.version().number()),
           upgradeJobExists
       );

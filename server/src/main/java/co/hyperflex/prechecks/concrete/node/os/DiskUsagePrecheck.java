@@ -1,7 +1,7 @@
 package co.hyperflex.prechecks.concrete.node.os;
 
-import co.hyperflex.ansible.AnsibleAdHocShellCommand;
 import co.hyperflex.ansible.AnsibleService;
+import co.hyperflex.ansible.commands.AnsibleAdHocShellCommand;
 import co.hyperflex.entities.cluster.SelfManagedCluster;
 import co.hyperflex.entities.cluster.SshInfo;
 import co.hyperflex.prechecks.contexts.NodeContext;
@@ -27,14 +27,9 @@ public class DiskUsagePrecheck extends BaseNodePrecheck {
     if (context.getCluster() instanceof SelfManagedCluster selfManagedCluster) {
       SshInfo sshInfo = selfManagedCluster.getSshInfo();
 
-      AnsibleAdHocShellCommand cmd = new AnsibleAdHocShellCommand
-          .Builder()
-          .hostIp(context.getNode().getIp())
-          .args("df -h / | tail -n 1 | awk '{ print $5 }' | tr -d %")
-          .sshUsername(sshInfo.username())
-          .sshKeyPath(sshInfo.keyPath())
-          .useBecome(true)
-          .build();
+      AnsibleAdHocShellCommand cmd = new AnsibleAdHocShellCommand.Builder().hostIp(context.getNode().getIp())
+          .args("df -h / | tail -n 1 | awk '{ print $5 }' | tr -d %").sshUsername(sshInfo.username()).sshKeyPath(sshInfo.keyPath())
+          .useBecome(true).build();
       ansibleService.run(cmd, new Consumer<String>() {
         @Override
         public void accept(String s) {

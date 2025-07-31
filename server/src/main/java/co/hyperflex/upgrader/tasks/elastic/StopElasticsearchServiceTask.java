@@ -1,6 +1,6 @@
 package co.hyperflex.upgrader.tasks.elastic;
 
-import co.hyperflex.ansible.AnsibleAdHocSystemdCommand;
+import co.hyperflex.ansible.commands.AnsibleAdHocSystemdCommand;
 import co.hyperflex.upgrader.tasks.AbstractAnsibleTask;
 import co.hyperflex.upgrader.tasks.Context;
 import co.hyperflex.upgrader.tasks.TaskResult;

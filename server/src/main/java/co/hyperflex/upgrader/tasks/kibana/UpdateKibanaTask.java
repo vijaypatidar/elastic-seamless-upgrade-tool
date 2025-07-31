@@ -1,7 +1,7 @@
 package co.hyperflex.upgrader.tasks.kibana;
 
-import co.hyperflex.ansible.AnsibleAdHocAptCommand;
-import co.hyperflex.ansible.AnsibleAdHocYumCommand;
+import co.hyperflex.ansible.commands.AnsibleAdHocAptCommand;
+import co.hyperflex.ansible.commands.AnsibleAdHocYumCommand;
 import co.hyperflex.upgrader.tasks.AbstractAnsibleTask;
 import co.hyperflex.upgrader.tasks.Context;
 import co.hyperflex.upgrader.tasks.TaskResult;
