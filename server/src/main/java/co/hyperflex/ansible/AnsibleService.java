@@ -51,15 +51,21 @@ public class AnsibleService {
     command.add(inventory);
     command.add("-m");
     command.add(cmd.getModule());
-    if (cmd.getArgs() != null) {
+
+    if (cmd instanceof AnsibleAdHocAptCommand aptCommand && aptCommand.getArgs() != null) {
       command.add("-a");
       String args =
-          cmd.getArgs().entrySet().stream().map(entry -> entry.getKey() + "=" + entry.getValue())
+          aptCommand.getArgs().entrySet().stream().map(entry -> entry.getKey() + "=" + entry.getValue())
               .collect(Collectors.joining(" "));
       command.add(args);
+    } else if (cmd instanceof AnsibleAdHocShellCommand shellCommand && shellCommand.getArgs() != null) {
+      command.add("-a");
+      command.add(shellCommand.getArgs());
+    } else {
+      throw new IllegalArgumentException("Unknown command: " + cmd);
     }
-    command.add("-u");
 
+    command.add("-u");
     command.add(cmd.getSshUser());
     command.add("--private-key");
     command.add(cmd.getSshKeyPath());

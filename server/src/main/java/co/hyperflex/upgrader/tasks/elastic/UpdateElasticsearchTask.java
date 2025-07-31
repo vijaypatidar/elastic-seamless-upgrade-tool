@@ -1,6 +1,7 @@
 package co.hyperflex.upgrader.tasks.elastic;
 
-import co.hyperflex.ansible.AnsibleAdHocCommand;
+import co.hyperflex.ansible.AnsibleAdHocAptCommand;
+import co.hyperflex.ansible.AnsibleAdHocYumCommand;
 import co.hyperflex.upgrader.tasks.AbstractAnsibleTask;
 import co.hyperflex.upgrader.tasks.Context;
 import co.hyperflex.upgrader.tasks.TaskResult;
@@ -13,10 +14,9 @@ public class UpdateElasticsearchTask extends AbstractAnsibleTask {
 
     boolean isUbuntu = true; //
     if (isUbuntu) {
-      AnsibleAdHocCommand cmd = new AnsibleAdHocCommand
+      AnsibleAdHocAptCommand cmd = new AnsibleAdHocAptCommand
           .Builder()
           .hostIp(context.node().getIp())
-          .module("ansible.builtin.apt")
           .args(Map.of(
               "name", "elasticsearch=" + context.config().targetVersion(),
               "state", "present")
@@ -27,10 +27,9 @@ public class UpdateElasticsearchTask extends AbstractAnsibleTask {
           .build();
       return runAdHocCommand(cmd, context);
     } else {
-      AnsibleAdHocCommand cmd = new AnsibleAdHocCommand
+      AnsibleAdHocYumCommand cmd = new AnsibleAdHocYumCommand
           .Builder()
           .hostIp(context.node().getIp())
-          .module("ansible.builtin.yum")
           .args(Map.of(
               "name", "elasticsearch-" + context.config().targetVersion(),
               "state", "present"
