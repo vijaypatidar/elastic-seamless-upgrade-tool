@@ -66,12 +66,9 @@ public class ClusterService {
   private final ClusterUpgradeJobService clusterUpgradeJobService;
   private final SshKeyService sshKeyService;
 
-  public ClusterService(ClusterRepository clusterRepository,
-                        ClusterNodeRepository clusterNodeRepository, ClusterMapper clusterMapper,
-                        ElasticsearchClientProvider elasticsearchClientProvider,
-                        KibanaClientProvider kibanaClientProvider,
-                        ClusterUpgradeJobService clusterUpgradeJobService,
-                        SshKeyService sshKeyService) {
+  public ClusterService(ClusterRepository clusterRepository, ClusterNodeRepository clusterNodeRepository, ClusterMapper clusterMapper,
+                        ElasticsearchClientProvider elasticsearchClientProvider, KibanaClientProvider kibanaClientProvider,
+                        ClusterUpgradeJobService clusterUpgradeJobService, SshKeyService sshKeyService) {
     this.clusterRepository = clusterRepository;
     this.clusterNodeRepository = clusterNodeRepository;
     this.clusterMapper = clusterMapper;
@@ -86,26 +83,22 @@ public class ClusterService {
     clusterRepository.save(cluster);
     syncElasticNodes(cluster);
     if (request instanceof AddSelfManagedClusterRequest selfManagedRequest) {
-      final List<KibanaNode> clusterNodes = selfManagedRequest.getKibanaNodes()
-          .stream()
-          .map(kibanaNodeRequest -> {
-            KibanaNode node = clusterMapper.toNodeEntity(kibanaNodeRequest);
-            node.setId(HashUtil.generateHash(cluster.getId() + ":" + node.getIp()));
-            node.setClusterId(cluster.getId());
-            return node;
-          }).toList();
-      syncKibanaNodes((SelfManagedCluster) cluster, clusterNodes);
+      final List<KibanaNode> clusterNodes = selfManagedRequest.getKibanaNodes().stream().map(kibanaNodeRequest -> {
+        KibanaNode node = clusterMapper.toNodeEntity(kibanaNodeRequest);
+        node.setId(HashUtil.generateHash(cluster.getId() + ":" + node.getIp()));
+        node.setClusterId(cluster.getId());
+        return node;
+      }).toList();
+      addKibanaNodes((SelfManagedCluster) cluster, clusterNodes);
       clusterNodeRepository.saveAll(clusterNodes);
     }
 
     return new AddClusterResponse(cluster.getId());
   }
 
-  public UpdateClusterResponse updateCluster(String clusterId,
-                                             UpdateClusterRequest request) {
+  public UpdateClusterResponse updateCluster(String clusterId, UpdateClusterRequest request) {
     Cluster cluster = clusterRepository.findById(clusterId)
-        .orElseThrow(() -> new co.hyperflex.exceptions.NotFoundException(
-            "Cluster not found with id: " + clusterId));
+        .orElseThrow(() -> new co.hyperflex.exceptions.NotFoundException("Cluster not found with id: " + clusterId));
 
     cluster.setName(request.getName());
     cluster.setElasticUrl(request.getElasticUrl());
@@ -115,25 +108,18 @@ public class ClusterService {
     cluster.setPassword(request.getPassword());
 
 
-    if (request instanceof UpdateSelfManagedClusterRequest selfManagedRequest
-        && cluster instanceof SelfManagedCluster selfManagedCluster) {
-      String file =
-          sshKeyService.createSSHPrivateKeyFile(selfManagedRequest.getSshKey(),
-              selfManagedCluster.getId());
-      selfManagedCluster.setSshInfo(
-          new SshInfo(selfManagedRequest.getSshUsername(), selfManagedRequest.getSshKey(), file));
+    if (request instanceof UpdateSelfManagedClusterRequest selfManagedRequest && cluster instanceof SelfManagedCluster selfManagedCluster) {
+      String file = sshKeyService.createSSHPrivateKeyFile(selfManagedRequest.getSshKey(), selfManagedCluster.getId());
+      selfManagedCluster.setSshInfo(new SshInfo(selfManagedRequest.getSshUsername(), selfManagedRequest.getSshKey(), file));
 
-      if (selfManagedRequest.getKibanaNodes() != null
-          && !selfManagedRequest.getKibanaNodes().isEmpty()) {
-        final List<KibanaNode> clusterNodes = selfManagedRequest.getKibanaNodes()
-            .stream()
-            .map(kibanaNodeRequest -> {
-              KibanaNode node = clusterMapper.toNodeEntity(kibanaNodeRequest);
-              node.setClusterId(cluster.getId());
-              node.setId(HashUtil.generateHash(cluster.getId() + ":" + node.getIp()));
-              return node;
-            }).toList();
-        syncKibanaNodes(selfManagedCluster, clusterNodes);
+      if (selfManagedRequest.getKibanaNodes() != null && !selfManagedRequest.getKibanaNodes().isEmpty()) {
+        final List<KibanaNode> clusterNodes = selfManagedRequest.getKibanaNodes().stream().map(kibanaNodeRequest -> {
+          KibanaNode node = clusterMapper.toNodeEntity(kibanaNodeRequest);
+          node.setClusterId(cluster.getId());
+          node.setId(HashUtil.generateHash(cluster.getId() + ":" + node.getIp()));
+          return node;
+        }).toList();
+        addKibanaNodes(selfManagedCluster, clusterNodes);
         clusterNodeRepository.saveAll(clusterNodes);
       }
 
@@ -154,10 +140,8 @@ public class ClusterService {
     if (optionalCluster.isPresent()) {
       Cluster cluster = optionalCluster.get();
       List<ClusterNode> nodes = clusterNodeRepository.findByClusterId(clusterId);
-      List<GetClusterKibanaNodeResponse> kibanaNodes = nodes.stream()
-          .filter(node -> node.getType() == ClusterNodeType.KIBANA)
-          .map(node -> new GetClusterKibanaNodeResponse(node.getId(), node.getName(), node.getIp()))
-          .toList();
+      List<GetClusterKibanaNodeResponse> kibanaNodes = nodes.stream().filter(node -> node.getType() == ClusterNodeType.KIBANA)
+          .map(node -> new GetClusterKibanaNodeResponse(node.getId(), node.getName(), node.getIp())).toList();
       return clusterMapper.toGetClusterResponse(cluster, kibanaNodes);
     }
     throw new NotFoundException("Cluster not found with id: " + clusterId);
@@ -172,38 +156,24 @@ public class ClusterService {
       clusterNodes = clusterNodeRepository.findByClusterIdAndType(clusterId, type);
     }
 
-    int minNonUpgradedNodeRank = clusterNodes.stream()
-        .filter(node -> node.getStatus() != NodeUpgradeStatus.UPGRADED)
-        .mapToInt(ClusterNode::getRank)
-        .min()
-        .orElse(Integer.MAX_VALUE);
+    int minNonUpgradedNodeRank =
+        clusterNodes.stream().filter(node -> node.getStatus() != NodeUpgradeStatus.UPGRADED).mapToInt(ClusterNode::getRank).min()
+            .orElse(Integer.MAX_VALUE);
 
-    boolean isUpgrading =
-        clusterNodes.stream().anyMatch(node -> node.getStatus() == NodeUpgradeStatus.UPGRADING);
+    boolean isUpgrading = clusterNodes.stream().anyMatch(node -> node.getStatus() == NodeUpgradeStatus.UPGRADING);
 
-    return clusterNodes.stream()
-        .peek(node ->
-            node.setUpgradable(
-                node.getStatus() != NodeUpgradeStatus.UPGRADED
-                    && !isUpgrading
-                    && node.getRank() <= minNonUpgradedNodeRank)
-        )
-        .sorted(Comparator.comparingInt(ClusterNode::getRank))
-        .map(clusterMapper::toGetClusterNodeResponse).toList();
+    return clusterNodes.stream().peek(node -> node.setUpgradable(
+            node.getStatus() != NodeUpgradeStatus.UPGRADED && !isUpgrading && node.getRank() <= minNonUpgradedNodeRank))
+        .sorted(Comparator.comparingInt(ClusterNode::getRank)).map(clusterMapper::toGetClusterNodeResponse).toList();
   }
 
   public List<GetClusterResponse> getClusters() {
-    return clusterRepository.findAll().stream()
-        .map(cluster -> {
-          List<ClusterNode> nodes = clusterNodeRepository.findByClusterId(cluster.getId());
-          List<GetClusterKibanaNodeResponse> kibanaNodes = nodes.stream()
-              .filter(node -> node.getType() == ClusterNodeType.KIBANA)
-              .map(node -> new GetClusterKibanaNodeResponse(node.getId(), node.getName(),
-                  node.getIp()))
-              .toList();
-          return clusterMapper.toGetClusterResponse(cluster, kibanaNodes);
-        })
-        .toList();
+    return clusterRepository.findAll().stream().map(cluster -> {
+      List<ClusterNode> nodes = clusterNodeRepository.findByClusterId(cluster.getId());
+      List<GetClusterKibanaNodeResponse> kibanaNodes = nodes.stream().filter(node -> node.getType() == ClusterNodeType.KIBANA)
+          .map(node -> new GetClusterKibanaNodeResponse(node.getId(), node.getName(), node.getIp())).toList();
+      return clusterMapper.toGetClusterResponse(cluster, kibanaNodes);
+    }).toList();
   }
 
   public ClusterOverviewResponse getClusterOverview(String clusterId) {
@@ -223,28 +193,12 @@ public class ClusterService {
       List<MasterRecord> activeMasters = elasticClient.getActiveMasters();
       Boolean adaptiveReplicaEnabled = elasticClient.isAdaptiveReplicaEnabled();
       var counts = elasticClient.getEntitiesCounts();
-      return new ClusterOverviewResponse(
-          info.clusterName(),
-          info.clusterUuid(),
-          health.status(),
-          info.version().number(),
-          false,
-          counts.dataNodes(),
-          counts.totalNodes(),
-          activeMasters.size(),
-          activeMasters.stream().map(MasterRecord::id).collect(Collectors.joining(",")),
-          adaptiveReplicaEnabled,
-          indices.valueBody().size(),
-          counts.activePrimaryShards(),
-          counts.activeShards(),
-          counts.unassignedShards(),
-          counts.initializingShards(),
-          counts.relocatingShards(),
-          cluster.getType().getDisplayName(),
-          targetVersion,
-          UpgradePathUtils.getPossibleUpgrades(info.version().number()),
-          upgradeJobExists
-      );
+      return new ClusterOverviewResponse(info.clusterName(), info.clusterUuid(), health.status(), info.version().number(), false,
+          counts.dataNodes(), counts.totalNodes(), activeMasters.size(),
+          activeMasters.stream().map(MasterRecord::id).collect(Collectors.joining(",")), adaptiveReplicaEnabled, indices.valueBody().size(),
+          counts.activePrimaryShards(), counts.activeShards(), counts.unassignedShards(), counts.initializingShards(),
+          counts.relocatingShards(), cluster.getType().getDisplayName(), targetVersion,
+          UpgradePathUtils.getPossibleUpgrades(info.version().number()), upgradeJobExists);
 
     } catch (IOException e) {
       log.error("Failed to get cluster overview for clusterId: {}", clusterId, e);
@@ -257,17 +211,41 @@ public class ClusterService {
         .noneMatch(status -> NodeUpgradeStatus.UPGRADED != status);
   }
 
-  private void syncKibanaNodes(SelfManagedCluster cluster, List<KibanaNode> nodes) {
+  public void syncClusterState(String clusterId) {
+    try {
+      Cluster cluster = clusterRepository.findById(clusterId).orElseThrow();
+      syncElasticNodes(cluster);
+      if (cluster instanceof SelfManagedCluster selfManagedCluster) {
+        syncKibanaNodes(selfManagedCluster);
+      }
+    } catch (Exception e) {
+      log.error("Failed to sync cluster state for clusterId: {}", clusterId, e);
+    }
+  }
+
+  private void addKibanaNodes(SelfManagedCluster cluster, List<KibanaNode> nodes) {
     var kibanaClient = kibanaClientProvider.getClient(cluster);
     nodes.forEach(node -> {
       GetKibanaStatusResponse details = kibanaClient.getKibanaNodeDetails(node.getIp());
       OsStats os = details.metrics().os();
       node.setVersion(details.version().number());
-      node.setOs(new OperatingSystemInfo(
-          os.platform(),
-          os.platformRelease()));
+      node.setOs(new OperatingSystemInfo(os.platform(), os.platformRelease()));
     });
   }
+
+  private void syncKibanaNodes(SelfManagedCluster cluster) {
+    var kibanaClient = kibanaClientProvider.getClient(cluster);
+    List<ClusterNode> clusterNodes =
+        clusterNodeRepository.findByClusterId(cluster.getId()).stream().filter(node -> node.getType() == ClusterNodeType.KIBANA).toList();
+    clusterNodes.forEach(node -> {
+      GetKibanaStatusResponse details = kibanaClient.getKibanaNodeDetails(node.getIp());
+      OsStats os = details.metrics().os();
+      node.setVersion(details.version().number());
+      node.setOs(new OperatingSystemInfo(os.platform(), os.platformRelease()));
+    });
+    clusterNodeRepository.saveAll(clusterNodes);
+  }
+
 
   private void syncElasticNodes(Cluster cluster) {
     try {
@@ -290,21 +268,15 @@ public class ClusterService {
         node.setIp(value.ip());
         node.setName(value.name());
         node.setVersion(value.version());
-        node.setRoles(
-            value.roles().stream().map(Enum::name).toList()
-        );
+        node.setRoles(value.roles().stream().map(Enum::name).map(String::toLowerCase).toList());
 
         // Extract OS info
         if (value.os() != null) {
-          node.setOs(new OperatingSystemInfo(
-              value.os().name(),
-              value.os().version()
-          ));
+          node.setOs(new OperatingSystemInfo(value.os().name(), value.os().version()));
         }
 
         node.setProgress(0);
-        boolean isActiveMaster =
-            activeMasters.stream().anyMatch(masterNode -> nodeId.equals(masterNode.id()));
+        boolean isActiveMaster = activeMasters.stream().anyMatch(masterNode -> nodeId.equals(masterNode.id()));
         node.setMaster(isActiveMaster);
         node.setStatus(NodeUpgradeStatus.AVAILABLE);
         node.setType(ClusterNodeType.ELASTIC);
@@ -319,7 +291,6 @@ public class ClusterService {
 
         clusterNodes.add(node);
       }
-
 
       clusterNodeRepository.saveAll(clusterNodes);
 
