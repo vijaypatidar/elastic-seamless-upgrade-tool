@@ -102,12 +102,11 @@ public class ClusterUpgradeService {
   }
 
   public ClusterInfoResponse upgradeInfo(String clusterId) {
-
+    boolean upgradeJobExists = clusterUpgradeJobService.clusterUpgradeJobExists(clusterId);
+    if (!upgradeJobExists) {
+      throw new BadRequestException("Please set cluster target version");
+    }
     try {
-      boolean upgradeJobExists = clusterUpgradeJobService.clusterUpgradeJobExists(clusterId);
-      if (!upgradeJobExists) {
-        throw new BadRequestException("Please set cluster target version");
-      }
       ElasticClient client = elasticsearchClientProvider.getElasticsearchClientByClusterId(clusterId);
       KibanaClient kibanaClient = kibanaClientProvider.getKibanaClientByClusterId(clusterId);
 

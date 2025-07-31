@@ -70,7 +70,7 @@ public class UpgradePathUtils {
 
     return POSSIBLE_UPGRADES.keySet().stream()
         .sorted(VersionUtils.VERSION_COMPARATOR)
-        .filter(v -> VersionUtils.isVersionGt(v, version))
+        .filter(v -> VersionUtils.isVersionGt(version, v))
         .reduce((first, second) -> second)
         .map(POSSIBLE_UPGRADES::get)
         .orElse(List.of());
