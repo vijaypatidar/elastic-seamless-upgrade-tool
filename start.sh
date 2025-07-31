@@ -24,10 +24,13 @@ services:
     pull_policy: always
     ports:
       - '8080:8080'
+    volumes:
+      - seamless-upgrade-tool:/output
     depends_on:
       - seamless-upgrade-mongodb
 
 volumes:
+  seamless-upgrade-tool:
   seamless-upgrade-mongodb-data:
 EOF
 
