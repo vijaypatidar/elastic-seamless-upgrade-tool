@@ -106,6 +106,7 @@ function IndexLogs({
 							<NodeListItem
 								key={idx}
 								status={index?.status}
+								severity={index?.severity}
 								isSelected={selectedIndex.index === index.index}
 								name={index?.name}
 								onClick={() => setSelectedIndex(index)}
@@ -142,6 +143,7 @@ function IndexLogs({
 										<NodeListItem
 											key={index}
 											status={change.status}
+											severity={change.severity}
 											name={change.name}
 											isSelected={change.id === selectedPrecheck?.id}
 											onClick={() => setSelectedPrecheck(change)}

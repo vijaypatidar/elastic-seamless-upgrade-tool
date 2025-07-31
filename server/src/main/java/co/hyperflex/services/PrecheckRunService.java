@@ -109,6 +109,7 @@ public class PrecheckRunService {
                           breakingChange.getDescription(),
                           breakingChange.getUrl()
                       ),
+                      PrecheckSeverity.WARNING,
                       PrecheckStatus.FAILED
                   ))
                   .toList();
@@ -120,7 +121,7 @@ public class PrecheckRunService {
   public PrecheckStatus getGroupStatus(@NotNull String groupId) {
     List<PrecheckStatus> statuses = precheckRunRepository.findStatusAndSeverityByPrecheckGroupId(groupId)
         .stream()
-        .filter(status -> status.status() != PrecheckStatus.FAILED && status.severity() != PrecheckSeverity.ERROR)
+        .filter(status -> status.severity() == PrecheckSeverity.ERROR)
         .map(PrecheckStatusAndSeverityView::status)
         .toList();
     return getMergedPrecheckStatus(statuses);
