@@ -120,7 +120,7 @@ function BreakingChangesLogs({ data, isLoading = true }: { data: any; isLoading:
 						)}
 					</Box>
 					<Box className="flex flex-col w-full gap-[2px]">
-						<LogsList logs={[]} isLoading={isLoading} />
+						<LogsList logs={selectedCheck?.logs ?? []} isLoading={isLoading} />
 					</Box>
 				</Box>
 			</Box>

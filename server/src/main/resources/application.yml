@@ -24,6 +24,5 @@ management:
       enabled: false
 
 seamless:
-  legacy-backend: http://localhost:3000
   output:
     dir: "output"

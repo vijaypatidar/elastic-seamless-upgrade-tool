@@ -11,14 +11,9 @@ import co.elastic.clients.elasticsearch.nodes.NodesInfoResponse;
 import co.elastic.clients.elasticsearch.nodes.info.NodeInfo;
 import co.hyperflex.clients.elastic.ElasticClient;
 import co.hyperflex.clients.elastic.ElasticsearchClientProvider;
-import co.hyperflex.clients.elastic.dto.ElasticDeprecation;
-import co.hyperflex.clients.elastic.dto.GetElasticDeprecationResponse;
-import co.hyperflex.clients.kibana.KibanaClient;
 import co.hyperflex.clients.kibana.KibanaClientProvider;
-import co.hyperflex.clients.kibana.dto.GetKibanaDeprecationResponse;
 import co.hyperflex.clients.kibana.dto.GetKibanaStatusResponse;
 import co.hyperflex.clients.kibana.dto.OsStats;
-import co.hyperflex.dtos.GetDeprecationsResponse;
 import co.hyperflex.dtos.clusters.AddClusterRequest;
 import co.hyperflex.dtos.clusters.AddClusterResponse;
 import co.hyperflex.dtos.clusters.AddSelfManagedClusterRequest;
@@ -251,6 +246,11 @@ public class ClusterService {
     }
   }
 
+  public boolean isNodesUpgraded(String clusterId, ClusterNodeType clusterNodeType) {
+    return getNodes(clusterId, clusterNodeType).stream().map(GetClusterNodeResponse::status)
+        .noneMatch(status -> NodeUpgradeStatus.UPGRADED != status);
+  }
+
   private void syncKibanaNodes(SelfManagedCluster cluster, List<KibanaNode> nodes) {
     var kibanaClient = kibanaClientProvider.getClient(cluster);
     nodes.forEach(node -> {
@@ -322,71 +322,6 @@ public class ClusterService {
     } catch (Exception e) {
       log.error("Error syncing nodes from Elasticsearch:", e);
       throw new RuntimeException(e);
-    }
-  }
-
-  public boolean isNodesUpgraded(String clusterId, ClusterNodeType clusterNodeType) {
-    return getNodes(clusterId, clusterNodeType).stream().map(GetClusterNodeResponse::status)
-        .noneMatch(status -> NodeUpgradeStatus.UPGRADED != status);
-  }
-
-  public List<GetDeprecationsResponse> getKibanaDeprecations(String clusterId) {
-    KibanaClient kibanaClient = kibanaClientProvider.getKibanaClientByClusterId(clusterId);
-    List<GetKibanaDeprecationResponse.Deprecation> deprecations =
-        kibanaClient.getDeprecations().deprecations();
-    return deprecations.stream().map((item) -> new GetDeprecationsResponse(
-        item.title(),
-        item.message(),
-        item.level(),
-        item.correctiveActions().manualSteps()
-    )).toList();
-  }
-
-  public List<GetDeprecationsResponse> getElasticDeprecations(String clusterId) {
-    ElasticClient elasticClient =
-        elasticsearchClientProvider.getElasticsearchClientByClusterId(clusterId);
-
-    GetElasticDeprecationResponse deprecation = elasticClient.getDeprecation();
-    List<GetDeprecationsResponse> responses = new LinkedList<>();
-    Optional.ofNullable(deprecation.clusterSettings()).ifPresent(deprecations -> {
-      processMigrationDeprecations(deprecations, responses);
-    });
-    Optional.ofNullable(deprecation.mlSettings()).ifPresent(deprecations -> {
-      processMigrationDeprecations(deprecations, responses);
-    });
-    Optional.ofNullable(deprecation.nodeSettings()).ifPresent(deprecations -> {
-      processMigrationDeprecations(deprecations, responses);
-    });
-    Optional.ofNullable(deprecation.indexSettings()).ifPresent(deprecations -> {
-      deprecations.forEach(
-          (s, deprecations1) -> processMigrationDeprecations(deprecations1, responses));
-    });
-    Optional.ofNullable(deprecation.dataStreams()).ifPresent(deprecations -> {
-      deprecations.forEach(
-          (s, deprecations1) -> processMigrationDeprecations(deprecations1, responses));
-    });
-    Optional.ofNullable(deprecation.ilmPolicies()).ifPresent(deprecations -> {
-      deprecations.forEach(
-          (s, deprecations1) -> processMigrationDeprecations(deprecations1, responses));
-    });
-    Optional.ofNullable(deprecation.templates()).ifPresent(deprecations -> {
-      deprecations.forEach(
-          (s, deprecations1) -> processMigrationDeprecations(deprecations1, responses));
-    });
-    return responses;
-  }
-
-  private void processMigrationDeprecations(List<ElasticDeprecation> deprecations,
-                                            List<GetDeprecationsResponse> responses) {
-    if (deprecations != null) {
-      deprecations.forEach((item) -> {
-        responses.add(new GetDeprecationsResponse(
-            item.message(),
-            item.details(),
-            item.level(),
-            List.of(item.url())
-        ));
-      });
     }
   }
 

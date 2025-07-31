@@ -7,8 +7,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
 @EnableScheduling
-public class NextGenSeamlessUpgrade {
+public class SeamlessUpgrade {
   public static void main(String[] args) {
-    SpringApplication.run(NextGenSeamlessUpgrade.class, args);
+    SpringApplication.run(SeamlessUpgrade.class, args);
   }
 }

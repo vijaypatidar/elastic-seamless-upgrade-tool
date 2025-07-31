@@ -10,7 +10,7 @@ public record ClusterInfoResponse(
 ) {
   public record Elastic(
       boolean isUpgradable,
-      Deprecations deprecations,
+      DeprecationCounts deprecationCounts,
       SnapshotWrapper snapshot
   ) {
     public record SnapshotWrapper(
@@ -22,11 +22,11 @@ public record ClusterInfoResponse(
 
   public record Kibana(
       @NotNull boolean isUpgradable,
-      Deprecations deprecations
+      DeprecationCounts deprecationCounts
   ) {
   }
 
-  public record Deprecations(
+  public record DeprecationCounts(
       int critical,
       int warning
   ) {

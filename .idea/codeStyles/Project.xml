@@ -51,7 +51,7 @@
       </indentOptions>
     </codeStyleSettings>
     <codeStyleSettings language="JAVA">
-      <option name="RIGHT_MARGIN" value="100" />
+      <option name="RIGHT_MARGIN" value="140" />
       <option name="BLANK_LINES_BEFORE_PACKAGE" value="1" />
       <option name="SPACE_BEFORE_ARRAY_INITIALIZER_LBRACE" value="true" />
       <option name="CALL_PARAMETERS_WRAP" value="1" />
