@@ -1,5 +1,6 @@
 package co.hyperflex.services;
 
+import co.hyperflex.dtos.prechecks.GetBreakingChangeEntry;
 import co.hyperflex.dtos.prechecks.GetClusterPrecheckEntry;
 import co.hyperflex.dtos.prechecks.GetGroupedPrecheckResponse;
 import co.hyperflex.dtos.prechecks.GetIndexPrecheckGroup;
@@ -14,13 +15,14 @@ import co.hyperflex.entities.precheck.PrecheckRun;
 import co.hyperflex.entities.precheck.PrecheckSeverity;
 import co.hyperflex.entities.precheck.PrecheckStatus;
 import co.hyperflex.entities.precheck.PrecheckType;
+import co.hyperflex.entities.upgrade.ClusterUpgradeJob;
 import co.hyperflex.exceptions.NotFoundException;
 import co.hyperflex.mappers.PrecheckMapper;
+import co.hyperflex.repositories.BreakingChangeRepository;
 import co.hyperflex.repositories.PrecheckGroupRepository;
 import co.hyperflex.repositories.PrecheckRunRepository;
 import co.hyperflex.repositories.projection.PrecheckStatusAndSeverityView;
 import jakarta.validation.constraints.NotNull;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -36,20 +38,25 @@ public class PrecheckRunService {
 
   private final PrecheckRunRepository precheckRunRepository;
   private final PrecheckGroupRepository precheckGroupRepository;
+  private final BreakingChangeRepository breakingChangeRepository;
+  private final ClusterUpgradeJobService clusterUpgradeJobService;
   private final MongoTemplate mongoTemplate;
   private final PrecheckMapper precheckMapper;
 
   public PrecheckRunService(PrecheckRunRepository precheckRunRepository,
-                            PrecheckGroupRepository precheckGroupRepository,
+                            PrecheckGroupRepository precheckGroupRepository, BreakingChangeRepository breakingChangeRepository,
+                            ClusterUpgradeJobService clusterUpgradeJobService,
                             MongoTemplate mongoTemplate, PrecheckMapper precheckMapper) {
     this.precheckRunRepository = precheckRunRepository;
     this.precheckGroupRepository = precheckGroupRepository;
+    this.breakingChangeRepository = breakingChangeRepository;
+    this.clusterUpgradeJobService = clusterUpgradeJobService;
     this.mongoTemplate = mongoTemplate;
     this.precheckMapper = precheckMapper;
   }
 
   public GetGroupedPrecheckResponse getGroupedPrecheckByClusterId(String clusterId) {
-
+    ClusterUpgradeJob clusterUpgradeJob = clusterUpgradeJobService.getActiveJobByClusterId(clusterId);
     return precheckGroupRepository.findFirstByClusterIdOrderByCreatedAtDesc(clusterId)
         .map(precheckGroup -> {
           List<PrecheckRun> precheckRuns =
@@ -91,8 +98,21 @@ public class PrecheckRunService {
                     entry.getValue());
               }).toList();
 
-          return new GetGroupedPrecheckResponse(nodeGroups, clusterPrechecks, indexGroups,
-              Collections.emptyList());
+          List<GetBreakingChangeEntry> breakingChangeEntries =
+              breakingChangeRepository.getBreakingChanges(clusterUpgradeJob.getCurrentVersion(), clusterUpgradeJob.getTargetVersion())
+                  .stream()
+                  .map(breakingChange -> new GetBreakingChangeEntry(
+                      breakingChange.getId(),
+                      breakingChange.getTitle() + "(" + breakingChange.getVersion() + ")",
+                      List.of(
+                          "Category: " + breakingChange.getCategory(),
+                          breakingChange.getDescription(),
+                          breakingChange.getUrl()
+                      ),
+                      PrecheckStatus.FAILED
+                  ))
+                  .toList();
+          return new GetGroupedPrecheckResponse(nodeGroups, clusterPrechecks, indexGroups, breakingChangeEntries);
         })
         .orElseThrow(() -> new NotFoundException("No PrecheckRun found for cluster: " + clusterId));
   }

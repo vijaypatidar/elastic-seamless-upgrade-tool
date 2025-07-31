@@ -13,7 +13,6 @@ import co.hyperflex.dtos.prechecks.GetPrecheckEntry;
 import co.hyperflex.entities.BreakingChange;
 import co.hyperflex.entities.upgrade.ClusterUpgradeJob;
 import co.hyperflex.repositories.BreakingChangeRepository;
-import co.hyperflex.utils.VersionUtils;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -130,12 +129,7 @@ public class PrecheckReportService {
 
   private StringBuilder getBreakingChangesMdReport(String currentVersion, String targetVersion) {
     StringBuilder md = new StringBuilder();
-    List<BreakingChange> breakingChanges = breakingChangeRepository
-        .findAll()
-        .stream()
-        .filter(breakingChange -> VersionUtils.isVersionGt(breakingChange.getVersion(), currentVersion)
-            && VersionUtils.isVersionGte(targetVersion, breakingChange.getVersion()))
-        .toList();
+    List<BreakingChange> breakingChanges = breakingChangeRepository.getBreakingChanges(currentVersion, targetVersion);
 
     md.append("# Breaking Changes Report\n\n").append("From version: **").append(currentVersion).append("** to **").append(targetVersion)
         .append("**\n\n");

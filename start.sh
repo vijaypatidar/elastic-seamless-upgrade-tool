@@ -18,17 +18,6 @@ services:
     volumes:
       - seamless-upgrade-mongodb-data:/data/db
 
-  backend:
-    image: hyperflex/elastic-seamless-upgrade-backend:$DOCKER_TAG
-    container_name: backend
-    pull_policy: always
-    environment:
-      MONGO_URI: mongodb://admin:admin123@seamless-upgrade-mongodb:27017/
-    depends_on:
-      - seamless-upgrade-mongodb
-    ports:
-      - '3000:3000'
-
   seamless-upgrade-tool:
     image: hyperflex/elastic-seamless-upgrade-tool:$DOCKER_TAG
     container_name: tool
