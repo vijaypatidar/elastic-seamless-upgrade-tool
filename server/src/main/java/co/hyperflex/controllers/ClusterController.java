@@ -5,6 +5,7 @@ import co.hyperflex.dtos.clusters.AddClusterRequest;
 import co.hyperflex.dtos.clusters.AddClusterResponse;
 import co.hyperflex.dtos.clusters.ClusterOverviewResponse;
 import co.hyperflex.dtos.clusters.ClusterVerifyResponse;
+import co.hyperflex.dtos.clusters.GetClusterListItemResponse;
 import co.hyperflex.dtos.clusters.GetClusterNodeResponse;
 import co.hyperflex.dtos.clusters.GetClusterResponse;
 import co.hyperflex.dtos.clusters.UpdateClusterRequest;
@@ -34,8 +35,7 @@ public class ClusterController {
   private final CertificatesService certificatesService;
   private final DeprecationService deprecationService;
 
-  public ClusterController(ClusterService clusterService, CertificatesService certificatesService,
-                           DeprecationService deprecationService) {
+  public ClusterController(ClusterService clusterService, CertificatesService certificatesService, DeprecationService deprecationService) {
     this.clusterService = clusterService;
     this.certificatesService = certificatesService;
     this.deprecationService = deprecationService;
@@ -47,15 +47,14 @@ public class ClusterController {
   }
 
   @PutMapping("/{clusterId}")
-  public UpdateClusterResponse updateCluster(@Valid @RequestBody
-                                             UpdateClusterRequest request,
-                                             @PathVariable String clusterId) {
+  public UpdateClusterResponse updateCluster(@Valid @RequestBody UpdateClusterRequest request, @PathVariable String clusterId) {
     return clusterService.updateCluster(clusterId, request);
   }
 
   @GetMapping("")
-  public List<GetClusterResponse> getClusters() {
-    return clusterService.getClusters();
+  public List<GetClusterListItemResponse> getClusters() {
+    return clusterService.getClusters().stream()
+        .map(item -> new GetClusterListItemResponse(item.getId(), item.getName(), item.getType(), "8.0.0", "green")).toList();
   }
 
   @GetMapping("/{clusterId}")
@@ -65,14 +64,12 @@ public class ClusterController {
 
   @GetMapping("/{clusterId}/nodes")
   public List<GetClusterNodeResponse> getClusterNodes(@PathVariable String clusterId,
-                                                      @RequestParam(required = false)
-                                                      ClusterNodeType type) {
+                                                      @RequestParam(required = false) ClusterNodeType type) {
     return clusterService.getNodes(clusterId, type);
   }
 
   @PostMapping(value = "/certificates/upload", consumes = "multipart/form-data")
-  public UploadCertificateResponse uploadCertificate(@RequestParam("files") MultipartFile[] files,
-                                                     @PathVariable String clusterId) {
+  public UploadCertificateResponse uploadCertificate(@RequestParam("files") MultipartFile[] files, @PathVariable String clusterId) {
     return certificatesService.uploadCertificate(files, clusterId);
   }
 
@@ -83,7 +80,7 @@ public class ClusterController {
 
   @GetMapping("/verify")
   public ClusterVerifyResponse verify() {
-    List<GetClusterResponse> clusters = getClusters();
+    List<GetClusterResponse> clusters = clusterService.getClusters();
     if (clusters.isEmpty()) {
       return new ClusterVerifyResponse(false, null);
     } else {
