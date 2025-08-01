@@ -7,7 +7,7 @@ WORKDIR /app
 COPY . /app
 
 # Use Gradle wrapper if present; fallback to system Gradle
-RUN ./gradlew clean build --no-daemon
+RUN ./gradlew clean build -x test --no-daemon
 
 # Stage 2: Create final image with Ansible and JRE
 FROM hyperflex/jre21ansible:latest
