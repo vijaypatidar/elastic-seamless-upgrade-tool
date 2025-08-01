@@ -8,4 +8,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface PrecheckGroupRepository extends MongoRepository<PrecheckGroup, String> {
   Optional<PrecheckGroup> findFirstByClusterIdOrderByCreatedAtDesc(String clusterId);
+
+  Optional<PrecheckGroup> findFirstByClusterUpgradeJobIdOrderByCreatedAtDesc(String jobId);
 }

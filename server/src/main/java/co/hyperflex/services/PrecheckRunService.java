@@ -1,11 +1,14 @@
 package co.hyperflex.services;
 
+import co.hyperflex.dtos.prechecks.CreatePrecheckGroupRequest;
+import co.hyperflex.dtos.prechecks.CreatePrecheckGroupResponse;
 import co.hyperflex.dtos.prechecks.GetBreakingChangeEntry;
 import co.hyperflex.dtos.prechecks.GetClusterPrecheckEntry;
 import co.hyperflex.dtos.prechecks.GetGroupedPrecheckResponse;
 import co.hyperflex.dtos.prechecks.GetIndexPrecheckGroup;
 import co.hyperflex.dtos.prechecks.GetNodePrecheckGroup;
 import co.hyperflex.dtos.prechecks.GetPrecheckEntry;
+import co.hyperflex.dtos.prechecks.GetPrecheckGroupResponse;
 import co.hyperflex.dtos.prechecks.PrecheckRerunRequest;
 import co.hyperflex.entities.precheck.ClusterPrecheckRun;
 import co.hyperflex.entities.precheck.IndexPrecheckRun;
@@ -22,10 +25,12 @@ import co.hyperflex.repositories.BreakingChangeRepository;
 import co.hyperflex.repositories.PrecheckGroupRepository;
 import co.hyperflex.repositories.PrecheckRunRepository;
 import co.hyperflex.repositories.projection.PrecheckStatusAndSeverityView;
+import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotNull;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -118,6 +123,18 @@ public class PrecheckRunService {
         .orElseThrow(() -> new NotFoundException("No PrecheckRun found for cluster: " + clusterId));
   }
 
+  public GetPrecheckGroupResponse getPrecheckGroupByJobId(String jobId) {
+    Optional<PrecheckGroup> precheckGroup =
+        precheckGroupRepository.findFirstByClusterUpgradeJobIdOrderByCreatedAtDesc(jobId);
+    return precheckGroup.map(this::toGetPrecheckGroupResponse).orElse(null);
+  }
+
+  public GetPrecheckGroupResponse getPrecheckGroupByClusterId(String jobId) {
+    Optional<PrecheckGroup> precheckGroup =
+        precheckGroupRepository.findFirstByClusterIdOrderByCreatedAtDesc(jobId);
+    return precheckGroup.map(this::toGetPrecheckGroupResponse).orElse(null);
+  }
+
   public PrecheckStatus getGroupStatus(@NotNull String groupId) {
     List<PrecheckStatus> statuses = precheckRunRepository.findStatusAndSeverityByPrecheckGroupId(groupId)
         .stream()
@@ -127,7 +144,7 @@ public class PrecheckRunService {
     return getMergedPrecheckStatus(statuses);
   }
 
-  public void rerunPrechecks(PrecheckGroup precheckGroup, PrecheckRerunRequest request) {
+  public void rerunPrechecks(String precheckGroupId, PrecheckRerunRequest request) {
     List<Criteria> criteriaList = new LinkedList<>();
 
     if (request.precheckIds() != null && !request.precheckIds().isEmpty()) {
@@ -147,7 +164,7 @@ public class PrecheckRunService {
     }
 
     Query query = new Query(new Criteria().orOperator(criteriaList)
-        .andOperator(Criteria.where("precheckGroupId").is(precheckGroup.getId())));
+        .andOperator(Criteria.where("precheckGroupId").is(precheckGroupId)));
     Update update = new Update().set("status", PrecheckStatus.PENDING).set("startedAt", null)
         .set("endAt", null);
     mongoTemplate.updateMulti(query, update, PrecheckRun.class);
@@ -180,5 +197,25 @@ public class PrecheckRunService {
       return PrecheckStatus.PENDING;
     }
     return PrecheckStatus.COMPLETED;
+  }
+
+  private GetPrecheckGroupResponse toGetPrecheckGroupResponse(@Nullable PrecheckGroup group) {
+    if (group == null) {
+      return null;
+    }
+    return new GetPrecheckGroupResponse(
+        group.getId(),
+        group.getClusterUpgradeJobId(),
+        group.getClusterId(),
+        group.getStatus()
+    );
+  }
+
+  public CreatePrecheckGroupResponse createPrecheckGroup(CreatePrecheckGroupRequest request) {
+    final PrecheckGroup precheckGroup = new PrecheckGroup();
+    precheckGroup.setClusterId(request.clusterId());
+    precheckGroup.setClusterUpgradeJobId(request.clusterUpgradeJobId());
+    precheckGroupRepository.save(precheckGroup);
+    return new CreatePrecheckGroupResponse(precheckGroup.getId());
   }
 }

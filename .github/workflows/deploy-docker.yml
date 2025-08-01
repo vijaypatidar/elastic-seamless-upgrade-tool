@@ -1,5 +1,5 @@
-name: Deploy start script local to gist
-run-name: start-script-local deployment
+name: Build Elastic Seamless Upgrade Tool
+run-name: build-elastic-seamless-upgrade-tool
 
 on:
     push:

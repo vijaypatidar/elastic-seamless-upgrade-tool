@@ -38,7 +38,7 @@ public class ClusterUpgradeJobService {
     return clusterUpgradeJobRepository
         .findByClusterIdAndStatusIsNot(clusterId, ClusterUpgradeStatus.UPDATED)
         .stream().findFirst().orElseThrow(
-            () -> new NotFoundException("No active cluster job found for clusterId: " + clusterId));
+            () -> new NotFoundException("No active cluster job found for cluster ID: " + clusterId));
   }
 
   public @NotNull boolean clusterUpgradeJobExists(@NotNull String clusterId) {
