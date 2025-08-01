@@ -17,6 +17,7 @@ import co.hyperflex.clients.kibana.dto.OsStats;
 import co.hyperflex.dtos.clusters.AddClusterRequest;
 import co.hyperflex.dtos.clusters.AddClusterResponse;
 import co.hyperflex.dtos.clusters.AddSelfManagedClusterRequest;
+import co.hyperflex.dtos.clusters.ClusterListItemResponse;
 import co.hyperflex.dtos.clusters.ClusterOverviewResponse;
 import co.hyperflex.dtos.clusters.GetClusterKibanaNodeResponse;
 import co.hyperflex.dtos.clusters.GetClusterNodeResponse;
@@ -171,7 +172,27 @@ public class ClusterService {
         .sorted(Comparator.comparingInt(ClusterNode::getRank)).map(clusterMapper::toGetClusterNodeResponse).toList();
   }
 
-  public List<GetClusterResponse> getClusters() {
+  public List<ClusterListItemResponse> getClusters() {
+    return clusterRepository.findAll().stream().map(cluster -> {
+      String version = "N/A";
+      String status = null;
+      try {
+        ElasticClient client = elasticsearchClientProvider.getClient(cluster);
+        version = client.getClusterInfo().version().number();
+        status = client.getHealthStatus();
+      } catch (Exception e) {
+        log.error("Error getting cluster list from Elasticsearch:", e);
+      }
+      return new ClusterListItemResponse(cluster.getId(),
+          cluster.getName(),
+          cluster.getType().name(),
+          cluster.getType().getDisplayName(),
+          version, status);
+    }).toList();
+  }
+
+  @Deprecated
+  public List<GetClusterResponse> getClustersList() {
     return clusterRepository.findAll().stream().map(cluster -> {
       List<ClusterNode> nodes = clusterNodeRepository.findByClusterId(cluster.getId());
       List<GetClusterKibanaNodeResponse> kibanaNodes = nodes.stream().filter(node -> node.getType() == ClusterNodeType.KIBANA)

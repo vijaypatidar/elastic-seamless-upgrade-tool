@@ -52,6 +52,14 @@ public class ElasticClient {
     return elasticsearchClient;
   }
 
+  public String getHealthStatus() {
+    try {
+      return getElasticsearchClient().cat().health().valueBody().get(0).status();
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
   public List<String> getIndices() {
     ElasticsearchIndicesClient indices = elasticsearchClient.indices();
     GetIndexRequest request = GetIndexRequest.of(b -> b.index("*"));
