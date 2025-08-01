@@ -5,6 +5,7 @@ import co.hyperflex.entities.cluster.ClusterNodeType;
 import co.hyperflex.upgrader.tasks.Task;
 import co.hyperflex.upgrader.tasks.elastic.DisableShardAllocationTask;
 import co.hyperflex.upgrader.tasks.elastic.EnableShardAllocationTask;
+import co.hyperflex.upgrader.tasks.elastic.RestartElasticsearchServiceTask;
 import co.hyperflex.upgrader.tasks.elastic.StartElasticsearchServiceTask;
 import co.hyperflex.upgrader.tasks.elastic.StopElasticsearchServiceTask;
 import co.hyperflex.upgrader.tasks.elastic.SyncedFlushTask;
@@ -34,7 +35,7 @@ public class UpgradePlanBuilder {
       tasks.add(new SyncedFlushTask());
       tasks.add(new StopElasticsearchServiceTask());
       tasks.add(new UpdateElasticsearchTask());
-      tasks.add(new StartElasticsearchServiceTask());
+      tasks.add(new RestartElasticsearchServiceTask());
       tasks.add(new WaitForElasticsearchTransportPortTask());
       tasks.add(new WaitForElasticsearchHttpPortTask());
       tasks.add(new WaitForYellowOrGreenClusterStatusTask());

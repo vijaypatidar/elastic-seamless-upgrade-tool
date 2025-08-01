@@ -36,8 +36,8 @@ export class WebSocketClient {
 
 		this.socket.addEventListener("message", (event) => {
 			try {
-				const { type, data } = JSON.parse(event.data)
-				this.emitLocal(type, data)
+				const data = JSON.parse(event.data)
+				this.emitLocal(data.type, data)
 			} catch {
 				console.warn("Invalid WebSocket message:", event.data)
 			}

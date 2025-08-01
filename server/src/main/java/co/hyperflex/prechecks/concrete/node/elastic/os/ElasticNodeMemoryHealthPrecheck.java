@@ -44,7 +44,7 @@ public class ElasticNodeMemoryHealthPrecheck extends BaseElasticNodePrecheck {
       if (memoryPercent > 90) {
         logger.warn("Memory usage on node is %s", memoryPercent);
         throw new RuntimeException("Memory usage check failed: current usage is " + memoryPercent
-            + ", which exceeds the threshold of 80%");
+            + ", which exceeds the threshold of 90%");
       }
     } catch (IOException e) {
       throw new RuntimeException(e);

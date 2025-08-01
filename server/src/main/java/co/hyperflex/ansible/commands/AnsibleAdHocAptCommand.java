@@ -1,18 +1,17 @@
-package co.hyperflex.ansible;
+package co.hyperflex.ansible.commands;
 
 import java.util.Map;
 
-public class AnsibleAdHocCommand {
+public class AnsibleAdHocAptCommand extends AnsibleAdHocCommand {
   private final String hostIp;
-  private final String module;
+  private final String module = "ansible.builtin.apt";
   private final Map<String, Object> args;
   private final boolean useBecome;
   private final String sshUser;
   private final String sshKeyPath;
 
-  private AnsibleAdHocCommand(Builder builder) {
+  private AnsibleAdHocAptCommand(Builder builder) {
     this.hostIp = builder.hostIp;
-    this.module = builder.module;
     this.args = builder.args;
     this.useBecome = builder.useBecome;
     this.sshUser = builder.sshUser;
@@ -57,11 +56,6 @@ public class AnsibleAdHocCommand {
       return this;
     }
 
-    public Builder module(String module) {
-      this.module = module;
-      return this;
-    }
-
     public Builder args(Map<String, Object> args) {
       this.args = args;
       return this;
@@ -82,8 +76,8 @@ public class AnsibleAdHocCommand {
       return this;
     }
 
-    public AnsibleAdHocCommand build() {
-      return new AnsibleAdHocCommand(this);
+    public AnsibleAdHocAptCommand build() {
+      return new AnsibleAdHocAptCommand(this);
     }
   }
 }

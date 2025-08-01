@@ -1,6 +1,6 @@
 package co.hyperflex.upgrader.tasks.kibana;
 
-import co.hyperflex.ansible.AnsibleAdHocCommand;
+import co.hyperflex.ansible.commands.AnsibleAdHocSystemdCommand;
 import co.hyperflex.upgrader.tasks.AbstractAnsibleTask;
 import co.hyperflex.upgrader.tasks.Context;
 import co.hyperflex.upgrader.tasks.TaskResult;
@@ -11,10 +11,9 @@ public class RestartKibanaServiceTask extends AbstractAnsibleTask {
   @Override
   public TaskResult run(Context context) {
 
-    AnsibleAdHocCommand cmd = new AnsibleAdHocCommand
+    AnsibleAdHocSystemdCommand cmd = new AnsibleAdHocSystemdCommand
         .Builder()
         .hostIp(context.node().getIp())
-        .module("ansible.builtin.systemd")
         .args(Map.of(
             "name", "kibana",
             "state", "restarted",

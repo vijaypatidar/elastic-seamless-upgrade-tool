@@ -5,10 +5,13 @@ import co.hyperflex.clients.elastic.ElasticClient;
 import co.hyperflex.clients.elastic.ElasticsearchClientProvider;
 import co.hyperflex.dtos.upgrades.CreateClusterUpgradeJobRequest;
 import co.hyperflex.dtos.upgrades.CreateClusterUpgradeJobResponse;
+import co.hyperflex.entities.cluster.ClusterNode;
 import co.hyperflex.entities.upgrade.ClusterUpgradeJob;
 import co.hyperflex.entities.upgrade.ClusterUpgradeStatus;
+import co.hyperflex.entities.upgrade.NodeUpgradeStatus;
 import co.hyperflex.exceptions.ConflictException;
 import co.hyperflex.exceptions.NotFoundException;
+import co.hyperflex.repositories.ClusterNodeRepository;
 import co.hyperflex.repositories.ClusterUpgradeJobRepository;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
@@ -21,11 +24,14 @@ public class ClusterUpgradeJobService {
   private static final Logger logger = LoggerFactory.getLogger(ClusterUpgradeJobService.class);
   private final ClusterUpgradeJobRepository clusterUpgradeJobRepository;
   private final ElasticsearchClientProvider elasticsearchClientProvider;
+  private final ClusterNodeRepository clusterNodeRepository;
 
   public ClusterUpgradeJobService(ClusterUpgradeJobRepository clusterUpgradeJobRepository,
-                                  ElasticsearchClientProvider elasticsearchClientProvider) {
+                                  ElasticsearchClientProvider elasticsearchClientProvider,
+                                  ClusterNodeRepository clusterNodeRepository) {
     this.clusterUpgradeJobRepository = clusterUpgradeJobRepository;
     this.elasticsearchClientProvider = elasticsearchClientProvider;
+    this.clusterNodeRepository = clusterNodeRepository;
   }
 
   public @NotNull ClusterUpgradeJob getActiveJobByClusterId(@NotNull String clusterId) {
@@ -69,8 +75,19 @@ public class ClusterUpgradeJobService {
 
     clusterUpgradeJobRepository.save(clusterUpgradeJob);
 
+    resetUpgradeStatus(clusterId);
+
     return new CreateClusterUpgradeJobResponse("Cluster upgrade job created successfully",
         clusterUpgradeJob.getId());
+  }
+
+  private void resetUpgradeStatus(@NotNull String clusterId) {
+    List<ClusterNode> clusterNodes = clusterNodeRepository.findByClusterId(clusterId);
+    clusterNodes.forEach(node -> {
+      node.setStatus(NodeUpgradeStatus.AVAILABLE);
+      node.setProgress(0);
+    });
+    clusterNodeRepository.saveAll(clusterNodes);
   }
 
 }
