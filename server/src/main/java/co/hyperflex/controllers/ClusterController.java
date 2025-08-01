@@ -3,9 +3,9 @@ package co.hyperflex.controllers;
 import co.hyperflex.dtos.GetDeprecationsResponse;
 import co.hyperflex.dtos.clusters.AddClusterRequest;
 import co.hyperflex.dtos.clusters.AddClusterResponse;
+import co.hyperflex.dtos.clusters.ClusterListItemResponse;
 import co.hyperflex.dtos.clusters.ClusterOverviewResponse;
 import co.hyperflex.dtos.clusters.ClusterVerifyResponse;
-import co.hyperflex.dtos.clusters.GetClusterListItemResponse;
 import co.hyperflex.dtos.clusters.GetClusterNodeResponse;
 import co.hyperflex.dtos.clusters.GetClusterResponse;
 import co.hyperflex.dtos.clusters.UpdateClusterRequest;
@@ -52,7 +52,7 @@ public class ClusterController {
   }
 
   @GetMapping("")
-  public List<GetClusterListItemResponse> getClusters() {
+  public List<ClusterListItemResponse> getClusters() {
     return clusterService.getClusters();
   }
 
