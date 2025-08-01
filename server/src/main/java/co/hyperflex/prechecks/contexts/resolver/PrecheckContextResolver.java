@@ -94,8 +94,7 @@ public class PrecheckContextResolver {
             precheckLogger
         );
       }
-      default ->
-          throw new IllegalArgumentException("Unknown precheck type: " + precheckRun.getType());
+      default -> throw new IllegalArgumentException("Unknown precheck type: " + precheckRun.getType());
     }
   }
 }

@@ -40,6 +40,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class ClusterUpgradeServiceTest {
 
+  private static final String CLUSTER_ID = "test-cluster-id";
   @Mock
   private ElasticsearchClientProvider elasticsearchClientProvider;
   @Mock
@@ -66,13 +67,10 @@ class ClusterUpgradeServiceTest {
   private ElasticClient elasticClient;
   @Mock
   private KibanaClient kibanaClient;
-
   @InjectMocks
   private ClusterUpgradeService clusterUpgradeService;
-
   private ClusterUpgradeJob clusterUpgradeJob;
   private ClusterInfoResponse.DeprecationCounts deprecationCounts;
-  private static final String CLUSTER_ID = "test-cluster-id";
 
   @BeforeEach
   void setUp() {

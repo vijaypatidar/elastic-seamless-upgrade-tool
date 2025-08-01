@@ -46,7 +46,7 @@ public class AnsibleService {
     }
   }
 
-  private Process getProcess(AnsibleAdHocCommand cmd) throws IOException {
+  protected Process getProcess(AnsibleAdHocCommand cmd) throws IOException {
     String inventory = cmd.getHostIp() + ",";
     List<String> command = new ArrayList<>();
     command.add("ansible");
