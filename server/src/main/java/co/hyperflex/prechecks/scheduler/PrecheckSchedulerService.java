@@ -78,7 +78,7 @@ public class PrecheckSchedulerService {
               NodePrecheckRun precheckRun = new NodePrecheckRun();
               precheckRun.setPrecheckId(precheck.getId());
               precheckRun.setNode(
-                  new NodePrecheckRun.NodeInfo(node.id(), node.id(), node.ip())
+                  new NodePrecheckRun.NodeInfo(node.id(), node.name(), node.ip())
               );
               precheckRun.setPrecheckGroupId(precheckGroupId);
               precheckRun.setSeverity(precheck.getSeverity());
