@@ -104,7 +104,7 @@ public class DeprecationService {
             item.message(),
             item.details(),
             item.level(),
-            List.of(item.url())
+            List.of(Optional.ofNullable(item.url()).orElse(""))
         ));
       });
     }

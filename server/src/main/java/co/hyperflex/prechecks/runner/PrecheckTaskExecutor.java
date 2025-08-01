@@ -61,8 +61,7 @@ public class PrecheckTaskExecutor {
           case NODE -> ((BaseNodePrecheck) precheck).run((NodeContext) context);
           case INDEX -> ((BaseIndexPrecheck) precheck).run((IndexContext) context);
           case CLUSTER -> ((BaseClusterPrecheck) precheck).run((ClusterContext) context);
-          default ->
-              throw new IllegalArgumentException("Unknown precheck type: " + record.getType());
+          default -> throw new IllegalArgumentException("Unknown precheck type: " + record.getType());
         }
 
         record.setStatus(PrecheckStatus.COMPLETED);
