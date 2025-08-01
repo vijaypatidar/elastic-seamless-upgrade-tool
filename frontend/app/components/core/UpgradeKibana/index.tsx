@@ -207,7 +207,7 @@ function UpgradeKibana({ clusterType }: TUpgradeKibana) {
 				case "action":
 					return (
 						<Box className="flex justify-end">
-							{row?.disabled && row.status != "UPGRADING" ? (
+							{row?.disabled && (row.status != "UPGRADING" && row.status != "UPGRADED") ? (
 								<Box
 									className="flex gap-1 items-center"
 									color="#EFC93D"

@@ -96,9 +96,9 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 
 	const getCluster = async () => {
 		await axiosJSON
-			.get("/clusters/verify")
+			.get("/clusters/" + clusterId)
 			.then((res) => {
-				const cluster = res?.data?.cluster
+				const cluster = res?.data
 				cluster && setInitialValues({
 					name: cluster.name,
 					type: cluster.type,
@@ -118,7 +118,6 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 							storedOnServer: true,
 						})) || [],
 				})
-
 				formik.resetForm()
 			})
 			.catch((err) => {

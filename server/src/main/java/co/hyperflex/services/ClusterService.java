@@ -147,6 +147,10 @@ public class ClusterService {
     throw new NotFoundException("Cluster not found with id: " + clusterId);
   }
 
+  public List<GetClusterNodeResponse> getNodes(String clusterId) {
+    return this.getNodes(clusterId, null);
+  }
+
   public List<GetClusterNodeResponse> getNodes(String clusterId, ClusterNodeType type) {
     List<ClusterNode> clusterNodes;
 
