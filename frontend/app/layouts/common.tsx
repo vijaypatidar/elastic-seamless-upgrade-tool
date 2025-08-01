@@ -12,7 +12,7 @@ import { cn } from "~/lib/Utils"
 import { useSocketStore } from "~/store/socket"
 
 function Common() {
-	const { socket, isConnected, connect, disconnect } = useSocketStore()
+	const { socket, connect, disconnect } = useSocketStore()
 	const { isOpen, onOpen, onOpenChange } = useDisclosure()
 	const { isOpen: isSettingsOpen, onOpen: onSettingsOpen, onOpenChange: onSettingsOpenChange } = useDisclosure()
 	const { isOpen: isEditOpen, onOpen: onEditOpen, onOpenChange: onEditOpenChange } = useDisclosure()
@@ -38,9 +38,9 @@ function Common() {
 							"flex flex-col gap-[6px] items-start bg-[linear-gradient(88deg,_rgba(61,59,68,0.2)_1.02%,_rgba(71,67,81,0.2)_98.21%)] p-3 border border-solid",
 						],
 						{
-							"border-[#384F45]": message.notificationType === "success",
-							"border-[#623834]": message.notificationType === "error",
-							"border-[#4F422A]": message.notificationType === "warning",
+							"border-[#384F45]": message.notificationType === "SUCCESS",
+							"border-[#623834]": message.notificationType === "ERROR",
+							"border-[#4F422A]": message.notificationType === "WARNING",
 						}
 					),
 					content: "items-start",
@@ -48,9 +48,9 @@ function Common() {
 				},
 				closeIcon: <FiX size="24px" />,
 				icon:
-					message.notificationType === "success" ? (
+					message.notificationType === "SUCCESS" ? (
 						<TickCircle variant="Bold" color="#4CDB9D" size="20px" />
-					) : message.notificationType === "error" ? (
+					) : message.notificationType === "ERROR" ? (
 						<Warning2 variant="Bold" color="#E75547" size="20px" />
 					) : (
 						<Refresh2 variant="Bold" color="#F4B82C" size="20px" />
