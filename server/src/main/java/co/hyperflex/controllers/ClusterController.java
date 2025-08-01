@@ -53,8 +53,7 @@ public class ClusterController {
 
   @GetMapping("")
   public List<GetClusterListItemResponse> getClusters() {
-    return clusterService.getClusters().stream()
-        .map(item -> new GetClusterListItemResponse(item.getId(), item.getName(), item.getType(), "8.0.0", "green")).toList();
+    return clusterService.getClusters();
   }
 
   @GetMapping("/{clusterId}")
@@ -80,7 +79,7 @@ public class ClusterController {
 
   @GetMapping("/verify")
   public ClusterVerifyResponse verify() {
-    List<GetClusterResponse> clusters = clusterService.getClusters();
+    List<GetClusterResponse> clusters = clusterService.getClustersList();
     if (clusters.isEmpty()) {
       return new ClusterVerifyResponse(false, null);
     } else {

@@ -1,11 +1,8 @@
 package co.hyperflex.prechecks.concrete.cluster;
 
-import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch.cat.health.HealthRecord;
 import co.hyperflex.prechecks.contexts.ClusterContext;
 import co.hyperflex.prechecks.core.BaseClusterPrecheck;
 import co.hyperflex.prechecks.core.PrecheckLogger;
-import java.io.IOException;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -18,12 +15,9 @@ public class ClusterHealthPrecheck extends BaseClusterPrecheck {
 
   @Override
   public void run(ClusterContext context) {
-    ElasticsearchClient client = context.getElasticClient().getElasticsearchClient();
     PrecheckLogger logger = context.getLogger();
-
     try {
-      HealthRecord health = client.cat().health().valueBody().get(0);
-      String status = health.status();
+      String status = context.getElasticClient().getHealthStatus();
       boolean isHealthy = "green".equalsIgnoreCase(status);
 
       String message = String.format("Cluster health status: '%s'. Expected: 'green'.", status);
@@ -33,8 +27,7 @@ public class ClusterHealthPrecheck extends BaseClusterPrecheck {
         logger.error("Cluster health check failed. " + message);
         throw new RuntimeException("Cluster health check failed. " + message);
       }
-
-    } catch (IOException e) {
+    } catch (Exception e) {
       logger.error("Failed to check cluster health", e);
       throw new RuntimeException("Failed to check cluster health", e);
     }
