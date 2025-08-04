@@ -89,7 +89,11 @@ public class PrecheckRunService {
                         && nodePrecheckRun.getNode().getId().equals(entry.getKey())).findFirst()
                 .orElseThrow()).getNode();
 
-            List<PrecheckStatus> statuses = entry.getValue().stream().map(GetPrecheckEntry::status).toList();
+            List<PrecheckStatus> statuses = entry.getValue()
+                .stream()
+                .filter(precheckEntry -> precheckEntry.severity() == PrecheckSeverity.ERROR)
+                .map(GetPrecheckEntry::status)
+                .toList();
             PrecheckStatus status = getMergedPrecheckStatus(statuses);
             return new GetNodePrecheckGroup(nodeInfo.getId(), nodeInfo.getIp(), nodeInfo.getName(),
                 status, entry.getValue());
@@ -97,7 +101,11 @@ public class PrecheckRunService {
 
           List<GetIndexPrecheckGroup> indexGroups =
               indexPrechecks.entrySet().stream().map(entry -> {
-                List<PrecheckStatus> statuses = entry.getValue().stream().map(GetPrecheckEntry::status).toList();
+                List<PrecheckStatus> statuses = entry.getValue()
+                    .stream()
+                    .filter(precheckEntry -> precheckEntry.severity() == PrecheckSeverity.ERROR)
+                    .map(GetPrecheckEntry::status)
+                    .toList();
                 PrecheckStatus status = getMergedPrecheckStatus(statuses);
                 return new GetIndexPrecheckGroup(entry.getKey(), entry.getKey(), status,
                     entry.getValue());

@@ -3,6 +3,7 @@ package co.hyperflex.prechecks.concrete.node.kibana.os;
 import co.hyperflex.clients.kibana.KibanaClient;
 import co.hyperflex.clients.kibana.dto.GetKibanaStatusResponse;
 import co.hyperflex.clients.kibana.dto.OsStats;
+import co.hyperflex.entities.precheck.PrecheckSeverity;
 import co.hyperflex.prechecks.contexts.NodeContext;
 import co.hyperflex.prechecks.core.BaseKibanaNodePrecheck;
 import co.hyperflex.prechecks.core.PrecheckLogger;
@@ -13,6 +14,11 @@ public class KibanaNodeMemoryHealthPrecheck extends BaseKibanaNodePrecheck {
   @Override
   public String getName() {
     return "Memory Utilization check";
+  }
+
+  @Override
+  public PrecheckSeverity getSeverity() {
+    return PrecheckSeverity.WARNING;
   }
 
   @Override
@@ -38,7 +44,7 @@ public class KibanaNodeMemoryHealthPrecheck extends BaseKibanaNodePrecheck {
     int memoryPercent = (int) ((usedMemory * 100.0) / totalMemory);
 
     long bitsInMB = 1024 * 1024;
-    logger.info("Memory - Total: %s MB, Free: %s MB, Utilised: %s", totalMemory / bitsInMB,
+    logger.info("Memory - Total: %s MB, Free: %s MB, Utilised: %s%%", totalMemory / bitsInMB,
         freeMemory / bitsInMB, memoryPercent);
 
     if (memoryPercent > 90) {

@@ -1,5 +1,5 @@
 import { Tab, Tabs } from "@heroui/react"
-import { Box, Breadcrumbs, Typography } from "@mui/material"
+import { Box, Breadcrumbs, Tooltip, Typography } from "@mui/material"
 import { useMutation } from "@tanstack/react-query"
 import { ArrowRight2, Convertshape2, ExportCurve, Refresh } from "iconsax-react"
 import { useEffect, useState } from "react"
@@ -89,9 +89,11 @@ function PreCheckPage() {
 
 				<Box className="flex gap-[6px]">
 					<Box className="flex flex-row gap-[6px]">
-						<OutlinedBorderButton onClick={HandleRerun} disabled={isPending}>
-							<Refresh color="currentColor" size="14px" /> {isPending ? "Running" : "Rerun"}
-						</OutlinedBorderButton>
+						<Tooltip title="Rerun all prechecks" arrow>
+							<OutlinedBorderButton onClick={HandleRerun} disabled={isPending}>
+								<Refresh color="currentColor" size="14px" /> {isPending ? "Running" : "Rerun"}
+							</OutlinedBorderButton>
+						</Tooltip>
 						<OutlinedBorderButton onClick={handleExport} disable={isExportPending}>
 							<ExportCurve color="currentColor" size="14px" /> {isExportPending ? "Exporting" : "Export"}
 						</OutlinedBorderButton>
