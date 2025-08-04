@@ -27,6 +27,7 @@ import co.hyperflex.repositories.PrecheckRunRepository;
 import co.hyperflex.repositories.projection.PrecheckStatusAndSeverityView;
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotNull;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -70,7 +71,7 @@ public class PrecheckRunService {
           Map<String, List<GetPrecheckEntry>> nodePrechecks =
               precheckRuns.stream().filter(pr -> pr instanceof NodePrecheckRun)
                   .map(pr -> (NodePrecheckRun) pr).collect(
-                      Collectors.groupingBy(pr -> pr.getNode().getId(),
+                      Collectors.groupingBy(pr -> pr.getNode().id(),
                           Collectors.mapping(precheckMapper::toPrecheckEntry, Collectors.toList())));
 
           Map<String, List<GetPrecheckEntry>> indexPrechecks =
@@ -84,20 +85,29 @@ public class PrecheckRunService {
                   .map(precheckMapper::toClusterPrecheckEntry).toList();
 
           List<GetNodePrecheckGroup> nodeGroups = nodePrechecks.entrySet().stream().map(entry -> {
+
             NodePrecheckRun.NodeInfo nodeInfo = ((NodePrecheckRun) precheckRuns.stream().filter(
                     pr -> pr instanceof NodePrecheckRun nodePrecheckRun
-                        && nodePrecheckRun.getNode().getId().equals(entry.getKey())).findFirst()
+                        && nodePrecheckRun.getNode().id().equals(entry.getKey())).findFirst()
                 .orElseThrow()).getNode();
 
-            List<PrecheckStatus> statuses = entry.getValue().stream().map(GetPrecheckEntry::status).toList();
+            List<PrecheckStatus> statuses = entry.getValue()
+                .stream()
+                .filter(precheckEntry -> precheckEntry.severity() == PrecheckSeverity.ERROR)
+                .map(GetPrecheckEntry::status)
+                .toList();
             PrecheckStatus status = getMergedPrecheckStatus(statuses);
-            return new GetNodePrecheckGroup(nodeInfo.getId(), nodeInfo.getIp(), nodeInfo.getName(),
-                status, entry.getValue());
-          }).toList();
+            return new GetNodePrecheckGroup(nodeInfo.id(), nodeInfo.ip(), nodeInfo.name(),
+                status, entry.getValue(), nodeInfo.rank());
+          }).sorted(Comparator.comparingInt(GetNodePrecheckGroup::rank)).toList();
 
           List<GetIndexPrecheckGroup> indexGroups =
               indexPrechecks.entrySet().stream().map(entry -> {
-                List<PrecheckStatus> statuses = entry.getValue().stream().map(GetPrecheckEntry::status).toList();
+                List<PrecheckStatus> statuses = entry.getValue()
+                    .stream()
+                    .filter(precheckEntry -> precheckEntry.severity() == PrecheckSeverity.ERROR)
+                    .map(GetPrecheckEntry::status)
+                    .toList();
                 PrecheckStatus status = getMergedPrecheckStatus(statuses);
                 return new GetIndexPrecheckGroup(entry.getKey(), entry.getKey(), status,
                     entry.getValue());

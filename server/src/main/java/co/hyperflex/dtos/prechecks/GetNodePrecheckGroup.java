@@ -8,6 +8,6 @@ public record GetNodePrecheckGroup(
     String ip,
     String name,
     PrecheckStatus status,
-    List<GetPrecheckEntry> prechecks
-) {
+    List<GetPrecheckEntry> prechecks,
+    int rank) {
 }
