@@ -9,7 +9,7 @@ public record ClusterInfoResponse(
     @NotNull Kibana kibana,
     @NotNull Precheck precheck,
     @Nullable String deploymentId
-    ) {
+) {
   public record Elastic(
       boolean isUpgradable,
       DeprecationCounts deprecationCounts,
