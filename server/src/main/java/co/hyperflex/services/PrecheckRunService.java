@@ -232,4 +232,8 @@ public class PrecheckRunService {
     precheckGroupRepository.save(precheckGroup);
     return new CreatePrecheckGroupResponse(precheckGroup.getId());
   }
+
+  public void addLog(String precheckRunId, String message) {
+
+  }
 }
