@@ -6,8 +6,8 @@ import co.hyperflex.clients.elastic.ElasticClient;
 import co.hyperflex.entities.precheck.PrecheckSeverity;
 import co.hyperflex.prechecks.contexts.NodeContext;
 import co.hyperflex.prechecks.core.BaseElasticNodePrecheck;
-import co.hyperflex.prechecks.core.PrecheckLogger;
 import java.io.IOException;
+import org.slf4j.Logger;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -25,7 +25,7 @@ public class ElasticNodeMemoryHealthPrecheck extends BaseElasticNodePrecheck {
   @Override
   public void run(NodeContext context) {
     try {
-      PrecheckLogger logger = context.getLogger();
+      Logger logger = context.getLogger();
       ElasticClient elasticClient = context.getElasticClient();
       String nodeId = context.getNode().getId();
       NodesStatsResponse stats =

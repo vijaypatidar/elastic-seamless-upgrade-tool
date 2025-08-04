@@ -9,10 +9,10 @@ import co.elastic.clients.elasticsearch.indices.get_mapping.IndexMappingRecord;
 import co.hyperflex.entities.precheck.PrecheckSeverity;
 import co.hyperflex.prechecks.contexts.IndexContext;
 import co.hyperflex.prechecks.core.BaseIndexPrecheck;
-import co.hyperflex.prechecks.core.PrecheckLogger;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
+import org.slf4j.Logger;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -29,7 +29,7 @@ public class IndexFieldCountPrecheck extends BaseIndexPrecheck {
   public void run(IndexContext context) {
     String indexName = context.getIndexName();
     ElasticsearchClient elasticsearchClient = context.getElasticClient().getElasticsearchClient();
-    PrecheckLogger logger = context.getLogger();
+    Logger logger = context.getLogger();
     try {
       GetMappingResponse response =
           elasticsearchClient.indices().getMapping(GetMappingRequest.of(r -> r.index(indexName)));
@@ -38,18 +38,18 @@ public class IndexFieldCountPrecheck extends BaseIndexPrecheck {
 
       if (Optional.ofNullable(indexMapping).map(IndexMappingRecord::mappings)
           .map(TypeMapping::properties).isEmpty()) {
-        logger.info("Index [%s] has no properties defined.", indexName);
+        logger.info("Index [{}] has no properties defined.", indexName);
         return;
       }
 
       Map<String, Property> properties = indexMapping.mappings().properties();
       int fieldCount = countFields(properties);
 
-      logger.info("Index [%s] has %s mapped fields.", indexName, fieldCount);
+      logger.info("Index [{}] has {} mapped fields.", indexName, fieldCount);
 
       if (fieldCount > fieldLimit) {
         logger.warn(
-            "Index [%s] exceeds the recommended field count (%s > %s). Consider flattening mappings.",
+            "Index [{}] exceeds the recommended field count ({} > {}). Consider flattening mappings.",
             indexName, fieldCount, fieldLimit);
       }
     } catch (IOException e) {

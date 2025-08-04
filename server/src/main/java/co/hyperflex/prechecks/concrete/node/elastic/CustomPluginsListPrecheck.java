@@ -8,12 +8,12 @@ import co.elastic.clients.elasticsearch.nodes.info.NodeInfo;
 import co.hyperflex.entities.precheck.PrecheckSeverity;
 import co.hyperflex.prechecks.contexts.NodeContext;
 import co.hyperflex.prechecks.core.BaseElasticNodePrecheck;
-import co.hyperflex.prechecks.core.PrecheckLogger;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import org.slf4j.Logger;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -52,7 +52,7 @@ public class CustomPluginsListPrecheck extends BaseElasticNodePrecheck {
   public void run(NodeContext context) {
     String nodeId = context.getNode().getId();
     ElasticsearchClient client = context.getElasticClient().getElasticsearchClient();
-    PrecheckLogger logger = context.getLogger();
+    Logger logger = context.getLogger();
 
     try {
       NodesInfoResponse nodeInfoResponse = client.nodes().info(r -> r

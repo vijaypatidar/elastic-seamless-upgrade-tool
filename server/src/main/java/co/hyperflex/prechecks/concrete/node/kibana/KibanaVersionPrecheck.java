@@ -2,7 +2,7 @@ package co.hyperflex.prechecks.concrete.node.kibana;
 
 import co.hyperflex.prechecks.contexts.NodeContext;
 import co.hyperflex.prechecks.core.BaseKibanaNodePrecheck;
-import co.hyperflex.prechecks.core.PrecheckLogger;
+import org.slf4j.Logger;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -18,7 +18,7 @@ public class KibanaVersionPrecheck extends BaseKibanaNodePrecheck {
     String expectedVersion = context.getClusterUpgradeJob().getCurrentVersion();
 
     String nodeIp = context.getNode().getIp();
-    PrecheckLogger logger = context.getLogger();
+    Logger logger = context.getLogger();
 
     try {
       String actualVersion = context.getKibanaClient().getKibanaVersion(nodeIp);

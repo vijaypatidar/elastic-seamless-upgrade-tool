@@ -27,6 +27,7 @@ import co.hyperflex.repositories.PrecheckRunRepository;
 import co.hyperflex.repositories.projection.PrecheckStatusAndSeverityView;
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotNull;
+import java.util.Date;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
@@ -49,9 +50,8 @@ public class PrecheckRunService {
   private final MongoTemplate mongoTemplate;
   private final PrecheckMapper precheckMapper;
 
-  public PrecheckRunService(PrecheckRunRepository precheckRunRepository,
-                            PrecheckGroupRepository precheckGroupRepository, BreakingChangeRepository breakingChangeRepository,
-                            ClusterUpgradeJobService clusterUpgradeJobService,
+  public PrecheckRunService(PrecheckRunRepository precheckRunRepository, PrecheckGroupRepository precheckGroupRepository,
+                            BreakingChangeRepository breakingChangeRepository, ClusterUpgradeJobService clusterUpgradeJobService,
                             MongoTemplate mongoTemplate, PrecheckMapper precheckMapper) {
     this.precheckRunRepository = precheckRunRepository;
     this.precheckGroupRepository = precheckGroupRepository;
@@ -180,10 +180,6 @@ public class PrecheckRunService {
     mongoTemplate.updateMulti(query, update, PrecheckRun.class);
   }
 
-  public List<PrecheckRun> getPendingPrecheckRuns() {
-    return precheckRunRepository.findTop40ByStatus(PrecheckStatus.PENDING);
-  }
-
   private PrecheckStatus getMergedPrecheckStatus(List<PrecheckStatus> statuses) {
     boolean hasCompleted = false;
     boolean hasPending = false;
@@ -234,6 +230,24 @@ public class PrecheckRunService {
   }
 
   public void addLog(String precheckRunId, String message) {
+    precheckRunRepository.addLog(precheckRunId, message);
+  }
 
+  public List<PrecheckRun> getPendingPrechecks() {
+    return precheckRunRepository.getPendingPrechecks();
+  }
+
+  public void updatePrecheckStatus(String id, PrecheckStatus precheckStatus) {
+    Update update = new Update().set(PrecheckRunRepository.STATUS, precheckStatus);
+    if (precheckStatus == PrecheckStatus.RUNNING) {
+      update.set("startedAt", new Date());
+      update.set("logs", new LinkedList<>());
+    } else if (precheckStatus == PrecheckStatus.PENDING) {
+      update.set("endedAt", null);
+      update.set("startedAt", null);
+    } else if (precheckStatus == PrecheckStatus.COMPLETED) {
+      update.set("endedAt", new Date());
+    }
+    precheckRunRepository.updateById(id, update);
   }
 }

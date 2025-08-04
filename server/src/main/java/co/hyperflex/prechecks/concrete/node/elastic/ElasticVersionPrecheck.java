@@ -5,9 +5,9 @@ import co.elastic.clients.elasticsearch.nodes.NodesInfoResponse;
 import co.elastic.clients.elasticsearch.nodes.info.NodeInfo;
 import co.hyperflex.prechecks.contexts.NodeContext;
 import co.hyperflex.prechecks.core.BaseElasticNodePrecheck;
-import co.hyperflex.prechecks.core.PrecheckLogger;
 import java.io.IOException;
 import java.util.Map;
+import org.slf4j.Logger;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -28,7 +28,7 @@ public class ElasticVersionPrecheck extends BaseElasticNodePrecheck {
 
     String expectedVersion = context.getClusterUpgradeJob().getCurrentVersion();
     ElasticsearchClient client = context.getElasticClient().getElasticsearchClient();
-    PrecheckLogger logger = context.getLogger();
+    Logger logger = context.getLogger();
 
     try {
       NodesInfoResponse response = client.nodes().info(r -> r.nodeId(nodeId));
@@ -41,15 +41,12 @@ public class ElasticVersionPrecheck extends BaseElasticNodePrecheck {
 
       String actualVersion = node.version();
       if (expectedVersion.equals(actualVersion)) {
-        logger.info("Node [%s] is running on the expected version: %s.", node.name(),
+        logger.info("Node [{}] is running on the expected version: {}.", node.name(),
             expectedVersion);
       } else {
-        String msg = String.format(
-            "Node [%s] version mismatch: expected %s, but found %s.",
-            node.name(), expectedVersion, actualVersion
-        );
-        logger.error(msg);
-        throw new RuntimeException(msg); // Similar to throwing ConflictError in Node.js
+        logger.error("Node [{}] version mismatch: expected {}, but found {}.",
+            node.name(), expectedVersion, actualVersion);
+        throw new RuntimeException();
       }
 
     } catch (IOException e) {

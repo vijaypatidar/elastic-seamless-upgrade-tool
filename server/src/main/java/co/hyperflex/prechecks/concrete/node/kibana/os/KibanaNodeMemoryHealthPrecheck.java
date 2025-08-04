@@ -6,7 +6,7 @@ import co.hyperflex.clients.kibana.dto.OsStats;
 import co.hyperflex.entities.precheck.PrecheckSeverity;
 import co.hyperflex.prechecks.contexts.NodeContext;
 import co.hyperflex.prechecks.core.BaseKibanaNodePrecheck;
-import co.hyperflex.prechecks.core.PrecheckLogger;
+import org.slf4j.Logger;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -23,7 +23,7 @@ public class KibanaNodeMemoryHealthPrecheck extends BaseKibanaNodePrecheck {
 
   @Override
   public void run(NodeContext context) {
-    PrecheckLogger logger = context.getLogger();
+    Logger logger = context.getLogger();
     String nodeId = context.getNode().getId();
     KibanaClient kibanaClient = context.getKibanaClient();
 

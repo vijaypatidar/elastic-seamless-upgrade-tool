@@ -16,7 +16,6 @@ import co.hyperflex.prechecks.contexts.ClusterContext;
 import co.hyperflex.prechecks.contexts.IndexContext;
 import co.hyperflex.prechecks.contexts.NodeContext;
 import co.hyperflex.prechecks.contexts.PrecheckContext;
-import co.hyperflex.prechecks.core.DBPrecheckLogger;
 import co.hyperflex.repositories.ClusterNodeRepository;
 import co.hyperflex.repositories.ClusterRepository;
 import co.hyperflex.services.ClusterUpgradeJobService;
@@ -59,7 +58,6 @@ public class PrecheckContextResolver {
     KibanaClient kibanaClient =
         kibanaClientProvider.getKibanaClientByClusterId(clusterId);
 
-    DBPrecheckLogger precheckLogger = new DBPrecheckLogger(precheckRun);
 
     switch (precheckRun) {
       case IndexPrecheckRun indexPrecheckRun -> {
@@ -69,7 +67,7 @@ public class PrecheckContextResolver {
             kibanaClient,
             indexPrecheckRun.getIndex().getName(),
             clusterUpgradeJob,
-            precheckLogger
+            LOG
         );
       }
       case NodePrecheckRun nodePrecheckRun -> {
@@ -82,7 +80,7 @@ public class PrecheckContextResolver {
             kibanaClient,
             clusterNode,
             clusterUpgradeJob,
-            precheckLogger
+            LOG
         );
       }
       case ClusterPrecheckRun clusterPrecheckRun -> {
@@ -91,7 +89,7 @@ public class PrecheckContextResolver {
             elasticClient,
             kibanaClient,
             clusterUpgradeJob,
-            precheckLogger
+            LOG
         );
       }
       default -> throw new IllegalArgumentException("Unknown precheck type: " + precheckRun.getType());

@@ -5,9 +5,9 @@ import co.elastic.clients.elasticsearch.cat.nodes.NodesRecord;
 import co.hyperflex.entities.precheck.PrecheckSeverity;
 import co.hyperflex.prechecks.contexts.ClusterContext;
 import co.hyperflex.prechecks.core.BaseClusterPrecheck;
-import co.hyperflex.prechecks.core.PrecheckLogger;
 import java.io.IOException;
 import java.util.List;
+import org.slf4j.Logger;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -26,7 +26,7 @@ public class MasterEligibleNodesPrecheck extends BaseClusterPrecheck {
   @Override
   public void run(ClusterContext context) {
     ElasticsearchClient client = context.getElasticClient().getElasticsearchClient();
-    PrecheckLogger logger = context.getLogger();
+    Logger logger = context.getLogger();
 
     try {
       List<NodesRecord> nodes = client.cat().nodes().valueBody();
@@ -39,14 +39,14 @@ public class MasterEligibleNodesPrecheck extends BaseClusterPrecheck {
 
       int masterCount = masterEligibleNodes.size();
 
-      logger.info("Found %s master-eligible node(s) out of %s total node(s).", masterCount,
+      logger.info("Found {} master-eligible node(s) out of {} total node(s).", masterCount,
           totalNodes);
 
       boolean isSmallCluster = totalNodes <= 3;
 
       if (isSmallCluster) {
         logger.info(
-            "Small cluster detected (%s total node%s). For production high availability,"
+            "Small cluster detected ({} total node{}). For production high availability,"
                 + " it's recommended to have at least 3 master-eligible nodes.",
             totalNodes,
             totalNodes > 1 ? "s" : ""
@@ -56,8 +56,8 @@ public class MasterEligibleNodesPrecheck extends BaseClusterPrecheck {
 
       if (masterCount % 2 == 0) {
         logger.warn(
-            "Even number (%s) of master-eligible nodes detected. Consider using an "
-                + "odd number (e.g., %s) to avoid split-brain scenarios.",
+            "Even number ({}) of master-eligible nodes detected. Consider using an "
+                + "odd number (e.g., {}) to avoid split-brain scenarios.",
             masterCount,
             masterCount + 1
         );
@@ -67,8 +67,8 @@ public class MasterEligibleNodesPrecheck extends BaseClusterPrecheck {
       int toleratedFailures = masterCount - quorum;
 
       logger.info(
-          "Master quorum requirement: %s out of %s master-eligible nodes."
-              + " Cluster can tolerate up to %s failure(s) and still elect a master.",
+          "Master quorum requirement: {} out of {} master-eligible nodes."
+              + " Cluster can tolerate up to {} failure(s) and still elect a master.",
           quorum,
           masterCount,
           toleratedFailures
@@ -76,19 +76,14 @@ public class MasterEligibleNodesPrecheck extends BaseClusterPrecheck {
 
       if (masterCount < 3) {
         logger.error(
-            "Only %s master-eligible node%s detected. This is below the recommended"
-                + " minimum of 3 for safe master elections.",
+            "Only {} master-eligible node{} detected. This is below the recommended minimum of 3 for safe master elections.",
             masterCount,
             masterCount > 1 ? "s" : ""
         );
-
-        throw new RuntimeException(
-            String.format(
-                "Insufficient master-eligible nodes: found %s,"
-                    +
-                    " need at least 3 for high availability.",
-                masterCount)
-        );
+        logger.error(
+            "Insufficient master-eligible nodes: found {} need at least 3 for high availability.",
+            masterCount);
+        throw new RuntimeException();
       }
 
     } catch (IOException e) {

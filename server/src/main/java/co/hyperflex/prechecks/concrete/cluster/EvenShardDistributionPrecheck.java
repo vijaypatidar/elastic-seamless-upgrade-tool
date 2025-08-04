@@ -5,7 +5,6 @@ import co.elastic.clients.elasticsearch.cat.shards.ShardsRecord;
 import co.hyperflex.entities.precheck.PrecheckSeverity;
 import co.hyperflex.prechecks.contexts.ClusterContext;
 import co.hyperflex.prechecks.core.BaseClusterPrecheck;
-import co.hyperflex.prechecks.core.PrecheckLogger;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -13,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -31,7 +31,7 @@ public class EvenShardDistributionPrecheck extends BaseClusterPrecheck {
   @Override
   public void run(ClusterContext context) {
     ElasticsearchClient client = context.getElasticClient().getElasticsearchClient();
-    PrecheckLogger logger = context.getLogger();
+    Logger logger = context.getLogger();
 
     try {
       List<ShardsRecord> shards = client.cat().shards().valueBody();
@@ -49,7 +49,7 @@ public class EvenShardDistributionPrecheck extends BaseClusterPrecheck {
           .map(e -> String.format("%s: %d", e.getKey(), e.getValue()))
           .collect(Collectors.toList());
 
-      logger.info("Shard distribution per node:\n%s", String.join("\n", nodeShardInfo));
+      logger.info("Shard distribution per node:\n{}", String.join("\n", nodeShardInfo));
 
       List<Integer> counts = new ArrayList<>(shardCountByNode.values());
       if (counts.isEmpty()) {
@@ -61,12 +61,10 @@ public class EvenShardDistributionPrecheck extends BaseClusterPrecheck {
       int spread = max - min;
 
       if (spread > 10) {
-        String msg = String.format(
-            "Uneven shard distribution detected. Max: %d, Min: %d, Spread: %d. Expected spread <= 10.",
+        logger.error(
+            "Uneven shard distribution detected. Max: {}, Min: {}, Spread: {}. Expected spread <= 10.",
             max, min, spread);
-        logger.error(msg);
-        throw new RuntimeException(
-        );
+        throw new RuntimeException();
       }
 
     } catch (IOException e) {

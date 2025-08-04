@@ -4,9 +4,9 @@ import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch.cat.shards.ShardsRecord;
 import co.hyperflex.prechecks.contexts.ClusterContext;
 import co.hyperflex.prechecks.core.BaseClusterPrecheck;
-import co.hyperflex.prechecks.core.PrecheckLogger;
 import java.io.IOException;
 import java.util.List;
+import org.slf4j.Logger;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -20,7 +20,7 @@ public class NoRelocatingShardsPrecheck extends BaseClusterPrecheck {
   @Override
   public void run(ClusterContext context) {
     ElasticsearchClient client = context.getElasticClient().getElasticsearchClient();
-    PrecheckLogger logger = context.getLogger();
+    Logger logger = context.getLogger();
 
     try {
 

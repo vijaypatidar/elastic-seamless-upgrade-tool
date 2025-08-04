@@ -7,9 +7,9 @@ import co.elastic.clients.elasticsearch.nodes.Stats;
 import co.hyperflex.entities.precheck.PrecheckSeverity;
 import co.hyperflex.prechecks.contexts.NodeContext;
 import co.hyperflex.prechecks.core.BaseElasticNodePrecheck;
-import co.hyperflex.prechecks.core.PrecheckLogger;
 import java.io.IOException;
 import java.util.Map;
+import org.slf4j.Logger;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -31,7 +31,7 @@ public class FileDescriptorLimitPrecheck extends BaseElasticNodePrecheck {
   public void run(NodeContext context) {
     String nodeId = context.getNode().getId();
     ElasticsearchClient client = context.getElasticClient().getElasticsearchClient();
-    PrecheckLogger logger = context.getLogger();
+    Logger logger = context.getLogger();
 
     try {
       NodesStatsResponse response = client.nodes().stats(r -> r.nodeId(nodeId).metric("process"));

@@ -14,12 +14,13 @@ import co.hyperflex.prechecks.core.BaseNodePrecheck;
 import co.hyperflex.prechecks.core.Precheck;
 import co.hyperflex.prechecks.registry.PrecheckRegistry;
 import co.hyperflex.repositories.PrecheckRunRepository;
+import co.hyperflex.services.PrecheckRunService;
 import co.hyperflex.services.notifications.NotificationService;
 import co.hyperflex.services.notifications.PrecheckProgressChangeEvent;
-import java.util.Date;
 import java.util.concurrent.CompletableFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -32,30 +33,29 @@ public class PrecheckTaskExecutor {
   private final PrecheckRegistry precheckRegistry;
   private final PrecheckContextResolver precheckContextResolver;
   private final NotificationService notificationService;
+  private final PrecheckRunService precheckRunService;
 
-  public PrecheckTaskExecutor(PrecheckRunRepository precheckRunRepository,
-                              PrecheckRegistry precheckRegistry,
-                              PrecheckContextResolver precheckContextResolver,
-                              NotificationService notificationService) {
+  public PrecheckTaskExecutor(PrecheckRunRepository precheckRunRepository, PrecheckRegistry precheckRegistry,
+                              PrecheckContextResolver precheckContextResolver, NotificationService notificationService,
+                              PrecheckRunService precheckRunService) {
     this.precheckRunRepository = precheckRunRepository;
     this.precheckRegistry = precheckRegistry;
     this.precheckContextResolver = precheckContextResolver;
     this.notificationService = notificationService;
+    this.precheckRunService = precheckRunService;
   }
 
   @Async("precheckAsyncExecutor")
   public CompletableFuture<Void> executeOne(PrecheckRun record) {
     try {
-      record.setStatus(PrecheckStatus.RUNNING);
-      record.setStartedAt(new Date());
-      record.getLogs().clear();
-      precheckRunRepository.save(record);
+      MDC.put("precheckRunId", record.getId());
+      precheckRunService.updatePrecheckStatus(record.getId(), PrecheckStatus.RUNNING);
       notificationService.sendNotification(new PrecheckProgressChangeEvent());
 
       PrecheckContext context = precheckContextResolver.resolveContext(record);
       try {
-        Precheck<?> precheck = precheckRegistry.getById(record.getPrecheckId()).orElseThrow(
-            () -> new NotFoundException("Precheck not found: " + record.getPrecheckId()));
+        Precheck<?> precheck = precheckRegistry.getById(record.getPrecheckId())
+            .orElseThrow(() -> new NotFoundException("Precheck not found: " + record.getPrecheckId()));
 
         switch (record.getType()) {
           case NODE -> ((BaseNodePrecheck) precheck).run((NodeContext) context);
@@ -63,23 +63,17 @@ public class PrecheckTaskExecutor {
           case CLUSTER -> ((BaseClusterPrecheck) precheck).run((ClusterContext) context);
           default -> throw new IllegalArgumentException("Unknown precheck type: " + record.getType());
         }
-
-        record.setStatus(PrecheckStatus.COMPLETED);
-        record.setEndAt(new Date());
-        precheckRunRepository.save(record);
-
+        precheckRunService.updatePrecheckStatus(record.getId(), PrecheckStatus.COMPLETED);
       } finally {
         context.getElasticClient().getElasticsearchClient().close();
       }
 
     } catch (Exception e) {
       LOG.error("Error executing precheck: {}", record.getId(), e);
-      record.setStatus(PrecheckStatus.FAILED);
-      record.setEndAt(new Date());
-      record.getLogs().add(e.getMessage());
-      precheckRunRepository.save(record);
+      precheckRunService.updatePrecheckStatus(record.getId(), PrecheckStatus.FAILED);
     } finally {
       notificationService.sendNotification(new PrecheckProgressChangeEvent());
+      MDC.clear();
     }
     return CompletableFuture.completedFuture(null);
   }
