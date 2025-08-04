@@ -73,7 +73,7 @@ public class PrecheckContextResolver {
         );
       }
       case NodePrecheckRun nodePrecheckRun -> {
-        ClusterNode clusterNode = clusterNodeRepository.findById(nodePrecheckRun.getNode().getId())
+        ClusterNode clusterNode = clusterNodeRepository.findById(nodePrecheckRun.getNode().id())
             .orElseThrow(() -> new NotFoundException(
                 "Cluster node not found: " + nodePrecheckRun.getClusterId()));
         return new NodeContext(

@@ -113,7 +113,8 @@ public class ClusterMapper {
         node.getStatus(),
         node.getOs(),
         node instanceof ElasticNode elasticNode && elasticNode.isMaster(),
-        node.isUpgradable()
+        node.isUpgradable(),
+        node.getRank()
     );
   }
 
