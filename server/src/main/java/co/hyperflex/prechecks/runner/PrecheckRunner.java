@@ -1,8 +1,7 @@
 package co.hyperflex.prechecks.runner;
 
 import co.hyperflex.entities.precheck.PrecheckRun;
-import co.hyperflex.entities.precheck.PrecheckStatus;
-import co.hyperflex.repositories.PrecheckRunRepository;
+import co.hyperflex.services.PrecheckRunService;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import org.slf4j.Logger;
@@ -13,18 +12,17 @@ import org.springframework.stereotype.Component;
 @Component
 public class PrecheckRunner {
   private static final Logger LOG = LoggerFactory.getLogger(PrecheckRunner.class);
-  private final PrecheckRunRepository precheckRunRepository;
   private final PrecheckTaskExecutor taskExecutor;
+  private final PrecheckRunService precheckRunService;
 
-  public PrecheckRunner(PrecheckRunRepository precheckRunRepository,
-                        PrecheckTaskExecutor taskExecutor) {
-    this.precheckRunRepository = precheckRunRepository;
+  public PrecheckRunner(PrecheckTaskExecutor taskExecutor, PrecheckRunService precheckRunService) {
     this.taskExecutor = taskExecutor;
+    this.precheckRunService = precheckRunService;
   }
 
   @Scheduled(fixedDelay = 5000)
   public void runNextBatch() {
-    List<PrecheckRun> pending = precheckRunRepository.findTop40ByStatus(PrecheckStatus.PENDING);
+    List<PrecheckRun> pending = precheckRunService.getPendingPrecheckRuns();
     if (pending.isEmpty()) {
       LOG.debug("No pending precheck runs found");
       return;
