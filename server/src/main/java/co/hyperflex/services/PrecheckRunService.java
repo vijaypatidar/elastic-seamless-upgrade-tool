@@ -170,6 +170,10 @@ public class PrecheckRunService {
     mongoTemplate.updateMulti(query, update, PrecheckRun.class);
   }
 
+  public List<PrecheckRun> getPendingPrecheckRuns() {
+    return precheckRunRepository.findTop40ByStatus(PrecheckStatus.PENDING);
+  }
+
   private PrecheckStatus getMergedPrecheckStatus(List<PrecheckStatus> statuses) {
     boolean hasCompleted = false;
     boolean hasPending = false;
