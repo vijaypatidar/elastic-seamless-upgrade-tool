@@ -27,8 +27,8 @@ import co.hyperflex.repositories.PrecheckRunRepository;
 import co.hyperflex.repositories.projection.PrecheckStatusAndSeverityView;
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotNull;
-import java.util.Date;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -176,7 +176,7 @@ public class PrecheckRunService {
     Query query = new Query(new Criteria().orOperator(criteriaList)
         .andOperator(Criteria.where("precheckGroupId").is(precheckGroupId)));
     Update update = new Update().set("status", PrecheckStatus.PENDING).set("startedAt", null)
-        .set("endAt", null);
+        .set("endedAt", null);
     mongoTemplate.updateMulti(query, update, PrecheckRun.class);
   }
 
@@ -245,7 +245,7 @@ public class PrecheckRunService {
     } else if (precheckStatus == PrecheckStatus.PENDING) {
       update.set("endedAt", null);
       update.set("startedAt", null);
-    } else if (precheckStatus == PrecheckStatus.COMPLETED) {
+    } else if (precheckStatus == PrecheckStatus.COMPLETED || precheckStatus == PrecheckStatus.FAILED) {
       update.set("endedAt", new Date());
     }
     precheckRunRepository.updateById(id, update);

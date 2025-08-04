@@ -41,7 +41,7 @@ public abstract class PrecheckRun {
 
   private Date startedAt;
 
-  private Date endAt;
+  private Date endedAt;
 
   public String getId() {
     return id;
@@ -107,12 +107,12 @@ public abstract class PrecheckRun {
     this.startedAt = startedAt;
   }
 
-  public Date getEndAt() {
-    return endAt;
+  public Date getEndedAt() {
+    return endedAt;
   }
 
-  public void setEndAt(Date endAt) {
-    this.endAt = endAt;
+  public void setEndedAt(Date endedAt) {
+    this.endedAt = endedAt;
   }
 
   public String getPrecheckId() {

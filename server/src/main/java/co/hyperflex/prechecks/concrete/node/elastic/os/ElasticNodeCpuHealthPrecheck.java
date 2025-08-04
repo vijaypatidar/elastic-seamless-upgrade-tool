@@ -6,7 +6,6 @@ import co.hyperflex.clients.elastic.ElasticClient;
 import co.hyperflex.prechecks.contexts.NodeContext;
 import co.hyperflex.prechecks.core.BaseElasticNodePrecheck;
 import java.io.IOException;
-import java.util.Map;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Component;
 
@@ -33,13 +32,12 @@ public class ElasticNodeCpuHealthPrecheck extends BaseElasticNodePrecheck {
       }
 
       int cpuPercent = nodeStats.os().cpu().percent();
-      Map<String, Double> loadAvg = nodeStats.os().cpu().loadAverage();
 
-      logger.info("CPU Utilization check completed for node: %s", nodeId);
-      logger.info("CPU Usage: " + cpuPercent + "%%");
+      logger.info("CPU Utilization check completed for node: {}", nodeId);
+      logger.info("CPU Usage: {}%", cpuPercent);
       if (cpuPercent > 80) {
-        throw new RuntimeException("CPU utilization check failed: current usage is " + cpuPercent
-            + "%, which exceeds the threshold of 80%");
+        logger.error("CPU Utilization check failed. Current CPU usage is {}%, which exceeds the threshold of 80%", cpuPercent);
+        throw new RuntimeException();
       }
 
     } catch (IOException e) {

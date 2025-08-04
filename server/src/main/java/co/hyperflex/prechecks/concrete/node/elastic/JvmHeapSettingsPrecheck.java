@@ -45,7 +45,7 @@ public class JvmHeapSettingsPrecheck extends BaseElasticNodePrecheck {
       String name = node.name();
       NodeJvmInfo jvmStats = node.jvm();
       if (jvmStats == null || jvmStats.mem() == null) {
-        logger.info("%s: Skipping JVM heap check — JVM memory stats missing.", name);
+        logger.info("{}: Skipping JVM heap check — JVM memory stats missing.", name);
         return;
       }
 
@@ -56,11 +56,11 @@ public class JvmHeapSettingsPrecheck extends BaseElasticNodePrecheck {
       double heapInitGB = heapInit / Math.pow(1024, 3);
       double heapMaxGB = heapMax / Math.pow(1024, 3);
 
-      logger.info("%s: -Xms=%.2fGB, -Xmx=%.2fGB", name, heapInitGB, heapMaxGB);
+      logger.info("{}: -Xms={}GB, -Xmx={}GB", name, heapInitGB, heapMaxGB);
 
       if (heapInit != heapMax) {
-        throw new RuntimeException(
-            String.format("%s has mismatched -Xms and -Xmx values. They must be equal.", name));
+        logger.error("{} has mismatched -Xms and -Xmx values. They must be equal.", name);
+        throw new RuntimeException();
       }
 
     } catch (IOException e) {

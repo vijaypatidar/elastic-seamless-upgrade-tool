@@ -18,7 +18,6 @@ public class KibanaNodeCpuHealthPrecheck extends BaseKibanaNodePrecheck {
   @Override
   public void run(NodeContext context) {
     Logger logger = context.getLogger();
-    String nodeId = context.getNode().getId();
     KibanaClient kibanaClient = context.getKibanaClient();
 
     GetKibanaStatusResponse details =
@@ -27,18 +26,19 @@ public class KibanaNodeCpuHealthPrecheck extends BaseKibanaNodePrecheck {
     OsStats osStats = details.metrics().os();
 
     if (osStats == null) {
-      logger.warn("No stats found for node: {}", nodeId);
+      logger.warn("No stats found for node");
       return;
     }
 
     double cpuPercent = osStats.load().fiveMinute();
 
-    logger.info("CPU Utilization check completed for node: %s", nodeId);
-    logger.info("CPU Usage: " + cpuPercent + "%%");
+    logger.info("CPU Utilization check completed for node.");
+    logger.info("Current CPU Usage: {}%", cpuPercent);
     if (cpuPercent > 80) {
-      throw new RuntimeException("CPU utilization check failed: current usage is " + cpuPercent
-          + "%, which exceeds the threshold of 80%");
+      logger.error("CPU utilization check failed: current usage is {}%, which exceeds the threshold of 80%", cpuPercent);
+      throw new RuntimeException();
     }
+
 
   }
 }

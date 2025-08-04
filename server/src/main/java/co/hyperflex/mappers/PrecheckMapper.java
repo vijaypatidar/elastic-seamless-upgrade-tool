@@ -11,8 +11,8 @@ public class PrecheckMapper {
   public GetPrecheckEntry toPrecheckEntry(
       PrecheckRun precheckRun) {
     long duration = 0;
-    if (precheckRun.getStartedAt() != null && precheckRun.getEndAt() != null) {
-      duration = precheckRun.getEndAt().getTime() - precheckRun.getStartedAt().getTime();
+    if (precheckRun.getStartedAt() != null && precheckRun.getEndedAt() != null) {
+      duration = precheckRun.getEndedAt().getTime() - precheckRun.getStartedAt().getTime();
     }
     return new GetPrecheckEntry(
         precheckRun.getId(),
@@ -27,8 +27,8 @@ public class PrecheckMapper {
   public GetClusterPrecheckEntry toClusterPrecheckEntry(
       PrecheckRun precheckRun) {
     long duration = 0;
-    if (precheckRun.getStartedAt() != null && precheckRun.getEndAt() != null) {
-      duration = precheckRun.getEndAt().getTime() - precheckRun.getStartedAt().getTime();
+    if (precheckRun.getStartedAt() != null && precheckRun.getEndedAt() != null) {
+      duration = precheckRun.getEndedAt().getTime() - precheckRun.getStartedAt().getTime();
     }
     return new GetClusterPrecheckEntry(
         precheckRun.getId(),

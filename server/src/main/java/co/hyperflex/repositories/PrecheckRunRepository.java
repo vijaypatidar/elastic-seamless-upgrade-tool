@@ -3,7 +3,6 @@ package co.hyperflex.repositories;
 import co.hyperflex.entities.precheck.PrecheckRun;
 import co.hyperflex.entities.precheck.PrecheckStatus;
 import co.hyperflex.repositories.projection.PrecheckStatusAndSeverityView;
-import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -44,7 +43,7 @@ public class PrecheckRunRepository extends AbstractMongoRepository<PrecheckRun, 
   }
 
   public void addLog(String precheckRunId, String message) {
-    Update update = new Update().push(LOGS, "[" + LocalDateTime.now() + "] " + message);
+    Update update = new Update().push(LOGS, message);
     updateById(precheckRunId, update);
   }
 

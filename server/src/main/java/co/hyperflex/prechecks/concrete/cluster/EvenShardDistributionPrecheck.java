@@ -11,7 +11,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Component;
 
@@ -45,11 +44,12 @@ public class EvenShardDistributionPrecheck extends BaseClusterPrecheck {
         shardCountByNode.put(node, shardCountByNode.getOrDefault(node, 0) + 1);
       }
 
-      List<String> nodeShardInfo = shardCountByNode.entrySet().stream()
-          .map(e -> String.format("%s: %d", e.getKey(), e.getValue()))
-          .collect(Collectors.toList());
 
-      logger.info("Shard distribution per node:\n{}", String.join("\n", nodeShardInfo));
+      logger.info("Shard distribution per node:");
+      shardCountByNode.entrySet().stream()
+          .map(e -> String.format("%s: %d", e.getKey(), e.getValue()))
+          .forEach(logger::info);
+
 
       List<Integer> counts = new ArrayList<>(shardCountByNode.values());
       if (counts.isEmpty()) {

@@ -23,20 +23,18 @@ public class KibanaVersionPrecheck extends BaseKibanaNodePrecheck {
     try {
       String actualVersion = context.getKibanaClient().getKibanaVersion(nodeIp);
       if (expectedVersion.equals(actualVersion)) {
-        logger.info("Kibana node [%s] is running on the expected version: %s.", nodeIp,
+        logger.info("Kibana node [{}] is running on the expected version: {}.", nodeIp,
             expectedVersion);
       } else {
-        String msg = String.format(
-            "Kibana node [%s] version mismatch: expected %s, but found %s.",
+        logger.error(
+            "Kibana node [{}] version mismatch: expected {}, but found {}.",
             nodeIp, expectedVersion, actualVersion
         );
-        logger.error(msg);
-        throw new RuntimeException(msg); // Use ConflictException if defined
+        throw new RuntimeException();
       }
     } catch (Exception e) {
-      String msg = String.format("Node with IP [%s] not found or unreachable.", nodeIp);
-      logger.error(msg);
-      throw new RuntimeException(msg, e); // Use NotFoundException if defined
+      logger.error("Node with IP [{}] not found or unreachable.", nodeIp);
+      throw new RuntimeException(e);
     }
   }
 }
