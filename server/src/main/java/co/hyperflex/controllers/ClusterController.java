@@ -5,7 +5,6 @@ import co.hyperflex.dtos.clusters.AddClusterRequest;
 import co.hyperflex.dtos.clusters.AddClusterResponse;
 import co.hyperflex.dtos.clusters.ClusterListItemResponse;
 import co.hyperflex.dtos.clusters.ClusterOverviewResponse;
-import co.hyperflex.dtos.clusters.ClusterVerifyResponse;
 import co.hyperflex.dtos.clusters.GetClusterNodeResponse;
 import co.hyperflex.dtos.clusters.GetClusterResponse;
 import co.hyperflex.dtos.clusters.UpdateClusterRequest;
@@ -77,15 +76,6 @@ public class ClusterController {
     return clusterService.getClusterOverview(clusterId);
   }
 
-  @GetMapping("/verify")
-  public ClusterVerifyResponse verify() {
-    List<GetClusterResponse> clusters = clusterService.getClustersList();
-    if (clusters.isEmpty()) {
-      return new ClusterVerifyResponse(false, null);
-    } else {
-      return new ClusterVerifyResponse(true, clusters.getLast());
-    }
-  }
 
   @GetMapping("/{clusterId}/deprecations/kibana")
   public List<GetDeprecationsResponse> getDeprecations(@PathVariable String clusterId) {
