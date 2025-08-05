@@ -11,4 +11,6 @@ public interface ClusterUpgradeJobRepository extends MongoRepository<ClusterUpgr
   List<ClusterUpgradeJob> findByClusterIdAndStatusIsNot(
       String clusterId,
       ClusterUpgradeStatus status);
+
+  List<ClusterUpgradeJob> findByClusterId(String clusterId);
 }

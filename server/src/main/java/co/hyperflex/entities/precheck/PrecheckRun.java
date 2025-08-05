@@ -22,7 +22,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public abstract class PrecheckRun {
 
   public static final String STATUS = "status";
-  public static final String PRECHECK_GROUP_ID = "precheckGroupId";
+  public static final String CLUSTER_UPGRADE_JOB_ID = "clusterUpgradeJobId";
   public static final String SEVERITY = "severity";
   public static final String LOGS = "logs";
   public static final String START_TIME = "startTime";
@@ -41,15 +41,15 @@ public abstract class PrecheckRun {
 
   private PrecheckSeverity severity = PrecheckSeverity.WARNING;
 
-  private String precheckGroupId;
+  private String clusterUpgradeJobId;
 
   private PrecheckStatus status = PrecheckStatus.PENDING;
 
   private List<String> logs = List.of();
 
-  private Date startedAt;
+  private Date startTime;
 
-  private Date endedAt;
+  private Date endTime;
 
   public String getId() {
     return id;
@@ -83,12 +83,12 @@ public abstract class PrecheckRun {
     this.severity = severity;
   }
 
-  public String getPrecheckGroupId() {
-    return precheckGroupId;
+  public String getClusterUpgradeJobId() {
+    return clusterUpgradeJobId;
   }
 
-  public void setPrecheckGroupId(String precheckGroupId) {
-    this.precheckGroupId = precheckGroupId;
+  public void setClusterUpgradeJobId(String clusterUpgradeJobId) {
+    this.clusterUpgradeJobId = clusterUpgradeJobId;
   }
 
   public PrecheckStatus getStatus() {
@@ -107,20 +107,20 @@ public abstract class PrecheckRun {
     this.logs = logs;
   }
 
-  public Date getStartedAt() {
-    return startedAt;
+  public Date getStartTime() {
+    return startTime;
   }
 
-  public void setStartedAt(Date startedAt) {
-    this.startedAt = startedAt;
+  public void setStartTime(Date startTime) {
+    this.startTime = startTime;
   }
 
-  public Date getEndedAt() {
-    return endedAt;
+  public Date getEndTime() {
+    return endTime;
   }
 
-  public void setEndedAt(Date endedAt) {
-    this.endedAt = endedAt;
+  public void setEndTime(Date endTime) {
+    this.endTime = endTime;
   }
 
   public String getPrecheckId() {

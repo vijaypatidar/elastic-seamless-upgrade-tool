@@ -11,6 +11,7 @@ public class ClusterUpgradeJob {
   private String clusterId;
   private String currentVersion;
   private String targetVersion;
+  private boolean isActive;
   private ClusterUpgradeStatus status = ClusterUpgradeStatus.PENDING;
 
 
@@ -48,6 +49,14 @@ public class ClusterUpgradeJob {
 
   public ClusterUpgradeStatus getStatus() {
     return status;
+  }
+
+  public boolean isActive() {
+    return isActive;
+  }
+
+  public void setActive(boolean active) {
+    isActive = active;
   }
 
   public void setStatus(ClusterUpgradeStatus status) {

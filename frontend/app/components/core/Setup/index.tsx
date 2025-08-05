@@ -43,7 +43,13 @@ function Setup() {
 
 	const handleNextStep = () => setStep(step + 1)
 
-	const handleBackStep = () => setStep(step - 1)
+	const handleBackStep = () => {
+		if (step === 1) {
+			navigate("/")
+		} else {
+			setStep(step - 1)
+		}
+	}
 
 	const handleStepInfraSubmit = (value: string | null) => {
 		if (value) {
@@ -105,7 +111,7 @@ function Setup() {
 	const getStepForm = useMemo(() => {
 		switch (step) {
 			case 1:
-				return <Infrastructure onSubmit={handleStepInfraSubmit} />
+				return <Infrastructure backStep={handleBackStep} onSubmit={handleStepInfraSubmit} />
 			case 2:
 				return <Credentials backStep={handleBackStep} onSubmit={handleCredSubmit} initialValues={creds} />
 			case 3:
