@@ -9,7 +9,6 @@ import co.hyperflex.dtos.GetElasticsearchSnapshotResponse;
 import co.hyperflex.dtos.clusters.GetClusterNodeResponse;
 import co.hyperflex.dtos.clusters.GetClusterResponse;
 import co.hyperflex.dtos.clusters.GetElasticCloudClusterResponse;
-import co.hyperflex.dtos.prechecks.GetPrecheckGroupResponse;
 import co.hyperflex.dtos.upgrades.ClusterNodeUpgradeRequest;
 import co.hyperflex.dtos.upgrades.ClusterNodeUpgradeResponse;
 import co.hyperflex.dtos.upgrades.ClusterUpgradeResponse;
@@ -123,12 +122,12 @@ public class ClusterUpgradeService {
       GetClusterResponse cluster = clusterService.getClusterById(clusterId);
       PrecheckStatus precheckStatus = null;
       if (activeUpgradeJob != null) {
-        GetPrecheckGroupResponse latestPrecheckGroup = precheckRunService.getPrecheckGroupByJobId(activeUpgradeJob.getId());
-        if (latestPrecheckGroup == null) {
+        boolean precheckExists = precheckRunService.precheckExistsForJob(activeUpgradeJob.getId());
+        if (!precheckExists) {
           precheckSchedulerService.schedule(clusterId);
           precheckStatus = PrecheckStatus.RUNNING;
         } else {
-          precheckStatus = precheckRunService.getGroupStatus(latestPrecheckGroup.id());
+          precheckStatus = precheckRunService.getStatusByUpgradeJobId(activeUpgradeJob.getId());
         }
       } else {
         precheckStatus = PrecheckStatus.COMPLETED;

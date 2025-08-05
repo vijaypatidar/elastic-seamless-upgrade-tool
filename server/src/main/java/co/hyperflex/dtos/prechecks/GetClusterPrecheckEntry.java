@@ -10,6 +10,6 @@ public record GetClusterPrecheckEntry(
     PrecheckStatus status,
     PrecheckSeverity severity,
     List<String> logs,
-    double duration
+    String duration
 ) {
 }

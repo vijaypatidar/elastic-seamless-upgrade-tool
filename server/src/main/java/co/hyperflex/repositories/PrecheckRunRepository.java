@@ -1,7 +1,7 @@
 package co.hyperflex.repositories;
 
+import static co.hyperflex.entities.precheck.PrecheckRun.CLUSTER_UPGRADE_JOB_ID;
 import static co.hyperflex.entities.precheck.PrecheckRun.LOGS;
-import static co.hyperflex.entities.precheck.PrecheckRun.PRECHECK_GROUP_ID;
 import static co.hyperflex.entities.precheck.PrecheckRun.SEVERITY;
 import static co.hyperflex.entities.precheck.PrecheckRun.STATUS;
 
@@ -29,15 +29,15 @@ public class PrecheckRunRepository extends AbstractMongoRepository<PrecheckRun, 
     return mongoTemplate.find(query, PrecheckRun.class, collectionName);
   }
 
-  public List<PrecheckRun> findByPrecheckGroupId(String precheckGroupId) {
+  public List<PrecheckRun> getAllByJobId(String upgradeJobId) {
     Query query = new Query();
-    query.addCriteria(Criteria.where(PRECHECK_GROUP_ID).is(precheckGroupId));
+    query.addCriteria(Criteria.where(CLUSTER_UPGRADE_JOB_ID).is(upgradeJobId));
     return mongoTemplate.find(query, PrecheckRun.class, collectionName);
   }
 
-  public List<PrecheckStatusAndSeverityView> findStatusAndSeverityByPrecheckGroupId(String precheckGroupId) {
+  public List<PrecheckStatusAndSeverityView> findStatusAndSeverityByUpgradeJobId(String upgradeJobId) {
     Query query = new Query();
-    query.addCriteria(Criteria.where(PRECHECK_GROUP_ID).is(precheckGroupId));
+    query.addCriteria(Criteria.where(CLUSTER_UPGRADE_JOB_ID).is(upgradeJobId));
     query.fields().include(STATUS).include(SEVERITY);
     return mongoTemplate.find(query, PrecheckStatusAndSeverityView.class, collectionName);
   }
@@ -47,4 +47,9 @@ public class PrecheckRunRepository extends AbstractMongoRepository<PrecheckRun, 
     updateById(precheckRunId, update);
   }
 
+  public int getCountByJobId(String upgradeJobId) {
+    Query query = new Query();
+    query.addCriteria(Criteria.where(CLUSTER_UPGRADE_JOB_ID).is(upgradeJobId));
+    return mongoTemplate.find(query, PrecheckRun.class, collectionName).size();
+  }
 }
