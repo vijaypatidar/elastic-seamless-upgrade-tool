@@ -174,9 +174,9 @@ public class PrecheckRunService {
     }
 
     Query query = new Query(new Criteria().orOperator(criteriaList)
-        .andOperator(Criteria.where("precheckGroupId").is(precheckGroupId)));
-    Update update = new Update().set("status", PrecheckStatus.PENDING).set("startedAt", null)
-        .set("endedAt", null);
+        .andOperator(Criteria.where(PrecheckRun.PRECHECK_GROUP_ID).is(precheckGroupId)));
+    Update update = new Update().set(PrecheckRun.STATUS, PrecheckStatus.PENDING).set(PrecheckRun.START_TIME, null)
+        .set(PrecheckRun.END_TIME, null);
     mongoTemplate.updateMulti(query, update, PrecheckRun.class);
   }
 
@@ -238,16 +238,17 @@ public class PrecheckRunService {
   }
 
   public void updatePrecheckStatus(String id, PrecheckStatus precheckStatus) {
-    Update update = new Update().set(PrecheckRunRepository.STATUS, precheckStatus);
+    Update update = new Update().set(PrecheckRun.STATUS, precheckStatus);
     if (precheckStatus == PrecheckStatus.RUNNING) {
-      update.set("startedAt", new Date());
-      update.set("logs", new LinkedList<>());
+      update.set(PrecheckRun.START_TIME, new Date());
+      update.set(PrecheckRun.LOGS, new LinkedList<>());
     } else if (precheckStatus == PrecheckStatus.PENDING) {
-      update.set("endedAt", null);
-      update.set("startedAt", null);
+      update.set(PrecheckRun.END_TIME, null);
+      update.set(PrecheckRun.START_TIME, null);
     } else if (precheckStatus == PrecheckStatus.COMPLETED || precheckStatus == PrecheckStatus.FAILED) {
-      update.set("endedAt", new Date());
+      update.set(PrecheckRun.END_TIME, new Date());
     }
     precheckRunRepository.updateById(id, update);
   }
+
 }

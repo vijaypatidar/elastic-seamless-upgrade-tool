@@ -63,8 +63,7 @@ public class ClusterAllocationSettingPrecheck extends BaseClusterPrecheck {
         logger.warn(
             "This setting may prevent shard allocation and lead to red cluster status."
                 + " Set it to 'all' before upgrade.");
-        throw new RuntimeException(
-            "Precheck failed: " + message);
+        throw new RuntimeException();
       } else {
         logger.info(message);
       }

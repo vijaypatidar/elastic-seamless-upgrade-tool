@@ -13,7 +13,6 @@ import co.hyperflex.prechecks.core.BaseIndexPrecheck;
 import co.hyperflex.prechecks.core.BaseNodePrecheck;
 import co.hyperflex.prechecks.core.Precheck;
 import co.hyperflex.prechecks.registry.PrecheckRegistry;
-import co.hyperflex.repositories.PrecheckRunRepository;
 import co.hyperflex.services.PrecheckRunService;
 import co.hyperflex.services.notifications.NotificationService;
 import co.hyperflex.services.notifications.PrecheckProgressChangeEvent;
@@ -29,16 +28,14 @@ public class PrecheckTaskExecutor {
 
   private static final Logger LOG = LoggerFactory.getLogger(PrecheckTaskExecutor.class);
 
-  private final PrecheckRunRepository precheckRunRepository;
   private final PrecheckRegistry precheckRegistry;
   private final PrecheckContextResolver precheckContextResolver;
   private final NotificationService notificationService;
   private final PrecheckRunService precheckRunService;
 
-  public PrecheckTaskExecutor(PrecheckRunRepository precheckRunRepository, PrecheckRegistry precheckRegistry,
+  public PrecheckTaskExecutor(PrecheckRegistry precheckRegistry,
                               PrecheckContextResolver precheckContextResolver, NotificationService notificationService,
                               PrecheckRunService precheckRunService) {
-    this.precheckRunRepository = precheckRunRepository;
     this.precheckRegistry = precheckRegistry;
     this.precheckContextResolver = precheckContextResolver;
     this.notificationService = notificationService;

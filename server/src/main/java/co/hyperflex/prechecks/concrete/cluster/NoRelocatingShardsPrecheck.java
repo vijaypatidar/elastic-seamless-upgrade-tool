@@ -23,21 +23,18 @@ public class NoRelocatingShardsPrecheck extends BaseClusterPrecheck {
     Logger logger = context.getLogger();
 
     try {
-
       List<ShardsRecord> shards = client.cat().shards().valueBody();
-
       List<ShardsRecord> relocatingShards =
           shards.stream().filter(s -> "RELOCATING".equalsIgnoreCase(s.state())).toList();
 
       for (ShardsRecord shard : relocatingShards) {
-        logger.error("Relocating shard: index=%s, shard=%s, from=%s", shard.index(), shard.shard(),
+        logger.error("Relocating shard: index={}, shard={}, from={}", shard.index(), shard.shard(),
             shard.node());
       }
 
       if (!relocatingShards.isEmpty()) {
-        throw new RuntimeException(
-            String.format("Relocating shards check failed. %d shard(s) are currently relocating.",
-                relocatingShards.size()));
+        logger.error("Relocating shards check failed. {} shard(s) are currently relocating.", relocatingShards.size());
+        throw new RuntimeException();
       }
 
     } catch (IOException e) {

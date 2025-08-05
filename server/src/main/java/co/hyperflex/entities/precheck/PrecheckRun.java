@@ -20,6 +20,14 @@ import org.springframework.data.mongodb.core.mapping.Document;
     @JsonSubTypes.Type(value = NodePrecheckRun.class, name = "NODE"),
     @JsonSubTypes.Type(value = IndexPrecheckRun.class, name = "INDEX")})
 public abstract class PrecheckRun {
+
+  public static final String STATUS = "status";
+  public static final String PRECHECK_GROUP_ID = "precheckGroupId";
+  public static final String SEVERITY = "severity";
+  public static final String LOGS = "logs";
+  public static final String START_TIME = "startTime";
+  public static final String END_TIME = "endTime";
+
   @Id
   private String id;
 

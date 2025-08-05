@@ -20,11 +20,10 @@ public class ClusterHealthPrecheck extends BaseClusterPrecheck {
       String status = context.getElasticClient().getHealthStatus();
       boolean isHealthy = "green".equalsIgnoreCase(status);
 
-      String message = String.format("Cluster health status: '%s'. Expected: 'green'.", status);
-      logger.info(message);
+      logger.info("Cluster health status: '{}'. Expected: 'green'.", status);
 
       if (!isHealthy) {
-        logger.error("Cluster health check failed. {}", message);
+        logger.error("Cluster health check failed");
         throw new RuntimeException();
       }
     } catch (Exception e) {

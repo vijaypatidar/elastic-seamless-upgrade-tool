@@ -1,5 +1,10 @@
 package co.hyperflex.repositories;
 
+import static co.hyperflex.entities.precheck.PrecheckRun.LOGS;
+import static co.hyperflex.entities.precheck.PrecheckRun.PRECHECK_GROUP_ID;
+import static co.hyperflex.entities.precheck.PrecheckRun.SEVERITY;
+import static co.hyperflex.entities.precheck.PrecheckRun.STATUS;
+
 import co.hyperflex.entities.precheck.PrecheckRun;
 import co.hyperflex.entities.precheck.PrecheckStatus;
 import co.hyperflex.repositories.projection.PrecheckStatusAndSeverityView;
@@ -12,11 +17,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public class PrecheckRunRepository extends AbstractMongoRepository<PrecheckRun, String> {
-
-  public static final String STATUS = "status";
-  public static final String PRECHECK_GROUP_ID = "precheckGroupId";
-  public static final String SEVERITY = "severity";
-  public static final String LOGS = "logs";
 
   public PrecheckRunRepository(MongoTemplate mongoTemplate) {
     super(mongoTemplate, PrecheckRun.class);
