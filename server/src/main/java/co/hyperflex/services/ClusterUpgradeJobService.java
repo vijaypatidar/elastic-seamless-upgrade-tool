@@ -82,10 +82,12 @@ public class ClusterUpgradeJobService {
       existingJob.setClusterId(clusterId);
       existingJob.setTargetVersion(request.targetVersion());
       existingJob.setCurrentVersion(currentVersion);
+      existingJob.setActive(true);
       clusterUpgradeJobRepository.save(existingJob);
+    } else {
+      existingJob.setActive(true);
     }
 
-    existingJob.setActive(true);
     clusterUpgradeJobRepository.saveAll(jobs);
 
     resetUpgradeStatus(clusterId);
