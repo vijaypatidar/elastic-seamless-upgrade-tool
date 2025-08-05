@@ -194,16 +194,6 @@ public class ClusterService {
     }).toList();
   }
 
-  @Deprecated
-  public List<GetClusterResponse> getClustersList() {
-    return clusterRepository.findAll().stream().map(cluster -> {
-      List<ClusterNode> nodes = clusterNodeRepository.findByClusterId(cluster.getId());
-      List<GetClusterKibanaNodeResponse> kibanaNodes = nodes.stream().filter(node -> node.getType() == ClusterNodeType.KIBANA)
-          .map(node -> new GetClusterKibanaNodeResponse(node.getId(), node.getName(), node.getIp())).toList();
-      return clusterMapper.toGetClusterResponse(cluster, kibanaNodes);
-    }).toList();
-  }
-
   public ClusterOverviewResponse getClusterOverview(String clusterId) {
     Cluster cluster = clusterRepository.getCluster(clusterId);
     ElasticClient elasticClient = elasticsearchClientProvider.getClient(cluster);
