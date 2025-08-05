@@ -37,6 +37,7 @@ import co.hyperflex.entities.cluster.OperatingSystemInfo;
 import co.hyperflex.entities.cluster.SelfManagedCluster;
 import co.hyperflex.entities.cluster.SshInfo;
 import co.hyperflex.entities.upgrade.ClusterUpgradeJob;
+import co.hyperflex.entities.upgrade.ClusterUpgradeStatus;
 import co.hyperflex.entities.upgrade.NodeUpgradeStatus;
 import co.hyperflex.exceptions.BadRequestException;
 import co.hyperflex.exceptions.NotFoundException;
@@ -198,11 +199,15 @@ public class ClusterService {
     ElasticClient elasticClient = elasticsearchClientProvider.getClient(cluster);
     ElasticsearchClient client = elasticClient.getElasticsearchClient();
     String targetVersion = null;
-    boolean upgradeJobExists = clusterUpgradeJobService.clusterUpgradeJobExists(clusterId);
-    if (upgradeJobExists) {
-      ClusterUpgradeJob activeJobByClusterId = clusterUpgradeJobService.getActiveJobByClusterId(clusterId);
-      targetVersion = activeJobByClusterId.getTargetVersion();
+    boolean underUpgrade = false;
+    try {
+      ClusterUpgradeJob activeJobByCluster = clusterUpgradeJobService.getActiveJobByClusterId(clusterId);
+      targetVersion = activeJobByCluster.getTargetVersion();
+      underUpgrade = activeJobByCluster.getStatus() != ClusterUpgradeStatus.PENDING;
+    } catch (Exception ignore) {
+      log.warn("Cluster upgrade job not found for cluster [ClusterId: {}]", clusterId);
     }
+
     try {
       InfoResponse info = client.info();
       HealthRecord health = client.cat().health().valueBody().getFirst();
@@ -215,7 +220,7 @@ public class ClusterService {
           activeMasters.stream().map(MasterRecord::id).collect(Collectors.joining(",")), adaptiveReplicaEnabled, indices.valueBody().size(),
           counts.activePrimaryShards(), counts.activeShards(), counts.unassignedShards(), counts.initializingShards(),
           counts.relocatingShards(), cluster.getType().getDisplayName(), targetVersion,
-          UpgradePathUtils.getPossibleUpgrades(info.version().number()), upgradeJobExists);
+          UpgradePathUtils.getPossibleUpgrades(info.version().number()), underUpgrade);
 
     } catch (IOException e) {
       log.error("Failed to get cluster overview for clusterId: {}", clusterId, e);

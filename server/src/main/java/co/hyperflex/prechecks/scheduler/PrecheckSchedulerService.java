@@ -3,9 +3,6 @@ package co.hyperflex.prechecks.scheduler;
 import co.hyperflex.clients.elastic.ElasticClient;
 import co.hyperflex.clients.elastic.ElasticsearchClientProvider;
 import co.hyperflex.dtos.clusters.GetClusterNodeResponse;
-import co.hyperflex.dtos.prechecks.CreatePrecheckGroupRequest;
-import co.hyperflex.dtos.prechecks.CreatePrecheckGroupResponse;
-import co.hyperflex.dtos.prechecks.GetPrecheckGroupResponse;
 import co.hyperflex.dtos.prechecks.PrecheckRerunRequest;
 import co.hyperflex.dtos.prechecks.PrecheckScheduleResponse;
 import co.hyperflex.entities.precheck.ClusterPrecheckRun;
@@ -23,6 +20,7 @@ import co.hyperflex.repositories.PrecheckRunRepository;
 import co.hyperflex.services.ClusterService;
 import co.hyperflex.services.ClusterUpgradeJobService;
 import co.hyperflex.services.PrecheckRunService;
+import co.hyperflex.utils.HashUtil;
 import java.util.List;
 import org.springframework.stereotype.Service;
 
@@ -54,32 +52,26 @@ public class PrecheckSchedulerService {
 
   public PrecheckScheduleResponse schedule(String clusterId) {
     final ClusterUpgradeJob clusterUpgradeJob = clusterUpgradeJobService.getActiveJobByClusterId(clusterId);
-    final CreatePrecheckGroupResponse createPrecheckGroupResponse = precheckRunService.createPrecheckGroup(
-        new CreatePrecheckGroupRequest(
-            clusterUpgradeJob.getId(),
-            clusterId
-        )
-    );
-    final String precheckGroupId = createPrecheckGroupResponse.id();
-    scheduleNodePrechecks(precheckGroupId, clusterId);
-    scheduleClusterPrechecks(precheckGroupId, clusterId);
-    scheduleIndexPrechecks(precheckGroupId, clusterId);
-
-    return new PrecheckScheduleResponse(precheckGroupId);
+    final String upgradeJobId = clusterUpgradeJob.getId();
+    scheduleNodePrechecks(upgradeJobId, clusterId);
+    scheduleClusterPrechecks(upgradeJobId, clusterId);
+    scheduleIndexPrechecks(upgradeJobId, clusterId);
+    return new PrecheckScheduleResponse(upgradeJobId);
   }
 
-  public void scheduleNodePrechecks(String precheckGroupId, String clusterId) {
+  public void scheduleNodePrechecks(String upgradeJobId, String clusterId) {
     List<GetClusterNodeResponse> nodes = clusterService.getNodes(clusterId);
     precheckRegistry.getNodePrechecks()
         .stream()
         .parallel()
         .flatMap(precheck -> nodes.stream().map(node -> {
           NodePrecheckRun precheckRun = new NodePrecheckRun();
+          precheckRun.setId(HashUtil.generateHash(precheck.getId() + ":" + upgradeJobId + ":" + node.id()));
           precheckRun.setPrecheckId(precheck.getId());
           precheckRun.setNode(
               new NodePrecheckRun.NodeInfo(node.id(), node.name(), node.ip(), node.rank())
           );
-          precheckRun.setPrecheckGroupId(precheckGroupId);
+          precheckRun.setClusterUpgradeJobId(upgradeJobId);
           precheckRun.setSeverity(precheck.getSeverity());
           precheckRun.setClusterId(clusterId);
           precheckRun.setName(precheck.getName());
@@ -91,11 +83,12 @@ public class PrecheckSchedulerService {
         .forEach(precheckRunRepository::save);
   }
 
-  public void scheduleClusterPrechecks(String precheckGroupId, String clusterId) {
+  public void scheduleClusterPrechecks(String upgradeJobId, String clusterId) {
     precheckRegistry.getClusterPrechecks().stream().parallel().map(precheck -> {
       ClusterPrecheckRun precheckRun = new ClusterPrecheckRun();
+      precheckRun.setId(HashUtil.generateHash(precheck.getId() + ":" + upgradeJobId));
       precheckRun.setPrecheckId(precheck.getId());
-      precheckRun.setPrecheckGroupId(precheckGroupId);
+      precheckRun.setClusterUpgradeJobId(upgradeJobId);
       precheckRun.setSeverity(precheck.getSeverity());
       precheckRun.setClusterId(clusterId);
       precheckRun.setName(precheck.getName());
@@ -103,7 +96,7 @@ public class PrecheckSchedulerService {
     }).forEach(precheckRunRepository::save);
   }
 
-  public void scheduleIndexPrechecks(String precheckGroupId, String clusterId) {
+  public void scheduleIndexPrechecks(String upgradeJobId, String clusterId) {
     ElasticClient elasticClient =
         elasticsearchClientProvider.getElasticsearchClientByClusterId(clusterId);
     final List<String> indexes = elasticClient.getIndices();
@@ -114,9 +107,10 @@ public class PrecheckSchedulerService {
             .stream()
             .map(index -> {
               IndexPrecheckRun precheckRun = new IndexPrecheckRun();
+              precheckRun.setId(HashUtil.generateHash(precheck.getId() + ":" + upgradeJobId + ":" + index));
               precheckRun.setIndex(new IndexPrecheckRun.IndexInfo(index));
               precheckRun.setPrecheckId(precheck.getId());
-              precheckRun.setPrecheckGroupId(precheckGroupId);
+              precheckRun.setClusterUpgradeJobId(upgradeJobId);
               precheckRun.setSeverity(precheck.getSeverity());
               precheckRun.setName(precheck.getName());
               precheckRun.setClusterId(clusterId);
@@ -129,8 +123,8 @@ public class PrecheckSchedulerService {
 
   public PrecheckScheduleResponse rerunPrechecks(String clusterId,
                                                  PrecheckRerunRequest request) {
-    GetPrecheckGroupResponse precheckGroup = precheckRunService.getPrecheckGroupByClusterId(clusterId);
-    precheckRunService.rerunPrechecks(precheckGroup.id(), request);
-    return new PrecheckScheduleResponse(precheckGroup.id());
+    ClusterUpgradeJob upgradeJob = clusterUpgradeJobService.getActiveJobByClusterId(clusterId);
+    precheckRunService.rerunPrechecks(upgradeJob.getId(), request);
+    return new PrecheckScheduleResponse(upgradeJob.getId());
   }
 }

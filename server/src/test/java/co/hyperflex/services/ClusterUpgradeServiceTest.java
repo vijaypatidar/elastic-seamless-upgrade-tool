@@ -15,7 +15,6 @@ import co.hyperflex.clients.kibana.KibanaClient;
 import co.hyperflex.clients.kibana.KibanaClientProvider;
 import co.hyperflex.dtos.ClusterInfoResponse;
 import co.hyperflex.dtos.GetElasticsearchSnapshotResponse;
-import co.hyperflex.dtos.prechecks.GetPrecheckGroupResponse;
 import co.hyperflex.entities.cluster.ClusterNodeType;
 import co.hyperflex.entities.precheck.PrecheckStatus;
 import co.hyperflex.entities.upgrade.ClusterUpgradeJob;
@@ -97,9 +96,8 @@ class ClusterUpgradeServiceTest {
     void upgradeInfo_when_prechecksCompleteAndNoNodesUpgraded_then_elasticIsUpgradable() {
       // Arrange
       when(clusterUpgradeJobService.getActiveJobByClusterId(CLUSTER_ID)).thenReturn(clusterUpgradeJob);
-      GetPrecheckGroupResponse precheckGroup = new GetPrecheckGroupResponse("groupId", "jobId", CLUSTER_ID, PrecheckStatus.COMPLETED);
-      when(precheckRunService.getPrecheckGroupByJobId(anyString())).thenReturn(precheckGroup);
-      when(precheckRunService.getGroupStatus(anyString())).thenReturn(PrecheckStatus.COMPLETED);
+      when(precheckRunService.precheckExistsForJob(anyString())).thenReturn(true);
+      when(precheckRunService.getStatusByUpgradeJobId(anyString())).thenReturn(PrecheckStatus.COMPLETED);
       when(elasticClient.getValidSnapshots()).thenReturn(List.of(new GetElasticsearchSnapshotResponse("snapshot", new Date())));
       when(clusterService.isNodesUpgraded(CLUSTER_ID, ClusterNodeType.ELASTIC)).thenReturn(false);
       when(clusterService.isNodesUpgraded(CLUSTER_ID, ClusterNodeType.KIBANA)).thenReturn(false);
@@ -117,10 +115,9 @@ class ClusterUpgradeServiceTest {
 
     @Test
     @DisplayName("Should trigger prechecks if they have not run yet")
-    void upgradeInfo_when_noPrecheckGroupExists_then_triggerPrechecks() {
+    void upgradeInfo_when_noPrecheckExists_then_triggerPrechecks() {
       // Arrange
       when(clusterUpgradeJobService.getActiveJobByClusterId(CLUSTER_ID)).thenReturn(clusterUpgradeJob);
-      when(precheckRunService.getPrecheckGroupByJobId(anyString())).thenReturn(null);
       when(elasticClient.getValidSnapshots()).thenReturn(Collections.emptyList());
 
       // Act
@@ -137,9 +134,8 @@ class ClusterUpgradeServiceTest {
     void upgradeInfo_when_prechecksFailed_then_showFailedStatus() {
       // Arrange
       when(clusterUpgradeJobService.getActiveJobByClusterId(CLUSTER_ID)).thenReturn(clusterUpgradeJob);
-      GetPrecheckGroupResponse precheckGroup = new GetPrecheckGroupResponse("groupId", "jobId", CLUSTER_ID, PrecheckStatus.FAILED);
-      when(precheckRunService.getPrecheckGroupByJobId(anyString())).thenReturn(precheckGroup);
-      when(precheckRunService.getGroupStatus(anyString())).thenReturn(PrecheckStatus.FAILED);
+      when(precheckRunService.precheckExistsForJob(anyString())).thenReturn(true);
+      when(precheckRunService.getStatusByUpgradeJobId(anyString())).thenReturn(PrecheckStatus.FAILED);
       when(elasticClient.getValidSnapshots()).thenReturn(Collections.emptyList());
 
       // Act
@@ -159,9 +155,8 @@ class ClusterUpgradeServiceTest {
     void upgradeInfo_when_elasticNodesAreUpgraded_then_kibanaIsUpgradable() {
       // Arrange
       when(clusterUpgradeJobService.getActiveJobByClusterId(CLUSTER_ID)).thenReturn(clusterUpgradeJob);
-      GetPrecheckGroupResponse precheckGroup = new GetPrecheckGroupResponse("groupId", "jobId", CLUSTER_ID, PrecheckStatus.COMPLETED);
-      when(precheckRunService.getPrecheckGroupByJobId(anyString())).thenReturn(precheckGroup);
-      when(precheckRunService.getGroupStatus(anyString())).thenReturn(PrecheckStatus.COMPLETED);
+      when(precheckRunService.precheckExistsForJob(anyString())).thenReturn(true);
+      when(precheckRunService.getStatusByUpgradeJobId(anyString())).thenReturn(PrecheckStatus.COMPLETED);
       when(elasticClient.getValidSnapshots()).thenReturn(Collections.emptyList());
       when(clusterService.isNodesUpgraded(CLUSTER_ID, ClusterNodeType.ELASTIC)).thenReturn(true);
       when(clusterService.isNodesUpgraded(CLUSTER_ID, ClusterNodeType.KIBANA)).thenReturn(false);
@@ -179,9 +174,8 @@ class ClusterUpgradeServiceTest {
     void upgradeInfo_when_allNodesAreUpgraded_then_nothingIsUpgradable() {
       // Arrange
       when(clusterUpgradeJobService.getActiveJobByClusterId(CLUSTER_ID)).thenReturn(clusterUpgradeJob);
-      GetPrecheckGroupResponse precheckGroup = new GetPrecheckGroupResponse("groupId", "jobId", CLUSTER_ID, PrecheckStatus.COMPLETED);
-      when(precheckRunService.getPrecheckGroupByJobId(anyString())).thenReturn(precheckGroup);
-      when(precheckRunService.getGroupStatus(anyString())).thenReturn(PrecheckStatus.COMPLETED);
+      when(precheckRunService.precheckExistsForJob(anyString())).thenReturn(true);
+      when(precheckRunService.getStatusByUpgradeJobId(anyString())).thenReturn(PrecheckStatus.COMPLETED);
       when(elasticClient.getValidSnapshots()).thenReturn(Collections.emptyList());
       when(clusterService.isNodesUpgraded(CLUSTER_ID, ClusterNodeType.ELASTIC)).thenReturn(true);
       when(clusterService.isNodesUpgraded(CLUSTER_ID, ClusterNodeType.KIBANA)).thenReturn(true);
@@ -199,10 +193,9 @@ class ClusterUpgradeServiceTest {
     void upgradeInfo_when_jobStatusIsUpdated_then_nothingIsUpgradable() {
       // Arrange
       clusterUpgradeJob.setStatus(ClusterUpgradeStatus.UPDATED);
+      when(precheckRunService.precheckExistsForJob(anyString())).thenReturn(true);
       when(clusterUpgradeJobService.getActiveJobByClusterId(CLUSTER_ID)).thenReturn(clusterUpgradeJob);
-      GetPrecheckGroupResponse precheckGroup = new GetPrecheckGroupResponse("groupId", "jobId", CLUSTER_ID, PrecheckStatus.COMPLETED);
-      when(precheckRunService.getPrecheckGroupByJobId(anyString())).thenReturn(precheckGroup);
-      when(precheckRunService.getGroupStatus(anyString())).thenReturn(PrecheckStatus.COMPLETED);
+      when(precheckRunService.getStatusByUpgradeJobId(anyString())).thenReturn(PrecheckStatus.COMPLETED);
       when(elasticClient.getValidSnapshots()).thenReturn(Collections.emptyList());
 
       // Act

@@ -1,11 +1,11 @@
 import { Box, Typography } from "@mui/material"
-import { ArrowRight, CloudNotif, Driver2 } from "iconsax-react"
+import { ArrowLeft, ArrowRight, CloudNotif, Driver2 } from "iconsax-react"
 import { SiKubernetes } from "react-icons/si"
 import { useState } from "react"
-import { ConatinedButton } from "~/components/utilities/Buttons"
+import { ConatinedButton, OutlinedButton } from "~/components/utilities/Buttons"
 import SelectionTile from "./widgets/SelectionTile"
 
-function Infrastructure({ onSubmit }: { onSubmit: (value: string | null) => void }) {
+function Infrastructure({ onSubmit, backStep }: { onSubmit: (value: string | null) => void , backStep: () => void }) {
 	const [selected, setSelected] = useState<string | null>(null)
 
 	const handleSubmit = () => {
@@ -50,6 +50,9 @@ function Infrastructure({ onSubmit }: { onSubmit: (value: string | null) => void
 					/>
 				</Box>
 				<Box className="flex justify-end">
+					<OutlinedButton onClick={backStep}>
+						<ArrowLeft size="20px" color="currentColor" /> Back
+					</OutlinedButton>
 					<ConatinedButton disabled={!Boolean(selected)} onClick={handleSubmit}>
 						Continue <ArrowRight size="20px" color="currentColor" />
 					</ConatinedButton>
