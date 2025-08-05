@@ -8,9 +8,9 @@ import co.elastic.clients.elasticsearch.nodes.Stats;
 import co.hyperflex.entities.precheck.PrecheckSeverity;
 import co.hyperflex.prechecks.contexts.NodeContext;
 import co.hyperflex.prechecks.core.BaseElasticNodePrecheck;
-import co.hyperflex.prechecks.core.PrecheckLogger;
 import java.io.IOException;
 import java.util.Map;
+import org.slf4j.Logger;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -32,7 +32,7 @@ public class JvmHeapUsagePrecheck extends BaseElasticNodePrecheck {
   public void run(NodeContext context) {
     String nodeId = context.getNode().getId();
     ElasticsearchClient client = context.getElasticClient().getElasticsearchClient();
-    PrecheckLogger logger = context.getLogger();
+    Logger logger = context.getLogger();
 
     try {
       NodesStatsResponse response = client.nodes().stats(r -> r
@@ -50,7 +50,7 @@ public class JvmHeapUsagePrecheck extends BaseElasticNodePrecheck {
       String name = node.name();
       Jvm jvm = node.jvm();
       if (jvm == null || jvm.mem() == null) {
-        logger.info("%s: Skipping heap usage check — missing JVM memory stats.", name);
+        logger.info("{}: Skipping heap usage check — missing JVM memory stats.", name);
         return;
       }
 
@@ -59,7 +59,7 @@ public class JvmHeapUsagePrecheck extends BaseElasticNodePrecheck {
       Long heapMax = mem.heapMaxInBytes();
 
       if (heapUsed == null || heapMax == null) {
-        logger.info("%s: Skipping heap usage check — missing heap values.", name);
+        logger.info("{}: Skipping heap usage check — missing heap values.", name);
         return;
       }
 
@@ -67,21 +67,19 @@ public class JvmHeapUsagePrecheck extends BaseElasticNodePrecheck {
       double heapUsedGB = heapUsed / Math.pow(1024, 3);
       double heapMaxGB = heapMax / Math.pow(1024, 3);
 
-      logger.info("%s: Heap used = %.2fGB / %.2fGB (%.2f%%)", name, heapUsedGB, heapMaxGB,
+      logger.info("{}: Heap used = {}GB / {}GB ({}%%)", name, heapUsedGB, heapMaxGB,
           usedPercent);
 
       if (usedPercent >= THRESHOLD_PERCENT) {
-        String msg = String.format(
-            "%s: Heap usage is too high (%.2f%%). It must be below %.0f%%.",
-            name, usedPercent, THRESHOLD_PERCENT
+        logger.warn(
+            "{}: Heap usage is too high ({}%). It must be below {}%.", name, usedPercent, THRESHOLD_PERCENT
         );
-        logger.warn(msg);
-        throw new RuntimeException(msg); // Replace with ConflictException if defined
+        throw new RuntimeException();
       }
 
     } catch (IOException e) {
       logger.error("Failed to get JVM stats for node: {}", nodeId, e);
-      throw new RuntimeException("Failed to get JVM stats for node: " + nodeId, e);
+      throw new RuntimeException();
     }
   }
 }

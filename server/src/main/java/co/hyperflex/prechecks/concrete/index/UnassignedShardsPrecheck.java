@@ -7,9 +7,9 @@ import co.elastic.clients.elasticsearch.cluster.AllocationExplainResponse;
 import co.hyperflex.entities.precheck.PrecheckSeverity;
 import co.hyperflex.prechecks.contexts.IndexContext;
 import co.hyperflex.prechecks.core.BaseIndexPrecheck;
-import co.hyperflex.prechecks.core.PrecheckLogger;
 import java.io.IOException;
 import java.util.List;
+import org.slf4j.Logger;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -24,7 +24,7 @@ public class UnassignedShardsPrecheck extends BaseIndexPrecheck {
   public void run(IndexContext context) {
     String indexName = context.getIndexName();
     ElasticsearchClient client = context.getElasticClient().getElasticsearchClient();
-    PrecheckLogger logger = context.getLogger();
+    Logger logger = context.getLogger();
 
     try {
       List<ShardsRecord> shardRecords = client.cat().shards(r -> r.index(indexName))
@@ -39,7 +39,7 @@ public class UnassignedShardsPrecheck extends BaseIndexPrecheck {
           .toList();
 
       if (!unassignedShards.isEmpty() || !initializingShards.isEmpty()) {
-        logger.warn("Index [%s] has unassigned or initializing shards.", indexName);
+        logger.warn("Index [{}] has unassigned or initializing shards.", indexName);
 
         for (ShardsRecord shard : unassignedShards) {
           if (shard.shard() != null && !shard.shard().isEmpty()) {
@@ -60,18 +60,18 @@ public class UnassignedShardsPrecheck extends BaseIndexPrecheck {
                   : "No details available";
 
               logger.info(
-                  "Unassigned shard [%s] (primary: %s) explanation: %s",
+                  "Unassigned shard [{}] (primary: {}) explanation: {}",
                   shard.shard(), isPrimary, explanation
               );
             } catch (NumberFormatException e) {
-              logger.warn("Skipping invalid shard number: [%s]", shard.shard());
+              logger.warn("Skipping invalid shard number: [{}]", shard.shard());
             }
           }
         }
 
         throw new RuntimeException("Index has unassigned or initializing shards.");
       } else {
-        logger.info("Index [%s] has all shards in assigned and started state.", indexName);
+        logger.info("Index [{}] has all shards in assigned and started state.", indexName);
       }
     } catch (IOException e) {
       logger.error("Failed to check unassigned shards for index: {}", indexName, e);

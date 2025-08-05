@@ -7,9 +7,9 @@ import co.elastic.clients.elasticsearch.nodes.Stats;
 import co.hyperflex.entities.precheck.PrecheckSeverity;
 import co.hyperflex.prechecks.contexts.NodeContext;
 import co.hyperflex.prechecks.core.BaseElasticNodePrecheck;
-import co.hyperflex.prechecks.core.PrecheckLogger;
 import java.io.IOException;
 import java.util.Map;
+import org.slf4j.Logger;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -31,7 +31,7 @@ public class FileDescriptorLimitPrecheck extends BaseElasticNodePrecheck {
   public void run(NodeContext context) {
     String nodeId = context.getNode().getId();
     ElasticsearchClient client = context.getElasticClient().getElasticsearchClient();
-    PrecheckLogger logger = context.getLogger();
+    Logger logger = context.getLogger();
 
     try {
       NodesStatsResponse response = client.nodes().stats(r -> r.nodeId(nodeId).metric("process"));
@@ -48,7 +48,7 @@ public class FileDescriptorLimitPrecheck extends BaseElasticNodePrecheck {
 
       if (process == null || process.maxFileDescriptors() == null
           || process.openFileDescriptors() == null) {
-        logger.info("%s: Skipping file descriptor check — missing metrics.", name);
+        logger.info("{}: Skipping file descriptor check — missing metrics.", name);
         return;
       }
 
@@ -56,15 +56,12 @@ public class FileDescriptorLimitPrecheck extends BaseElasticNodePrecheck {
       long openFD = process.openFileDescriptors();
       double usagePercent = (double) openFD / maxFD * 100;
 
-      logger.info("%s: Open FDs = %d, Max FDs = %d (%.2f%% in use)", name, openFD, maxFD,
-          usagePercent);
+      logger.info("{}: Open FDs = {}, Max FDs = {} ({}% in use)", name, openFD, maxFD, usagePercent);
 
       if (maxFD < MIN_LIMIT) {
-        String msg = String.format(
-            "%s: Max file descriptor limit (%d) is below the recommended minimum (%d). "
-                + "Consider increasing 'ulimit -n' and systemd LimitNOFILE.", name, maxFD,
-            MIN_LIMIT);
-        throw new RuntimeException(msg); // Use ConflictException if defined
+        logger.error("{}: Max file descriptor limit ({}) is below the recommended minimum ({}).", name, maxFD, MIN_LIMIT);
+        logger.error("Consider increasing 'ulimit -n' and systemd LimitNOFILE.");
+        throw new RuntimeException();
       }
 
     } catch (IOException e) {

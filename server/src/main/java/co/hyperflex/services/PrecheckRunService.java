@@ -28,6 +28,7 @@ import co.hyperflex.repositories.projection.PrecheckStatusAndSeverityView;
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotNull;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -49,9 +50,8 @@ public class PrecheckRunService {
   private final MongoTemplate mongoTemplate;
   private final PrecheckMapper precheckMapper;
 
-  public PrecheckRunService(PrecheckRunRepository precheckRunRepository,
-                            PrecheckGroupRepository precheckGroupRepository, BreakingChangeRepository breakingChangeRepository,
-                            ClusterUpgradeJobService clusterUpgradeJobService,
+  public PrecheckRunService(PrecheckRunRepository precheckRunRepository, PrecheckGroupRepository precheckGroupRepository,
+                            BreakingChangeRepository breakingChangeRepository, ClusterUpgradeJobService clusterUpgradeJobService,
                             MongoTemplate mongoTemplate, PrecheckMapper precheckMapper) {
     this.precheckRunRepository = precheckRunRepository;
     this.precheckGroupRepository = precheckGroupRepository;
@@ -174,14 +174,10 @@ public class PrecheckRunService {
     }
 
     Query query = new Query(new Criteria().orOperator(criteriaList)
-        .andOperator(Criteria.where("precheckGroupId").is(precheckGroupId)));
-    Update update = new Update().set("status", PrecheckStatus.PENDING).set("startedAt", null)
-        .set("endAt", null);
+        .andOperator(Criteria.where(PrecheckRun.PRECHECK_GROUP_ID).is(precheckGroupId)));
+    Update update = new Update().set(PrecheckRun.STATUS, PrecheckStatus.PENDING).set(PrecheckRun.START_TIME, null)
+        .set(PrecheckRun.END_TIME, null);
     mongoTemplate.updateMulti(query, update, PrecheckRun.class);
-  }
-
-  public List<PrecheckRun> getPendingPrecheckRuns() {
-    return precheckRunRepository.findTop40ByStatus(PrecheckStatus.PENDING);
   }
 
   private PrecheckStatus getMergedPrecheckStatus(List<PrecheckStatus> statuses) {
@@ -232,4 +228,27 @@ public class PrecheckRunService {
     precheckGroupRepository.save(precheckGroup);
     return new CreatePrecheckGroupResponse(precheckGroup.getId());
   }
+
+  public void addLog(String precheckRunId, String message) {
+    precheckRunRepository.addLog(precheckRunId, message);
+  }
+
+  public List<PrecheckRun> getPendingPrechecks() {
+    return precheckRunRepository.getPendingPrechecks();
+  }
+
+  public void updatePrecheckStatus(String id, PrecheckStatus precheckStatus) {
+    Update update = new Update().set(PrecheckRun.STATUS, precheckStatus);
+    if (precheckStatus == PrecheckStatus.RUNNING) {
+      update.set(PrecheckRun.START_TIME, new Date());
+      update.set(PrecheckRun.LOGS, new LinkedList<>());
+    } else if (precheckStatus == PrecheckStatus.PENDING) {
+      update.set(PrecheckRun.END_TIME, null);
+      update.set(PrecheckRun.START_TIME, null);
+    } else if (precheckStatus == PrecheckStatus.COMPLETED || precheckStatus == PrecheckStatus.FAILED) {
+      update.set(PrecheckRun.END_TIME, new Date());
+    }
+    precheckRunRepository.updateById(id, update);
+  }
+
 }

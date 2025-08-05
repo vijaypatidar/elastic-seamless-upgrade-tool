@@ -6,8 +6,8 @@ import co.hyperflex.clients.elastic.ElasticClient;
 import co.hyperflex.entities.precheck.PrecheckSeverity;
 import co.hyperflex.prechecks.contexts.NodeContext;
 import co.hyperflex.prechecks.core.BaseElasticNodePrecheck;
-import co.hyperflex.prechecks.core.PrecheckLogger;
 import java.io.IOException;
+import org.slf4j.Logger;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -25,7 +25,7 @@ public class ElasticNodeMemoryHealthPrecheck extends BaseElasticNodePrecheck {
   @Override
   public void run(NodeContext context) {
     try {
-      PrecheckLogger logger = context.getLogger();
+      Logger logger = context.getLogger();
       ElasticClient elasticClient = context.getElasticClient();
       String nodeId = context.getNode().getId();
       NodesStatsResponse stats =
@@ -44,13 +44,13 @@ public class ElasticNodeMemoryHealthPrecheck extends BaseElasticNodePrecheck {
       int memoryPercent = (int) ((usedMemory * 100.0) / totalMemory);
 
       long bitsInMB = 1024 * 1024;
-      logger.info("Memory - Total: %s MB, Free: %s MB, Utilised: %s", totalMemory / bitsInMB,
+      logger.info("Memory - Total: {} MB, Free: {} MB, Utilised: {}", totalMemory / bitsInMB,
           freeMemory / bitsInMB, memoryPercent);
 
       if (memoryPercent > 90) {
-        logger.warn("Memory usage on node is %s", memoryPercent);
-        throw new RuntimeException("Memory usage check failed: current usage is " + memoryPercent
-            + ", which exceeds the threshold of 90%");
+        logger.warn("Memory usage on node is {}", memoryPercent);
+        logger.error("Memory usage check failed: current usage is {}, which exceeds the threshold of 90%", memoryPercent);
+        throw new RuntimeException();
       }
     } catch (IOException e) {
       throw new RuntimeException(e);

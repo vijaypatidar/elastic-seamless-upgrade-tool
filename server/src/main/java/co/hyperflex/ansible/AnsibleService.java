@@ -9,6 +9,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -44,6 +45,15 @@ public class AnsibleService {
       logger.error("Failed to run ansible command", e);
       throw new RuntimeException(e);
     }
+  }
+
+  public AnsibleAdHocCommandResult run(@NotNull AnsibleAdHocCommand cmd) {
+    List<String> stdOutLogs = new LinkedList<>();
+    List<String> strErrLogs = new LinkedList<>();
+
+    int success = run(cmd, stdOutLogs::add, strErrLogs::add);
+
+    return new AnsibleAdHocCommandResult(success == 0, stdOutLogs, strErrLogs);
   }
 
   protected Process getProcess(AnsibleAdHocCommand cmd) throws IOException {

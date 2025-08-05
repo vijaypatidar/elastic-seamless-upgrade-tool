@@ -1,12 +1,12 @@
 package co.hyperflex.prechecks.concrete.node.os;
 
+import co.hyperflex.ansible.AnsibleAdHocCommandResult;
 import co.hyperflex.ansible.AnsibleService;
 import co.hyperflex.ansible.commands.AnsibleAdHocShellCommand;
 import co.hyperflex.entities.cluster.SelfManagedCluster;
 import co.hyperflex.entities.cluster.SshInfo;
 import co.hyperflex.prechecks.contexts.NodeContext;
 import co.hyperflex.prechecks.core.BaseNodePrecheck;
-import java.util.function.Consumer;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -30,17 +30,16 @@ public class DiskUsagePrecheck extends BaseNodePrecheck {
       AnsibleAdHocShellCommand cmd = new AnsibleAdHocShellCommand.Builder().hostIp(context.getNode().getIp())
           .args("df -h / | tail -n 1 | awk '{ print $5 }' | tr -d %").sshUsername(sshInfo.username()).sshKeyPath(sshInfo.keyPath())
           .useBecome(true).build();
-      ansibleService.run(cmd, new Consumer<String>() {
-        @Override
-        public void accept(String s) {
-          context.getLogger().info(s);
-        }
-      }, new Consumer<String>() {
-        @Override
-        public void accept(String s) {
-          context.getLogger().error(s);
-        }
-      });
+      AnsibleAdHocCommandResult result = ansibleService.run(cmd);
+
+      if (result.success()) {
+        context.getLogger().info("Disk Utilization check completed");
+        context.getLogger().info("Disk Utilized: {}%", result.stdOutLogs().getLast());
+      } else {
+        context.getLogger().info("Disk Utilization check failed");
+        result.stdOutLogs().forEach(context.getLogger()::error);
+        throw new RuntimeException("Unable to run Disk Utilization check");
+      }
     }
   }
 }

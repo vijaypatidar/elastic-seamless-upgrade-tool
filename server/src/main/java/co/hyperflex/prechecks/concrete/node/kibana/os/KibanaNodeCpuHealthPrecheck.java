@@ -5,7 +5,7 @@ import co.hyperflex.clients.kibana.dto.GetKibanaStatusResponse;
 import co.hyperflex.clients.kibana.dto.OsStats;
 import co.hyperflex.prechecks.contexts.NodeContext;
 import co.hyperflex.prechecks.core.BaseKibanaNodePrecheck;
-import co.hyperflex.prechecks.core.PrecheckLogger;
+import org.slf4j.Logger;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -17,8 +17,7 @@ public class KibanaNodeCpuHealthPrecheck extends BaseKibanaNodePrecheck {
 
   @Override
   public void run(NodeContext context) {
-    PrecheckLogger logger = context.getLogger();
-    String nodeId = context.getNode().getId();
+    Logger logger = context.getLogger();
     KibanaClient kibanaClient = context.getKibanaClient();
 
     GetKibanaStatusResponse details =
@@ -27,18 +26,19 @@ public class KibanaNodeCpuHealthPrecheck extends BaseKibanaNodePrecheck {
     OsStats osStats = details.metrics().os();
 
     if (osStats == null) {
-      logger.warn("No stats found for node: {}", nodeId);
+      logger.warn("No stats found for node");
       return;
     }
 
     double cpuPercent = osStats.load().fiveMinute();
 
-    logger.info("CPU Utilization check completed for node: %s", nodeId);
-    logger.info("CPU Usage: " + cpuPercent + "%%");
+    logger.info("CPU Utilization check completed for node.");
+    logger.info("Current CPU Usage: {}%", cpuPercent);
     if (cpuPercent > 80) {
-      throw new RuntimeException("CPU utilization check failed: current usage is " + cpuPercent
-          + "%, which exceeds the threshold of 80%");
+      logger.error("CPU utilization check failed: current usage is {}%, which exceeds the threshold of 80%", cpuPercent);
+      throw new RuntimeException();
     }
+
 
   }
 }

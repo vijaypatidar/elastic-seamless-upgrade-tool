@@ -70,71 +70,61 @@ public class PrecheckSchedulerService {
 
   public void scheduleNodePrechecks(String precheckGroupId, String clusterId) {
     List<GetClusterNodeResponse> nodes = clusterService.getNodes(clusterId);
-    final List<NodePrecheckRun> precheckRuns =
-        precheckRegistry.getNodePrechecks()
-            .stream()
-            .parallel()
-            .flatMap(precheck -> nodes.stream().map(node -> {
-              NodePrecheckRun precheckRun = new NodePrecheckRun();
-              precheckRun.setPrecheckId(precheck.getId());
-              precheckRun.setNode(
-                  new NodePrecheckRun.NodeInfo(node.id(), node.name(), node.ip(), node.rank())
-              );
-              precheckRun.setPrecheckGroupId(precheckGroupId);
-              precheckRun.setSeverity(precheck.getSeverity());
-              precheckRun.setClusterId(clusterId);
-              precheckRun.setName(precheck.getName());
-              return precheckRun;
-            }).filter(precheckRun -> {
-              PrecheckContext context = precheckContextResolver.resolveContext(precheckRun);
-              return ((BaseNodePrecheck) precheck).shouldRun((NodeContext) context);
-            }))
-            .toList();
-
-    precheckRunRepository.saveAll(precheckRuns);
-
-  }
-
-  public void scheduleClusterPrechecks(String precheckGroupId, String clusterId) {
-    final List<ClusterPrecheckRun> precheckRuns =
-        precheckRegistry.getClusterPrechecks().stream().parallel().map(precheck -> {
-          ClusterPrecheckRun precheckRun = new ClusterPrecheckRun();
+    precheckRegistry.getNodePrechecks()
+        .stream()
+        .parallel()
+        .flatMap(precheck -> nodes.stream().map(node -> {
+          NodePrecheckRun precheckRun = new NodePrecheckRun();
           precheckRun.setPrecheckId(precheck.getId());
+          precheckRun.setNode(
+              new NodePrecheckRun.NodeInfo(node.id(), node.name(), node.ip(), node.rank())
+          );
           precheckRun.setPrecheckGroupId(precheckGroupId);
           precheckRun.setSeverity(precheck.getSeverity());
           precheckRun.setClusterId(clusterId);
           precheckRun.setName(precheck.getName());
           return precheckRun;
-        }).toList();
+        }).filter(precheckRun -> {
+          PrecheckContext context = precheckContextResolver.resolveContext(precheckRun);
+          return ((BaseNodePrecheck) precheck).shouldRun((NodeContext) context);
+        }))
+        .forEach(precheckRunRepository::save);
+  }
 
-    precheckRunRepository.saveAll(precheckRuns);
-
+  public void scheduleClusterPrechecks(String precheckGroupId, String clusterId) {
+    precheckRegistry.getClusterPrechecks().stream().parallel().map(precheck -> {
+      ClusterPrecheckRun precheckRun = new ClusterPrecheckRun();
+      precheckRun.setPrecheckId(precheck.getId());
+      precheckRun.setPrecheckGroupId(precheckGroupId);
+      precheckRun.setSeverity(precheck.getSeverity());
+      precheckRun.setClusterId(clusterId);
+      precheckRun.setName(precheck.getName());
+      return precheckRun;
+    }).forEach(precheckRunRepository::save);
   }
 
   public void scheduleIndexPrechecks(String precheckGroupId, String clusterId) {
     ElasticClient elasticClient =
         elasticsearchClientProvider.getElasticsearchClientByClusterId(clusterId);
     final List<String> indexes = elasticClient.getIndices();
-    final List<IndexPrecheckRun> precheckRuns =
-        precheckRegistry.getIndexPrechecks()
+    precheckRegistry.getIndexPrechecks()
+        .stream()
+        .parallel()
+        .flatMap(precheck -> indexes
             .stream()
-            .parallel()
-            .flatMap(precheck -> indexes
-                .stream()
-                .map(index -> {
-                  IndexPrecheckRun precheckRun = new IndexPrecheckRun();
-                  precheckRun.setIndex(new IndexPrecheckRun.IndexInfo(index));
-                  precheckRun.setPrecheckId(precheck.getId());
-                  precheckRun.setPrecheckGroupId(precheckGroupId);
-                  precheckRun.setSeverity(precheck.getSeverity());
-                  precheckRun.setName(precheck.getName());
-                  precheckRun.setClusterId(clusterId);
-                  return precheckRun;
-                }).filter(precheckRun -> {
-                  PrecheckContext context = precheckContextResolver.resolveContext(precheckRun);
-                  return ((BaseIndexPrecheck) precheck).shouldRun((IndexContext) context);
-                })).toList();
-    precheckRunRepository.saveAll(precheckRuns);
+            .map(index -> {
+              IndexPrecheckRun precheckRun = new IndexPrecheckRun();
+              precheckRun.setIndex(new IndexPrecheckRun.IndexInfo(index));
+              precheckRun.setPrecheckId(precheck.getId());
+              precheckRun.setPrecheckGroupId(precheckGroupId);
+              precheckRun.setSeverity(precheck.getSeverity());
+              precheckRun.setName(precheck.getName());
+              precheckRun.setClusterId(clusterId);
+              return precheckRun;
+            }).filter(precheckRun -> {
+              PrecheckContext context = precheckContextResolver.resolveContext(precheckRun);
+              return ((BaseIndexPrecheck) precheck).shouldRun((IndexContext) context);
+            })).forEach(precheckRunRepository::save);
   }
 
   public PrecheckScheduleResponse rerunPrechecks(String clusterId,

@@ -8,12 +8,12 @@ import co.elastic.clients.elasticsearch.nodes.info.NodeInfo;
 import co.hyperflex.entities.precheck.PrecheckSeverity;
 import co.hyperflex.prechecks.contexts.NodeContext;
 import co.hyperflex.prechecks.core.BaseElasticNodePrecheck;
-import co.hyperflex.prechecks.core.PrecheckLogger;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import org.slf4j.Logger;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -52,7 +52,7 @@ public class CustomPluginsListPrecheck extends BaseElasticNodePrecheck {
   public void run(NodeContext context) {
     String nodeId = context.getNode().getId();
     ElasticsearchClient client = context.getElasticClient().getElasticsearchClient();
-    PrecheckLogger logger = context.getLogger();
+    Logger logger = context.getLogger();
 
     try {
       NodesInfoResponse nodeInfoResponse = client.nodes().info(r -> r
@@ -68,7 +68,7 @@ public class CustomPluginsListPrecheck extends BaseElasticNodePrecheck {
       }
 
       if (nodeInfo.plugins() == null || nodeInfo.plugins().isEmpty()) {
-        logger.info("No plugins found for node with ID [" + nodeId + "].");
+        logger.info("No plugins found for node with ID [{}].", nodeId);
         return;
       }
 
@@ -82,17 +82,17 @@ public class CustomPluginsListPrecheck extends BaseElasticNodePrecheck {
           .toList();
 
       if (customPlugins.isEmpty()) {
-        logger.info("Node [%s] has no manually installed plugins.", nodeInfo.name());
+        logger.info("Node [{}] has no manually installed plugins.", nodeInfo.name());
       } else {
         logger.info(
-            "Node [%s] has manually installed plugins: %s",
+            "Node [{}] has manually installed plugins: {}",
             nodeInfo.name(),
             String.join(", ", customPlugins)
         );
       }
     } catch (IOException e) {
       logger.error("Failed to check installed plugins for node: {}", nodeId, e);
-      throw new RuntimeException("Failed to check installed plugins for node: " + nodeId, e);
+      throw new RuntimeException(e);
     }
   }
 }

@@ -43,6 +43,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -167,11 +168,15 @@ public class ClusterUpgradeService {
     executorService.submit(() -> {
       try {
         lock.lock();
+        MDC.put("clusterId", cluster.getId());
+        MDC.put("clusterUpgradeJobId", clusterUpgradeJob.getId());
 
         ElasticClient elasticClient = elasticsearchClientProvider.getClient(cluster);
         KibanaClient kibanaClient = kibanaClientProvider.getClient(cluster);
 
+
         for (ClusterNode node : nodes.stream().sorted(Comparator.comparingInt(ClusterNode::getRank)).toList()) {
+          MDC.put("nodeId", node.getId());
           if (NodeUpgradeStatus.UPGRADED == node.getStatus()) {
             log.info("Skipping node with [NodeId: {}] as its already updated", node.getId());
             continue;
@@ -229,6 +234,7 @@ public class ClusterUpgradeService {
         clusterService.syncClusterState(cluster.getId());
         syncUpgradeJobStatus(cluster, clusterUpgradeJob);
         notificationService.sendNotification(new UpgradeProgressChangeEvent());
+        MDC.clear();
         lock.unlock();
       }
     });

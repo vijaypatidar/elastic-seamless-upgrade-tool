@@ -8,10 +8,10 @@ import co.elastic.clients.elasticsearch.nodes.Stats;
 import co.hyperflex.entities.precheck.PrecheckSeverity;
 import co.hyperflex.prechecks.contexts.NodeContext;
 import co.hyperflex.prechecks.core.BaseElasticNodePrecheck;
-import co.hyperflex.prechecks.core.PrecheckLogger;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
+import org.slf4j.Logger;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -33,7 +33,7 @@ public class IngestLoadPrecheck extends BaseElasticNodePrecheck {
   public void run(NodeContext context) {
     String nodeId = context.getNode().getId();
     ElasticsearchClient client = context.getElasticClient().getElasticsearchClient();
-    PrecheckLogger logger = context.getLogger();
+    Logger logger = context.getLogger();
 
     try {
       NodesInfoResponse stats = client.nodes().info(r -> r.nodeId(nodeId));
@@ -52,18 +52,18 @@ public class IngestLoadPrecheck extends BaseElasticNodePrecheck {
       var ingestTotal = Optional.ofNullable(nodeStats.ingest()).map(Ingest::total).orElse(null);
 
       if (ingestTotal == null || ingestTotal.count() == 0 || ingestTotal.timeInMillis() == 0) {
-        logger.info("%s: Skipping ingest load check — no activity data.", nodeName);
+        logger.info("{}: Skipping ingest load check — no activity data.", nodeName);
         return;
       }
 
       double docsPerSec = ingestTotal.count() / (ingestTotal.timeInMillis() / 1000.0);
       String docsPerSecRounded = String.format("%.2f", docsPerSec);
 
-      logger.info("%s: Ingested %d docs in %d ms → ~%s docs/sec", nodeName, ingestTotal.count(),
+      logger.info("{}: Ingested {} docs in {} ms → ~{} docs/sec", nodeName, ingestTotal.count(),
           ingestTotal.timeInMillis(), docsPerSecRounded);
 
       if (docsPerSec > THROUGHPUT_THRESHOLD) {
-        logger.warn("%s: Ingest load is high (%s docs/sec). Threshold: %d docs/sec.", nodeName,
+        logger.warn("{}: Ingest load is high ({} docs/sec). Threshold: {} docs/sec.", nodeName,
             docsPerSecRounded, THROUGHPUT_THRESHOLD);
       }
 

@@ -7,9 +7,9 @@ import co.elastic.clients.json.JsonData;
 import co.hyperflex.entities.precheck.PrecheckSeverity;
 import co.hyperflex.prechecks.contexts.ClusterContext;
 import co.hyperflex.prechecks.core.BaseClusterPrecheck;
-import co.hyperflex.prechecks.core.PrecheckLogger;
 import java.io.IOException;
 import java.util.Map;
+import org.slf4j.Logger;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -28,7 +28,7 @@ public class ClusterAllocationSettingPrecheck extends BaseClusterPrecheck {
   @Override
   public void run(ClusterContext context) {
     ElasticsearchClient client = context.getElasticClient().getElasticsearchClient();
-    PrecheckLogger logger = context.getLogger();
+    Logger logger = context.getLogger();
 
     try {
       GetClusterSettingsResponse settings = client.cluster().getSettings(
@@ -52,10 +52,10 @@ public class ClusterAllocationSettingPrecheck extends BaseClusterPrecheck {
             transientSettings.get(clusterRoutingAllocationEnable).toJson().toString();
       }
 
+
       String message = String.format(
           "Current setting 'cluster.routing.allocation.enable' is '%s'.", allocationSetting);
 
-      logger.info(message);
 
       if ("primaries".equalsIgnoreCase(allocationSetting)
           || "none".equalsIgnoreCase(allocationSetting)) {
@@ -63,8 +63,9 @@ public class ClusterAllocationSettingPrecheck extends BaseClusterPrecheck {
         logger.warn(
             "This setting may prevent shard allocation and lead to red cluster status."
                 + " Set it to 'all' before upgrade.");
-        throw new RuntimeException(
-            "Precheck failed: " + message);
+        throw new RuntimeException();
+      } else {
+        logger.info(message);
       }
 
     } catch (IOException e) {
