@@ -37,7 +37,7 @@ public class ClusterUpgradeJobService {
   public @NotNull ClusterUpgradeJob getActiveJobByClusterId(@NotNull String clusterId) {
     return clusterUpgradeJobRepository
         .findByClusterIdAndStatusIsNot(clusterId, ClusterUpgradeStatus.UPDATED)
-        .stream().findFirst().orElseThrow(
+        .stream().filter(ClusterUpgradeJob::isActive).findFirst().orElseThrow(
             () -> new NotFoundException("No active cluster job found for cluster ID: " + clusterId));
   }
 
@@ -55,30 +55,42 @@ public class ClusterUpgradeJobService {
 
     final String clusterId = request.clusterId();
 
-    List<ClusterUpgradeJob> activeJobs =
-        clusterUpgradeJobRepository.findByClusterIdAndStatusIsNot(clusterId,
-            ClusterUpgradeStatus.UPDATED);
-
-    if (!activeJobs.isEmpty()) {
-      logger.error("Cluster upgrade job already exists for cluster id {}.", clusterId);
-      throw new ConflictException("Cluster upgrade job already exists");
-    }
+    List<ClusterUpgradeJob> jobs = clusterUpgradeJobRepository.findByClusterId(clusterId)
+        .stream().filter(job -> !job.getStatus().equals(ClusterUpgradeStatus.UPDATED))
+        .toList();
 
     ElasticClient elasticClient =
         elasticsearchClientProvider.getElasticsearchClientByClusterId(clusterId);
     InfoResponse info = elasticClient.getClusterInfo();
+    String currentVersion = info.version().number();
 
-    ClusterUpgradeJob clusterUpgradeJob = new ClusterUpgradeJob();
-    clusterUpgradeJob.setClusterId(clusterId);
-    clusterUpgradeJob.setTargetVersion(request.targetVersion());
-    clusterUpgradeJob.setCurrentVersion(info.version().number());
+    ClusterUpgradeJob existingJob = jobs.stream().filter(
+        job -> job.getCurrentVersion().equals(currentVersion)
+            && job.getTargetVersion().equals(request.targetVersion())
+    ).findFirst().orElse(null);
 
-    clusterUpgradeJobRepository.save(clusterUpgradeJob);
+    jobs.forEach(job -> {
+      if (!job.getStatus().equals(ClusterUpgradeStatus.PENDING)) {
+        logger.error("Cluster is under upgrade can't create upgrade job for [cluster: {}].", clusterId);
+        throw new ConflictException("Cluster is under upgrade can't create upgrade job for cluster");
+      }
+      job.setActive(false);
+    });
+
+    if (existingJob == null) {
+      existingJob = new ClusterUpgradeJob();
+      existingJob.setClusterId(clusterId);
+      existingJob.setTargetVersion(request.targetVersion());
+      existingJob.setCurrentVersion(currentVersion);
+      clusterUpgradeJobRepository.save(existingJob);
+    }
+
+    existingJob.setActive(true);
+    clusterUpgradeJobRepository.saveAll(jobs);
 
     resetUpgradeStatus(clusterId);
 
-    return new CreateClusterUpgradeJobResponse("Cluster upgrade job created successfully",
-        clusterUpgradeJob.getId());
+    return new CreateClusterUpgradeJobResponse("Cluster upgrade job created successfully", existingJob.getId());
   }
 
   private void resetUpgradeStatus(@NotNull String clusterId) {

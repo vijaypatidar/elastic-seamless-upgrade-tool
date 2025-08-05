@@ -168,6 +168,10 @@ public class ClusterUpgradeService {
     executorService.submit(() -> {
       try {
         lock.lock();
+        if (clusterUpgradeJob.getStatus().equals(ClusterUpgradeStatus.PENDING)) {
+          clusterUpgradeJob.setStatus(ClusterUpgradeStatus.UPGRADING);
+          clusterUpgradeJobRepository.save(clusterUpgradeJob);
+        }
         MDC.put("clusterId", cluster.getId());
         MDC.put("clusterUpgradeJobId", clusterUpgradeJob.getId());
 
