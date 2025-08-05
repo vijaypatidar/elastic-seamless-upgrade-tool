@@ -179,6 +179,7 @@ public class ClusterUpgradeService {
 
 
         for (ClusterNode node : nodes.stream().sorted(Comparator.comparingInt(ClusterNode::getRank)).toList()) {
+
           MDC.put("nodeId", node.getId());
           if (NodeUpgradeStatus.UPGRADED == node.getStatus()) {
             log.info("Skipping node with [NodeId: {}] as its already updated", node.getId());
@@ -191,27 +192,33 @@ public class ClusterUpgradeService {
           UpgradePlanBuilder upgradePlanBuilder = new UpgradePlanBuilder();
 
           List<Task> tasks = upgradePlanBuilder.buildPlanFor(node);
-          double seq = 0.0;
+
+          int checkPoint = getCheckPoint(clusterUpgradeJob, node.getId());
+
           node.setStatus(NodeUpgradeStatus.UPGRADING);
           updateNodeProgress(node, 0);
 
+          int index = 0;
           for (Task task : tasks) {
+            if (index++ < checkPoint) {
+              log.info("Skipping [Task: {}] for [NodeId: {}] as its already performed successfully.", task.getId(), node.getId());
+              continue;
+            }
             try {
-              log.info("Task [taskId: {}] [Sequence: {}] [NodeIp: {}] Starting task", task.getId(), seq, node.getIp());
+              log.info("Task [taskId: {}] [NodeIp: {}] Starting task", task.getId(), node.getIp());
               TaskResult result = task.run(context);
               System.out.println(result);
-              log.info("Task [taskId: {}] [Sequence: {}] [NodeIp: {}] [Success: {}]  Result: {}", task.getId(), seq, node.getIp(),
+              log.info("Task [taskId: {}] [NodeIp: {}] [Success: {}]  Result: {}", task.getId(), node.getIp(),
                   result.isSuccess(), result);
               if (!result.isSuccess()) {
                 node.setStatus(NodeUpgradeStatus.FAILED);
-                updateNodeProgress(node, (int) ((seq / tasks.size()) * 100));
-
-
+                updateNodeProgress(node, (int) (((checkPoint * 1.0) / tasks.size()) * 100));
                 notifyNodeUpgradeFailed(node);
                 throw new RuntimeException(result.getMessage());
               }
-              seq++;
-              updateNodeProgress(node, (int) ((seq / tasks.size()) * 100));
+              checkPoint++;
+              setCheckPoint(clusterUpgradeJob, node.getId(), checkPoint);
+              updateNodeProgress(node, (int) (((checkPoint * 1.0) / tasks.size()) * 100));
               Thread.sleep(2000);
             } finally {
               notificationService.sendNotification(new UpgradeProgressChangeEvent());
@@ -297,5 +304,14 @@ public class ClusterUpgradeService {
     node.setProgress(progress);
     clusterNodeRepository.save(node);
     notificationService.sendNotification(new UpgradeProgressChangeEvent());
+  }
+
+  private void setCheckPoint(ClusterUpgradeJob job, String nodeId, int checkPoint) {
+    job.getNodeCheckPoints().put(nodeId, checkPoint);
+    clusterUpgradeJobRepository.save(job);
+  }
+
+  private int getCheckPoint(ClusterUpgradeJob job, String nodeId) {
+    return job.getNodeCheckPoints().getOrDefault(nodeId, 0);
   }
 }

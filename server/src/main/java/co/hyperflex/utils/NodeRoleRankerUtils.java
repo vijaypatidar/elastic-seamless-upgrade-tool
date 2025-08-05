@@ -5,37 +5,63 @@ import java.util.List;
 public class NodeRoleRankerUtils {
 
   public static int getNodeRankByRoles(List<String> nodeRoles, boolean isActiveMaster) {
-    final List<String> roles = nodeRoles.stream().map(String::toLowerCase).toList();
+    final List<String> roles = nodeRoles.stream()
+        .map(String::toLowerCase)
+        .toList();
+
     boolean isMaster = roles.contains("master");
-    boolean isData = roles.stream().anyMatch(role -> role.startsWith("data"));
     boolean isIngest = roles.contains("ingest");
     boolean isML = roles.contains("ml");
     boolean isTransform = roles.contains("transform");
     boolean isRemote = roles.contains("remote_cluster_client");
     boolean isKibana = roles.contains("kibana");
 
-    // Coordinating-only: no special roles
-    boolean isCoordinatingOnly =
-        !isMaster && !isData && !isIngest && !isML && !isTransform && !isRemote;
+    boolean isDataFrozen = roles.contains("data_frozen");
+    boolean isDataCold = roles.contains("data_cold");
+    boolean isDataWarm = roles.contains("data_warm");
+    boolean isDataHot = roles.contains("data_hot");
+    boolean isDataContent = roles.contains("data_content");
+    boolean isGeneralData = roles.contains("data");
+
+    boolean isAnyData = isDataFrozen || isDataCold || isDataWarm || isDataHot || isDataContent || isGeneralData;
 
     if (isKibana) {
-      return 100; // Kibana must be upgraded after any elastic node
-    } else if (isActiveMaster) {
-      return 60; // Active master node (upgrade last)
-    } else if (isCoordinatingOnly) {
-      return 10;           // coordinating-only node
-    } else if (isIngest) {
-      return 15;        // ingest-only or ingest node
-    } else if (isML || isRemote || isTransform) {
-      return 20; // ml, transform, remote_cluster_client
-    } else if (isData && !isMaster) {
-      return 30;          // data-only node
-    } else if (isData) {
-      return 40;           // data + master node
-    } else if (isMaster) {
-      return 50;          // master-only node
-    } else {
-      return 100; // Fallback for unknown role combinations
+      return 200;
     }
+    if (isActiveMaster) {
+      return 150;
+    }
+
+    int rank = 0;
+
+    if (isAnyData) {
+      int dataScore = 7;
+      if (isDataHot) {
+        dataScore = 6;
+      } else if (isDataContent) {
+        dataScore = 5;
+      } else if (isDataWarm) {
+        dataScore = 4;
+      } else if (isDataCold) {
+        dataScore = 3;
+      } else if (isDataFrozen) {
+        dataScore = 2;
+      }
+      rank = 30 + dataScore;
+    } else if (isMaster) {
+      rank = 80;
+    } else if (isML || isTransform || isRemote) {
+      rank = 20;
+    } else if (isIngest) {
+      rank = 15;
+    } else {
+      rank = 10; // Coordinating-only
+    }
+
+    if (isMaster && isAnyData) {
+      rank += 15;
+    }
+
+    return rank;
   }
 }

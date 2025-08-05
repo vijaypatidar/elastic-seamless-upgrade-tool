@@ -1,5 +1,7 @@
 package co.hyperflex.entities.upgrade;
 
+import java.util.HashMap;
+import java.util.Map;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -12,6 +14,7 @@ public class ClusterUpgradeJob {
   private String currentVersion;
   private String targetVersion;
   private boolean isActive;
+  private Map<String, Integer> nodeCheckPoints = new HashMap<>();
   private ClusterUpgradeStatus status = ClusterUpgradeStatus.PENDING;
 
 
@@ -61,5 +64,13 @@ public class ClusterUpgradeJob {
 
   public void setStatus(ClusterUpgradeStatus status) {
     this.status = status;
+  }
+
+  public Map<String, Integer> getNodeCheckPoints() {
+    return nodeCheckPoints;
+  }
+
+  public void setNodeCheckPoints(Map<String, Integer> nodeCheckPoints) {
+    this.nodeCheckPoints = nodeCheckPoints;
   }
 }
