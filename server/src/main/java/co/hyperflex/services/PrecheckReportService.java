@@ -167,7 +167,7 @@ public class PrecheckReportService {
 
 
   private String getESDeprecationsMdReport(String clusterId) {
-    ElasticClient client = elasticsearchClientProvider.getElasticsearchClientByClusterId(clusterId);
+    ElasticClient client = elasticsearchClientProvider.getClientByClusterId(clusterId);
     GetElasticDeprecationResponse deprecationResponse = client.getDeprecation();
 
     StringBuilder md = new StringBuilder("## Elasticsearch Deprecations\n\n");

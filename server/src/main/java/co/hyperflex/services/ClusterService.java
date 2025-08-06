@@ -57,6 +57,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -101,6 +102,7 @@ public class ClusterService {
     return new AddClusterResponse(cluster.getId());
   }
 
+  @CacheEvict(value = "elasticClientCache", key = "#clusterId")
   public UpdateClusterResponse updateCluster(String clusterId, UpdateClusterRequest request) {
     Cluster cluster = clusterRepository.findById(clusterId)
         .orElseThrow(() -> new co.hyperflex.exceptions.NotFoundException("Cluster not found with id: " + clusterId));
@@ -183,7 +185,7 @@ public class ClusterService {
       String version = "N/A";
       String status = null;
       try {
-        ElasticClient client = elasticsearchClientProvider.getClient(cluster);
+        ElasticClient client = elasticsearchClientProvider.getClientByClusterId(cluster.getId());
         version = client.getClusterInfo().version().number();
         status = client.getHealthStatus();
       } catch (Exception e) {
@@ -196,7 +198,7 @@ public class ClusterService {
 
   public ClusterOverviewResponse getClusterOverview(String clusterId) {
     Cluster cluster = clusterRepository.getCluster(clusterId);
-    ElasticClient elasticClient = elasticsearchClientProvider.getClient(cluster);
+    ElasticClient elasticClient = elasticsearchClientProvider.getClientByClusterId(cluster.getId());
     ElasticsearchClient client = elasticClient.getElasticsearchClient();
     String targetVersion = null;
     boolean underUpgrade = false;
@@ -271,7 +273,7 @@ public class ClusterService {
 
   private void syncElasticNodes(Cluster cluster) {
     try {
-      ElasticClient elasticClient = elasticsearchClientProvider.getClient(cluster);
+      ElasticClient elasticClient = elasticsearchClientProvider.buildElasticClient(cluster);
       ElasticsearchClient client = elasticClient.getElasticsearchClient();
       NodesInfoRequest request = new NodesInfoRequest.Builder().build();
       NodesInfoResponse response = client.nodes().info(request);
@@ -329,8 +331,9 @@ public class ClusterService {
     cluster.setKibanaUrl(UrlUtils.validateAndCleanUrl(cluster.getKibanaUrl()));
     cluster.setElasticUrl(UrlUtils.validateAndCleanUrl(cluster.getElasticUrl()));
     try {
-      ElasticClient elasticClient = elasticsearchClientProvider.getClient(cluster);
+      ElasticClient elasticClient = elasticsearchClientProvider.buildElasticClient(cluster);
       elasticClient.getHealthStatus();
+      elasticClient.close();
     } catch (Exception e) {
       log.warn("Error validating cluster credentials", e);
       throw new BadRequestException("Elastic credentials are invalid");

@@ -36,10 +36,10 @@ public class SshCommandExecutor implements AutoCloseable {
 
       session.auth().verify(timeoutSeconds, TimeUnit.SECONDS);
     } catch (Exception e) {
-      if (e.getCause() instanceof TimeoutException){
-        throw new RuntimeException("Error: Unable to establish SSH connection to host (IP: "+host+").");
+      if (e.getCause() instanceof TimeoutException) {
+        throw new RuntimeException("Unable to establish SSH connection to host (IP: " + host + ").");
       }
-      throw new RuntimeException("SSH authentication failed for host (IP: "+host+").");
+      throw new RuntimeException("SSH authentication failed for host (IP: " + host + ").");
     }
   }
 

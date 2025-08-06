@@ -50,20 +50,16 @@ public class PrecheckTaskExecutor {
       notificationService.sendNotification(new PrecheckProgressChangeEvent());
 
       PrecheckContext context = precheckContextResolver.resolveContext(record);
-      try {
-        Precheck<?> precheck = precheckRegistry.getById(record.getPrecheckId())
-            .orElseThrow(() -> new NotFoundException("Precheck not found: " + record.getPrecheckId()));
+      Precheck<?> precheck = precheckRegistry.getById(record.getPrecheckId())
+          .orElseThrow(() -> new NotFoundException("Precheck not found: " + record.getPrecheckId()));
 
-        switch (record.getType()) {
-          case NODE -> ((BaseNodePrecheck) precheck).run((NodeContext) context);
-          case INDEX -> ((BaseIndexPrecheck) precheck).run((IndexContext) context);
-          case CLUSTER -> ((BaseClusterPrecheck) precheck).run((ClusterContext) context);
-          default -> throw new IllegalArgumentException("Unknown precheck type: " + record.getType());
-        }
-        precheckRunService.updatePrecheckStatus(record.getId(), PrecheckStatus.COMPLETED);
-      } finally {
-        context.getElasticClient().getElasticsearchClient().close();
+      switch (record.getType()) {
+        case NODE -> ((BaseNodePrecheck) precheck).run((NodeContext) context);
+        case INDEX -> ((BaseIndexPrecheck) precheck).run((IndexContext) context);
+        case CLUSTER -> ((BaseClusterPrecheck) precheck).run((ClusterContext) context);
+        default -> throw new IllegalArgumentException("Unknown precheck type: " + record.getType());
       }
+      precheckRunService.updatePrecheckStatus(record.getId(), PrecheckStatus.COMPLETED);
 
     } catch (Exception e) {
       LOG.error("Error executing precheck: {}", record.getId(), e);

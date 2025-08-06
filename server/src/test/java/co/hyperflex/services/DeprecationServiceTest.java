@@ -60,7 +60,7 @@ class DeprecationServiceTest {
   @Test
   void getElasticDeprecations_returnsCorrectly() {
     // Arrange
-    when(elasticsearchClientProvider.getElasticsearchClientByClusterId(CLUSTER_ID)).thenReturn(elasticClient);
+    when(elasticsearchClientProvider.getClientByClusterId(CLUSTER_ID)).thenReturn(elasticClient);
     ElasticDeprecation deprecation = new ElasticDeprecation("Details", "critical", "Message", "URL");
     GetElasticDeprecationResponse elasticResponse = new GetElasticDeprecationResponse(
         List.of(deprecation), Collections.emptyMap(), Collections.emptyMap(), Collections.emptyList(),
@@ -100,7 +100,7 @@ class DeprecationServiceTest {
   @Test
   void getElasticDeprecationCounts_returnsCorrectCounts() {
     // Arrange
-    when(elasticsearchClientProvider.getElasticsearchClientByClusterId(CLUSTER_ID)).thenReturn(elasticClient);
+    when(elasticsearchClientProvider.getClientByClusterId(CLUSTER_ID)).thenReturn(elasticClient);
     ElasticDeprecation critical = new ElasticDeprecation(null, "critical", null, null);
     ElasticDeprecation warning = new ElasticDeprecation(null, "warning", null, null);
     GetElasticDeprecationResponse elasticResponse = new GetElasticDeprecationResponse(
