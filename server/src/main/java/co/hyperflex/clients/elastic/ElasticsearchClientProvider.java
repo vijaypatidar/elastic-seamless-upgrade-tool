@@ -39,7 +39,7 @@ public class ElasticsearchClientProvider {
   }
 
   @Cacheable(value = "elasticClientCache", key = "#clusterId")
-  public synchronized ElasticClient getClientByClusterId(@NotNull String clusterId) {
+  public ElasticClient getClientByClusterId(@NotNull String clusterId) {
     return clusterRepository.findById(clusterId).map(ElasticsearchClientProvider.this::buildElasticClient)
         .orElseThrow(() -> new NotFoundException("Cluster not found"));
   }

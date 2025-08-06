@@ -47,8 +47,6 @@ public class PrecheckTaskExecutor {
     try {
       MDC.put("precheckRunId", record.getId());
       precheckRunService.updatePrecheckStatus(record.getId(), PrecheckStatus.RUNNING);
-      notificationService.sendNotification(new PrecheckProgressChangeEvent());
-
       PrecheckContext context = precheckContextResolver.resolveContext(record);
       Precheck<?> precheck = precheckRegistry.getById(record.getPrecheckId())
           .orElseThrow(() -> new NotFoundException("Precheck not found: " + record.getPrecheckId()));

@@ -20,10 +20,11 @@ public class CacheConfig {
 
   @Bean
   public CacheManager cacheManager() {
-    CaffeineCache elasticClientCache = getElasticClientCache();
-
     SimpleCacheManager manager = new SimpleCacheManager();
-    manager.setCaches(List.of(elasticClientCache));
+    manager.setCaches(List.of(
+        getElasticClientCache(),
+        getSettingCache()
+    ));
     return manager;
   }
 
@@ -38,6 +39,11 @@ public class CacheConfig {
             }
           }
         }).build());
+  }
+
+  private static CaffeineCache getSettingCache() {
+    return new CaffeineCache("settingCache",
+        Caffeine.newBuilder().expireAfterAccess(10, TimeUnit.MINUTES).build());
   }
 
 }
