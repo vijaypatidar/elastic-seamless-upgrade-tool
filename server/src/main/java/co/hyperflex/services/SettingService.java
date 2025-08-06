@@ -6,6 +6,8 @@ import co.hyperflex.dtos.settings.UpdateSettingResponse;
 import co.hyperflex.entities.Setting;
 import co.hyperflex.mappers.SettingMapper;
 import co.hyperflex.repositories.SettingRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -18,12 +20,14 @@ public class SettingService {
     this.settingMapper = settingMapper;
   }
 
+  @Cacheable(value = "settingCache")
   public GetSettingResponse getSetting() {
     return settingRepository.findById("settings")
         .map(settingMapper::toResponse)
         .orElse(new GetSettingResponse(null));
   }
 
+  @CacheEvict(value = "settingCache", allEntries = true)
   public UpdateSettingResponse updateSetting(UpdateSettingRequest request) {
     Setting setting = settingRepository.findById("settings").orElse(new Setting());
     setting.setNotificationWebhookUrl(request.notificationWebhookUrl());

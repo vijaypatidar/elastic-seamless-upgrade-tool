@@ -10,6 +10,11 @@ spring:
       max-file-size: 1MB
       max-request-size: 10MB
       enabled: true
+  cache:
+    type: caffeine
+    caffeine:
+      spec: initialCapacity=100,maximumSize=500,expireAfterAccess=5m
+
 app:
   ansible:
     playbooks-directory: /
