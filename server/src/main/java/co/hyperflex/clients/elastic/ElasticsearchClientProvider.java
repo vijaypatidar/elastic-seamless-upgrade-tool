@@ -18,6 +18,7 @@ import org.apache.http.ssl.SSLContextBuilder;
 import org.elasticsearch.client.RestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
 
@@ -37,12 +38,13 @@ public class ElasticsearchClientProvider {
     this.objectMapper = objectMapper;
   }
 
-  public ElasticClient getElasticsearchClientByClusterId(@NotNull String clusterId) {
-    return clusterRepository.findById(clusterId).map(this::getClient)
+  @Cacheable(value = "elasticClientCache", key = "#clusterId")
+  public ElasticClient getClientByClusterId(@NotNull String clusterId) {
+    return clusterRepository.findById(clusterId).map(ElasticsearchClientProvider.this::buildElasticClient)
         .orElseThrow(() -> new NotFoundException("Cluster not found"));
   }
 
-  public ElasticClient getClient(Cluster cluster) {
+  public ElasticClient buildElasticClient(Cluster cluster) {
     try {
       SSLContext sslContext = SSLContextBuilder.create()
           .loadTrustMaterial(null, (X509Certificate[] chain, String authType) -> true)

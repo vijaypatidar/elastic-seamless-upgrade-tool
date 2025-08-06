@@ -34,7 +34,7 @@ import org.elasticsearch.client.RestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ElasticClient {
+public class ElasticClient implements AutoCloseable {
   private static final Logger LOG = LoggerFactory.getLogger(ElasticClient.class);
   private final ElasticsearchClient elasticsearchClient;
   private final RestClient restClient;
@@ -196,5 +196,11 @@ public class ElasticClient {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  @Override
+  public void close() throws Exception {
+    getElasticsearchClient().close();
+    restClient.close();
   }
 }

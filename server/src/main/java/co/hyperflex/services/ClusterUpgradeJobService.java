@@ -60,7 +60,7 @@ public class ClusterUpgradeJobService {
         .toList();
 
     ElasticClient elasticClient =
-        elasticsearchClientProvider.getElasticsearchClientByClusterId(clusterId);
+        elasticsearchClientProvider.getClientByClusterId(clusterId);
     InfoResponse info = elasticClient.getClusterInfo();
     String currentVersion = info.version().number();
 
