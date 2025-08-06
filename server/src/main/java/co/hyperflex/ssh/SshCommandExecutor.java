@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.security.KeyPair;
 import java.util.EnumSet;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import org.apache.sshd.client.SshClient;
 import org.apache.sshd.client.channel.ClientChannel;
 import org.apache.sshd.client.channel.ClientChannelEvent;
@@ -16,12 +17,11 @@ public class SshCommandExecutor implements AutoCloseable {
 
   private final SshClient client;
   private final ClientSession session;
-  private final long timeoutSeconds;
+  private final long timeoutSeconds = 15;
 
-  public SshCommandExecutor(String host, int port, String username, String privateKeyPath, long timeoutSeconds) {
+  public SshCommandExecutor(String host, int port, String username, String privateKeyPath) {
 
     try {
-      this.timeoutSeconds = timeoutSeconds;
       this.client = SshClient.setUpDefaultClient();
       client.start();
 
@@ -36,7 +36,10 @@ public class SshCommandExecutor implements AutoCloseable {
 
       session.auth().verify(timeoutSeconds, TimeUnit.SECONDS);
     } catch (Exception e) {
-      throw new RuntimeException(e);
+      if (e.getCause() instanceof TimeoutException){
+        throw new RuntimeException("Error: Unable to establish SSH connection to host (IP: "+host+").");
+      }
+      throw new RuntimeException("SSH authentication failed for host (IP: "+host+").");
     }
   }
 
@@ -52,7 +55,7 @@ public class SshCommandExecutor implements AutoCloseable {
       channel.waitFor(EnumSet.of(ClientChannelEvent.CLOSED), TimeUnit.SECONDS.toMillis(timeoutSeconds));
 
       int exitCode = channel.getExitStatus() != null ? channel.getExitStatus() : -1;
-      return new CommandResult(exitCode, stdout.toString(), stderr.toString());
+      return new CommandResult(exitCode, stdout.toString().trim(), stderr.toString().trim());
     }
   }
 

@@ -1,21 +1,14 @@
 package co.hyperflex.prechecks.concrete.node.os;
 
-import co.hyperflex.ansible.AnsibleAdHocCommandResult;
-import co.hyperflex.ansible.AnsibleService;
-import co.hyperflex.ansible.commands.AnsibleAdHocShellCommand;
 import co.hyperflex.entities.cluster.SelfManagedCluster;
-import co.hyperflex.entities.cluster.SshInfo;
 import co.hyperflex.prechecks.contexts.NodeContext;
 import co.hyperflex.prechecks.core.BaseNodePrecheck;
+import co.hyperflex.ssh.CommandResult;
+import co.hyperflex.ssh.SshCommandExecutor;
 import org.springframework.stereotype.Component;
 
 @Component
 public class DiskUsagePrecheck extends BaseNodePrecheck {
-  private final AnsibleService ansibleService;
-
-  public DiskUsagePrecheck(AnsibleService ansibleService) {
-    this.ansibleService = ansibleService;
-  }
 
   @Override
   public String getName() {
@@ -25,19 +18,17 @@ public class DiskUsagePrecheck extends BaseNodePrecheck {
   @Override
   public void run(NodeContext context) {
     if (context.getCluster() instanceof SelfManagedCluster selfManagedCluster) {
-      SshInfo sshInfo = selfManagedCluster.getSshInfo();
-
-      AnsibleAdHocShellCommand cmd = new AnsibleAdHocShellCommand.Builder().hostIp(context.getNode().getIp())
-          .args("df -h / | tail -n 1 | awk '{ print $5 }' | tr -d %").sshUsername(sshInfo.username()).sshKeyPath(sshInfo.keyPath())
-          .useBecome(true).build();
-      AnsibleAdHocCommandResult result = ansibleService.run(cmd);
-
-      if (result.success()) {
-        context.getLogger().info("Disk Utilization check completed");
-        context.getLogger().info("Disk Utilized: {}%", result.stdOutLogs().getLast());
-      } else {
-        context.getLogger().info("Disk Utilization check failed");
-        result.stdOutLogs().forEach(context.getLogger()::error);
+      try (SshCommandExecutor executor = context.getSshExecutor()) {
+        CommandResult result = executor.execute("df -h / | tail -n 1 | awk '{ print $5 }' | tr -d %");
+        if (result.isSuccess()) {
+          context.getLogger().info("Disk Utilization check completed");
+          context.getLogger().info("Disk Utilized: {}%", result.stdout());
+        } else {
+          throw new RuntimeException(result.stderr());
+        }
+      } catch (Exception e) {
+        context.getLogger().error("Disk Utilization check failed");
+        context.getLogger().error(e.getMessage());
         throw new RuntimeException("Unable to run Disk Utilization check");
       }
     }
