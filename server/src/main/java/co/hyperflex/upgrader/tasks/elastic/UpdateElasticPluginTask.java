@@ -21,7 +21,7 @@ public class UpdateElasticPluginTask implements Task {
       logger.info("Getting list of installed plugins");
       CommandResult result = executor.execute(listPlugin);
       if (result.isSuccess()) {
-        List<String> plugins = Arrays.stream(result.stdout().split("\n")).map(String::trim).toList();
+        List<String> plugins = Arrays.stream(result.stdout().split("\n")).map(String::trim).filter(p -> !p.isBlank()).toList();
 
         if (plugins.isEmpty()) {
           context.logger().info("No plugins found");
@@ -50,11 +50,12 @@ public class UpdateElasticPluginTask implements Task {
         }
 
         return TaskResult.success("Plugins updated successfully");
+      } else {
+        return TaskResult.failure("Failed to list plugins");
       }
     } catch (IOException e) {
       logger.error(e.getMessage());
       return TaskResult.failure(e.getMessage());
     }
-    return TaskResult.success("Update ElasticPlugins");
   }
 }
