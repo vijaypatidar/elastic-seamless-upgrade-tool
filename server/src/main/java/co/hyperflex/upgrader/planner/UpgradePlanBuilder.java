@@ -9,6 +9,7 @@ import co.hyperflex.upgrader.tasks.elastic.RestartElasticsearchServiceTask;
 import co.hyperflex.upgrader.tasks.elastic.StartElasticsearchServiceTask;
 import co.hyperflex.upgrader.tasks.elastic.StopElasticsearchServiceTask;
 import co.hyperflex.upgrader.tasks.elastic.SyncedFlushTask;
+import co.hyperflex.upgrader.tasks.elastic.UpdateElasticPluginTask;
 import co.hyperflex.upgrader.tasks.elastic.UpdateElasticsearchTask;
 import co.hyperflex.upgrader.tasks.elastic.WaitForElasticsearchHttpPortTask;
 import co.hyperflex.upgrader.tasks.elastic.WaitForElasticsearchTransportPortTask;
@@ -35,6 +36,7 @@ public class UpgradePlanBuilder {
       tasks.add(new SyncedFlushTask());
       tasks.add(new StopElasticsearchServiceTask());
       tasks.add(new UpdateElasticsearchTask());
+      tasks.add(new UpdateElasticPluginTask());
       tasks.add(new RestartElasticsearchServiceTask());
       tasks.add(new WaitForElasticsearchTransportPortTask());
       tasks.add(new WaitForElasticsearchHttpPortTask());

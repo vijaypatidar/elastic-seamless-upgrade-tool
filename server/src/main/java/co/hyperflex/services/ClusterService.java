@@ -272,8 +272,7 @@ public class ClusterService {
 
 
   private void syncElasticNodes(Cluster cluster) {
-    try {
-      ElasticClient elasticClient = elasticsearchClientProvider.buildElasticClient(cluster);
+    try (ElasticClient elasticClient = elasticsearchClientProvider.buildElasticClient(cluster)) {
       ElasticsearchClient client = elasticClient.getElasticsearchClient();
       NodesInfoRequest request = new NodesInfoRequest.Builder().build();
       NodesInfoResponse response = client.nodes().info(request);
@@ -330,10 +329,8 @@ public class ClusterService {
   private void validateCluster(Cluster cluster) {
     cluster.setKibanaUrl(UrlUtils.validateAndCleanUrl(cluster.getKibanaUrl()));
     cluster.setElasticUrl(UrlUtils.validateAndCleanUrl(cluster.getElasticUrl()));
-    try {
-      ElasticClient elasticClient = elasticsearchClientProvider.buildElasticClient(cluster);
+    try (ElasticClient elasticClient = elasticsearchClientProvider.buildElasticClient(cluster)) {
       elasticClient.getHealthStatus();
-      elasticClient.close();
     } catch (Exception e) {
       log.warn("Error validating cluster credentials", e);
       throw new BadRequestException("Elastic credentials are invalid");

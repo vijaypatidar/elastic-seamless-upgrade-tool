@@ -41,15 +41,6 @@ public class ClusterUpgradeJobService {
             () -> new NotFoundException("No active cluster job found for cluster ID: " + clusterId));
   }
 
-  public @NotNull boolean clusterUpgradeJobExists(@NotNull String clusterId) {
-    try {
-      this.getActiveJobByClusterId(clusterId);
-      return true;
-    } catch (NotFoundException e) {
-      return false;
-    }
-  }
-
   public CreateClusterUpgradeJobResponse createClusterUpgradeJob(
       @NotNull CreateClusterUpgradeJobRequest request) {
 
