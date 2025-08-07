@@ -11,6 +11,12 @@ import java.util.List;
 import org.slf4j.Logger;
 
 public class UpdateElasticPluginTask implements Task {
+
+  @Override
+  public String getName() {
+    return "Update elastic plugins";
+  }
+
   @Override
   public TaskResult run(Context context) {
     var removePlugin = "sudo /usr/share/elasticsearch/bin/elasticsearch-plugin remove ";

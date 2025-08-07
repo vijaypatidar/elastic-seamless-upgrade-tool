@@ -14,6 +14,11 @@ import java.util.Map;
 public class DisableShardAllocationTask implements Task {
 
   @Override
+  public String getName() {
+    return "Disable Shard Allocation";
+  }
+
+  @Override
   public TaskResult run(Context context) {
     ElasticsearchClient elasticsearchClient = context.elasticClient().getElasticsearchClient();
 

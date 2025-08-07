@@ -15,6 +15,11 @@ public class WaitForKibanaPortTask implements Task {
   private static final int RETRY_DELAY_MILLIS = 5000;
 
   @Override
+  public String getName() {
+    return "Wait for kibana http port";
+  }
+
+  @Override
   public TaskResult run(Context context) {
     final ClusterNode node = context.node();
     final Logger logger = context.logger();

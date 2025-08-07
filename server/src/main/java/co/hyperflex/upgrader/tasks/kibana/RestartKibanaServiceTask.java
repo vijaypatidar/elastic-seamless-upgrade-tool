@@ -9,6 +9,11 @@ import java.util.Map;
 public class RestartKibanaServiceTask extends AbstractAnsibleTask {
 
   @Override
+  public String getName() {
+    return "Restart kibana service";
+  }
+
+  @Override
   public TaskResult run(Context context) {
 
     AnsibleAdHocSystemdCommand cmd = new AnsibleAdHocSystemdCommand

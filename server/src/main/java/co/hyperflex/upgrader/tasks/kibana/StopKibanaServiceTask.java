@@ -9,6 +9,11 @@ import java.util.Map;
 public class StopKibanaServiceTask extends AbstractAnsibleTask {
 
   @Override
+  public String getName() {
+    return "Stop kibana service";
+  }
+
+  @Override
   public TaskResult run(Context context) {
     context.logger().info("Stopping Kibana service task");
     AnsibleAdHocSystemdCommand cmd = new AnsibleAdHocSystemdCommand

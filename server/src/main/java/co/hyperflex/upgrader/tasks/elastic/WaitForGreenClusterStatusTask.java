@@ -14,6 +14,11 @@ public class WaitForGreenClusterStatusTask implements Task {
   private static final int RETRY_DELAY_MILLIS = 2000;
 
   @Override
+  public String getName() {
+    return "Wait for green cluster status";
+  }
+
+  @Override
   public TaskResult run(Context context) {
     final ElasticsearchClient client = context.elasticClient().getElasticsearchClient();
     final Logger logger = context.logger();

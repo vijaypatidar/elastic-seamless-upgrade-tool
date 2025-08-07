@@ -65,9 +65,9 @@ public class ClusterUpgradeService {
   public ClusterUpgradeService(ElasticsearchClientProvider elasticsearchClientProvider, ClusterNodeRepository clusterNodeRepository,
                                ClusterService clusterService, ClusterRepository clusterRepository,
                                KibanaClientProvider kibanaClientProvider, ClusterUpgradeJobService clusterUpgradeJobService,
-                               NotificationService notificationService,
-                               PrecheckSchedulerService precheckSchedulerService, DeprecationService deprecationService,
-                               PrecheckRunService precheckRunService, ClusterUpgradeJobRepository clusterUpgradeJobRepository) {
+                               NotificationService notificationService, PrecheckSchedulerService precheckSchedulerService,
+                               DeprecationService deprecationService, PrecheckRunService precheckRunService,
+                               ClusterUpgradeJobRepository clusterUpgradeJobRepository) {
     this.elasticsearchClientProvider = elasticsearchClientProvider;
     this.clusterNodeRepository = clusterNodeRepository;
     this.clusterService = clusterService;
@@ -201,27 +201,38 @@ public class ClusterUpgradeService {
           int index = 0;
           for (Task task : tasks) {
             if (index++ < checkPoint) {
-              log.info("Skipping [Task: {}] for [NodeId: {}] as its already performed successfully.", task.getId(), node.getId());
+              log.info("Skipping task [name: {}] for node [id: {}] — already upgraded.", task.getName(), node.getId());
               continue;
             }
             try {
-              log.info("Task [taskId: {}] [NodeIp: {}] Starting task", task.getId(), node.getIp());
+              log.info("Starting task [name: {}] for node [ip: {}] [progress: {}%]", task.getName(), node.getIp(),
+                  (index * 100) / tasks.size());
+
               TaskResult result = task.run(context);
-              System.out.println(result);
-              log.info("Task [taskId: {}] [NodeIp: {}] [Success: {}]  Result: {}", task.getId(), node.getIp(),
-                  result.isSuccess(), result);
+
+
+              log.info("Task [name: {}] completed for node [ip: {}] [success: {}] [result: {}]", task.getName(), node.getIp(),
+                  result.isSuccess(), result.getMessage());
+
               if (!result.isSuccess()) {
-                log.error(result.getMessage());
+                log.error("Task [name: {}] failed for node [ip: {}] — {}", task.getName(), node.getIp(), result.getMessage());
                 throw new RuntimeException(result.getMessage());
               }
+
               checkPoint++;
               setCheckPoint(clusterUpgradeJob, node.getId(), checkPoint);
-              updateNodeProgress(node, (int) (((checkPoint * 1.0) / tasks.size()) * 100));
+
+              int progress = (int) ((checkPoint * 100.0) / tasks.size());
+              updateNodeProgress(node, progress);
+
               Thread.sleep(2000);
             } catch (Exception e) {
               node.setStatus(NodeUpgradeStatus.FAILED);
-              updateNodeProgress(node, (int) (((checkPoint * 1.0) / tasks.size()) * 100));
+              int progress = (int) ((checkPoint * 100.0) / tasks.size());
+              updateNodeProgress(node, progress);
               notifyNodeUpgradeFailed(node);
+
+              log.error("Exception while running task [name: {}] for node [ip: {}]: {}", task.getName(), node.getIp(), e.getMessage(), e);
               throw new RuntimeException(e.getMessage(), e);
             } finally {
               notificationService.sendNotification(new UpgradeProgressChangeEvent());

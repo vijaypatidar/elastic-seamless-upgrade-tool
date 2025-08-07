@@ -10,6 +10,11 @@ import java.util.Map;
 public class UpdateElasticsearchTask extends AbstractAnsibleTask {
 
   @Override
+  public String getName() {
+    return "Update elasticsearch";
+  }
+
+  @Override
   public TaskResult run(Context context) {
 
     boolean isUbuntu = true; //

@@ -9,6 +9,11 @@ import java.util.Map;
 public class RestartElasticsearchServiceTask extends AbstractAnsibleTask {
 
   @Override
+  public String getName() {
+    return "Restart Elasticsearch Service";
+  }
+
+  @Override
   public TaskResult run(Context context) {
     AnsibleAdHocSystemdCommand cmd = new AnsibleAdHocSystemdCommand.Builder()
         .hostIp(context.node().getIp())
