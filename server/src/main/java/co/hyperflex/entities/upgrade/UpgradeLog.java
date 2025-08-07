@@ -6,6 +6,10 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "upgrade-logs")
 public class UpgradeLog {
+  public static final String CLUSTER_UPGRADE_JOB_ID = "clusterUpgradeJobId";
+  public static final String NODE_ID = "nodeId";
+  public static final String LOGS = "logs";
+
   @Id
   private String id;
   private List<String> logs;

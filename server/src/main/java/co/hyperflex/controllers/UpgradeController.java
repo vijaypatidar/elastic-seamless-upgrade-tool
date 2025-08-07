@@ -8,6 +8,7 @@ import co.hyperflex.dtos.upgrades.CreateClusterUpgradeJobRequest;
 import co.hyperflex.dtos.upgrades.CreateClusterUpgradeJobResponse;
 import co.hyperflex.dtos.upgrades.GetUpgradeLogsRequest;
 import co.hyperflex.dtos.upgrades.GetUpgradeLogsResponse;
+import co.hyperflex.entities.upgrade.ClusterUpgradeJob;
 import co.hyperflex.services.ClusterUpgradeJobService;
 import co.hyperflex.services.ClusterUpgradeService;
 import co.hyperflex.services.UpgradeLogService;
@@ -60,7 +61,8 @@ public class UpgradeController {
 
   @GetMapping("/logs")
   public GetUpgradeLogsResponse clusterUpgradeLogs(@RequestParam(required = false) String clusterId, @RequestParam String nodeId) {
-    return upgradeLogService.getLogs(new GetUpgradeLogsRequest(clusterId, nodeId));
+    ClusterUpgradeJob job = createClusterUpgradeJob.getActiveJobByClusterId(clusterId);
+    return upgradeLogService.getLogs(new GetUpgradeLogsRequest(job.getId(), nodeId));
   }
 
 }

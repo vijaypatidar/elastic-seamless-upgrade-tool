@@ -13,6 +13,10 @@ import java.util.Map;
 
 public class EnableShardAllocationTask implements Task {
 
+  @Override
+  public String getName() {
+    return "Enable Shard Allocation";
+  }
 
   @Override
   public TaskResult run(Context context) {

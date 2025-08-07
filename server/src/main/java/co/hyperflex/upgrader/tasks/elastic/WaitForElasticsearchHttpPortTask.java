@@ -14,6 +14,12 @@ public class WaitForElasticsearchHttpPortTask implements Task {
   private static final int MAX_RETRIES = 30;
   private static final int RETRY_DELAY_MILLIS = 2000;
 
+
+  @Override
+  public String getName() {
+    return "Wait for Elasticsearch Http port";
+  }
+
   @Override
   public TaskResult run(Context context) {
     final ClusterNode node = context.node();

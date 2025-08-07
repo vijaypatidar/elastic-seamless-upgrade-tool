@@ -9,6 +9,11 @@ import java.util.Map;
 public class StopElasticsearchServiceTask extends AbstractAnsibleTask {
 
   @Override
+  public String getName() {
+    return "Stop Elasticsearch Service";
+  }
+
+  @Override
   public TaskResult run(Context context) {
     AnsibleAdHocSystemdCommand cmd = new AnsibleAdHocSystemdCommand.Builder()
         .hostIp(context.node().getIp())

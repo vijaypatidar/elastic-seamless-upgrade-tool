@@ -11,6 +11,11 @@ import org.springframework.core.ParameterizedTypeReference;
 public class SetDefaultIndexTask implements Task {
 
   @Override
+  public String getName() {
+    return "Set default index(syslog)";
+  }
+
+  @Override
   public TaskResult run(Context context) {
     final Logger logger = context.logger();
     final String host = context.node().getIp();

@@ -9,6 +9,11 @@ import java.io.IOException;
 public class SyncedFlushTask implements Task {
 
   @Override
+  public String getName() {
+    return "Flush data streams or indices";
+  }
+
+  @Override
   public TaskResult run(Context context) {
     ElasticsearchClient elasticsearchClient = context.elasticClient().getElasticsearchClient();
     try {

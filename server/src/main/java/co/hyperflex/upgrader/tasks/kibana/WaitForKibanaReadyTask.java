@@ -11,6 +11,11 @@ public class WaitForKibanaReadyTask implements Task {
   private static final int RETRY_DELAY_MILLIS = 5000;
 
   @Override
+  public String getName() {
+    return "Wait for kibana service to be available";
+  }
+
+  @Override
   public TaskResult run(Context context) {
     final Logger logger = context.logger();
     final String host = context.node().getIp();

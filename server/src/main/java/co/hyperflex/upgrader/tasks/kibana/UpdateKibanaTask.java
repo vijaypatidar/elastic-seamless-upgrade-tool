@@ -10,6 +10,11 @@ import java.util.Map;
 public class UpdateKibanaTask extends AbstractAnsibleTask {
 
   @Override
+  public String getName() {
+    return "Update kibana service";
+  }
+
+  @Override
   public TaskResult run(Context context) {
 
     boolean isUbuntu = true; // This should be determined from the node's OS

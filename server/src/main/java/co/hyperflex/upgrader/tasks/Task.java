@@ -5,5 +5,7 @@ public interface Task {
     return getClass().getName();
   }
 
+  String getName();
+
   TaskResult run(Context context);
 }

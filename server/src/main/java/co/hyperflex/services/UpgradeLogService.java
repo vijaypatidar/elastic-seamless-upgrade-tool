@@ -21,14 +21,19 @@ public class UpgradeLogService {
   }
 
   public void addLog(String jobId, String nodeId, String message) {
-    Query query = new Query(Criteria.where("clusterUpgradeJobId").is(jobId).and("nodeId").is(nodeId));
-    Update update = new Update().push("logs", "[" + LocalDateTime.now() + "] " + message).setOnInsert("clusterUpgradeJobId", jobId)
-        .setOnInsert("nodeId", nodeId);
+    Query query = new Query(Criteria.where(UpgradeLog.CLUSTER_UPGRADE_JOB_ID).is(jobId).and(UpgradeLog.NODE_ID).is(nodeId));
+    Update update = new Update()
+        .push(UpgradeLog.LOGS, "[" + LocalDateTime.now() + "] " + message)
+        .setOnInsert(UpgradeLog.CLUSTER_UPGRADE_JOB_ID, jobId)
+        .setOnInsert(UpgradeLog.NODE_ID, nodeId);
     mongoTemplate.upsert(query, update, UpgradeLog.class);
   }
 
   public GetUpgradeLogsResponse getLogs(GetUpgradeLogsRequest request) {
-    Query query = new Query(Criteria.where("nodeId").is(request.nodeId()));
+    Query query = new Query(
+        Criteria.where(UpgradeLog.NODE_ID).is(request.nodeId())
+            .and(UpgradeLog.CLUSTER_UPGRADE_JOB_ID).is(request.clusterUpgradeJobId())
+    );
     UpgradeLog upgradeLog = mongoTemplate.findOne(query, UpgradeLog.class);
     return new GetUpgradeLogsResponse(Optional.ofNullable(upgradeLog).map(UpgradeLog::getLogs).orElse(List.of()));
   }

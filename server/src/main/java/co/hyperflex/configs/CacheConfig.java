@@ -30,10 +30,11 @@ public class CacheConfig {
 
   private static CaffeineCache getElasticClientCache() {
     return new CaffeineCache("elasticClientCache",
-        Caffeine.newBuilder().expireAfterAccess(5, TimeUnit.MINUTES).removalListener((Object key, Object value, RemovalCause cause) -> {
+        Caffeine.newBuilder().expireAfterAccess(20, TimeUnit.MINUTES).removalListener((Object key, Object value, RemovalCause cause) -> {
           if (value instanceof AutoCloseable autoCloseable) {
             try {
               autoCloseable.close();
+              log.info("ElasticClient cache has been closed");
             } catch (Exception e) {
               log.warn("Error closing AutoCloseable", e);
             }

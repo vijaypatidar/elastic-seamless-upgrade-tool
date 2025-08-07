@@ -15,6 +15,11 @@ public class WaitForElasticsearchTransportPortTask implements Task {
   private static final int RETRY_DELAY_MILLIS = 2000;
 
   @Override
+  public String getName() {
+    return "Wait for Elasticsearch Transport port";
+  }
+
+  @Override
   public TaskResult run(Context context) {
     final ClusterNode node = context.node();
     final Logger logger = context.logger();
