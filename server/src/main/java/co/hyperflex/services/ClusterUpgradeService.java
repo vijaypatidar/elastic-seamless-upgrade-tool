@@ -211,15 +211,18 @@ public class ClusterUpgradeService {
               log.info("Task [taskId: {}] [NodeIp: {}] [Success: {}]  Result: {}", task.getId(), node.getIp(),
                   result.isSuccess(), result);
               if (!result.isSuccess()) {
-                node.setStatus(NodeUpgradeStatus.FAILED);
-                updateNodeProgress(node, (int) (((checkPoint * 1.0) / tasks.size()) * 100));
-                notifyNodeUpgradeFailed(node);
+                log.error(result.getMessage());
                 throw new RuntimeException(result.getMessage());
               }
               checkPoint++;
               setCheckPoint(clusterUpgradeJob, node.getId(), checkPoint);
               updateNodeProgress(node, (int) (((checkPoint * 1.0) / tasks.size()) * 100));
               Thread.sleep(2000);
+            } catch (Exception e) {
+              node.setStatus(NodeUpgradeStatus.FAILED);
+              updateNodeProgress(node, (int) (((checkPoint * 1.0) / tasks.size()) * 100));
+              notifyNodeUpgradeFailed(node);
+              throw new RuntimeException(e.getMessage(), e);
             } finally {
               notificationService.sendNotification(new UpgradeProgressChangeEvent());
             }
