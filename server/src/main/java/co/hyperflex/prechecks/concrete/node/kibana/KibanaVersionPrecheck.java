@@ -1,5 +1,6 @@
 package co.hyperflex.prechecks.concrete.node.kibana;
 
+import co.hyperflex.entities.precheck.PrecheckSeverity;
 import co.hyperflex.prechecks.contexts.NodeContext;
 import co.hyperflex.prechecks.core.BaseKibanaNodePrecheck;
 import org.slf4j.Logger;
@@ -11,6 +12,11 @@ public class KibanaVersionPrecheck extends BaseKibanaNodePrecheck {
   @Override
   public String getName() {
     return "Kibana Version Check";
+  }
+
+  @Override
+  public PrecheckSeverity getSeverity() {
+    return PrecheckSeverity.WARNING;
   }
 
   @Override

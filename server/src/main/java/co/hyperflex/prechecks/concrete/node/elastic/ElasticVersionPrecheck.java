@@ -3,6 +3,7 @@ package co.hyperflex.prechecks.concrete.node.elastic;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch.nodes.NodesInfoResponse;
 import co.elastic.clients.elasticsearch.nodes.info.NodeInfo;
+import co.hyperflex.entities.precheck.PrecheckSeverity;
 import co.hyperflex.prechecks.contexts.NodeContext;
 import co.hyperflex.prechecks.core.BaseElasticNodePrecheck;
 import java.io.IOException;
@@ -13,13 +14,14 @@ import org.springframework.stereotype.Component;
 @Component
 public class ElasticVersionPrecheck extends BaseElasticNodePrecheck {
 
-
-  public ElasticVersionPrecheck() {
-  }
-
   @Override
   public String getName() {
     return "Elasticsearch Version Check";
+  }
+
+  @Override
+  public PrecheckSeverity getSeverity() {
+    return PrecheckSeverity.WARNING;
   }
 
   @Override

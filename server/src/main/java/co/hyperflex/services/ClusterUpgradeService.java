@@ -20,6 +20,7 @@ import co.hyperflex.entities.precheck.PrecheckStatus;
 import co.hyperflex.entities.upgrade.ClusterUpgradeJob;
 import co.hyperflex.entities.upgrade.ClusterUpgradeStatus;
 import co.hyperflex.entities.upgrade.NodeUpgradeStatus;
+import co.hyperflex.entities.upgrade.UpgradeLog;
 import co.hyperflex.exceptions.BadRequestException;
 import co.hyperflex.prechecks.scheduler.PrecheckSchedulerService;
 import co.hyperflex.repositories.ClusterNodeRepository;
@@ -34,6 +35,7 @@ import co.hyperflex.upgrader.tasks.Configuration;
 import co.hyperflex.upgrader.tasks.Context;
 import co.hyperflex.upgrader.tasks.Task;
 import co.hyperflex.upgrader.tasks.TaskResult;
+import co.hyperflex.utils.VersionUtils;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -176,20 +178,25 @@ public class ClusterUpgradeService {
           clusterUpgradeJob.setStatus(ClusterUpgradeStatus.UPGRADING);
           clusterUpgradeJobRepository.save(clusterUpgradeJob);
         }
-        MDC.put("clusterId", cluster.getId());
-        MDC.put("clusterUpgradeJobId", clusterUpgradeJob.getId());
+        MDC.put(UpgradeLog.CLUSTER_UPGRADE_JOB_ID, clusterUpgradeJob.getId());
 
         ElasticClient elasticClient = elasticsearchClientProvider.getClientByClusterId(cluster.getId());
         KibanaClient kibanaClient = kibanaClientProvider.getClient(cluster);
 
 
         for (ClusterNode node : nodes.stream().sorted(Comparator.comparingInt(ClusterNode::getRank)).toList()) {
-
-          MDC.put("nodeId", node.getId());
+          MDC.put(UpgradeLog.NODE_ID, node.getId());
           if (NodeUpgradeStatus.UPGRADED == node.getStatus()) {
             log.info("Skipping node with [NodeId: {}] as its already updated", node.getId());
             continue;
+          } else if (VersionUtils.isVersionGte(node.getVersion(), clusterUpgradeJob.getTargetVersion())) {
+            log.info("Skipping node with [NodeId: {}] as its already on target version", node.getId());
+            node.setStatus(NodeUpgradeStatus.UPGRADED);
+            updateNodeProgress(node, 100);
+            continue;
           }
+
+
           Configuration config = new Configuration(9300, 9200, cluster.getSshInfo().username(), cluster.getSshInfo().keyPath(),
               clusterUpgradeJob.getTargetVersion());
           Context context = new Context(node, config, log, elasticClient, kibanaClient);
