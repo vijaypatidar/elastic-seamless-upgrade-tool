@@ -59,10 +59,6 @@ function Settings({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: () 
 				})
 				formik.resetForm()
 			})
-			.catch((err) => {
-				console.log(err)
-				toast.error(err?.response?.data.err ?? StringManager.GENERIC_ERROR)
-			})
 		return null
 	}
 
@@ -84,7 +80,6 @@ function Settings({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: () 
 					setInitialValues(initialValues)
 					formik.resetForm()
 				})
-				.catch((err) => toast.error(err?.response?.data.err ?? StringManager.GENERIC_ERROR))
 		},
 	})
 

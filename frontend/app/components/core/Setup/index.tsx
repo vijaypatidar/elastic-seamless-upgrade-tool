@@ -76,7 +76,6 @@ function Setup() {
 						},
 					})
 					.then((res) => (certIds = res?.data?.certificateIds))
-					.catch((err) => toast.error(err?.response?.data.err ?? StringManager.GENERIC_ERROR))
 			}
 			await axiosJSON
 				.post("/clusters", {
@@ -99,7 +98,6 @@ function Setup() {
 					setClusterId(res?.data?.id)
 					navigate("/")
 				})
-				.catch((err) => toast.error(err?.response?.data.err ?? StringManager.GENERIC_ERROR))
 		},
 	})
 

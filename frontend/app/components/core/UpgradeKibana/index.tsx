@@ -6,7 +6,6 @@ import { useCallback, type Key } from "react"
 import { toast } from "sonner"
 import axiosJSON from "~/apis/http"
 import { OutlinedBorderButton } from "~/components/utilities/Buttons"
-import StringManager from "~/constants/StringManager"
 import { useLocalStore } from "~/store/common"
 import ProgressBar from "./widgets/progress"
 import { cn } from "~/lib/Utils"
@@ -104,7 +103,6 @@ function UpgradeKibana({ clusterType }: TUpgradeKibana) {
 					disabled: !item.upgradable,
 				}))
 			})
-			.catch((err) => toast.error(err?.response?.data.err ?? StringManager.GENERIC_ERROR))
 
 		return response
 	}

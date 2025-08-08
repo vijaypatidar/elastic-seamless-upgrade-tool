@@ -16,10 +16,6 @@ const PrecheckNotTriggered = ({ refetch }: { refetch: () => void }) => {
 		await axiosJSON
 			.post(`/clusters/${clusterId}/prechecks`)
 			.then(() => refetch())
-			.catch((err) => {
-				console.log("Err", err)
-				toast.error(err?.response?.data.err ?? StringManager.GENERIC_ERROR)
-			})
 	}
 
 	const { mutate: HandleRerun, isPending } = useMutation({

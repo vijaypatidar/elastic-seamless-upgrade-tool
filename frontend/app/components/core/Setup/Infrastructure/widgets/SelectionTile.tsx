@@ -1,5 +1,5 @@
 import { Box, Typography } from "@mui/material"
-import { Flash, Record, TickCircle } from "iconsax-react"
+import { Record, TickCircle } from "iconsax-react"
 import { cn } from "~/lib/Utils"
 import AssetsManager from "~/constants/AssetsManager"
 
@@ -60,7 +60,7 @@ const SelectionTile = ({
 							lineHeight="22px"
 							sx={{
 								background: "linear-gradient(270deg, #B07FF4 28.46%, #CCFE76 100%)",
-								"backgroundClip": "text",
+								backgroundClip: "text",
 								"-webkit-background-clip": "text",
 								"-webkit-text-fill-color": "transparent",
 							}}

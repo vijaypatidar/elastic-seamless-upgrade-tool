@@ -98,11 +98,11 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 	}
 
 	const getCluster = async () => {
-		axiosJSON
-			.get("/clusters/" + clusterId)
-			.then((res) => {
-				const cluster = res?.data
-				cluster && setInitialValues({
+		try {
+			const response = await axiosJSON.get(`/clusters/${clusterId}`)
+			const cluster = response.data
+			cluster &&
+				setInitialValues({
 					name: cluster.name,
 					type: cluster.type,
 					elasticUrl: cluster.elasticUrl,
@@ -121,14 +121,12 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 							storedOnServer: true,
 						})) || [],
 				})
-				formik.resetForm()
-			})
-			.catch((err) => {
-				console.log(err)
-				toast.error(err?.response?.data.err ?? StringManager.GENERIC_ERROR)
-			})
 
-		return null
+			formik.resetForm()
+		} catch (err: any) {
+			console.error(err)
+			return null
+		}
 	}
 
 	const { isLoading, isRefetching, refetch } = useQuery({
@@ -156,7 +154,6 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 						},
 					})
 					.then((res) => (certIds = res?.data?.certificateIds))
-					.catch((err) => toast.error(err?.response?.data.err ?? StringManager.GENERIC_ERROR))
 			}
 			await axiosJSON
 				.put("clusters/" + clusterId, {
@@ -166,7 +163,7 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 					elasticUrl: values.elasticUrl,
 					username: values.username,
 					password: values.password,
-					kibanaUrl:  values.kibanaUrl,
+					kibanaUrl: values.kibanaUrl,
 					certificateIds: [
 						...values.certFiles
 							?.filter((cert: File | TExistingFile) => !(cert instanceof File))
@@ -176,7 +173,7 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 					sshUsername: values.sshUser,
 					apiKey: values.apiKey,
 					sshKey: values.pathToSSH ?? "",
-					kibanaNodes: values.kibanaConfigs
+					kibanaNodes: values.kibanaConfigs,
 				})
 				.then((res) => {
 					refetch()
@@ -187,7 +184,6 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 					toast.success("Cluster updated successfully")
 					onOpenChange()
 				})
-				.catch((err) => toast.error(err?.response?.data.err ?? StringManager.GENERIC_ERROR))
 		},
 	})
 
@@ -550,6 +546,36 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 																				formik.touched.apiKey &&
 																				formik.errors.apiKey
 																			}
+																			InputProps={{
+																				endAdornment: (
+																					<InputAdornment position="end">
+																						<IconButton
+																							aria-label="toggle api key visibility"
+																							onClick={() =>
+																								setShowPassword(
+																									!showPassword
+																								)
+																							}
+																							onMouseDown={(event) =>
+																								event.preventDefault()
+																							}
+																							edge="end"
+																						>
+																							{showPassword ? (
+																								<Eye
+																									size="18px"
+																									color="#FFF"
+																								/>
+																							) : (
+																								<EyeSlash
+																									size="18px"
+																									color="#FFF"
+																								/>
+																							)}
+																						</IconButton>
+																					</InputAdornment>
+																				),
+																			}}
 																		/>
 																	}
 																/>
@@ -645,7 +671,9 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 																							error={
 																								Boolean(
 																									formik.errors
-																										.kibanaConfigs?.[index]?.name
+																										.kibanaConfigs?.[
+																										index
+																									]?.name
 																								) &&
 																								formik.touched
 																									.kibanaConfigs
@@ -678,7 +706,9 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 																							error={
 																								Boolean(
 																									formik.errors
-																										.kibanaConfigs?.[index]?.ip
+																										.kibanaConfigs?.[
+																										index
+																									]?.ip
 																								) &&
 																								formik.touched
 																									.kibanaConfigs

@@ -5,10 +5,8 @@ import { Camera, Flash } from "iconsax-react"
 import moment from "moment"
 import { useState } from "react"
 import { Link } from "react-router"
-import { toast } from "sonner"
 import axiosJSON from "~/apis/http"
 import { OutlinedBorderButton } from "~/components/utilities/Buttons"
-import StringManager from "~/constants/StringManager"
 import useCountdownTimer from "~/lib/hooks/useTimer"
 import { getStepIndicatorData } from "~/lib/Utils"
 import { useLocalStore } from "~/store/common"
@@ -126,7 +124,6 @@ function UpgradeAssistant() {
 				handleRoutingStates(step5Status, setKibanaNodeUpgradeAllowed)
 				setDeploymentId(response?.deploymentId ?? "")
 			})
-			.catch((err) => toast.error(err?.response?.data.err ?? StringManager.GENERIC_ERROR))
 		return response
 	}
 

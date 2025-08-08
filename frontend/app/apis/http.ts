@@ -1,8 +1,10 @@
 import axios from "axios"
 import { useLocalStore } from "~/store/common"
 import URLManager from "../constants/URLManager"
+import { toast } from "sonner"
+import StringManager from "~/constants/StringManager"
 
-let axiosJSON = axios.create({
+const axiosJSON = axios.create({
 	baseURL: URLManager.HTTP_BASE_URL,
 	headers: {
 		"Content-Type": "application/json",
@@ -50,6 +52,7 @@ axiosJSON.interceptors.response.use(
 		return res
 	},
 	async (error) => {
+		toast.error(error?.response?.data.err ?? StringManager.GENERIC_ERROR)
 		const state = useLocalStore.getState()
 		// @ts-ignore
 		const session = state.sessionName

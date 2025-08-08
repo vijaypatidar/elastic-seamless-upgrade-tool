@@ -2,11 +2,9 @@ import { Spinner, Table, TableBody, TableCell, TableColumn, TableHeader, TableRo
 import { Box, Typography } from "@mui/material"
 import { useQuery } from "@tanstack/react-query"
 import { Folder } from "iconsax-react"
-import React, { useCallback, type Key } from "react"
+import { useCallback, type Key } from "react"
 import { useNavigate } from "react-router"
-import { toast } from "sonner"
 import axiosJSON from "~/apis/http"
-import StringManager from "~/constants/StringManager"
 import { cn } from "~/lib/Utils"
 import { useLocalStore } from "~/store/common"
 import useSafeRouteStore from "~/store/safeRoutes"
@@ -60,18 +58,11 @@ function ClusterList() {
 	const setInfraType = useLocalStore((state: any) => state.setInfraType)
 
 	const getClustersData = async () => {
-		let response = null
-		await axiosJSON
-			.get("/clusters")
-			.then((res: any) => {
-				console.log(res)
-				response = res.data
-			})
-			.catch((err: any) => toast.error(err?.response?.data.err ?? StringManager.GENERIC_ERROR))
-		return response
+		const response = await axiosJSON.get("/clusters")
+		return response.data
 	}
 
-	const { data, isLoading, refetch, isRefetching } = useQuery({
+	const { data, isLoading, isRefetching } = useQuery({
 		queryKey: ["get-all-clusters"],
 		queryFn: getClustersData,
 		staleTime: 0,
