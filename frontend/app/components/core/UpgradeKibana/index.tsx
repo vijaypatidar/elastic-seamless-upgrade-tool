@@ -2,15 +2,15 @@ import { Spinner, Table, TableBody, TableCell, TableColumn, TableHeader, TableRo
 import { Box, Typography } from "@mui/material"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { CloseCircle, Danger, Flash, Refresh, TickCircle, Warning2 } from "iconsax-react"
-import { useCallback, useEffect, type Key } from "react"
+import { useCallback, type Key } from "react"
 import { toast } from "sonner"
 import axiosJSON from "~/apis/http"
 import { OutlinedBorderButton } from "~/components/utilities/Buttons"
 import StringManager from "~/constants/StringManager"
 import { useLocalStore } from "~/store/common"
-import { useSocketStore } from "~/store/socket"
 import ProgressBar from "./widgets/progress"
 import { cn } from "~/lib/Utils"
+import { useRealtimeEventListener } from "~/lib/hooks/useRealtimeEventListener"
 
 const UPGRADE_ENUM = {
 	completed: (
@@ -84,18 +84,7 @@ const columns: TColumn = [
 
 function UpgradeKibana({ clusterType }: TUpgradeKibana) {
 	const clusterId = useLocalStore((state: any) => state.clusterId)
-	const { socket, isConnected } = useSocketStore()
-
-	useEffect(() => {
-		if (!socket) return
-		const listner = () => {
-			refetch()
-		}
-		socket.on("UPGRADE_PROGRESS_CHANGE", listner)
-		return () => {
-			socket.off("UPGRADE_PROGRESS_CHANGE", listner)
-		}
-	}, [socket])
+	useRealtimeEventListener("UPGRADE_PROGRESS_CHANGE", () => refetch(), true)
 
 	const getNodesInfo = async () => {
 		let response: any = []

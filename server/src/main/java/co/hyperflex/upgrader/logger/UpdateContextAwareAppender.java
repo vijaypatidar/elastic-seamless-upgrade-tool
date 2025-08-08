@@ -2,6 +2,7 @@ package co.hyperflex.upgrader.logger;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.AppenderBase;
+import co.hyperflex.entities.upgrade.UpgradeLog;
 import co.hyperflex.services.UpgradeLogService;
 import org.slf4j.MDC;
 import org.springframework.stereotype.Component;
@@ -16,8 +17,8 @@ public class UpdateContextAwareAppender extends AppenderBase<ILoggingEvent> {
 
   @Override
   protected void append(ILoggingEvent eventObject) {
-    String nodeId = MDC.get("nodeId");
-    String clusterUpgradeJobId = MDC.get("clusterUpgradeJobId");
+    String nodeId = MDC.get(UpgradeLog.NODE_ID);
+    String clusterUpgradeJobId = MDC.get(UpgradeLog.CLUSTER_UPGRADE_JOB_ID);
     String message = eventObject.getFormattedMessage();
     upgradeLogService.addLog(clusterUpgradeJobId, nodeId, message);
   }

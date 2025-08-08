@@ -8,11 +8,12 @@ import EditCluster from "~/components/core/EditCluster"
 import Settings from "~/components/core/Settings"
 import UpcomingFeature from "~/components/core/UpcomingFeature"
 import AssetsManager from "~/constants/AssetsManager"
+import { useRealtimeEventListener } from "~/lib/hooks/useRealtimeEventListener"
 import { cn } from "~/lib/Utils"
 import { useSocketStore } from "~/store/socket"
 
 function Common() {
-	const { socket, connect, disconnect } = useSocketStore()
+	const { connect, disconnect } = useSocketStore()
 	const { isOpen, onOpen, onOpenChange } = useDisclosure()
 	const { isOpen: isSettingsOpen, onOpen: onSettingsOpen, onOpenChange: onSettingsOpenChange } = useDisclosure()
 	const { isOpen: isEditOpen, onOpen: onEditOpen, onOpenChange: onEditOpenChange } = useDisclosure()
@@ -20,16 +21,14 @@ function Common() {
 
 	useEffect(() => {
 		connect() // Connect on mount
-
 		return () => {
 			disconnect() // Disconnect on unmount
 		}
 	}, [connect, disconnect])
 
-	useEffect(() => {
-		if (!socket) return
-
-		const listner = (message: any) => {
+	useRealtimeEventListener(
+		"NOTIFICATION",
+		(message: any) => {
 			addToast({
 				title: message.title,
 				description: message.message,
@@ -70,13 +69,9 @@ function Common() {
 					</Typography>
 				) : null,
 			})
-		}
-		socket.on("NOTIFICATION", listner)
-
-		return () => {
-			socket.off("NOTIFICATION", listner)
-		}
-	}, [socket])
+		},
+		false
+	)
 
 	// const [headerIndexChange, setHeaderIndexChange] = useState<boolean>(false)
 

@@ -1,6 +1,6 @@
 import { Box, CssBaseline, Typography } from "@mui/material"
 import { useMutation } from "@tanstack/react-query"
-import { useEffect, useMemo, useState } from "react"
+import { useMemo, useState } from "react"
 import { useNavigate } from "react-router"
 import { toast } from "sonner"
 import axiosJSON from "~/apis/http"
