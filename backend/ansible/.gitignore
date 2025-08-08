@@ -1,6 +1,0 @@
-/callback_plugins/__pycache__
-*.pem
-*.ini
-.tmp
-/ini/*.ini
-ssh-keys
