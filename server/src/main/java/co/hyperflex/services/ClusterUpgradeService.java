@@ -146,7 +146,6 @@ public class ClusterUpgradeService {
       ClusterInfoResponse.DeprecationCounts elasticDeprecationCounts = deprecationService.getElasticDeprecationCounts(clusterId);
 
       boolean isClusterUpgraded = activeUpgradeJob != null && activeUpgradeJob.getStatus() == ClusterUpgradeStatus.UPDATED;
-      clusterService.syncClusterState(clusterId);
       // Evaluate upgrade status
       boolean isESUpgraded = isClusterUpgraded || clusterService.isNodesUpgraded(clusterId, ClusterNodeType.ELASTIC);
       boolean isKibanaUpgraded = isClusterUpgraded || clusterService.isNodesUpgraded(clusterId, ClusterNodeType.KIBANA);
