@@ -14,7 +14,7 @@ import { useLocalStore } from "~/store/common"
 import useRefreshStore from "~/store/refresh"
 import useSafeRouteStore from "~/store/safeRoutes"
 import DetailBox from "./widgets/DetailBox"
-import { useSocketStore } from "~/store/socket"
+import { useRealtimeEventListener } from "~/lib/hooks/useRealtimeEventListener"
 
 const CLUSTER_STATUS_COLOR: { [key: string]: string } = {
 	yellow: "#E0B517",
@@ -50,23 +50,13 @@ const STYLES = {
 }
 
 function ClusterInfo() {
-	const { socket, isConnected } = useSocketStore()
 	const navigate = useNavigate()
 	const clusterId = useLocalStore((state: any) => state.clusterId)
 	const infraType = useLocalStore((state: any) => state.infraType)
 	const setUpgradeAssistAllowed = useSafeRouteStore((state: any) => state.setUpgradeAssistAllowed)
 	const refresh = useRefreshStore((state: any) => state.refreshToggle)
 
-	useEffect(() => {
-		if (!socket) return
-		const listner = () => {
-			refetch()
-		}
-		socket.on("CLUSTER_INFO_CHANGE", listner)
-		return () => {
-			socket.off("CLUSTER_INFO_CHANGE", listner)
-		}
-	}, [socket])
+	useRealtimeEventListener("CLUSTER_INFO_CHANGE", () => refetch())
 
 	const getClusterInfo = async () => {
 		let response: any = []
