@@ -205,6 +205,24 @@ class ClusterUpgradeServiceTest {
       assertFalse(response.elastic().isUpgradable());
       assertFalse(response.kibana().isUpgradable());
     }
+
+    @Test
+    @DisplayName("Precheck runs are marked COMPLETED once upgrade starts, regardless of result")
+    void upgradeInfo_when_jobStatusIsUpdating_then_precheckIsCompleted() {
+      // Arrange
+      clusterUpgradeJob.setStatus(ClusterUpgradeStatus.UPGRADING);
+      when(clusterUpgradeJobService.getActiveJobByClusterId(CLUSTER_ID)).thenReturn(clusterUpgradeJob);
+      when(elasticClient.getValidSnapshots()).thenReturn(Collections.emptyList());
+      when(clusterService.isNodesUpgraded(CLUSTER_ID, ClusterNodeType.ELASTIC)).thenReturn(false);
+
+      // Act
+      ClusterInfoResponse response = clusterUpgradeService.upgradeInfo(CLUSTER_ID);
+
+      // Assert
+      assertTrue(response.elastic().isUpgradable());
+      assertFalse(response.kibana().isUpgradable());
+      assertEquals(PrecheckStatus.COMPLETED, response.precheck().status());
+    }
   }
 
   @Nested

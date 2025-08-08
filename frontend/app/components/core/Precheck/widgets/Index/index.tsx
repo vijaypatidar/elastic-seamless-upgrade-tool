@@ -19,25 +19,29 @@ function IndexLogs({
 	isPending: boolean
 	isLoading: boolean
 }) {
-	const [selectedIndex, setSelectedIndex] = useState<any>([])
-	const [selectedPrecheck, setSelectedPrecheck] = useState<any>([])
+	const [selectedIndex, setSelectedIndex] = useState<any>(null)
+	const [selectedPrecheck, setSelectedPrecheck] = useState<any>(null)
 
 	useEffect(() => {
-		if (
-			selectedIndex.length === 0 ||
-			data?.index?.filter((change: any) => change.index === selectedIndex?.index).length === 0
-		) {
-			if (data?.index?.length === 0) {
-				setSelectedIndex([])
+		if (data?.index?.length > 0) {
+			if (selectedIndex === null) {
+				setSelectedIndex(data?.index[0])
 			} else {
-				setSelectedIndex(data?.index?.[0])
+				setSelectedIndex(data?.index?.find((index: any) => index.index === selectedIndex.index))
 			}
+		} else {
+			setSelectedIndex(null)
 		}
 	}, [data])
 
 	useEffect(() => {
-		if (selectedIndex.length !== 0) {
-			setSelectedPrecheck(selectedIndex?.prechecks?.[0])
+		if (selectedIndex !== null) {
+			if (selectedPrecheck !== null) {
+				const prev =	selectedIndex?.prechecks?.find((precheck: any) => precheck.id === selectedPrecheck.id)
+				setSelectedPrecheck(prev?prev: selectedIndex?.prechecks?.[0])
+			} else {
+				setSelectedPrecheck(selectedIndex?.prechecks?.[0])
+			}
 		} else {
 			setSelectedPrecheck(null)
 		}
@@ -107,7 +111,7 @@ function IndexLogs({
 								key={idx}
 								status={index?.status}
 								severity={index?.severity}
-								isSelected={selectedIndex.index === index.index}
+								isSelected={selectedIndex?.index === index.index}
 								name={index?.name}
 								onClick={() => setSelectedIndex(index)}
 							/>

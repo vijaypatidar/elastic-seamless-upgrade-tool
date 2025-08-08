@@ -122,12 +122,17 @@ public class ClusterUpgradeService {
       GetClusterResponse cluster = clusterService.getClusterById(clusterId);
       PrecheckStatus precheckStatus = null;
       if (activeUpgradeJob != null) {
-        boolean precheckExists = precheckRunService.precheckExistsForJob(activeUpgradeJob.getId());
-        if (!precheckExists) {
-          precheckSchedulerService.schedule(clusterId);
-          precheckStatus = PrecheckStatus.RUNNING;
+        boolean isClusterUpgrading = activeUpgradeJob.getStatus() == ClusterUpgradeStatus.UPGRADING;
+        if (isClusterUpgrading) {
+          precheckStatus = PrecheckStatus.COMPLETED;
         } else {
-          precheckStatus = precheckRunService.getStatusByUpgradeJobId(activeUpgradeJob.getId());
+          boolean precheckExists = precheckRunService.precheckExistsForJob(activeUpgradeJob.getId());
+          if (!precheckExists) {
+            precheckSchedulerService.schedule(clusterId);
+            precheckStatus = PrecheckStatus.RUNNING;
+          } else {
+            precheckStatus = precheckRunService.getStatusByUpgradeJobId(activeUpgradeJob.getId());
+          }
         }
       } else {
         precheckStatus = PrecheckStatus.COMPLETED;
