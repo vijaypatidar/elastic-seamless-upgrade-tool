@@ -23,20 +23,19 @@ function NodesLogs({
 	const [selectedPrecheck, setSelectedPrecheck] = useState<any>(null)
 
 	useEffect(() => {
-		if (
-			selectedNode?.length === null ||
-			data?.node?.filter((change: any) => change.nodeId === selectedNode?.nodeId).length === 0
-		) {
-			if (data?.node?.length === 0) {
-				setSelectedNode(null)
-			} else {
+		if (data?.node?.length > 0) {
+			if (selectedNode === null) {
 				setSelectedNode(data?.node?.[0])
+			} else {
+				setSelectedNode(data?.node?.find((node: any) => node.nodeId === selectedNode?.nodeId))
 			}
+		} else {
+			setSelectedNode(null)
 		}
 	}, [data])
 
 	useEffect(() => {
-		if (selectedNode?.length !== null) {
+		if (selectedNode !== null) {
 			setSelectedPrecheck(selectedNode?.prechecks?.[0])
 		} else {
 			setSelectedPrecheck(null)

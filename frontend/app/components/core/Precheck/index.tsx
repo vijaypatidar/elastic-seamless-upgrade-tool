@@ -1,7 +1,7 @@
 import { Box, Typography } from "@mui/material"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { Folder, Refresh } from "iconsax-react"
-import { useEffect, useRef } from "react"
+import { useEffect } from "react"
 import { toast } from "sonner"
 import axiosJSON from "~/apis/http"
 import { OutlinedBorderButton } from "~/components/utilities/Buttons"
@@ -9,6 +9,7 @@ import StringManager from "~/constants/StringManager"
 import { useLocalStore } from "~/store/common"
 import { useSocketStore } from "~/store/socket"
 import LogGroup from "./widgets/LogGroup"
+import { useDebouncedRefetch } from "~/lib/hooks/useDebouncedRefetch"
 
 const PrecheckNotTriggered = ({ refetch }: { refetch: () => void }) => {
 	const clusterId = useLocalStore((state: any) => state.clusterId)
@@ -73,7 +74,6 @@ const PrecheckNotTriggered = ({ refetch }: { refetch: () => void }) => {
 function Precheck({ selectedTab }: { selectedTab: TCheckTab }) {
 	const clusterId = useLocalStore((state: any) => state.clusterId)
 	const { socket } = useSocketStore()
-	const debounceRef = useRef(null)
 
 	const getPrecheck = async () => {
 		try {
@@ -90,21 +90,12 @@ function Precheck({ selectedTab }: { selectedTab: TCheckTab }) {
 		}
 	}
 
-	const { data, isLoading, refetch, error } = useQuery({
+	const { data, isLoading, refetch } = useQuery({
 		queryKey: ["get-prechecks"],
 		queryFn: getPrecheck,
 		staleTime: 0,
 	})
-	const _debounceRefetch = () => {
-		if (debounceRef.current) {
-			clearTimeout(debounceRef.current)
-		}
-
-		// @ts-ignore
-		debounceRef.current = setTimeout(() => {
-			refetch()
-		}, 1000)
-	}
+	const _debounceRefetch = useDebouncedRefetch(refetch, 1000, 1500)
 
 	useEffect(() => {
 		if (!socket) return
