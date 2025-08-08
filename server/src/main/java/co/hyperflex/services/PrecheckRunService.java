@@ -137,7 +137,7 @@ public class PrecheckRunService {
     }
 
     if (request.nodeIds() != null && !request.nodeIds().isEmpty()) {
-      criteriaList.add(Criteria.where("node.id").in(request.nodeIds()));
+      criteriaList.add(Criteria.where("node._id").in(request.nodeIds()));
     }
 
     if (request.indexNames() != null && !request.indexNames().isEmpty()) {
