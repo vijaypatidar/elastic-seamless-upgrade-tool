@@ -28,6 +28,8 @@ function Setup() {
 	// const { step, setStep } = useSessionStore((state: any) => ({ step: state.setupStep, setStep: state.setSetupStep }))
 
 	const [creds, setCreds] = useState<TCreds>({
+		type: infraType,
+		name: "",
 		elasticUrl: "",
 		kibanaUrl: "",
 		authPref: null,
@@ -41,11 +43,18 @@ function Setup() {
 
 	const handleNextStep = () => setStep(step + 1)
 
-	const handleBackStep = () => setStep(step - 1)
+	const handleBackStep = () => {
+		if (step === 1) {
+			navigate("/")
+		} else {
+			setStep(step - 1)
+		}
+	}
 
-	const handleStepInfraSubmit = (value: string | number | null) => {
+	const handleStepInfraSubmit = (value: string | null) => {
 		if (value) {
 			setInfraType(value)
+			setCreds({ ...creds, type: value })
 			handleNextStep()
 		}
 	}
@@ -65,7 +74,7 @@ function Setup() {
 			})
 			if (values.certFiles?.length !== 0) {
 				await axiosJSON
-					.post("/api/elastic/clusters/certificates/upload", formData, {
+					.post("/clusters/certificates/upload", formData, {
 						maxBodyLength: Infinity,
 						headers: {
 							"Content-Type": "multipart/form-data",
@@ -75,20 +84,25 @@ function Setup() {
 					.catch((err) => toast.error(err?.response?.data.err ?? StringManager.GENERIC_ERROR))
 			}
 			await axiosJSON
-				.post("/api/elastic/clusters", {
-					elastic: { url: creds.elasticUrl, username: creds.username, password: creds.password },
-					kibana: { url: creds.kibanaUrl, username: creds.username, password: creds.password },
+				.post("/clusters", {
+					name: creds.name,
+					elasticUrl: creds.elasticUrl,
+					kibanaUrl: creds.kibanaUrl,
+					username: creds.username,
+					password: creds.password,
 					certificateIds: certIds,
-					infrastructureType: infraType,
-					sshUser: creds.sshUser,
-					key: creds.pathToSSH ?? "",
-					kibanaConfigs: creds.kibanaConfigs,
+					type: infraType,
+					sshUsername: creds.sshUser,
+					sshKey: creds.pathToSSH ?? "",
+					apiKey: creds.apiKey,
+					kibanaNodes: creds.kibanaConfigs,
+					deploymentId: creds.deploymentId,
 				})
 				.then((res) => {
 					setClusterAdded(true)
 					setStep(1)
-					setClusterId(res?.data?.clusterId)
-					navigate("/cluster-overview")
+					setClusterId(res?.data?.id)
+					navigate("/")
 				})
 				.catch((err) => toast.error(err?.response?.data.err ?? StringManager.GENERIC_ERROR))
 		},
@@ -97,7 +111,7 @@ function Setup() {
 	const getStepForm = useMemo(() => {
 		switch (step) {
 			case 1:
-				return <Infrastructure onSubmit={handleStepInfraSubmit} />
+				return <Infrastructure backStep={handleBackStep} onSubmit={handleStepInfraSubmit} />
 			case 2:
 				return <Credentials backStep={handleBackStep} onSubmit={handleCredSubmit} initialValues={creds} />
 			case 3:

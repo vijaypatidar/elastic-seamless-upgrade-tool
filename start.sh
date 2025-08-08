@@ -7,8 +7,8 @@ DOCKER_TAG="${1:-latest}"
 cat <<EOF > docker-compose.yml
 
 services:
-  mongodb:
-    image: mongo:6.0
+  seamless-upgrade-mongodb:
+    image: mongo:8.0
     container_name: mongodb
     ports:
       - '27017:27017'
@@ -16,30 +16,22 @@ services:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: admin123
     volumes:
-      - mongo-data:/data/db
+      - seamless-upgrade-mongodb-data:/data/db
 
-  backend:
-    image: hyperflex/elastic-seamless-upgrade-backend:$DOCKER_TAG
-    container_name: backend
-    pull_policy: always
-    environment:
-      MONGO_URI: mongodb://admin:admin123@mongodb:27017/
-    depends_on:
-      - mongodb
-    ports:
-      - '3000:3000'
-
-  frontend:
-    image: hyperflex/elastic-seamless-upgrade-frontend:$DOCKER_TAG
-    container_name: frontend
+  seamless-upgrade-tool:
+    image: hyperflex/elastic-seamless-upgrade-tool:$DOCKER_TAG
+    container_name: tool
     pull_policy: always
     ports:
-      - '8080:80'
+      - '8080:8080'
+    volumes:
+      - seamless-upgrade-tool:/output
     depends_on:
-      - backend
+      - seamless-upgrade-mongodb
 
 volumes:
-  mongo-data:
+  seamless-upgrade-tool:
+  seamless-upgrade-mongodb-data:
 EOF
 
 # Start the services

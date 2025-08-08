@@ -8,6 +8,8 @@ export const useLocalStore = create()(
 			clusterId: "",
 			infraType: "",
 			sessionName: "",
+			deploymentId: "",
+			setDeploymentId: (id: string) => set((state: any) => ({ deploymentId: id })),
 			setClusterId: (id: string) => set((state: any) => ({ clusterId: id })),
 			setInfraType: (type: string) => set((state: any) => ({ infraType: type })),
 			setSessionName: (name: string) => set((state: any) => ({ sessionName: name })),

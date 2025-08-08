@@ -38,6 +38,9 @@ const STYLES = {
 }
 
 const INITIAL_VALUES = {
+	type: "",
+	name: "",
+	deploymentId: "",
 	elasticUrl: "",
 	kibanaUrl: "",
 	authPref: null,
@@ -53,9 +56,8 @@ const INITIAL_VALUES = {
 function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: () => void }) {
 	const refresh = useRefreshStore((state: any) => state.refresh)
 	const resetForEditCluster = useSafeRouteStore((state: any) => state.resetForEditCluster)
-	const setInfraType = useLocalStore((state: any) => state.setInfraType)
-	const setClusterId = useLocalStore((state: any) => state.setClusterId)
 	const clusterId = useLocalStore((state: any) => state.clusterId)
+	const infraType = useLocalStore((state: any) => state.infraType)
 	const { pathname } = useLocation()
 	const [initialValues, setInitialValues] = useState<TClusterValues>(INITIAL_VALUES)
 	const [showPassword, setShowPassword] = useState<boolean>(false)
@@ -70,7 +72,10 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 	})
 
 	useEffect(() => {
-		if (isOpen) formik.resetForm()
+		if (isOpen) {
+			formik.resetForm()
+			refetch()
+		}
 	}, [isOpen])
 
 	const handleChange = (fn: React.Dispatch<React.SetStateAction<(File | TExistingFile)[]>>, files: File[]) => {
@@ -93,26 +98,29 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 	}
 
 	const getCluster = async () => {
-		await axiosJSON
-			.get("/api/elastic/clusters/verify")
+		axiosJSON
+			.get("/clusters/" + clusterId)
 			.then((res) => {
-				setInitialValues({
-					elasticUrl: res?.data?.clusterData?.elastic?.url,
-					kibanaUrl: res?.data?.clusterData?.kibana?.url,
-					authPref: res?.data?.clusterData?.elastic?.username ? "U/P" : "API_KEY",
-					username: res?.data?.clusterData?.elastic?.username,
-					password: res?.data?.clusterData?.elastic?.password,
-					apiKey: res?.data?.clusterData?.elastic?.apiKey,
-					sshUser: res?.data?.clusterData?.sshUser,
-					pathToSSH: res?.data?.clusterData?.pathToKey,
-					kibanaConfigs: res?.data?.clusterData?.kibanaConfigs,
+				const cluster = res?.data
+				cluster && setInitialValues({
+					name: cluster.name,
+					type: cluster.type,
+					elasticUrl: cluster.elasticUrl,
+					kibanaUrl: cluster.kibanaUrl,
+					authPref: cluster.username ? "U/P" : "API_KEY",
+					username: cluster.username,
+					password: cluster.password,
+					apiKey: cluster.apiKey,
+					sshUser: cluster.sshUsername,
+					pathToSSH: cluster.sshKey,
+					kibanaConfigs: cluster.kibanaNodes,
+					deploymentId: cluster.deploymentId,
 					certFiles:
-						res?.data?.clusterData?.certificateIds?.map((certId: string) => ({
+						cluster.certificateIds?.map((certId: string) => ({
 							name: certId,
 							storedOnServer: true,
 						})) || [],
 				})
-
 				formik.resetForm()
 			})
 			.catch((err) => {
@@ -126,7 +134,7 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 	const { isLoading, isRefetching, refetch } = useQuery({
 		queryKey: ["get-cluster-info"],
 		queryFn: getCluster,
-		staleTime: Infinity,
+		staleTime: 0,
 	})
 
 	const { mutate: HandleSubmit, isPending } = useMutation({
@@ -141,7 +149,7 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 			})
 			if (values.certFiles?.filter((cert: File | TExistingFile) => cert instanceof File).length !== 0) {
 				await axiosJSON
-					.post("/api/elastic/clusters/certificates/upload", formData, {
+					.post("/clusters/certificates/upload", formData, {
 						maxBodyLength: Infinity,
 						headers: {
 							"Content-Type": "multipart/form-data",
@@ -151,24 +159,26 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 					.catch((err) => toast.error(err?.response?.data.err ?? StringManager.GENERIC_ERROR))
 			}
 			await axiosJSON
-				.post("/api/elastic/clusters", {
-					elastic: { url: values.elasticUrl, username: values.username, password: values.password },
-					kibana: { url: values.kibanaUrl, username: values.username, password: values.password },
+				.put("clusters/" + clusterId, {
+					type: values.type,
+					name: values.name,
+					deploymentId: values.deploymentId,
+					elasticUrl: values.elasticUrl,
+					username: values.username,
+					password: values.password,
+					kibanaUrl:  values.kibanaUrl,
 					certificateIds: [
 						...values.certFiles
 							?.filter((cert: File | TExistingFile) => !(cert instanceof File))
 							.map((cert: TExistingFile) => cert.name),
 						...certIds,
 					],
-					sshUser: values.sshUser,
-					infrastructureType: "on-premise",
-					key: values.pathToSSH ?? "",
-					kibanaConfigs: values.kibanaConfigs,
-					clusterId: clusterId,
+					sshUsername: values.sshUser,
+					apiKey: values.apiKey,
+					sshKey: values.pathToSSH ?? "",
+					kibanaNodes: values.kibanaConfigs
 				})
 				.then((res) => {
-					setInfraType("on-premise")
-					setClusterId(res?.data?.clusterId)
 					refetch()
 					resetForEditCluster()
 					if (pathname === "/cluster-overview") {
@@ -255,6 +265,46 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 									>
 										<Box className="flex flex-col max-w-[552px] w-full">
 											<Box className="flex flex-col items-stretch gap-6 max-w-[552px] w-full">
+												<Box className="flex flex-col gap-[6px] max-w-[515px]">
+													<Typography
+														color="#ABA9B1"
+														fontSize="14px"
+														fontWeight="400"
+														lineHeight="20px"
+													>
+														Cluster name
+													</Typography>
+													<Box
+														className="flex flex-col gap-[6px]"
+														key={formik.values.authPref}
+													>
+														<OneLineSkeleton
+															show={isLoading || isRefetching}
+															height="52px"
+															className="w-full rounded-[10px]"
+															component={
+																<Input
+																	fullWidth
+																	id="name"
+																	name="name"
+																	type="text"
+																	placeholder="Enter cluster name"
+																	variant="outlined"
+																	value={formik.values.name}
+																	onChange={formik.handleChange}
+																	onBlur={formik.handleBlur}
+																	error={
+																		formik.touched.name &&
+																		Boolean(formik.errors.name)
+																	}
+																	helperText={
+																		formik.touched.name && formik.errors.name
+																	}
+																/>
+															}
+														/>
+													</Box>
+												</Box>
 												<Box className="flex flex-col gap-[6px] w-full max-w-[515px]">
 													<Typography
 														color="#ABA9B1"
@@ -507,238 +557,269 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 														</Box>
 													</Box>
 												)}
-												<Box className="flex flex-col gap-[6px]">
-													<Box
-														className={cn("flex flex-row justify-between max-w-[515px]", {
-															"border border-dashed border-[#3D3B42] rounded-[10px] py-[11px] pl-[16px] pr-[12px]":
-																formik.values.kibanaConfigs?.length === 0,
-														})}
-													>
-														<Typography
-															color="#ABA9B1"
-															fontSize="14px"
-															fontWeight="400"
-															lineHeight="20px"
-														>
-															Kibana clusters
-														</Typography>
-														<Box>
-															<OutlinedButton
-																sx={{
-																	gap: "4px",
-																	fontSize: "12px",
-																	fontWeight: "500",
-																	lineHeight: "normal",
-																	border: "none",
-																	padding: "0px",
-																	minHeight: "0px",
-																	height: "fit-content",
-																	":hover": { color: "#4CDB9D !important" },
-																}}
-																onClick={() => {
-																	let option = formik.values.kibanaConfigs
-																	const newOptions = [...option, { name: "", ip: "" }]
-																	formik.setFieldValue(
-																		"kibanaConfigs",
-																		_.cloneDeep(newOptions)
-																	)
-																}}
+												{infraType == "SELF_MANAGED" && (
+													<>
+														<Box className="flex flex-col gap-[6px]">
+															<Box
+																className={cn(
+																	"flex flex-row justify-between max-w-[515px]",
+																	{
+																		"border border-dashed border-[#3D3B42] rounded-[10px] py-[11px] pl-[16px] pr-[12px]":
+																			formik.values.kibanaConfigs?.length === 0,
+																	}
+																)}
 															>
-																<Add size="16px" color="currentColor" />
-																Add cluster
-															</OutlinedButton>
+																<Typography
+																	color="#ABA9B1"
+																	fontSize="14px"
+																	fontWeight="400"
+																	lineHeight="20px"
+																>
+																	Kibana clusters
+																</Typography>
+																<Box>
+																	<OutlinedButton
+																		sx={{
+																			gap: "4px",
+																			fontSize: "12px",
+																			fontWeight: "500",
+																			lineHeight: "normal",
+																			border: "none",
+																			padding: "0px",
+																			minHeight: "0px",
+																			height: "fit-content",
+																			":hover": { color: "#4CDB9D !important" },
+																		}}
+																		onClick={() => {
+																			let option = formik.values.kibanaConfigs
+																			const newOptions = [
+																				...option,
+																				{ name: "", ip: "" },
+																			]
+																			formik.setFieldValue(
+																				"kibanaConfigs",
+																				_.cloneDeep(newOptions)
+																			)
+																		}}
+																	>
+																		<Add size="16px" color="currentColor" />
+																		Add cluster
+																	</OutlinedButton>
+																</Box>
+															</Box>
+															<Box className="flex flex-col gap-[6px] rounded-lg">
+																{_.map(
+																	formik.values.kibanaConfigs,
+																	(
+																		cluster: { name: string; ip: string },
+																		index: number
+																	) => {
+																		return (
+																			<Box className="flex flex-col gap-[2px]">
+																				<Box className="flex flex-row gap-2 items-center group">
+																					<Box className="flex flex-row gap-[6px] w-full max-w-[515px]">
+																						<Input
+																							fullWidth
+																							id={`kibanaConfigs.${index}`}
+																							name={`kibanaConfigs.${index}`}
+																							type="text"
+																							placeholder="Enter cluster name"
+																							varient="outlined"
+																							value={cluster.name}
+																							onBlur={formik.handleBlur}
+																							onChange={(e: any) => {
+																								let newOptions = [
+																									...formik.values
+																										.kibanaConfigs,
+																								]
+																								// @ts-ignore
+																								newOptions[index].name =
+																									e.target.value
+																								formik.setFieldValue(
+																									"kibanaConfigs",
+																									_.cloneDeep(
+																										newOptions
+																									)
+																								)
+																							}}
+																							error={
+																								Boolean(
+																									formik.errors
+																										.kibanaConfigs?.[
+																										index
+																									]
+																								) &&
+																								formik.touched
+																									.kibanaConfigs
+																							}
+																						/>
+																						<Input
+																							fullWidth
+																							id={`kibanaConfigs.${index}`}
+																							name={`kibanaConfigs.${index}`}
+																							type="text"
+																							placeholder="Enter cluster name"
+																							varient="outlined"
+																							value={cluster.ip}
+																							onBlur={formik.handleBlur}
+																							onChange={(e: any) => {
+																								let newOptions = [
+																									...formik.values
+																										.kibanaConfigs,
+																								]
+																								// @ts-ignore
+																								newOptions[index].ip =
+																									e.target.value
+																								formik.setFieldValue(
+																									"kibanaConfigs",
+																									_.cloneDeep(
+																										newOptions
+																									)
+																								)
+																							}}
+																							error={
+																								Boolean(
+																									formik.errors
+																										.kibanaConfigs?.[
+																										index
+																									]
+																								) &&
+																								formik.touched
+																									.kibanaConfigs
+																							}
+																						/>
+																					</Box>
+																					<Box className="hidden delete-button group-hover:flex">
+																						<IconButton
+																							sx={{
+																								borderRadius: "8px",
+																								padding: "4px",
+																							}}
+																							onClick={() => {
+																								let newOptions = [
+																									...formik.values
+																										.kibanaConfigs,
+																								]
+																								newOptions =
+																									newOptions.filter(
+																										(option, ind) =>
+																											ind !==
+																											index
+																									)
+																								formik.setFieldValue(
+																									"kibanaConfigs",
+																									_.cloneDeep(
+																										newOptions
+																									)
+																								)
+																							}}
+																						>
+																							<Trash
+																								size="20px"
+																								color="#E56852"
+																							/>
+																						</IconButton>
+																					</Box>
+																				</Box>
+																				{formik.touched.kibanaConfigs &&
+																				formik.errors.kibanaConfigs?.[index] ? (
+																					<Typography
+																						fontSize="12px"
+																						fontWeight="400"
+																						color="#EF4444"
+																						lineHeight="20px"
+																					>
+																						{formik.errors.kibanaConfigs?.[
+																							index
+																						]?.name ||
+																							formik.errors
+																								.kibanaConfigs?.[index]
+																								?.ip}
+																					</Typography>
+																				) : null}
+																			</Box>
+																		)
+																	}
+																)}
+															</Box>
 														</Box>
-													</Box>
-													<Box className="flex flex-col gap-[6px] rounded-lg">
-														{_.map(
-															formik.values.kibanaConfigs,
-															(cluster: { name: string; ip: string }, index: number) => {
-																return (
-																	<Box className="flex flex-col gap-[2px]">
-																		<Box className="flex flex-row gap-2 items-center group">
-																			<Box className="flex flex-row gap-[6px] w-full max-w-[515px]">
-																				<Input
-																					fullWidth
-																					id={`kibanaConfigs.${index}`}
-																					name={`kibanaConfigs.${index}`}
-																					type="text"
-																					placeholder="Enter cluster name"
-																					varient="outlined"
-																					value={cluster.name}
-																					onBlur={formik.handleBlur}
-																					onChange={(e: any) => {
-																						let newOptions = [
-																							...formik.values
-																								.kibanaConfigs,
-																						]
-																						// @ts-ignore
-																						newOptions[index].name =
-																							e.target.value
-																						formik.setFieldValue(
-																							"kibanaConfigs",
-																							_.cloneDeep(newOptions)
-																						)
-																					}}
-																					error={
-																						Boolean(
-																							formik.errors
-																								.kibanaConfigs?.[index]
-																						) &&
-																						formik.touched.kibanaConfigs
-																					}
-																				/>
-																				<Input
-																					fullWidth
-																					id={`kibanaConfigs.${index}`}
-																					name={`kibanaConfigs.${index}`}
-																					type="text"
-																					placeholder="Enter cluster name"
-																					varient="outlined"
-																					value={cluster.ip}
-																					onBlur={formik.handleBlur}
-																					onChange={(e: any) => {
-																						let newOptions = [
-																							...formik.values
-																								.kibanaConfigs,
-																						]
-																						// @ts-ignore
-																						newOptions[index].ip =
-																							e.target.value
-																						formik.setFieldValue(
-																							"kibanaConfigs",
-																							_.cloneDeep(newOptions)
-																						)
-																					}}
-																					error={
-																						Boolean(
-																							formik.errors
-																								.kibanaConfigs?.[index]
-																						) &&
-																						formik.touched.kibanaConfigs
-																					}
-																				/>
-																			</Box>
-																			<Box className="hidden delete-button group-hover:flex">
-																				<IconButton
-																					sx={{
-																						borderRadius: "8px",
-																						padding: "4px",
-																					}}
-																					onClick={() => {
-																						let newOptions = [
-																							...formik.values
-																								.kibanaConfigs,
-																						]
-																						newOptions = newOptions.filter(
-																							(option, ind) =>
-																								ind !== index
-																						)
-																						formik.setFieldValue(
-																							"kibanaConfigs",
-																							_.cloneDeep(newOptions)
-																						)
-																					}}
-																				>
-																					<Trash
-																						size="20px"
-																						color="#E56852"
-																					/>
-																				</IconButton>
-																			</Box>
-																		</Box>
-																		{formik.touched.kibanaConfigs &&
-																		formik.errors.kibanaConfigs?.[index] ? (
-																			<Typography
-																				fontSize="12px"
-																				fontWeight="400"
-																				color="#EF4444"
-																				lineHeight="20px"
-																			>
-																				{formik.errors.kibanaConfigs?.[index]
-																					?.name ||
-																					formik.errors.kibanaConfigs?.[index]
-																						?.ip}
-																			</Typography>
-																		) : null}
-																	</Box>
-																)
-															}
-														)}
-													</Box>
-												</Box>
-												<Box className="flex flex-col gap-[6px] max-w-[515px]">
-													<Typography
-														color="#ABA9B1"
-														fontSize="14px"
-														fontWeight="400"
-														lineHeight="20px"
-													>
-														SSH Username
-													</Typography>
-													<OneLineSkeleton
-														show={isLoading || isRefetching}
-														height="52px"
-														className="w-full rounded-[10px]"
-														component={
-															<Input
-																fullWidth
-																id="sshUser"
-																name="sshUser"
-																type="text"
-																placeholder="Enter ssh username"
-																variant="outlined"
-																value={formik.values.sshUser}
-																onChange={formik.handleChange}
-																onBlur={formik.handleBlur}
-																error={
-																	formik.touched.sshUser &&
-																	Boolean(formik.errors.sshUser)
-																}
-																helperText={
-																	formik.touched.sshUser && formik.errors.sshUser
+														<Box className="flex flex-col gap-[6px] max-w-[515px]">
+															<Typography
+																color="#ABA9B1"
+																fontSize="14px"
+																fontWeight="400"
+																lineHeight="20px"
+															>
+																SSH Username
+															</Typography>
+															<OneLineSkeleton
+																show={isLoading || isRefetching}
+																height="52px"
+																className="w-full rounded-[10px]"
+																component={
+																	<Input
+																		fullWidth
+																		id="sshUser"
+																		name="sshUser"
+																		type="text"
+																		placeholder="Enter ssh username"
+																		variant="outlined"
+																		value={formik.values.sshUser}
+																		onChange={formik.handleChange}
+																		onBlur={formik.handleBlur}
+																		error={
+																			formik.touched.sshUser &&
+																			Boolean(formik.errors.sshUser)
+																		}
+																		helperText={
+																			formik.touched.sshUser &&
+																			formik.errors.sshUser
+																		}
+																	/>
 																}
 															/>
-														}
-													/>
-												</Box>
-												<Box className="flex flex-col gap-[6px] max-w-[515px]">
-													<Typography
-														color="#ABA9B1"
-														fontSize="14px"
-														fontWeight="400"
-														lineHeight="20px"
-													>
-														SSH key
-													</Typography>
-													<OneLineSkeleton
-														show={isLoading || isRefetching}
-														height="192px"
-														className="w-full rounded-[10px]"
-														component={
-															<Input
-																fullWidth
-																id="pathToSSH"
-																name="pathToSSH"
-																type="text"
-																placeholder="Enter SSH key"
-																varient="outlined"
-																multiline
-																minRows={8}
-																maxRows={8}
-																value={formik.values.pathToSSH}
-																onChange={formik.handleChange}
-																onBlur={formik.handleBlur}
-																error={
-																	formik.touched.pathToSSH &&
-																	Boolean(formik.errors.pathToSSH)
-																}
-																helperText={
-																	formik.touched.pathToSSH && formik.errors.pathToSSH
+														</Box>
+														<Box className="flex flex-col gap-[6px] max-w-[515px]">
+															<Typography
+																color="#ABA9B1"
+																fontSize="14px"
+																fontWeight="400"
+																lineHeight="20px"
+															>
+																SSH key
+															</Typography>
+															<OneLineSkeleton
+																show={isLoading || isRefetching}
+																height="192px"
+																className="w-full rounded-[10px]"
+																component={
+																	<Input
+																		fullWidth
+																		id="pathToSSH"
+																		name="pathToSSH"
+																		type="text"
+																		placeholder="Enter SSH key"
+																		varient="outlined"
+																		multiline
+																		minRows={8}
+																		maxRows={8}
+																		value={formik.values.pathToSSH}
+																		onChange={formik.handleChange}
+																		onBlur={formik.handleBlur}
+																		error={
+																			formik.touched.pathToSSH &&
+																			Boolean(formik.errors.pathToSSH)
+																		}
+																		helperText={
+																			formik.touched.pathToSSH &&
+																			formik.errors.pathToSSH
+																		}
+																	/>
 																}
 															/>
-														}
-													/>
-												</Box>
+														</Box>
+													</>
+												)}
 												<Box className="flex flex-col gap-[6px] max-w-[515px]">
 													<Typography
 														fontSize="14px"

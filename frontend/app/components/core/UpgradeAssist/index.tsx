@@ -1,7 +1,7 @@
-import { Skeleton, Tooltip } from "@heroui/react"
+import { Skeleton } from "@heroui/react"
 import { Box, Typography } from "@mui/material"
 import { useQuery } from "@tanstack/react-query"
-import { Camera, Flash, InfoCircle } from "iconsax-react"
+import { Camera, Flash } from "iconsax-react"
 import moment from "moment"
 import { useState } from "react"
 import { Link } from "react-router"
@@ -19,6 +19,9 @@ import { FiArrowUpRight } from "react-icons/fi"
 
 function UpgradeAssistant() {
 	const clusterId = useLocalStore((state: any) => state.clusterId)
+	const infraType = useLocalStore((state: any) => state.infraType)
+	const deploymentId = useLocalStore((state: any) => state.deploymentId)
+	const setDeploymentId = useLocalStore((state: any) => state.setDeploymentId)
 	const { remainingTime, startTimer, resetTimer } = useCountdownTimer()
 	const setDeprecationChangesAllowed = useSafeRouteStore((state: any) => state.setDeprecationChangesAllowed)
 	const setElasticNodeUpgradeAllowed = useSafeRouteStore((state: any) => state.setElasticNodeUpgradeAllowed)
@@ -58,7 +61,7 @@ function UpgradeAssistant() {
 	const getUpgradeInfo = async () => {
 		let response: any = []
 		await axiosJSON
-			.get(`/api/elastic/clusters/${clusterId}/upgrade_info`)
+			.get(`/upgrades/${clusterId}/info`)
 			.then((res) => {
 				response = res.data
 				if (response?.elastic?.snapshot?.snapshot) {
@@ -76,7 +79,7 @@ function UpgradeAssistant() {
 
 				// Helper function to sum deprecations safely
 				const sumDeprecations = (type: string) =>
-					(elastic?.deprecations?.[type] ?? 1) + (kibana?.deprecations?.[type] ?? 1)
+					(elastic?.deprecationCounts?.[type] ?? 1) + (kibana?.deprecationCounts?.[type] ?? 1)
 
 				// Step 2 calculations
 				const criticalDeprecations = sumDeprecations("critical")
@@ -121,6 +124,7 @@ function UpgradeAssistant() {
 				handleRoutingStates(step3Status, setDeprecationChangesAllowed)
 				handleRoutingStates(step4Status, setElasticNodeUpgradeAllowed)
 				handleRoutingStates(step5Status, setKibanaNodeUpgradeAllowed)
+				setDeploymentId(response?.deploymentId ?? "")
 			})
 			.catch((err) => toast.error(err?.response?.data.err ?? StringManager.GENERIC_ERROR))
 		return response
@@ -307,15 +311,15 @@ function UpgradeAssistant() {
 					<Box className="flex flex-row gap-8 flex-grow w-full" flexWrap={{ xs: "wrap", md: "nowrap" }}>
 						<DeprectedSettings
 							title="Elastic search"
-							criticalValue={data?.elastic?.deprecations.critical ?? "NaN"}
-							warningValue={data?.elastic?.deprecations.warning ?? "NaN"}
+							criticalValue={data?.elastic?.deprecationCounts.critical ?? "NaN"}
+							warningValue={data?.elastic?.deprecationCounts.warning ?? "NaN"}
 							isDisabled={step3Data?.isDisabled}
 							to="/elastic/deprecation-logs"
 						/>
 						<DeprectedSettings
 							title="Kibana"
-							criticalValue={data?.kibana?.deprecations.critical ?? "NaN"}
-							warningValue={data?.kibana?.deprecations.warning ?? "NaN"}
+							criticalValue={data?.kibana?.deprecationCounts.critical ?? "NaN"}
+							warningValue={data?.kibana?.deprecationCounts.warning ?? "NaN"}
 							isDisabled={step3Data?.isDisabled}
 							to="/kibana/deprecation-logs"
 						/>
@@ -331,6 +335,7 @@ function UpgradeAssistant() {
 				internalBackground={step4Data?.internalBackground}
 				textColor={step4Data?.textColor}
 				stepValue={step4Data?.stepValue}
+				lastNode={infraType === "ELASTIC_CLOUD" ? true : false}
 			>
 				<Box className="flex flex-row gap-3 items-center rounded-[20px] justify-between w-full">
 					<Box className="flex flex-col gap-[6px]">
@@ -348,53 +353,72 @@ function UpgradeAssistant() {
 							can upgrade to Elastic 8.x. Be sure to back up your data again before upgrading.
 						</Typography>
 					</Box>
-					<OutlinedBorderButton
-						component={Link}
-						to="/elastic/upgrade"
-						disabled={step4Data?.isDisabled}
-						icon={Flash}
-						filledIcon={Flash}
-					>
-						Upgrade
-					</OutlinedBorderButton>
-				</Box>
-			</StepBox>
-			<StepBox
-				lastNode={true}
-				boxBackground={step5Data?.boxBackground}
-				background={step5Data?.background}
-				boxShadow={step5Data?.boxShadow}
-				internalBackground={step5Data?.internalBackground}
-				textColor={step5Data?.textColor}
-				stepValue={step5Data?.stepValue}
-			>
-				<Box className="flex flex-row gap-3 items-center rounded-[20px] justify-between w-full">
-					<Box className="flex flex-col gap-[6px]">
-						<Typography color="#FFF" fontSize="16px" fontWeight="600" lineHeight="normal">
-							Upgrade Kibana
-						</Typography>
-						<Typography
-							color="#6E6E6E"
-							fontSize="13px"
-							fontWeight="400"
-							lineHeight="20px"
-							letterSpacing="0.26px"
+					{infraType == "ELASTIC_CLOUD" ? (
+						<Box className="flex items-start">
+							<a
+								target="_blank"
+								href={`https://cloud.elastic.co/deployments/${deploymentId}?show_upgrade=true`}
+							>
+								<OutlinedBorderButton
+									disabled={stepStatus["2"] === "NOTVISITED"}
+									borderRadius="50%"
+									sx={{ minWidth: "38px !important", minHeight: "38px !important", padding: "0px" }}
+								>
+									<FiArrowUpRight size="20px" color="#FFF" />
+								</OutlinedBorderButton>
+							</a>
+						</Box>
+					) : (
+						<OutlinedBorderButton
+							component={Link}
+							to="/elastic/upgrade"
+							disabled={step4Data?.isDisabled}
+							icon={Flash}
+							filledIcon={Flash}
 						>
-							Once you've resolved all critical issues and verified that your applications are ready, you
-							can upgrade to Elastic 8.x. Be sure to back up your data again before upgrading.
-						</Typography>
-					</Box>
-					<OutlinedBorderButton
-						component={Link}
-						to="/kibana/upgrade"
-						disabled={step5Data?.isDisabled}
-						icon={Flash}
-						filledIcon={Flash}
-					>
-						Upgrade
-					</OutlinedBorderButton>
+							Upgrade
+						</OutlinedBorderButton>
+					)}
 				</Box>
 			</StepBox>
+			{infraType != "ELASTIC_CLOUD" && (
+				<StepBox
+					lastNode={true}
+					boxBackground={step5Data?.boxBackground}
+					background={step5Data?.background}
+					boxShadow={step5Data?.boxShadow}
+					internalBackground={step5Data?.internalBackground}
+					textColor={step5Data?.textColor}
+					stepValue={step5Data?.stepValue}
+				>
+					<Box className="flex flex-row gap-3 items-center rounded-[20px] justify-between w-full">
+						<Box className="flex flex-col gap-[6px]">
+							<Typography color="#FFF" fontSize="16px" fontWeight="600" lineHeight="normal">
+								Upgrade Kibana
+							</Typography>
+							<Typography
+								color="#6E6E6E"
+								fontSize="13px"
+								fontWeight="400"
+								lineHeight="20px"
+								letterSpacing="0.26px"
+							>
+								Once you've resolved all critical issues and verified that your applications are ready,
+								you can upgrade to Elastic 8.x. Be sure to back up your data again before upgrading.
+							</Typography>
+						</Box>
+						<OutlinedBorderButton
+							component={Link}
+							to="/kibana/upgrade"
+							disabled={step5Data?.isDisabled}
+							icon={Flash}
+							filledIcon={Flash}
+						>
+							Upgrade
+						</OutlinedBorderButton>
+					</Box>
+				</StepBox>
+			)}
 			{stepStatus["5"] === "COMPLETED" ? (
 				<Box className="sticky bottom-0 z-50">
 					<Box

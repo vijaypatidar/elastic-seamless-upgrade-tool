@@ -1,17 +1,16 @@
 import { Spinner, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from "@heroui/react"
 import { Box, Typography } from "@mui/material"
 import { useMutation, useQuery } from "@tanstack/react-query"
-import { CloseCircle, Flash, TickCircle, Warning2 } from "iconsax-react"
+import { CloseCircle, Danger, Flash, Refresh, TickCircle, Warning2 } from "iconsax-react"
 import { useCallback, useEffect, type Key } from "react"
 import { toast } from "sonner"
 import axiosJSON from "~/apis/http"
 import { OutlinedBorderButton } from "~/components/utilities/Buttons"
-import StorageManager from "~/constants/StorageManager"
 import StringManager from "~/constants/StringManager"
-import LocalStorageHandler from "~/lib/LocalHanlder"
 import { useLocalStore } from "~/store/common"
 import { useSocketStore } from "~/store/socket"
 import ProgressBar from "./widgets/progress"
+import { cn } from "~/lib/Utils"
 
 const UPGRADE_ENUM = {
 	completed: (
@@ -44,7 +43,7 @@ const UPGRADE_ENUM = {
 	),
 }
 
-const columns: TUpgradeColumn = [
+const columns: TColumn = [
 	{
 		key: "node_name",
 		label: "Node name",
@@ -101,22 +100,19 @@ function UpgradeKibana({ clusterType }: TUpgradeKibana) {
 	const getNodesInfo = async () => {
 		let response: any = []
 		await axiosJSON
-			.get(`/api/elastic/clusters/${clusterId}/kibana-nodes`)
+			.get(`/clusters/${clusterId}/nodes?type=KIBANA`)
 			.then((res) => {
 				response = res.data.map((item: any) => ({
-					key: item.nodeId,
+					key: item.id,
 					node_name: item.name,
 					ip: item.ip,
 					role: item.roles.join(","),
-					os: item.os.name,
+					os: item?.os?.name,
 					version: item.version,
 					status: item.status,
 					progress: item.progress,
 					isMaster: false,
-					disabled:
-						(item.isMaster &&
-							res.data.filter((i: any) => i.status !== "UPGRADED" && i.isMaster).length > 0) ||
-						res.data.some((i: any) => i.status === "UPGRADING"),
+					disabled: !item.upgradable,
 				}))
 			})
 			.catch((err) => toast.error(err?.response?.data.err ?? StringManager.GENERIC_ERROR))
@@ -127,8 +123,9 @@ function UpgradeKibana({ clusterType }: TUpgradeKibana) {
 	const performUpgrade = async (nodeId: string) => {
 		console.log("triggered")
 		await axiosJSON
-			.post(`/api/elastic/clusters/${clusterId}/nodes/upgrade-kibana`, {
-				nodes: [nodeId],
+			.post(`/upgrades/nodes`, {
+				nodeId: nodeId,
+				clusterId: clusterId,
 			})
 			.then((res) => {
 				refetch()
@@ -164,17 +161,53 @@ function UpgradeKibana({ clusterType }: TUpgradeKibana) {
 				case "node_name":
 					return row.node_name
 				case "ip":
-					return <span className="text-[#ADADAD]">{row.ip}</span>
+					return (
+						<span
+							className={cn({
+								"text-[#ADADAD]": row.status !== "UPGRADED",
+								"text[#E75547]": row.status !== "FAILED",
+							})}
+						>
+							{row.ip}
+						</span>
+					)
 				case "role":
-					return <span className="text-[#ADADAD]">{row.role}</span>
+					return (
+						<span
+							className={cn({
+								"text-[#ADADAD]": row.status !== "UPGRADED",
+								"text[#E75547]": row.status !== "FAILED",
+							})}
+						>
+							{row.role}
+						</span>
+					)
 				case "os":
-					return <span className="text-[#ADADAD]">{row.os}</span>
+					return (
+						<span
+							className={cn({
+								"text-[#ADADAD]": row.status !== "UPGRADED",
+								"text[#E75547]": row.status !== "FAILED",
+							})}
+						>
+							{row.os}
+						</span>
+					)
 				case "version":
-					return <span className="text-[#ADADAD]">{row.version}</span>
+					return (
+						<span
+							className={cn({
+								"text-[#ADADAD]": row.status !== "UPGRADED",
+								"text[#E75547]": row.status !== "FAILED",
+							})}
+						>
+							{row.version}
+						</span>
+					)
 				case "action":
 					return (
 						<Box className="flex justify-end">
-							{row?.disabled ? (
+							{row?.disabled && (row.status != "UPGRADING" && row.status != "UPGRADED") ? (
 								<Box
 									className="flex gap-1 items-center"
 									color="#EFC93D"
@@ -187,7 +220,7 @@ function UpgradeKibana({ clusterType }: TUpgradeKibana) {
 									</Box>
 									Upgrade other nodes first.
 								</Box>
-							) : row.status === "available" ? (
+							) : row.status === "AVAILABLE" ? (
 								<Box className="flex justify-end">
 									<OutlinedBorderButton
 										onClick={() => {
@@ -200,12 +233,23 @@ function UpgradeKibana({ clusterType }: TUpgradeKibana) {
 										Upgrade
 									</OutlinedBorderButton>
 								</Box>
-							) : row.status === "upgrading" ? (
+							) : row.status === "UPGRADING" ? (
 								<ProgressBar progress={row.progress ? row.progress : 0} />
-							) : row.status === "upgraded" ? (
+							) : row.status === "UPGRADED" ? (
 								UPGRADE_ENUM["completed"]
 							) : (
-								UPGRADE_ENUM["failed"]
+								<Box className="flex justify-end">
+									<OutlinedBorderButton
+										onClick={() => {
+											PerformUpgrade(row.key)
+										}}
+										icon={Refresh}
+										filledIcon={Refresh}
+										disabled={row?.disabled || isPending}
+									>
+										Retry
+									</OutlinedBorderButton>
+								</Box>
 							)}
 						</Box>
 					)
@@ -223,9 +267,31 @@ function UpgradeKibana({ clusterType }: TUpgradeKibana) {
 					<Typography color="#FFF" fontSize="14px" fontWeight="600" lineHeight="22px">
 						Node Details
 					</Typography>
-					<OutlinedBorderButton icon={Flash} filledIcon={Flash} disabled padding="8px 16px" fontSize="13px">
-						Upgrade all
-					</OutlinedBorderButton>
+					<Box className="flex flex-row items-center gap-2">
+						{data?.filter((item: any) => item.status === "FAILED").length !== 0 ? (
+							<Typography
+								className="inline-flex gap-[6px] items-center"
+								color="#E87D65"
+								fontSize="14px"
+								fontWeight="500"
+								lineHeight="normal"
+							>
+								<Box className="size-[15px] inline">
+									<Danger color="currentColor" size="15px" />
+								</Box>
+								Failed to upgrade
+							</Typography>
+						) : null}
+						<OutlinedBorderButton
+							icon={Flash}
+							filledIcon={Flash}
+							disabled
+							padding="8px 16px"
+							fontSize="13px"
+						>
+							Upgrade all
+						</OutlinedBorderButton>
+					</Box>
 				</Box>
 				<Box className="flex">
 					<Table

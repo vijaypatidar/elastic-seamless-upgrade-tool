@@ -10,7 +10,7 @@ type TDeprecationRow = {
 	status: string
 	issue: string
 	issue_details: string
-	resolution: string | string[]
+	resolutions: string[]
 }
 
 type TDeprecationCluster = { clusterType: "ELASTIC" | "KIBANA" }

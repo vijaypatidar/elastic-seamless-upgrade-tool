@@ -15,7 +15,7 @@ const SelectionTile = ({
 	Icon: React.FunctionComponent<{ size: string; color: string }>
 	label: string
 	isSelected: boolean
-	onSelect: (value: string | number) => void
+	onSelect: (value: string) => void
 	comingSoon?: boolean
 }) => {
 	return (

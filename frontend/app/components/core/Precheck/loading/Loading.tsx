@@ -47,7 +47,7 @@ function Loading() {
 						</Box>
 						<Box className="flex flex-row gap-[6px]">
 							<OutlinedBorderButton disabled>
-								<Refresh color="currentColor" size="18px" /> Re-run"
+								<Refresh color="currentColor" size="18px" /> Rerun"
 							</OutlinedBorderButton>
 							<OutlinedBorderButton disabled>
 								<ExportCurve color="currentColor" size="18px" /> Export

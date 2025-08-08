@@ -1,4 +1,7 @@
 type TClusterValues = {
+	type: string
+	name: string
+	deploymentId?: string
 	elasticUrl: string
 	kibanaUrl: string
 	authPref: "U/P" | "API_KEY" | null

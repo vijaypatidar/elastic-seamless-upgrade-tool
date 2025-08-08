@@ -71,7 +71,7 @@ function ClusterInfo() {
 	const getClusterInfo = async () => {
 		let response: any = []
 		await axiosJSON
-			.get(`/api/elastic/clusters/${clusterId}/info`)
+			.get(`/clusters/${clusterId}/overview`)
 			.then((res) => {
 				setUpgradeAssistAllowed(res.data?.targetVersion ? true : false)
 				response = res.data
@@ -92,7 +92,7 @@ function ClusterInfo() {
 
 	const handleVersionSelect = async (ver: string) => {
 		await axiosJSON
-			.post(`/api/elastic/clusters/${clusterId}/upgrade-job`, { version: ver })
+			.post(`/upgrades/jobs`, { targetVersion: ver, clusterId: clusterId })
 			.then((res) => {
 				setUpgradeAssistAllowed(res.data?.targetVersion ? true : false)
 				navigate("/upgrade-assistant")
@@ -139,7 +139,7 @@ function ClusterInfo() {
 									<Box className="relative">
 										<OutlinedBorderButton
 											{...bindTrigger(popupState)}
-											disabled={data?.underUpgradation}
+											disabled={data?.underUpgrade}
 										>
 											{isPending ? "Please wait..." : data?.targetVersion ?? "Upgrade available"}{" "}
 											<ArrowDown2 size="14px" color="#959595" />

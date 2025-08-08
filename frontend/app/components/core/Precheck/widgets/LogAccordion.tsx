@@ -8,7 +8,6 @@ import MuiAccordionSummary, {
 import MuiAccordionDetails from "@mui/material/AccordionDetails"
 import { ArrowRight2, TickCircle, Warning2 } from "iconsax-react"
 import React from "react"
-import { PrecheckStatus } from ".."
 
 const Accordion = styled((props: AccordionProps) => <MuiAccordion disableGutters elevation={0} square {...props} />)(
 	({ theme }) => ({
@@ -74,14 +73,14 @@ const AccordionDetails = styled(MuiAccordionDetails)(({ theme }) => ({
 
 function LogAccordion({
 	title,
-	status = PrecheckStatus.PENDING,
+	status = "PENDING",
 	logs = [],
 	duration,
 	expanded,
 	onChange,
 }: {
 	title: string
-	status?: PrecheckStatus
+	status?: TPrecheckStatus
 	logs?: string[]
 	duration: string
 	expanded: boolean
@@ -98,9 +97,9 @@ function LogAccordion({
 						fontWeight="500"
 						lineHeight="20px"
 					>
-						{status === PrecheckStatus.PENDING || status === PrecheckStatus.RUNNING ? (
+						{status === "PENDING" || status === "RUNNING" ? (
 							<Spinner color="default" variant="simple" classNames={{ wrapper: "size-4 text-inherit" }} />
-						) : status === PrecheckStatus.COMPLETED ? (
+						) : status === "COMPLETED" ? (
 							<TickCircle size="20px" color="#4cdb9d" variant="Bold" />
 						) : (
 							<Warning2 size="20px" color="#E75547" variant="Bold" />
