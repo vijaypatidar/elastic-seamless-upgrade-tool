@@ -52,7 +52,7 @@ public class PrecheckRunService {
   }
 
   public GetGroupedPrecheckResponse getGroupedPrecheckByClusterId(String clusterId) {
-    ClusterUpgradeJob clusterUpgradeJob = clusterUpgradeJobService.getActiveJobByClusterId(clusterId);
+    ClusterUpgradeJob clusterUpgradeJob = clusterUpgradeJobService.getLatestJobByClusterId(clusterId);
 
     List<PrecheckRun> precheckRuns =
         precheckRunRepository.getAllByJobId(clusterUpgradeJob.getId());

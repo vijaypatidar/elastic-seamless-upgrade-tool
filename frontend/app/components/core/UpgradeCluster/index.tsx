@@ -1,16 +1,17 @@
 import { Spinner, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from "@heroui/react"
 import { Box, Typography } from "@mui/material"
 import { useMutation, useQuery } from "@tanstack/react-query"
-import { CloseCircle, Danger, Flash, Refresh, TickCircle, Warning2 } from "iconsax-react"
-import { useCallback, useState, type Key } from "react"
+import { CloseCircle, Danger, DocumentText, Flash, More, Refresh, TickCircle, Warning2 } from "iconsax-react"
+import { type Key, useCallback, useState } from "react"
 import { toast } from "sonner"
 import axiosJSON from "~/apis/http"
 import { OutlinedBorderButton } from "~/components/utilities/Buttons"
 import { useLocalStore } from "~/store/common"
 import ProgressBar from "./widgets/progress"
-import { cn } from "../../../lib/Utils"
+import { cn } from "~/lib/Utils"
 import { useRealtimeEventListener } from "~/lib/hooks/useRealtimeEventListener"
 import UpgradeLogs from "../UpgradeLogs"
+import { AppDropdown } from "~/components/utilities/AppDropdown"
 
 const UPGRADE_ENUM = {
 	completed: (
@@ -198,6 +199,23 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 			)
 		}
 	}
+	const getMoreAction = (row: TUpgradeRow) => {
+		return (
+			<AppDropdown
+				label={<More size="14px" color="currentColor" style={{ transform: "rotate(90deg)" }} />}
+				items={[
+					{
+						label: "Logs",
+						onClick: () => {
+							setShowNodeLogs(row)
+						},
+						icon: <DocumentText size="14px" color="currentColor" />,
+					},
+				]}
+				iconOnly={true}
+			/>
+		)
+	}
 	const renderCell = useCallback(
 		(row: TUpgradeRow, columnKey: Key) => {
 			const cellValue = row[columnKey as keyof TUpgradeRow]
@@ -253,15 +271,7 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 					return (
 						<Box className="flex justify-end">
 							{getAction(row)}
-							<OutlinedBorderButton
-								onClick={() => {
-									setShowNodeLogs(row)
-								}}
-								icon={Refresh}
-								filledIcon={Refresh}
-							>
-								Show Logs
-							</OutlinedBorderButton>
+							{getMoreAction(row)}
 						</Box>
 					)
 				default:
@@ -273,7 +283,7 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 
 	return (
 		<Box className="flex w-full p-px rounded-2xl" sx={{ background: "radial-gradient(#6E687C, #1D1D1D)" }}>
-			{showNodeLogs && <UpgradeLogs  node={showNodeLogs} onOpenChange={() => setShowNodeLogs(undefined)} />}
+			{showNodeLogs && <UpgradeLogs node={showNodeLogs} onOpenChange={() => setShowNodeLogs(undefined)} />}
 			<Box className="flex flex-col gap-4 w-full rounded-2xl bg-[#0d0d0d]" padding="16px 24px">
 				<Box className="flex flex-row items-center gap-2 justify-between w-full">
 					<Typography color="#FFF" fontSize="14px" fontWeight="600" lineHeight="22px">

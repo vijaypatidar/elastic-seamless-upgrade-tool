@@ -3,8 +3,27 @@ import { useQuery } from "@tanstack/react-query"
 import axiosJSON from "~/apis/http"
 import { useLocalStore } from "~/store/common"
 import { useRealtimeEventListener } from "~/lib/hooks/useRealtimeEventListener"
-import { LogsBreadcrumb } from "~/components/core/UpgradeLogs/LogsBreadcrumb"
 import { FullScreenDrawer } from "~/components/utilities/FullScreenDrawer"
+import AppBreadcrumb from "~/components/utilities/AppBreadcrumb"
+import { ArrowLeft } from "iconsax-react"
+
+function LogsBreadcrumb({ onBack }: { onBack: () => void }) {
+	return (
+		<AppBreadcrumb
+			items={[
+				{
+					label: "Go back",
+					icon: <ArrowLeft size="14px" color="currentColor" />,
+					onClick: onBack,
+				},
+				{
+					label: "Logs",
+					color: "#BDA0FF",
+				},
+			]}
+		/>
+	)
+}
 
 function useUpgradeLogs(nodeId: string) {
 	const clusterId = useLocalStore((state: any) => state.clusterId)
@@ -48,7 +67,7 @@ function LogsList({ logs }: { logs: string[] }) {
 }
 
 function UpgradeLogs({ onOpenChange, node }: { node: TUpgradeRow; onOpenChange: () => void }) {
-	const { logs } = useUpgradeLogs(node.id)
+	const { logs, isLoading } = useUpgradeLogs(node.id)
 
 	return (
 		<FullScreenDrawer isOpen={true} onOpenChange={onOpenChange}>
