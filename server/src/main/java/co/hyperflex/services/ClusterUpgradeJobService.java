@@ -38,7 +38,16 @@ public class ClusterUpgradeJobService {
     return clusterUpgradeJobRepository
         .findByClusterIdAndStatusIsNot(clusterId, ClusterUpgradeStatus.UPDATED)
         .stream().filter(ClusterUpgradeJob::isActive).findFirst().orElseThrow(
-            () -> new NotFoundException("No active cluster job found for cluster ID: " + clusterId));
+            () -> new NotFoundException("Active upgrade job not found for this cluster."));
+  }
+
+  public @NotNull ClusterUpgradeJob getLatestJobByClusterId(@NotNull String clusterId) {
+    return clusterUpgradeJobRepository
+        .findByClusterId(clusterId)
+        .stream()
+        .filter(ClusterUpgradeJob::isActive)
+        .findFirst()
+        .orElseThrow(() -> new NotFoundException("Upgrade job not found for this cluster."));
   }
 
   public CreateClusterUpgradeJobResponse createClusterUpgradeJob(

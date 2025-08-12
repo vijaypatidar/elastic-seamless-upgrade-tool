@@ -2,7 +2,7 @@ import { Spinner, Table, TableBody, TableCell, TableColumn, TableHeader, TableRo
 import { Box, Typography } from "@mui/material"
 import { useMutation, useQuery } from "@tanstack/react-query"
 import { CloseCircle, Danger, Flash, Refresh, TickCircle, Warning2 } from "iconsax-react"
-import { useCallback, type Key } from "react"
+import { useCallback, useState, type Key } from "react"
 import { toast } from "sonner"
 import axiosJSON from "~/apis/http"
 import { OutlinedBorderButton } from "~/components/utilities/Buttons"
@@ -10,6 +10,7 @@ import { useLocalStore } from "~/store/common"
 import ProgressBar from "./widgets/progress"
 import { cn } from "../../../lib/Utils"
 import { useRealtimeEventListener } from "~/lib/hooks/useRealtimeEventListener"
+import UpgradeLogs from "../UpgradeLogs"
 
 const UPGRADE_ENUM = {
 	completed: (
@@ -83,27 +84,27 @@ const columns: TColumn = [
 
 function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 	const clusterId = useLocalStore((state: any) => state.clusterId)
+	const [showNodeLogs, setShowNodeLogs] = useState<TUpgradeRow | undefined>()
 
 	useRealtimeEventListener("UPGRADE_PROGRESS_CHANGE", () => refetch(), true)
 
 	const getNodesInfo = async () => {
 		let response: any = []
-		await axiosJSON
-			.get(`/clusters/${clusterId}/nodes?type=ELASTIC`)
-			.then((res) => {
-				response = res.data.map((item: any) => ({
-					key: item.id,
-					ip: item.ip,
-					node_name: item.name,
-					role: item.roles.join(","),
-					os: item.os.name,
-					version: item.version,
-					status: item.status,
-					progress: item.progress,
-					isMaster: item.isMaster,
-					disabled: !item.upgradable,
-				}))
-			})
+		await axiosJSON.get(`/clusters/${clusterId}/nodes?type=${clusterType}`).then((res) => {
+			response = res.data.map((item: any) => ({
+				key: item.id,
+				ip: item.ip,
+				node_name: item.name,
+				role: item.roles.join(","),
+				os: item.os.name,
+				version: item.version,
+				status: item.status,
+				progress: item.progress,
+				isMaster: item.isMaster,
+				disabled: !item.upgradable,
+				id: item.id,
+			}))
+		})
 
 		return response
 	}
@@ -137,12 +138,6 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 	const { data, isLoading, refetch, isRefetching } = useQuery({
 		queryKey: ["nodes-info"],
 		queryFn: getNodesInfo,
-		// refetchInterval: (data) => {
-		// 	const nodes = data.state.data
-		// 	const isUpgrading = nodes?.some((node: any) => node.status === "UPGRADING")
-		// 	return isUpgrading ? 1000 : false
-		// },
-		// refetchIntervalInBackground: true,
 		staleTime: 0,
 	})
 
@@ -255,7 +250,20 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 						</span>
 					)
 				case "action":
-					return <Box className="flex justify-end">{getAction(row)}</Box>
+					return (
+						<Box className="flex justify-end">
+							{getAction(row)}
+							<OutlinedBorderButton
+								onClick={() => {
+									setShowNodeLogs(row)
+								}}
+								icon={Refresh}
+								filledIcon={Refresh}
+							>
+								Show Logs
+							</OutlinedBorderButton>
+						</Box>
+					)
 				default:
 					return cellValue
 			}
@@ -265,6 +273,7 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 
 	return (
 		<Box className="flex w-full p-px rounded-2xl" sx={{ background: "radial-gradient(#6E687C, #1D1D1D)" }}>
+			{showNodeLogs && <UpgradeLogs  node={showNodeLogs} onOpenChange={() => setShowNodeLogs(undefined)} />}
 			<Box className="flex flex-col gap-4 w-full rounded-2xl bg-[#0d0d0d]" padding="16px 24px">
 				<Box className="flex flex-row items-center gap-2 justify-between w-full">
 					<Typography color="#FFF" fontSize="14px" fontWeight="600" lineHeight="22px">
