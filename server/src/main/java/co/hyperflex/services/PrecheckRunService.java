@@ -25,6 +25,7 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -80,25 +81,17 @@ public class PrecheckRunService {
                   && nodePrecheckRun.getNode().id().equals(entry.getKey())).findFirst()
           .orElseThrow()).getNode();
 
-      List<PrecheckStatus> statuses = entry.getValue()
-          .stream()
-          .filter(precheckEntry -> precheckEntry.severity() == PrecheckSeverity.ERROR)
-          .map(GetPrecheckEntry::status)
-          .toList();
-      PrecheckStatus status = getMergedPrecheckStatus(statuses);
+      PrecheckStatus status = getMergedPrecheckStatusFromEntries(entry.getValue());
+      PrecheckSeverity severity = getMergedPrecheckSeverity(entry.getValue());
       return new GetNodePrecheckGroup(nodeInfo.id(), nodeInfo.ip(), nodeInfo.name(),
-          status, entry.getValue(), nodeInfo.rank());
+          status, severity, entry.getValue(), nodeInfo.rank());
     }).sorted(Comparator.comparingInt(GetNodePrecheckGroup::rank)).toList();
 
     List<GetIndexPrecheckGroup> indexGroups =
         indexPrechecks.entrySet().stream().map(entry -> {
-          List<PrecheckStatus> statuses = entry.getValue()
-              .stream()
-              .filter(precheckEntry -> precheckEntry.severity() == PrecheckSeverity.ERROR)
-              .map(GetPrecheckEntry::status)
-              .toList();
-          PrecheckStatus status = getMergedPrecheckStatus(statuses);
-          return new GetIndexPrecheckGroup(entry.getKey(), entry.getKey(), status,
+          PrecheckStatus status = getMergedPrecheckStatusFromEntries(entry.getValue());
+          PrecheckSeverity severity = getMergedPrecheckSeverity(entry.getValue());
+          return new GetIndexPrecheckGroup(entry.getKey(), entry.getKey(), status, severity,
               entry.getValue());
         }).toList();
 
@@ -182,6 +175,23 @@ public class PrecheckRunService {
       return PrecheckStatus.PENDING;
     }
     return PrecheckStatus.COMPLETED;
+  }
+
+  private PrecheckStatus getMergedPrecheckStatusFromEntries(List<GetPrecheckEntry> prechecks) {
+    List<PrecheckStatus> statuses = prechecks
+        .stream()
+        .map(GetPrecheckEntry::status)
+        .toList();
+    return this.getMergedPrecheckStatus(statuses);
+  }
+
+  private PrecheckSeverity getMergedPrecheckSeverity(List<GetPrecheckEntry> prechecks) {
+    Optional<PrecheckSeverity> severityOptional = prechecks.stream()
+        .filter(precheck -> precheck.status() == PrecheckStatus.FAILED)
+        .map(GetPrecheckEntry::severity)
+        .filter(severity -> severity == PrecheckSeverity.ERROR)
+        .findAny();
+    return severityOptional.orElse(PrecheckSeverity.WARNING);
   }
 
   public void addLog(String precheckRunId, String message) {
