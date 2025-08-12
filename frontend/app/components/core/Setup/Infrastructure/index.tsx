@@ -5,7 +5,13 @@ import { useState } from "react"
 import { ConatinedButton, OutlinedButton } from "~/components/utilities/Buttons"
 import SelectionTile from "./widgets/SelectionTile"
 
-function Infrastructure({ onSubmit, backStep }: { onSubmit: (value: string | null) => void , backStep: () => void }) {
+function Infrastructure({
+	onSubmit,
+	backStep,
+}: {
+	readonly onSubmit: (value: string | null) => void
+	readonly backStep: () => void
+}) {
 	const [selected, setSelected] = useState<string | null>(null)
 
 	const handleSubmit = () => {
@@ -53,7 +59,7 @@ function Infrastructure({ onSubmit, backStep }: { onSubmit: (value: string | nul
 					<OutlinedButton onClick={backStep}>
 						<ArrowLeft size="20px" color="currentColor" /> Back
 					</OutlinedButton>
-					<ConatinedButton disabled={!Boolean(selected)} onClick={handleSubmit}>
+					<ConatinedButton disabled={!selected} onClick={handleSubmit}>
 						Continue <ArrowRight size="20px" color="currentColor" />
 					</ConatinedButton>
 				</Box>

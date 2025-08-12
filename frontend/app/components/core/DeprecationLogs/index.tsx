@@ -51,23 +51,19 @@ function DeprecationLogs({ clusterType }: { clusterType: "ELASTIC" | "KIBANA" })
 	const [search, setSearch] = useState<string>("")
 
 	const getLogs = async () => {
-		try {
-			const response = await axiosJSON.get(`/clusters/${clusterId}/deprecations/${
-				clusterType === "ELASTIC" ? "elastic-search" : "kibana"
-			}`)
-			const deprecations = response.data
-			return deprecations?.map((item: any, index: number): TDeprecationRow => {
-				return {
-					key: String(index),
-					issue: item?.issue,
-					status: item?.type.toUpperCase(),
-					issue_details: item?.issueDetails,
-					resolutions: item?.resolutions,
-				}
-			})
-		} catch (err: any) {
-			toast.error(err?.response?.data.err ?? StringManager.GENERIC_ERROR)
-		}
+		const response = await axiosJSON.get(
+			`/clusters/${clusterId}/deprecations/${clusterType === "ELASTIC" ? "elastic-search" : "kibana"}`
+		)
+		const deprecations = response.data
+		return deprecations?.map((item: any, index: number): TDeprecationRow => {
+			return {
+				key: String(index),
+				issue: item?.issue,
+				status: item?.type.toUpperCase(),
+				issue_details: item?.issueDetails,
+				resolutions: item?.resolutions,
+			}
+		})
 	}
 
 	const { data, isLoading, isRefetching, refetch } = useQuery({
@@ -169,8 +165,7 @@ function DeprecationLogs({ clusterType }: { clusterType: "ELASTIC" | "KIBANA" })
 								fontWeight="500"
 								lineHeight="normal"
 							>
-								<Box
-									className="min-h-2 min-w-2 w-min h-min rounded-[2px] bg-[#E87D65]" /> Critical:{" "}
+								<Box className="min-h-2 min-w-2 w-min h-min rounded-[2px] bg-[#E87D65]" /> Critical:{" "}
 								{isLoading ? (
 									<Skeleton className="rounded-sm">
 										<Box height="16px" width="10px" />

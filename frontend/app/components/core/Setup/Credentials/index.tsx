@@ -173,7 +173,7 @@ function Credentials({ initialValues: IV, backStep, onSubmit }: TCredentialsComp
 									fullWidth
 									id="apiKey"
 									name="apiKey"
-									type="text"
+									type={showPassword ? "text" : "password"}
 									placeholder="Enter apiKey"
 									variant="outlined"
 									value={formik.values.apiKey}
@@ -181,6 +181,24 @@ function Credentials({ initialValues: IV, backStep, onSubmit }: TCredentialsComp
 									onBlur={formik.handleBlur}
 									error={formik.touched.apiKey && Boolean(formik.errors.apiKey)}
 									helperText={formik.touched.apiKey && formik.errors.apiKey}
+									InputProps={{
+										endAdornment: (
+											<InputAdornment position="end">
+												<IconButton
+													aria-label="toggle api key visibility"
+													onClick={() => setShowPassword(!showPassword)}
+													onMouseDown={(event) => event.preventDefault()}
+													edge="end"
+												>
+													{showPassword ? (
+														<Eye size="18px" color="#FFF" />
+													) : (
+														<EyeSlash size="18px" color="#FFF" />
+													)}
+												</IconButton>
+											</InputAdornment>
+										),
+									}}
 								/>
 							)}
 						</Box>

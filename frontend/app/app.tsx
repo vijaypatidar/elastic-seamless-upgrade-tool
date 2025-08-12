@@ -1,10 +1,4 @@
-import { useEffect } from "react"
 import { Outlet } from "react-router"
-import { toast } from "sonner"
-import axiosJSON from "./apis/http"
-import StringManager from "./constants/StringManager"
-import useSafeRouteStore from "./store/safeRoutes"
-import { useLocalStore } from "./store/common"
 
 function MainApp() {
 	// const setClusterAdded = useSafeRouteStore((state: any) => state.setClusterAdded)
