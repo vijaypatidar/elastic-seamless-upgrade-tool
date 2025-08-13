@@ -15,5 +15,5 @@ export function usePrecheckSummary() {
 		staleTime: 0,
 	})
 	useRealtimeEventListener("PRECHECK_PROGRESS_CHANGE", () => refetch(), true)
-	return { critical: data?.critical ?? 0, warning: data?.warning ?? 0 }
+	return { critical: data?.critical ?? 0, warning: data?.warning ?? 0, skipped: data?.skipped ?? 0 }
 }

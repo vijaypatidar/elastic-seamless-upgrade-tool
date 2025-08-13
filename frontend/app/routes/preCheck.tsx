@@ -12,7 +12,6 @@ import StringManager from "~/constants/StringManager"
 import { useLocalStore } from "~/store/common"
 import type { Route } from "../+types/root"
 import useFilters from "~/lib/hooks/useFilter"
-import { usePrecheckSummary } from "~/lib/hooks/usePrecheckSummary"
 import { PrecheckSummary } from "~/components/core/Precheck/summary"
 
 export function meta({}: Route.MetaArgs) {
@@ -21,10 +20,9 @@ export function meta({}: Route.MetaArgs) {
 
 function PreCheckPage() {
 	const clusterId = useLocalStore((state: any) => state.clusterId)
-	const precheckSummary = usePrecheckSummary()
 	const [isExportPending, setIsExportPending] = useState(false)
 	const reReunPrecheck = async () => {
-		await axiosJSON.post(`/clusters/${clusterId}/prechecks`).catch((err) => {
+		await axiosJSON.post(`/clusters/${clusterId}/prechecks/rerun`, {}).catch((err) => {
 			toast.error(err?.response?.data.error ?? StringManager.GENERIC_ERROR)
 		})
 	}
@@ -91,8 +89,7 @@ function PreCheckPage() {
 
 				<Box className="flex gap-[6px]">
 					<Box className="flex flex-row gap-[6px]">
-						<PrecheckSummary count={precheckSummary.warning} type="warning" />
-						<PrecheckSummary count={precheckSummary.critical} type="critical" />
+						<PrecheckSummary />
 						<Tooltip title="Rerun all prechecks" arrow>
 							<OutlinedBorderButton onClick={HandleRerun} disabled={isPending}>
 								<Refresh color="currentColor" size="14px" /> {isPending ? "Running" : "Rerun"}

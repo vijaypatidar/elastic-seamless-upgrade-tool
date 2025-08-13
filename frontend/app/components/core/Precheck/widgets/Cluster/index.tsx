@@ -55,7 +55,10 @@ function ClusterLogs({
 						>
 							Prechecks
 						</Typography>
-						<OutlinedBorderButton onClick={() => handleRerun({})} disabled={isPending || isLoading}>
+						<OutlinedBorderButton
+							onClick={() => handleRerun({ cluster: true })}
+							disabled={isPending || isLoading}
+						>
 							<Refresh color="currentColor" size="14px" />
 							{isPending ? "Running..." : "Rerun"}
 						</OutlinedBorderButton>

@@ -4,20 +4,14 @@ import { TickCircle, Warning2 } from "iconsax-react"
 import { cn } from "~/lib/Utils"
 
 function StatusIcon({ status, severity }: { status: string; severity?: string }) {
-	switch (status) {
-		case "PENDING":
-		case "RUNNING":
-			return <Spinner color="default" variant="simple" classNames={{ wrapper: "size-4 text-inherit" }} />
-		case "COMPLETED":
-			return <TickCircle size="20px" color="#4CDB9D" variant="Bold" />
-		case "FAILED":
-			return severity == "WARNING" || severity == "INFO" ? (
-				<Warning2 size="20px" color="#E0B517" variant="Bold" />
-			) : (
-				<Warning2 size="20px" color="#E75547" variant="Bold" />
-			)
-		default:
-			return null
+	if (status === "PENDING" || status === "RUNNING") {
+		return <Spinner color="default" variant="simple" classNames={{ wrapper: "size-4 text-inherit" }} />
+	} else if (status === "COMPLETED") {
+		return <TickCircle size="20px" color={severity === "SKIPPED" ? "#98959E" : "#4CDB9D"} variant="Bold" />
+	} else {
+		const isNonError = severity === "WARNING" || severity === "INFO" || severity === "SKIPPED"
+		const color = isNonError ? "#E0B517" : "#E75547"
+		return <Warning2 size="20px" color={severity === "SKIPPED" ? "#98959E" : color} variant="Bold" />
 	}
 }
 

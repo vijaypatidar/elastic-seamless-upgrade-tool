@@ -8,6 +8,7 @@ import co.hyperflex.dtos.prechecks.GetNodePrecheckGroup;
 import co.hyperflex.dtos.prechecks.GetPrecheckEntry;
 import co.hyperflex.dtos.prechecks.GetPrecheckSummaryResponse;
 import co.hyperflex.dtos.prechecks.PrecheckRerunRequest;
+import co.hyperflex.dtos.prechecks.SkipPrecheckResponse;
 import co.hyperflex.entities.precheck.ClusterPrecheckRun;
 import co.hyperflex.entities.precheck.IndexPrecheckRun;
 import co.hyperflex.entities.precheck.NodePrecheckRun;
@@ -20,6 +21,8 @@ import co.hyperflex.mappers.PrecheckMapper;
 import co.hyperflex.repositories.BreakingChangeRepository;
 import co.hyperflex.repositories.PrecheckRunRepository;
 import co.hyperflex.repositories.projection.PrecheckStatusAndSeverityView;
+import co.hyperflex.services.notifications.NotificationService;
+import co.hyperflex.services.notifications.PrecheckProgressChangeEvent;
 import jakarta.validation.constraints.NotNull;
 import java.util.Comparator;
 import java.util.Date;
@@ -42,15 +45,17 @@ public class PrecheckRunService {
   private final ClusterUpgradeJobService clusterUpgradeJobService;
   private final MongoTemplate mongoTemplate;
   private final PrecheckMapper precheckMapper;
+  private final NotificationService notificationService;
 
   public PrecheckRunService(PrecheckRunRepository precheckRunRepository,
                             BreakingChangeRepository breakingChangeRepository, ClusterUpgradeJobService clusterUpgradeJobService,
-                            MongoTemplate mongoTemplate, PrecheckMapper precheckMapper) {
+                            MongoTemplate mongoTemplate, PrecheckMapper precheckMapper, NotificationService notificationService) {
     this.precheckRunRepository = precheckRunRepository;
     this.breakingChangeRepository = breakingChangeRepository;
     this.clusterUpgradeJobService = clusterUpgradeJobService;
     this.mongoTemplate = mongoTemplate;
     this.precheckMapper = precheckMapper;
+    this.notificationService = notificationService;
   }
 
   public GetGroupedPrecheckResponse getGroupedPrecheckByClusterId(String clusterId) {
@@ -138,14 +143,20 @@ public class PrecheckRunService {
       criteriaList.add(Criteria.where("index.name").in(request.indexNames()));
     }
 
-    if (criteriaList.isEmpty()) {
+    if (Boolean.TRUE.equals(request.cluster())) {
       criteriaList.add(Criteria.where("type").is(PrecheckType.CLUSTER));
     }
 
-    Query query = new Query(new Criteria().orOperator(criteriaList)
-        .andOperator(Criteria.where(PrecheckRun.CLUSTER_UPGRADE_JOB_ID).is(clusterUpgradeJobId)));
+    Query query;
+    if (criteriaList.isEmpty()) {
+      query = new Query(Criteria.where(PrecheckRun.CLUSTER_UPGRADE_JOB_ID).is(clusterUpgradeJobId));
+    } else {
+      query = new Query(new Criteria().orOperator(criteriaList)
+          .andOperator(Criteria.where(PrecheckRun.CLUSTER_UPGRADE_JOB_ID).is(clusterUpgradeJobId)));
+    }
     Update update = new Update().set(PrecheckRun.STATUS, PrecheckStatus.PENDING).set(PrecheckRun.START_TIME, null)
         .set(PrecheckRun.END_TIME, null);
+    notificationService.sendNotification(new PrecheckProgressChangeEvent());
     mongoTemplate.updateMulti(query, update, PrecheckRun.class);
   }
 
@@ -231,7 +242,16 @@ public class PrecheckRunService {
         ));
     return new GetPrecheckSummaryResponse(
         counts.getOrDefault(PrecheckSeverity.ERROR, 0L),
-        counts.getOrDefault(PrecheckSeverity.WARNING, 0L)
+        counts.getOrDefault(PrecheckSeverity.WARNING, 0L),
+        counts.getOrDefault(PrecheckSeverity.SKIPPED, 0L)
     );
+  }
+
+  public SkipPrecheckResponse skipPrecheck(String id) {
+    Query query = new Query(Criteria.where("_id").in(id));
+    Update update = new Update().set(PrecheckRun.SEVERITY, PrecheckSeverity.SKIPPED);
+    mongoTemplate.updateMulti(query, update, PrecheckRun.class);
+    notificationService.sendNotification(new PrecheckProgressChangeEvent());
+    return new SkipPrecheckResponse();
   }
 }

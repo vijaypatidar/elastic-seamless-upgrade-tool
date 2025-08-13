@@ -1,7 +1,8 @@
-import { Alarm } from "iconsax-react"
+import { Alarm, ArrowRight } from "iconsax-react"
 import { FiAlertTriangle } from "react-icons/fi"
+import { usePrecheckSummary } from "~/lib/hooks/usePrecheckSummary"
 
-type PrecheckType = "warning" | "critical"
+type PrecheckType = "warning" | "critical" | "skipped"
 
 const config: Record<
 	PrecheckType,
@@ -19,9 +20,15 @@ const config: Record<
 		label: "Critical",
 		Icon: FiAlertTriangle,
 	},
+	skipped: {
+		bg: "bg-[#98959E21]",
+		color: "#98959E",
+		label: "Skipped",
+		Icon: ArrowRight,
+	},
 }
 
-export function PrecheckSummary({ type, count }: { type: PrecheckType; count: number }) {
+function PrecheckSummaryItem({ type, count }: { type: PrecheckType; count: number }) {
 	const { bg, color, label, Icon } = config[type]
 
 	return (
@@ -33,5 +40,16 @@ export function PrecheckSummary({ type, count }: { type: PrecheckType; count: nu
 				</div>
 			</div>
 		</div>
+	)
+}
+
+export function PrecheckSummary() {
+	const precheckSummary = usePrecheckSummary()
+	return (
+		<>
+			<PrecheckSummaryItem count={precheckSummary.warning} type="warning" />
+			<PrecheckSummaryItem count={precheckSummary.critical} type="critical" />
+			<PrecheckSummaryItem count={precheckSummary.skipped} type="skipped" />
+		</>
 	)
 }

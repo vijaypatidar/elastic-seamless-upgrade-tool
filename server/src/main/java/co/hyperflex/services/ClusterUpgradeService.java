@@ -184,6 +184,7 @@ public class ClusterUpgradeService {
 
 
         for (ClusterNode node : nodes.stream().sorted(Comparator.comparingInt(ClusterNode::getRank)).toList()) {
+
           MDC.put(UpgradeLog.NODE_ID, node.getId());
           if (NodeUpgradeStatus.UPGRADED == node.getStatus()) {
             log.info("Skipping node with [NodeId: {}] as its already updated", node.getId());
