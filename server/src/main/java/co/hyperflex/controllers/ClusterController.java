@@ -7,6 +7,7 @@ import co.hyperflex.dtos.clusters.ClusterListItemResponse;
 import co.hyperflex.dtos.clusters.ClusterOverviewResponse;
 import co.hyperflex.dtos.clusters.GetClusterNodeResponse;
 import co.hyperflex.dtos.clusters.GetClusterResponse;
+import co.hyperflex.dtos.clusters.GetElasticNodeConfigurationResponse;
 import co.hyperflex.dtos.clusters.UpdateClusterRequest;
 import co.hyperflex.dtos.clusters.UpdateClusterResponse;
 import co.hyperflex.dtos.clusters.UploadCertificateResponse;
@@ -64,6 +65,11 @@ public class ClusterController {
   public List<GetClusterNodeResponse> getClusterNodes(@PathVariable String clusterId,
                                                       @RequestParam(required = false) ClusterNodeType type) {
     return clusterService.getNodes(clusterId, type);
+  }
+
+  @GetMapping("/{clusterId}/nodes/{nodeId}")
+  public GetElasticNodeConfigurationResponse getElasticNodeConfiguration(@PathVariable String clusterId, @PathVariable String nodeId) {
+    return clusterService.getElasticNodeConfiguration(clusterId, nodeId);
   }
 
   @PostMapping(value = "/certificates/upload", consumes = "multipart/form-data")
