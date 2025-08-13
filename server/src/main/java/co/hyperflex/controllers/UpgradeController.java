@@ -61,7 +61,7 @@ public class UpgradeController {
 
   @GetMapping("/logs")
   public GetUpgradeLogsResponse clusterUpgradeLogs(@RequestParam(required = false) String clusterId, @RequestParam String nodeId) {
-    ClusterUpgradeJob job = createClusterUpgradeJob.getActiveJobByClusterId(clusterId);
+    ClusterUpgradeJob job = createClusterUpgradeJob.getLatestJobByClusterId(clusterId);
     return upgradeLogService.getLogs(new GetUpgradeLogsRequest(job.getId(), nodeId));
   }
 

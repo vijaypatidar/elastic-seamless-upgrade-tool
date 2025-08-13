@@ -1,9 +1,10 @@
-import { Box, Breadcrumbs, Typography } from "@mui/material"
+import { Box, Typography } from "@mui/material"
 import { ArrowRight2, Convertshape2, HambergerMenu, Share } from "iconsax-react"
-import { Link, Outlet, useLocation } from "react-router"
+import { Link, Outlet, useLocation, useNavigate } from "react-router"
 import { toast } from "sonner"
 import { cn } from "~/lib/Utils"
 import useSafeRouteStore from "~/store/safeRoutes"
+import AppBreadcrumb from "~/components/utilities/AppBreadcrumb"
 
 const PATH_META_DATA: { [key: string]: { label: string; pos: number } } = {
 	"/cluster-overview": { label: "CLUSTER_OVERVIEW", pos: 1 },
@@ -15,6 +16,7 @@ const CENTER_ARROW_COMPLETE_GRADIENT = "linear-gradient(90deg, #52D97F 30%, #52D
 
 function ConfigLayout() {
 	const { pathname } = useLocation()
+	const navigate = useNavigate()
 	const upgradeAllowed = useSafeRouteStore((state: any) => state.upgradeAssistAllowed)
 
 	const GradientBox = ({
@@ -108,27 +110,19 @@ function ConfigLayout() {
 	return (
 		<>
 			<Box className="flex flex-col gap-[10px]" padding="0px 24px">
-				<Box
-					className="flex gap-[6px] w-max items-center rounded-lg border border-solid border-[#2F2F2F] bg-[#141415]"
-					padding="6px 10px 8px 10px"
-				>
-					<Breadcrumbs separator={<ArrowRight2 color="#ADADAD" size="14px" />}>
-						<Link to="/">
-							<Typography
-								className="flex items-center gap-[6px]"
-								color="#ADADAD"
-								fontSize="12px"
-								fontWeight="500"
-								lineHeight="normal"
-							>
-								<HambergerMenu color="currentColor" size="14px" /> Cluster details
-							</Typography>
-						</Link>
-						<Typography color="#BDA0FF" fontSize="12px" fontWeight="500" lineHeight="normal">
-							Cluster overview
-						</Typography>
-					</Breadcrumbs>
-				</Box>
+				<AppBreadcrumb
+					items={[
+						{
+							label: "Cluster details",
+							icon: <HambergerMenu color="currentColor" size="14px" />,
+							onClick: () => navigate("/"),
+						},
+						{
+							label: "Cluster overview",
+							color: "#BDA0FF",
+						},
+					]}
+				/>
 				<Box className="flex relative bg-[#0A0A0A]">
 					<GradientBox
 						to="/cluster-overview"

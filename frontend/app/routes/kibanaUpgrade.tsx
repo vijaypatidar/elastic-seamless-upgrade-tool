@@ -1,8 +1,8 @@
 import { Box, Breadcrumbs, Typography } from "@mui/material"
 import { ArrowRight2, Convertshape2 } from "iconsax-react"
 import { Link } from "react-router"
-import UpgradeKibana from "~/components/core/UpgradeKibana"
 import type { Route } from "../+types/root"
+import UpgradeCluster from "~/components/core/UpgradeCluster"
 
 export function meta({}: Route.MetaArgs) {
 	return [{ title: "Kibana Upgrade" }, { name: "description", content: "Welcome to Hyperflex" }]
@@ -32,7 +32,7 @@ function KibanaUpgrades() {
 					</Typography>
 				</Breadcrumbs>
 			</Box>
-			<UpgradeKibana clusterType="KIBANA" />
+			<UpgradeCluster clusterType="KIBANA" />
 		</Box>
 	)
 }
