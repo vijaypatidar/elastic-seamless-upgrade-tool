@@ -31,7 +31,11 @@ export function AppDropdown({ label, items, buttonClassName, iconOnly }: AppDrop
 		<Box className="mx-1">
 			<Box className="!bg-[#212022] border-1 !border-[#615D6A] !rounded-lg">
 				{iconOnly ? (
-					<IconButton onClick={handleClick} className={`!w-10 !h-10 !rounded-lg ${buttonClassName ?? ""}`}>
+					<IconButton
+						onClick={handleClick}
+						className={`!rounded-lg ${buttonClassName ?? ""}`}
+						style={{ width: "36px" , height:'36px'}}
+					>
 						{label}
 					</IconButton>
 				) : (
