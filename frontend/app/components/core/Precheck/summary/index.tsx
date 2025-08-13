@@ -1,4 +1,4 @@
-import { Alarm, ArrowRight } from "iconsax-react"
+import { Alarm, ArrowCircleRight2 } from "iconsax-react"
 import { FiAlertTriangle } from "react-icons/fi"
 import { usePrecheckSummary } from "~/lib/hooks/usePrecheckSummary"
 
@@ -24,7 +24,7 @@ const config: Record<
 		bg: "bg-[#98959E21]",
 		color: "#98959E",
 		label: "Skipped",
-		Icon: ArrowRight,
+		Icon: ArrowCircleRight2,
 	},
 }
 
