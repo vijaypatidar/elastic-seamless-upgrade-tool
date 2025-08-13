@@ -3,7 +3,7 @@ import { Box, Breadcrumbs, Tooltip, Typography } from "@mui/material"
 import { useMutation } from "@tanstack/react-query"
 import { ArrowRight2, Convertshape2, ExportCurve, Refresh } from "iconsax-react"
 import { useEffect, useState } from "react"
-import { Link, useParams } from "react-router"
+import { Link } from "react-router"
 import { toast } from "sonner"
 import axiosJSON from "~/apis/http"
 import Precheck from "~/components/core/Precheck"
@@ -12,14 +12,16 @@ import StringManager from "~/constants/StringManager"
 import { useLocalStore } from "~/store/common"
 import type { Route } from "../+types/root"
 import useFilters from "~/lib/hooks/useFilter"
+import { usePrecheckSummary } from "~/lib/hooks/usePrecheckSummary"
+import { PrecheckSummary } from "~/components/core/Precheck/summary"
 
 export function meta({}: Route.MetaArgs) {
 	return [{ title: "Pre-check" }, { name: "description", content: "Welcome to Hyperflex" }]
 }
 
 function PreCheckPage() {
-	const { tab } = useParams()
 	const clusterId = useLocalStore((state: any) => state.clusterId)
+	const precheckSummary = usePrecheckSummary()
 	const [isExportPending, setIsExportPending] = useState(false)
 	const reReunPrecheck = async () => {
 		await axiosJSON.post(`/clusters/${clusterId}/prechecks`).catch((err) => {
@@ -89,6 +91,8 @@ function PreCheckPage() {
 
 				<Box className="flex gap-[6px]">
 					<Box className="flex flex-row gap-[6px]">
+						<PrecheckSummary count={precheckSummary.warning} type="warning" />
+						<PrecheckSummary count={precheckSummary.critical} type="critical" />
 						<Tooltip title="Rerun all prechecks" arrow>
 							<OutlinedBorderButton onClick={HandleRerun} disabled={isPending}>
 								<Refresh color="currentColor" size="14px" /> {isPending ? "Running" : "Rerun"}

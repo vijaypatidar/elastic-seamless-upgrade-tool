@@ -6,6 +6,7 @@ import co.hyperflex.dtos.prechecks.GetGroupedPrecheckResponse;
 import co.hyperflex.dtos.prechecks.GetIndexPrecheckGroup;
 import co.hyperflex.dtos.prechecks.GetNodePrecheckGroup;
 import co.hyperflex.dtos.prechecks.GetPrecheckEntry;
+import co.hyperflex.dtos.prechecks.GetPrecheckSummaryResponse;
 import co.hyperflex.dtos.prechecks.PrecheckRerunRequest;
 import co.hyperflex.entities.precheck.ClusterPrecheckRun;
 import co.hyperflex.entities.precheck.IndexPrecheckRun;
@@ -218,5 +219,19 @@ public class PrecheckRunService {
 
   public boolean precheckExistsForJob(String upgradeJobId) {
     return precheckRunRepository.getCountByJobId(upgradeJobId) > 0;
+  }
+
+  public GetPrecheckSummaryResponse getSummary(String clusterId) {
+    var job = clusterUpgradeJobService.getLatestJobByClusterId(clusterId);
+    var counts = precheckRunRepository.findStatusAndSeverityByUpgradeJobId(job.getId()).stream()
+        .filter(p -> p.status() == PrecheckStatus.FAILED)
+        .collect(Collectors.groupingBy(
+            PrecheckStatusAndSeverityView::severity,
+            Collectors.counting()
+        ));
+    return new GetPrecheckSummaryResponse(
+        counts.getOrDefault(PrecheckSeverity.ERROR, 0L),
+        counts.getOrDefault(PrecheckSeverity.WARNING, 0L)
+    );
   }
 }
