@@ -55,9 +55,7 @@ public class ClusterUpgradeJobService {
 
     final String clusterId = request.clusterId();
 
-    List<ClusterUpgradeJob> jobs = clusterUpgradeJobRepository.findByClusterId(clusterId)
-        .stream().filter(job -> !job.getStatus().equals(ClusterUpgradeStatus.UPDATED))
-        .toList();
+    List<ClusterUpgradeJob> jobs = clusterUpgradeJobRepository.findByClusterId(clusterId);
 
     ElasticClient elasticClient =
         elasticsearchClientProvider.getClientByClusterId(clusterId);
@@ -70,7 +68,10 @@ public class ClusterUpgradeJobService {
     ).findFirst().orElse(null);
 
     jobs.forEach(job -> {
-      if (!job.getStatus().equals(ClusterUpgradeStatus.PENDING)) {
+      var jobStatus = job.getStatus();
+      var isPending = ClusterUpgradeStatus.PENDING.equals(jobStatus);
+      var isUpdated = ClusterUpgradeStatus.UPDATED.equals(jobStatus);
+      if (!(isUpdated || isPending)) {
         logger.error("Cluster is under upgrade can't create upgrade job for [cluster: {}].", clusterId);
         throw new ConflictException("Cluster is under upgrade can't create upgrade job for cluster");
       }
