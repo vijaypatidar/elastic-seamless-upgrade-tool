@@ -37,8 +37,8 @@ function NodesLogs({
 	}, [data])
 
 	useEffect(() => {
-		if (selectedNode !== null) {
-			setSelectedPrecheck(selectedNode?.prechecks?.[0])
+		if (selectedPrecheck !== null) {
+			setSelectedPrecheck(selectedNode?.prechecks?.find((p: any) => p.id === selectedPrecheck?.id))
 		} else {
 			setSelectedPrecheck(null)
 		}
