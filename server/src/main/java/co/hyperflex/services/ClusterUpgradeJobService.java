@@ -5,6 +5,7 @@ import co.hyperflex.clients.elastic.ElasticClient;
 import co.hyperflex.clients.elastic.ElasticsearchClientProvider;
 import co.hyperflex.dtos.upgrades.CreateClusterUpgradeJobRequest;
 import co.hyperflex.dtos.upgrades.CreateClusterUpgradeJobResponse;
+import co.hyperflex.dtos.upgrades.StopClusterUpgradeResponse;
 import co.hyperflex.entities.cluster.ClusterNode;
 import co.hyperflex.entities.upgrade.ClusterUpgradeJob;
 import co.hyperflex.entities.upgrade.ClusterUpgradeStatus;
@@ -17,6 +18,7 @@ import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -25,19 +27,24 @@ public class ClusterUpgradeJobService {
   private final ClusterUpgradeJobRepository clusterUpgradeJobRepository;
   private final ElasticsearchClientProvider elasticsearchClientProvider;
   private final ClusterNodeRepository clusterNodeRepository;
+  private final ClusterLockService clusterLockService;
 
   public ClusterUpgradeJobService(ClusterUpgradeJobRepository clusterUpgradeJobRepository,
                                   ElasticsearchClientProvider elasticsearchClientProvider,
-                                  ClusterNodeRepository clusterNodeRepository) {
+                                  ClusterNodeRepository clusterNodeRepository, ClusterLockService clusterLockService) {
     this.clusterUpgradeJobRepository = clusterUpgradeJobRepository;
     this.elasticsearchClientProvider = elasticsearchClientProvider;
     this.clusterNodeRepository = clusterNodeRepository;
+    this.clusterLockService = clusterLockService;
   }
 
   public @NotNull ClusterUpgradeJob getActiveJobByClusterId(@NotNull String clusterId) {
     return clusterUpgradeJobRepository
-        .findByClusterIdAndStatusIsNot(clusterId, ClusterUpgradeStatus.UPDATED)
-        .stream().filter(ClusterUpgradeJob::isActive).findFirst().orElseThrow(
+        .findByClusterId(clusterId)
+        .stream()
+        .filter(ClusterUpgradeJob::isActive)
+        .filter(clusterUpgradeJob -> !ClusterUpgradeStatus.UPDATED.equals(clusterUpgradeJob.getStatus()))
+        .findFirst().orElseThrow(
             () -> new NotFoundException("Active upgrade job not found for this cluster."));
   }
 
@@ -88,7 +95,6 @@ public class ClusterUpgradeJobService {
     }
 
     clusterUpgradeJobRepository.saveAll(jobs);
-
     resetUpgradeStatus(clusterId);
 
     return new CreateClusterUpgradeJobResponse("Cluster upgrade job created successfully", existingJob.getId());
@@ -103,4 +109,28 @@ public class ClusterUpgradeJobService {
     clusterNodeRepository.saveAll(clusterNodes);
   }
 
+  public StopClusterUpgradeResponse stopClusterUpgrade(@NotNull String clusterId) {
+    final ClusterUpgradeJob job = getActiveJobByClusterId(clusterId);
+    Update update = new Update().set(ClusterUpgradeJob.STOP, true);
+    clusterUpgradeJobRepository.updateById(job.getId(), update);
+    return new StopClusterUpgradeResponse();
+  }
+
+  public void setJobStatus(String id, ClusterUpgradeStatus status) {
+    Update update = new Update().set(ClusterUpgradeJob.STATUS, status);
+    clusterUpgradeJobRepository.updateById(id, update);
+  }
+
+  public ClusterUpgradeJob getUpgradeJobById(@NotNull String clusterUpgradeJobId) {
+    return clusterUpgradeJobRepository.findById(clusterUpgradeJobId).orElseThrow();
+  }
+
+  public void setCheckPoint(String jobId, String nodeId, int checkPoint) {
+    Update update = new Update().set("nodeCheckPoints." + nodeId, checkPoint);
+    clusterUpgradeJobRepository.updateById(jobId, update);
+  }
+
+  public int getCheckPoint(String jobId, String nodeId) {
+    return getUpgradeJobById(jobId).getNodeCheckPoints().getOrDefault(nodeId, 0);
+  }
 }
