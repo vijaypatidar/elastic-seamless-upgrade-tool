@@ -9,6 +9,7 @@ import { cn } from "~/lib/Utils"
 import validationSchema from "./validation/validation"
 import SelectionTile from "./widgets/SelectionTile"
 import { useLocalStore } from "~/store/common"
+import SshFileInput from "~/components/common/SshFileInput"
 
 function Credentials({ initialValues: IV, backStep, onSubmit }: TCredentialsComp) {
 	const [showPassword, setShowPassword] = useState<boolean>(false)
@@ -372,24 +373,10 @@ function Credentials({ initialValues: IV, backStep, onSubmit }: TCredentialsComp
 							/>
 						</Box>
 						<Box className="flex flex-col gap-[6px] max-w-[515px]">
-							<Typography color="#ABA9B1" fontSize="14px" fontWeight="400" lineHeight="20px">
-								SSH key
-							</Typography>
-							<Input
-								fullWidth
-								id="pathToSSH"
-								name="pathToSSH"
-								type="text"
-								placeholder="Enter SSH key"
-								varient="outlined"
-								multiline
-								minRows={8}
-								maxRows={8}
-								value={formik.values.pathToSSH}
-								onChange={formik.handleChange}
-								onBlur={formik.handleBlur}
-								error={formik.touched.pathToSSH && Boolean(formik.errors.pathToSSH)}
-								helperText={formik.touched.pathToSSH && formik.errors.pathToSSH}
+							<SshFileInput
+								onSshKeyChange={(key) => formik.setFieldValue("pathToSSH", key)}
+								sshKey={formik.getFieldMeta("pathToSSH").value}
+								error={formik.errors.pathToSSH}
 							/>
 						</Box>
 					</>

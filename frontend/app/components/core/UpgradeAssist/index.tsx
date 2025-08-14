@@ -59,7 +59,7 @@ function UpgradeAssistant() {
 	const getUpgradeInfo = async () => {
 		let response: any = []
 		await axiosJSON
-			.get(`/upgrades/${clusterId}/info`)
+			.get(`/clusters/${clusterId}/upgrades/info`)
 			.then((res) => {
 				response = res.data
 				if (response?.elastic?.snapshot?.snapshot) {

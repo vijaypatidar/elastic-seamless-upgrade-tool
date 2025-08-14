@@ -8,6 +8,7 @@ import co.hyperflex.dtos.upgrades.CreateClusterUpgradeJobRequest;
 import co.hyperflex.dtos.upgrades.CreateClusterUpgradeJobResponse;
 import co.hyperflex.dtos.upgrades.GetUpgradeLogsRequest;
 import co.hyperflex.dtos.upgrades.GetUpgradeLogsResponse;
+import co.hyperflex.entities.cluster.ClusterNodeType;
 import co.hyperflex.entities.upgrade.ClusterUpgradeJob;
 import co.hyperflex.services.ClusterUpgradeJobService;
 import co.hyperflex.services.ClusterUpgradeService;
@@ -24,7 +25,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/v1/upgrades")
+@RequestMapping("/api/v1/clusters/{clusterId}/upgrades")
 public class UpgradeController {
   private static final Logger logger = LoggerFactory.getLogger(UpgradeController.class);
   private final ClusterUpgradeService clusterUpgradeService;
@@ -38,30 +39,32 @@ public class UpgradeController {
     this.upgradeLogService = upgradeLogService;
   }
 
+  @PostMapping()
+  public ClusterUpgradeResponse clusterUpgrade(@PathVariable String clusterId, @RequestParam ClusterNodeType nodeType) {
+    return clusterUpgradeService.upgrade(clusterId, nodeType);
+  }
 
   @PostMapping("/jobs")
-  public CreateClusterUpgradeJobResponse clusterUpgradeJob(@Valid @RequestBody CreateClusterUpgradeJobRequest request) {
-    return createClusterUpgradeJob.createClusterUpgradeJob(request);
+  public CreateClusterUpgradeJobResponse clusterUpgradeJob(@Valid @RequestBody CreateClusterUpgradeJobRequest request,
+                                                           @PathVariable String clusterId) {
+    return createClusterUpgradeJob.createClusterUpgradeJob(clusterId, request);
   }
 
-  @PostMapping("/nodes")
-  public ClusterNodeUpgradeResponse clusterNodeUpgrade(@Valid @RequestBody ClusterNodeUpgradeRequest request) {
-    return clusterUpgradeService.upgradeNode(request);
+  @PostMapping("/nodes/{nodeId}")
+  public ClusterNodeUpgradeResponse clusterNodeUpgrade(@PathVariable String clusterId,
+                                                       @PathVariable String nodeId) {
+    return clusterUpgradeService.upgradeNode(new ClusterNodeUpgradeRequest(clusterId, nodeId));
   }
 
-  @PostMapping("/clusters/{clusterId}")
-  public ClusterUpgradeResponse clusterUpgrade(@PathVariable String clusterId) {
-    return clusterUpgradeService.upgrade(clusterId);
-  }
 
-  @GetMapping("/{clusterId}/info")
+  @GetMapping("info")
   public ClusterInfoResponse clusterInfo(@PathVariable String clusterId) {
     return clusterUpgradeService.upgradeInfo(clusterId);
   }
 
-  @GetMapping("/logs")
-  public GetUpgradeLogsResponse clusterUpgradeLogs(@RequestParam(required = false) String clusterId, @RequestParam String nodeId) {
-    ClusterUpgradeJob job = createClusterUpgradeJob.getActiveJobByClusterId(clusterId);
+  @GetMapping("/nodes/{nodeId}/logs")
+  public GetUpgradeLogsResponse clusterUpgradeLogs(@PathVariable String clusterId, @PathVariable String nodeId) {
+    ClusterUpgradeJob job = createClusterUpgradeJob.getLatestJobByClusterId(clusterId);
     return upgradeLogService.getLogs(new GetUpgradeLogsRequest(job.getId(), nodeId));
   }
 
