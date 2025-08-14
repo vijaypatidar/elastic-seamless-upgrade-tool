@@ -1,10 +1,8 @@
 import * as Yup from "yup"
 import { URL_PATTERN } from "~/constants/RegexManager"
 
-
 const validationSchema = Yup.object().shape({
-	name: Yup.string()
-			.required("Please enter cluster name."),
+	name: Yup.string().required("Please enter cluster name."),
 	type: Yup.string()
 		.required("Please select deployment type.")
 		.oneOf(["SELF_MANAGED", "ELASTIC_CLOUD"], "Invalid type selected."),
@@ -22,7 +20,7 @@ const validationSchema = Yup.object().shape({
 	username: Yup.string().when("authPref", {
 		is: "U/P",
 		then: (schema) => schema.required("Please enter username."),
-		otherwise: (schema) => schema.notRequired(),		
+		otherwise: (schema) => schema.notRequired(),
 	}),
 
 	password: Yup.string().when("authPref", {
@@ -45,19 +43,21 @@ const validationSchema = Yup.object().shape({
 
 	pathToSSH: Yup.string().when("type", {
 		is: "SELF_MANAGED",
-		then: (schema) => schema.required("Please enter SSH key."),
+		then: (schema) => schema.required("Please upload SSH private file."),
 		otherwise: (schema) => schema.notRequired(),
 	}),
 
 	kibanaConfigs: Yup.array().when("type", {
 		is: "SELF_MANAGED",
 		then: (schema) =>
-			schema.of(
-				Yup.object({
-					name: Yup.string().required("Cluster name is required."),
-					ip: Yup.string().required("Cluster IP is required."),
-				})
-			).min(1, "At least one Kibana config is required."),
+			schema
+				.of(
+					Yup.object({
+						name: Yup.string().required("Node name is required."),
+						ip: Yup.string().required("Node IP is required."),
+					})
+				)
+				.min(1, "At least one Kibana config is required."),
 		otherwise: (schema) => schema.notRequired(),
 	}),
 	deploymentId: Yup.string().when("type", {

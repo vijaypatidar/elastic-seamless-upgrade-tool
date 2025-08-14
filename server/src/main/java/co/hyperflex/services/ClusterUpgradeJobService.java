@@ -38,17 +38,22 @@ public class ClusterUpgradeJobService {
     return clusterUpgradeJobRepository
         .findByClusterIdAndStatusIsNot(clusterId, ClusterUpgradeStatus.UPDATED)
         .stream().filter(ClusterUpgradeJob::isActive).findFirst().orElseThrow(
-            () -> new NotFoundException("No active cluster job found for cluster ID: " + clusterId));
+            () -> new NotFoundException("Active upgrade job not found for this cluster."));
+  }
+
+  public @NotNull ClusterUpgradeJob getLatestJobByClusterId(@NotNull String clusterId) {
+    return clusterUpgradeJobRepository
+        .findByClusterId(clusterId)
+        .stream()
+        .filter(ClusterUpgradeJob::isActive)
+        .findFirst()
+        .orElseThrow(() -> new NotFoundException("Upgrade job not found for this cluster."));
   }
 
   public CreateClusterUpgradeJobResponse createClusterUpgradeJob(
-      @NotNull CreateClusterUpgradeJobRequest request) {
+      @NotNull String clusterId, @NotNull CreateClusterUpgradeJobRequest request) {
 
-    final String clusterId = request.clusterId();
-
-    List<ClusterUpgradeJob> jobs = clusterUpgradeJobRepository.findByClusterId(clusterId)
-        .stream().filter(job -> !job.getStatus().equals(ClusterUpgradeStatus.UPDATED))
-        .toList();
+    List<ClusterUpgradeJob> jobs = clusterUpgradeJobRepository.findByClusterId(clusterId);
 
     ElasticClient elasticClient =
         elasticsearchClientProvider.getClientByClusterId(clusterId);
@@ -61,7 +66,10 @@ public class ClusterUpgradeJobService {
     ).findFirst().orElse(null);
 
     jobs.forEach(job -> {
-      if (!job.getStatus().equals(ClusterUpgradeStatus.PENDING)) {
+      var jobStatus = job.getStatus();
+      var isPending = ClusterUpgradeStatus.PENDING.equals(jobStatus);
+      var isUpdated = ClusterUpgradeStatus.UPDATED.equals(jobStatus);
+      if (!(isUpdated || isPending)) {
         logger.error("Cluster is under upgrade can't create upgrade job for [cluster: {}].", clusterId);
         throw new ConflictException("Cluster is under upgrade can't create upgrade job for cluster");
       }

@@ -9,6 +9,7 @@ import { cn } from "~/lib/Utils"
 import validationSchema from "./validation/validation"
 import SelectionTile from "./widgets/SelectionTile"
 import { useLocalStore } from "~/store/common"
+import SshFileInput from "~/components/common/SshFileInput"
 
 function Credentials({ initialValues: IV, backStep, onSubmit }: TCredentialsComp) {
 	const [showPassword, setShowPassword] = useState<boolean>(false)
@@ -173,7 +174,7 @@ function Credentials({ initialValues: IV, backStep, onSubmit }: TCredentialsComp
 									fullWidth
 									id="apiKey"
 									name="apiKey"
-									type="text"
+									type={showPassword ? "text" : "password"}
 									placeholder="Enter apiKey"
 									variant="outlined"
 									value={formik.values.apiKey}
@@ -181,6 +182,24 @@ function Credentials({ initialValues: IV, backStep, onSubmit }: TCredentialsComp
 									onBlur={formik.handleBlur}
 									error={formik.touched.apiKey && Boolean(formik.errors.apiKey)}
 									helperText={formik.touched.apiKey && formik.errors.apiKey}
+									InputProps={{
+										endAdornment: (
+											<InputAdornment position="end">
+												<IconButton
+													aria-label="toggle api key visibility"
+													onClick={() => setShowPassword(!showPassword)}
+													onMouseDown={(event) => event.preventDefault()}
+													edge="end"
+												>
+													{showPassword ? (
+														<Eye size="18px" color="#FFF" />
+													) : (
+														<EyeSlash size="18px" color="#FFF" />
+													)}
+												</IconButton>
+											</InputAdornment>
+										),
+									}}
 								/>
 							)}
 						</Box>
@@ -218,7 +237,7 @@ function Credentials({ initialValues: IV, backStep, onSubmit }: TCredentialsComp
 								})}
 							>
 								<Typography color="#ABA9B1" fontSize="14px" fontWeight="400" lineHeight="20px">
-									Kibana clusters
+									Kibana nodes
 								</Typography>
 								<Box>
 									<OutlinedButton
@@ -240,14 +259,14 @@ function Credentials({ initialValues: IV, backStep, onSubmit }: TCredentialsComp
 										}}
 									>
 										<Add size="16px" color="currentColor" />
-										Add cluster
+										Add node
 									</OutlinedButton>
 								</Box>
 							</Box>
 							<Box className="flex flex-col gap-[6px] rounded-lg">
 								{_.map(
 									formik.values.kibanaConfigs,
-									(cluster: { name: string; ip: string }, index: number) => {
+									(node: { name: string; ip: string }, index: number) => {
 										return (
 											<Box className="flex flex-col gap-[2px]">
 												<Box className="flex flex-row gap-2 items-center group">
@@ -255,11 +274,11 @@ function Credentials({ initialValues: IV, backStep, onSubmit }: TCredentialsComp
 														<Input
 															fullWidth
 															id={`kibanaConfigs.${index}`}
-															name={`kibanaConfigs.${index}`}
+															name={`kibanaConfigs.${index}.name`}
 															type="text"
-															placeholder="Enter cluster name"
+															placeholder="Enter node name"
 															varient="outlined"
-															value={cluster.name}
+															value={node.name}
 															onBlur={formik.handleBlur}
 															onChange={(e: any) => {
 																let newOptions = [...formik.values.kibanaConfigs]
@@ -271,18 +290,18 @@ function Credentials({ initialValues: IV, backStep, onSubmit }: TCredentialsComp
 																)
 															}}
 															error={
-																Boolean(formik.errors.kibanaConfigs?.[index]) &&
+																Boolean(formik.errors.kibanaConfigs?.[index]?.name) &&
 																formik.touched.kibanaConfigs
 															}
 														/>
 														<Input
 															fullWidth
 															id={`kibanaConfigs.${index}`}
-															name={`kibanaConfigs.${index}`}
+															name={`kibanaConfigs.${index}.ip`}
 															type="text"
-															placeholder="Enter cluster name"
+															placeholder="Enter node ip"
 															varient="outlined"
-															value={cluster.ip}
+															value={node.ip}
 															onBlur={formik.handleBlur}
 															onChange={(e: any) => {
 																let newOptions = [...formik.values.kibanaConfigs]
@@ -294,7 +313,7 @@ function Credentials({ initialValues: IV, backStep, onSubmit }: TCredentialsComp
 																)
 															}}
 															error={
-																Boolean(formik.errors.kibanaConfigs?.[index]) &&
+																Boolean(formik.errors.kibanaConfigs?.[index]?.ip) &&
 																formik.touched.kibanaConfigs
 															}
 														/>
@@ -354,24 +373,10 @@ function Credentials({ initialValues: IV, backStep, onSubmit }: TCredentialsComp
 							/>
 						</Box>
 						<Box className="flex flex-col gap-[6px] max-w-[515px]">
-							<Typography color="#ABA9B1" fontSize="14px" fontWeight="400" lineHeight="20px">
-								SSH key
-							</Typography>
-							<Input
-								fullWidth
-								id="pathToSSH"
-								name="pathToSSH"
-								type="text"
-								placeholder="Enter SSH key"
-								varient="outlined"
-								multiline
-								minRows={8}
-								maxRows={8}
-								value={formik.values.pathToSSH}
-								onChange={formik.handleChange}
-								onBlur={formik.handleBlur}
-								error={formik.touched.pathToSSH && Boolean(formik.errors.pathToSSH)}
-								helperText={formik.touched.pathToSSH && formik.errors.pathToSSH}
+							<SshFileInput
+								onSshKeyChange={(key) => formik.setFieldValue("pathToSSH", key)}
+								sshKey={formik.getFieldMeta("pathToSSH").value}
+								error={formik.errors.pathToSSH}
 							/>
 						</Box>
 					</>

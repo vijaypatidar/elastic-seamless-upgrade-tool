@@ -67,13 +67,13 @@ public class UpgradePathUtils {
     if (version == null) {
       return null;
     }
-
-    return POSSIBLE_UPGRADES.keySet().stream()
+    var possibleUpgrades = POSSIBLE_UPGRADES.keySet().stream()
         .sorted(VersionUtils.VERSION_COMPARATOR)
         .filter(v -> VersionUtils.isVersionGt(version, v))
         .reduce((first, second) -> second)
         .map(POSSIBLE_UPGRADES::get)
         .orElse(List.of());
+    return possibleUpgrades.stream().sorted((v1, v2) -> VersionUtils.VERSION_COMPARATOR.compare(v2, v1)).toList();
   }
 
 }

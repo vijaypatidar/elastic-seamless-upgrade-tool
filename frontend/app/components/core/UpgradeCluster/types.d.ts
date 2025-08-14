@@ -1,4 +1,5 @@
 type TUpgradeRow = {
+	id: string
 	status: string
 	progress: number | undefined
 	key: string

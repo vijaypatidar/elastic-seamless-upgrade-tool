@@ -1,8 +1,10 @@
 package co.hyperflex.controllers;
 
 import co.hyperflex.dtos.prechecks.GetGroupedPrecheckResponse;
+import co.hyperflex.dtos.prechecks.GetPrecheckSummaryResponse;
 import co.hyperflex.dtos.prechecks.PrecheckRerunRequest;
 import co.hyperflex.dtos.prechecks.PrecheckScheduleResponse;
+import co.hyperflex.dtos.prechecks.SkipPrecheckResponse;
 import co.hyperflex.prechecks.scheduler.PrecheckSchedulerService;
 import co.hyperflex.services.PrecheckReportService;
 import co.hyperflex.services.PrecheckRunService;
@@ -10,6 +12,7 @@ import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -30,9 +33,14 @@ public class PrecheckController {
     this.precheckReportService = precheckReportService;
   }
 
-  @PostMapping("")
+  @PostMapping()
   public PrecheckScheduleResponse runAll(@PathVariable String clusterId) {
     return scheduler.schedule(clusterId);
+  }
+
+  @PutMapping("/{id}/skip")
+  public SkipPrecheckResponse skip(@PathVariable String clusterId, @PathVariable String id) {
+    return precheckRunService.skipPrecheck(id);
   }
 
   @PostMapping("/rerun")
@@ -42,15 +50,19 @@ public class PrecheckController {
     return scheduler.rerunPrechecks(clusterId, request);
   }
 
-  @GetMapping("")
+  @GetMapping()
   public GetGroupedPrecheckResponse getGroupedPrechecks(@PathVariable String clusterId) {
     return precheckRunService.getGroupedPrecheckByClusterId(clusterId);
+  }
+
+  @GetMapping("/summary")
+  public GetPrecheckSummaryResponse getPrecheckSummary(@PathVariable String clusterId) {
+    return precheckRunService.getSummary(clusterId);
   }
 
   @GetMapping("/report")
   public String getReport(@PathVariable String clusterId) {
     return precheckReportService.generatePrecheckReportMdContent(clusterId);
   }
-
 
 }

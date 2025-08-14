@@ -96,12 +96,12 @@ public class ClusterUpgradeService {
     return new ClusterNodeUpgradeResponse("Node upgrade started");
   }
 
-  public ClusterUpgradeResponse upgrade(String clusterId) {
+  public ClusterUpgradeResponse upgrade(String clusterId, ClusterNodeType nodeType) {
     Cluster cluster = clusterRepository.findById(clusterId).orElseThrow();
     if (cluster instanceof SelfManagedCluster selfManagedCluster) {
       ClusterUpgradeJob clusterUpgradeJob = clusterUpgradeJobService.getActiveJobByClusterId(clusterId);
       List<ClusterNode> clusterNodes =
-          clusterNodeRepository.findByClusterId(clusterId).stream().filter(node -> node.getType() == ClusterNodeType.ELASTIC)
+          clusterNodeRepository.findByClusterId(clusterId).stream().filter(node -> node.getType() == nodeType)
               .sorted(Comparator.comparingInt(ClusterNode::getRank)).toList();
 
       upgradeNodes(selfManagedCluster, clusterNodes, clusterUpgradeJob);
@@ -146,7 +146,6 @@ public class ClusterUpgradeService {
       ClusterInfoResponse.DeprecationCounts elasticDeprecationCounts = deprecationService.getElasticDeprecationCounts(clusterId);
 
       boolean isClusterUpgraded = activeUpgradeJob != null && activeUpgradeJob.getStatus() == ClusterUpgradeStatus.UPDATED;
-      clusterService.syncClusterState(clusterId);
       // Evaluate upgrade status
       boolean isESUpgraded = isClusterUpgraded || clusterService.isNodesUpgraded(clusterId, ClusterNodeType.ELASTIC);
       boolean isKibanaUpgraded = isClusterUpgraded || clusterService.isNodesUpgraded(clusterId, ClusterNodeType.KIBANA);
@@ -185,6 +184,7 @@ public class ClusterUpgradeService {
 
 
         for (ClusterNode node : nodes.stream().sorted(Comparator.comparingInt(ClusterNode::getRank)).toList()) {
+
           MDC.put(UpgradeLog.NODE_ID, node.getId());
           if (NodeUpgradeStatus.UPGRADED == node.getStatus()) {
             log.info("Skipping node with [NodeId: {}] as its already updated", node.getId());
