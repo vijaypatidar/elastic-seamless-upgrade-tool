@@ -96,12 +96,12 @@ public class ClusterUpgradeService {
     return new ClusterNodeUpgradeResponse("Node upgrade started");
   }
 
-  public ClusterUpgradeResponse upgrade(String clusterId) {
+  public ClusterUpgradeResponse upgrade(String clusterId, ClusterNodeType nodeType) {
     Cluster cluster = clusterRepository.findById(clusterId).orElseThrow();
     if (cluster instanceof SelfManagedCluster selfManagedCluster) {
       ClusterUpgradeJob clusterUpgradeJob = clusterUpgradeJobService.getActiveJobByClusterId(clusterId);
       List<ClusterNode> clusterNodes =
-          clusterNodeRepository.findByClusterId(clusterId).stream().filter(node -> node.getType() == ClusterNodeType.ELASTIC)
+          clusterNodeRepository.findByClusterId(clusterId).stream().filter(node -> node.getType() == nodeType)
               .sorted(Comparator.comparingInt(ClusterNode::getRank)).toList();
 
       upgradeNodes(selfManagedCluster, clusterNodes, clusterUpgradeJob);

@@ -33,12 +33,12 @@ public class PrecheckController {
     this.precheckReportService = precheckReportService;
   }
 
-  @PostMapping("")
+  @PostMapping()
   public PrecheckScheduleResponse runAll(@PathVariable String clusterId) {
     return scheduler.schedule(clusterId);
   }
 
-  @PutMapping("/skip/{id}")
+  @PutMapping("/{id}/skip")
   public SkipPrecheckResponse skip(@PathVariable String clusterId, @PathVariable String id) {
     return precheckRunService.skipPrecheck(id);
   }
@@ -50,7 +50,7 @@ public class PrecheckController {
     return scheduler.rerunPrechecks(clusterId, request);
   }
 
-  @GetMapping("")
+  @GetMapping()
   public GetGroupedPrecheckResponse getGroupedPrechecks(@PathVariable String clusterId) {
     return precheckRunService.getGroupedPrecheckByClusterId(clusterId);
   }
