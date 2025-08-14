@@ -21,6 +21,7 @@ import useSafeRouteStore from "~/store/safeRoutes"
 import validationSchema from "./validation/validation"
 import { FullScreenDrawer } from "~/components/utilities/FullScreenDrawer"
 import AppBreadcrumb from "~/components/utilities/AppBreadcrumb"
+import SshFileInput from "~/components/common/SshFileInput"
 
 const INITIAL_VALUES = {
 	type: "",
@@ -118,6 +119,7 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 					pathToSSH: cluster.sshKey,
 					kibanaConfigs: cluster.kibanaNodes,
 					deploymentId: cluster.deploymentId,
+					sshFile: null,
 					certFiles:
 						cluster.certificateIds?.map((certId: string) => ({
 							name: certId,
@@ -670,41 +672,12 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 												/>
 											</Box>
 											<Box className="flex flex-col gap-[6px] max-w-[515px]">
-												<Typography
-													color="#ABA9B1"
-													fontSize="14px"
-													fontWeight="400"
-													lineHeight="20px"
-												>
-													SSH key
-												</Typography>
-												<OneLineSkeleton
-													show={isLoading || isRefetching}
-													height="192px"
-													className="w-full rounded-[10px]"
-													component={
-														<Input
-															fullWidth
-															id="pathToSSH"
-															name="pathToSSH"
-															type="text"
-															placeholder="Enter SSH key"
-															varient="outlined"
-															multiline
-															minRows={8}
-															maxRows={8}
-															value={formik.values.pathToSSH}
-															onChange={formik.handleChange}
-															onBlur={formik.handleBlur}
-															error={
-																formik.touched.pathToSSH &&
-																Boolean(formik.errors.pathToSSH)
-															}
-															helperText={
-																formik.touched.pathToSSH && formik.errors.pathToSSH
-															}
-														/>
-													}
+												<SshFileInput
+													onSshKeyChange={(key) => {
+														formik.setFieldValue("pathToSSH", key)
+													}}
+													sshKey={formik.getFieldMeta("pathToSSH").value}
+													error={formik.errors.pathToSSH}
 												/>
 											</Box>
 										</>
