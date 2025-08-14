@@ -51,9 +51,7 @@ public class ClusterUpgradeJobService {
   }
 
   public CreateClusterUpgradeJobResponse createClusterUpgradeJob(
-      @NotNull CreateClusterUpgradeJobRequest request) {
-
-    final String clusterId = request.clusterId();
+      @NotNull String clusterId, @NotNull CreateClusterUpgradeJobRequest request) {
 
     List<ClusterUpgradeJob> jobs = clusterUpgradeJobRepository.findByClusterId(clusterId);
 

@@ -36,7 +36,7 @@ function LogGroup({
 	})
 
 	const handlePrecheckSkip = async (id: string) => {
-		await axiosJSON.put(`/clusters/${clusterId}/prechecks/skip/${id}`).then(() => {
+		await axiosJSON.put(`/clusters/${clusterId}/prechecks/${id}/skip`).then(() => {
 			toast.success("Precheck skipped successfully")
 		})
 	}
