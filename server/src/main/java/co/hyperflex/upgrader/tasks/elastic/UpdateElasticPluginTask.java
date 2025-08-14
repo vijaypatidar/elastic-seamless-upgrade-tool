@@ -19,9 +19,10 @@ public class UpdateElasticPluginTask implements Task {
 
   @Override
   public TaskResult run(Context context) {
-    var removePlugin = "sudo /usr/share/elasticsearch/bin/elasticsearch-plugin remove ";
-    var installPlugin = "sudo /usr/share/elasticsearch/bin/elasticsearch-plugin install ";
-    var listPlugin = "sudo /usr/share/elasticsearch/bin/elasticsearch-plugin list";
+    var pluginCommand = "sudo /usr/share/elasticsearch/bin/elasticsearch-plugin ";
+    var removePlugin = pluginCommand + "remove ";
+    var installPlugin = pluginCommand + "install --batch ";
+    var listPlugin = pluginCommand + "list";
     Logger logger = context.logger();
     try (SshCommandExecutor executor = context.getSshCommandExecutor()) {
       logger.info("Getting list of installed plugins");
