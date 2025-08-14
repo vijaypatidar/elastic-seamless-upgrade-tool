@@ -124,7 +124,7 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 	}
 	const performUpgradeAll = async () => {
 		await axiosJSON
-			.post(`/clusters/${clusterId}/upgrades`)
+			.post(`/clusters/${clusterId}/upgrades?nodeType=${clusterType}`)
 			.then(() => {
 				refetch()
 				toast.success("Upgrade started")

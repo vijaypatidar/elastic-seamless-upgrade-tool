@@ -8,6 +8,7 @@ import co.hyperflex.dtos.upgrades.CreateClusterUpgradeJobRequest;
 import co.hyperflex.dtos.upgrades.CreateClusterUpgradeJobResponse;
 import co.hyperflex.dtos.upgrades.GetUpgradeLogsRequest;
 import co.hyperflex.dtos.upgrades.GetUpgradeLogsResponse;
+import co.hyperflex.entities.cluster.ClusterNodeType;
 import co.hyperflex.entities.upgrade.ClusterUpgradeJob;
 import co.hyperflex.services.ClusterUpgradeJobService;
 import co.hyperflex.services.ClusterUpgradeService;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -37,6 +39,10 @@ public class UpgradeController {
     this.upgradeLogService = upgradeLogService;
   }
 
+  @PostMapping()
+  public ClusterUpgradeResponse clusterUpgrade(@PathVariable String clusterId, @RequestParam ClusterNodeType nodeType) {
+    return clusterUpgradeService.upgrade(clusterId, nodeType);
+  }
 
   @PostMapping("/jobs")
   public CreateClusterUpgradeJobResponse clusterUpgradeJob(@Valid @RequestBody CreateClusterUpgradeJobRequest request,
@@ -50,10 +56,6 @@ public class UpgradeController {
     return clusterUpgradeService.upgradeNode(new ClusterNodeUpgradeRequest(clusterId, nodeId));
   }
 
-  @PostMapping()
-  public ClusterUpgradeResponse clusterUpgrade(@PathVariable String clusterId) {
-    return clusterUpgradeService.upgrade(clusterId);
-  }
 
   @GetMapping("info")
   public ClusterInfoResponse clusterInfo(@PathVariable String clusterId) {
