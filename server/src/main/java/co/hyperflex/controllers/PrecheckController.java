@@ -1,8 +1,10 @@
 package co.hyperflex.controllers;
 
 import co.hyperflex.dtos.prechecks.GetGroupedPrecheckResponse;
+import co.hyperflex.dtos.prechecks.GetPrecheckSummaryResponse;
 import co.hyperflex.dtos.prechecks.PrecheckRerunRequest;
 import co.hyperflex.dtos.prechecks.PrecheckScheduleResponse;
+import co.hyperflex.dtos.prechecks.SkipPrecheckResponse;
 import co.hyperflex.prechecks.scheduler.PrecheckSchedulerService;
 import co.hyperflex.services.PrecheckReportService;
 import co.hyperflex.services.PrecheckRunService;
@@ -10,6 +12,7 @@ import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -35,6 +38,11 @@ public class PrecheckController {
     return scheduler.schedule(clusterId);
   }
 
+  @PutMapping("/skip/{id}")
+  public SkipPrecheckResponse skip(@PathVariable String clusterId, @PathVariable String id) {
+    return precheckRunService.skipPrecheck(id);
+  }
+
   @PostMapping("/rerun")
   public PrecheckScheduleResponse rerunCluster(@PathVariable String clusterId,
                                                @Valid @RequestBody PrecheckRerunRequest request) {
@@ -47,10 +55,14 @@ public class PrecheckController {
     return precheckRunService.getGroupedPrecheckByClusterId(clusterId);
   }
 
+  @GetMapping("/summary")
+  public GetPrecheckSummaryResponse getPrecheckSummary(@PathVariable String clusterId) {
+    return precheckRunService.getSummary(clusterId);
+  }
+
   @GetMapping("/report")
   public String getReport(@PathVariable String clusterId) {
     return precheckReportService.generatePrecheckReportMdContent(clusterId);
   }
-
 
 }

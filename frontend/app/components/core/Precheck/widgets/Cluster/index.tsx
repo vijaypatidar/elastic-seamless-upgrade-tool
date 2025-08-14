@@ -1,6 +1,6 @@
 import { Skeleton } from "@heroui/react"
 import { Box, Typography } from "@mui/material"
-import { Refresh } from "iconsax-react"
+import { ArrowCircleRight2, Refresh } from "iconsax-react"
 import { useEffect, useState } from "react"
 import { OutlinedBorderButton } from "~/components/utilities/Buttons"
 import ListLoader from "../../loading/ListLoader"
@@ -13,9 +13,11 @@ function ClusterLogs({
 	handleRerun,
 	isPending = false,
 	isLoading = false,
+	handlePrecheckSkip,
 }: {
 	data: any
 	handleRerun: (payload: any) => void
+	handlePrecheckSkip: (id: string) => void
 	isPending: boolean
 	isLoading: boolean
 }) {
@@ -55,7 +57,10 @@ function ClusterLogs({
 						>
 							Prechecks
 						</Typography>
-						<OutlinedBorderButton onClick={() => handleRerun({})} disabled={isPending || isLoading}>
+						<OutlinedBorderButton
+							onClick={() => handleRerun({ cluster: true })}
+							disabled={isPending || isLoading}
+						>
 							<Refresh color="currentColor" size="14px" />
 							{isPending ? "Running..." : "Rerun"}
 						</OutlinedBorderButton>
@@ -147,10 +152,22 @@ function ClusterLogs({
 										</Skeleton>
 									)}
 								</Box>
-								<OutlinedBorderButton onClick={handlePrecheckRerun} disabled={isPending || isLoading}>
-									<Refresh color="currentColor" size="14px" />
-									{isPending ? "Running..." : "Rerun"}
-								</OutlinedBorderButton>
+								<Box className="flex flex-row gap-2">
+									<OutlinedBorderButton
+										onClick={handlePrecheckRerun}
+										disabled={isPending || isLoading}
+									>
+										<Refresh color="currentColor" size="14px" />
+										{isPending ? "Running..." : "Rerun"}
+									</OutlinedBorderButton>
+									<OutlinedBorderButton
+										onClick={() => handlePrecheckSkip(selectedPrecheck.id)}
+										disabled={isPending || isLoading}
+									>
+										<ArrowCircleRight2 color="currentColor" size="14px" />
+										Skip
+									</OutlinedBorderButton>
+								</Box>
 							</Box>
 							<Box className="flex flex-col w-full gap-[2px]">
 								<LogsList logs={selectedPrecheck?.logs || []} isLoading={isLoading} />

@@ -7,6 +7,7 @@ import IndexLogs from "./Index"
 import NodesLogs from "./Nodes"
 import axiosJSON from "~/apis/http"
 import { useLocalStore } from "~/store/common"
+import { toast } from "sonner"
 
 function LogGroup({
 	dataFor,
@@ -34,6 +35,12 @@ function LogGroup({
 		},
 	})
 
+	const handlePrecheckSkip = async (id: string) => {
+		await axiosJSON.put(`/clusters/${clusterId}/prechecks/skip/${id}`).then(() => {
+			toast.success("Precheck skipped successfully")
+		})
+	}
+
 	const layout = useMemo(() => {
 		console.log(dataFor)
 		if (dataFor === "CLUSTER") {
@@ -41,6 +48,7 @@ function LogGroup({
 				<ClusterLogs
 					data={data}
 					handleRerun={(payload) => HandleRerun(payload)}
+					handlePrecheckSkip={handlePrecheckSkip}
 					isPending={isPending}
 					isLoading={isLoading}
 				/>
@@ -50,6 +58,7 @@ function LogGroup({
 				<NodesLogs
 					data={data}
 					handleRerun={(payload) => HandleRerun(payload)}
+					handlePrecheckSkip={handlePrecheckSkip}
 					isPending={isPending}
 					isLoading={isLoading}
 				/>
@@ -59,6 +68,7 @@ function LogGroup({
 				<IndexLogs
 					data={data}
 					handleRerun={(payload) => HandleRerun(payload)}
+					handlePrecheckSkip={handlePrecheckSkip}
 					isPending={isPending}
 					isLoading={isLoading}
 				/>
