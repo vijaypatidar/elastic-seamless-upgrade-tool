@@ -255,11 +255,8 @@ public class ClusterUpgradeService {
           notifyNodeUpgradedSuccessfully(cluster, node);
         }
 
-        if (nodes.size() > 1) {
-          notifyClusterUpgradedSuccessFully(cluster);
-        }
-
       } catch (Exception e) {
+        clusterUpgradeJobService.setJobStatus(clusterUpgradeJobId, ClusterUpgradeStatus.FAILED);
         if (nodes.size() > 1) {
           notifyClusterUpgradeFailed(cluster);
         }
@@ -281,6 +278,7 @@ public class ClusterUpgradeService {
         .toList();
     if (nodes.isEmpty()) {
       clusterUpgradeJobService.setJobStatus(clusterUpgradeJob.getId(), ClusterUpgradeStatus.UPDATED);
+      notifyClusterUpgradedSuccessFully(cluster);
     }
   }
 

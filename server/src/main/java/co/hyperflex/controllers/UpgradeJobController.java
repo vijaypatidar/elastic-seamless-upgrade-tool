@@ -3,6 +3,7 @@ package co.hyperflex.controllers;
 import co.hyperflex.dtos.upgrades.CreateClusterUpgradeJobRequest;
 import co.hyperflex.dtos.upgrades.CreateClusterUpgradeJobResponse;
 import co.hyperflex.dtos.upgrades.GetTargetVersionResponse;
+import co.hyperflex.dtos.upgrades.GetUpgradeJobStatusResponse;
 import co.hyperflex.dtos.upgrades.StopClusterUpgradeResponse;
 import co.hyperflex.services.ClusterUpgradeJobService;
 import jakarta.validation.Valid;
@@ -32,9 +33,14 @@ public class UpgradeJobController {
     return clusterUpgradeJobService.createClusterUpgradeJob(clusterId, request);
   }
 
-  @GetMapping
+  @GetMapping("/target-version")
   public GetTargetVersionResponse getTargetVersionInfo(@PathVariable String clusterId) {
     return clusterUpgradeJobService.getTargetVersionInfo(clusterId);
+  }
+
+  @GetMapping("/status")
+  public GetUpgradeJobStatusResponse getUpgradeJobStatusResponse(@PathVariable String clusterId) {
+    return clusterUpgradeJobService.getUpgradeJobStatus(clusterId);
   }
 
   @PutMapping("/stop")

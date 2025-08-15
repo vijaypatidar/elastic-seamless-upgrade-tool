@@ -45,7 +45,7 @@ function TargetVersionDropdown() {
 	const { data, isLoading, isRefetching , refetch} = useQuery({
 		queryKey: ["get-target-version-info"],
 		queryFn: async () => {
-			const response = await axiosJSON.get(`/clusters/${clusterId}/upgrades/jobs`)
+			const response = await axiosJSON.get(`/clusters/${clusterId}/upgrades/jobs/target-version`)
 			const data = response.data
 			setUpgradeAssistAllowed(data?.targetVersion)
 			return data
