@@ -116,9 +116,7 @@ public class ClusterUpgradeJobService {
 
   public void setJobStatus(String id, ClusterUpgradeStatus status) {
     Update update = new Update().set(ClusterUpgradeJob.STATUS, status);
-    if (ClusterUpgradeStatus.UPGRADING.equals(status)) {
-      update.set(ClusterUpgradeJob.STOP, false);
-    }
+    update.set(ClusterUpgradeJob.STOP, false);
     clusterUpgradeJobRepository.updateById(id, update);
   }
 
@@ -140,7 +138,7 @@ public class ClusterUpgradeJobService {
       String targetVersion = null;
       boolean underUpgrade = false;
       try {
-        ClusterUpgradeJob job = getLatestJobByClusterId(clusterId);
+        ClusterUpgradeJob job = getActiveJobByClusterId(clusterId);
         targetVersion = job.getTargetVersion();
         underUpgrade = job.getStatus() != ClusterUpgradeStatus.PENDING;
       } catch (Exception e) {

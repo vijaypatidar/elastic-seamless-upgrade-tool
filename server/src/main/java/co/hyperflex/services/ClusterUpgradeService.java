@@ -279,6 +279,13 @@ public class ClusterUpgradeService {
     if (nodes.isEmpty()) {
       clusterUpgradeJobService.setJobStatus(clusterUpgradeJob.getId(), ClusterUpgradeStatus.UPDATED);
       notifyClusterUpgradedSuccessFully(cluster);
+    } else if (!clusterUpgradeJob.getStatus().equals(ClusterUpgradeStatus.STOPPED)) {
+      var failedNodeExists = nodes
+          .stream()
+          .anyMatch(node -> NodeUpgradeStatus.FAILED.equals(node.status()));
+      clusterUpgradeJobService.setJobStatus(clusterUpgradeJob.getId(),
+          failedNodeExists ? ClusterUpgradeStatus.FAILED : ClusterUpgradeStatus.PARTIALLY_UPDATED
+      );
     }
   }
 
