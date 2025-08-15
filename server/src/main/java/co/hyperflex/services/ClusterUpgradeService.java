@@ -167,7 +167,7 @@ public class ClusterUpgradeService {
 
     executorService.submit(() -> {
       try {
-        clusterLockService.lock();
+        clusterLockService.lock(cluster.getId());
 
         clusterUpgradeJobService.setJobStatus(clusterUpgradeJobId, ClusterUpgradeStatus.UPGRADING);
         MDC.put(UpgradeLog.CLUSTER_UPGRADE_JOB_ID, clusterUpgradeJobId);
@@ -269,7 +269,7 @@ public class ClusterUpgradeService {
         syncUpgradeJobStatus(cluster, clusterUpgradeJobId);
         notificationService.sendNotification(new UpgradeProgressChangeEvent());
         MDC.clear();
-        clusterLockService.unlock();
+        clusterLockService.unlock(cluster.getId());
       }
     });
   }

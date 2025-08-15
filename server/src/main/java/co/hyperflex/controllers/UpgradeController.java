@@ -42,7 +42,6 @@ public class UpgradeController {
     return clusterUpgradeService.upgradeNode(new ClusterNodeUpgradeRequest(clusterId, nodeId));
   }
 
-
   @GetMapping("info")
   public ClusterInfoResponse clusterInfo(@PathVariable String clusterId) {
     return clusterUpgradeService.upgradeInfo(clusterId);

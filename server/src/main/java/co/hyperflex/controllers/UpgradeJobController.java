@@ -2,11 +2,13 @@ package co.hyperflex.controllers;
 
 import co.hyperflex.dtos.upgrades.CreateClusterUpgradeJobRequest;
 import co.hyperflex.dtos.upgrades.CreateClusterUpgradeJobResponse;
+import co.hyperflex.dtos.upgrades.GetTargetVersionResponse;
 import co.hyperflex.dtos.upgrades.StopClusterUpgradeResponse;
 import co.hyperflex.services.ClusterUpgradeJobService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -30,8 +32,13 @@ public class UpgradeJobController {
     return clusterUpgradeJobService.createClusterUpgradeJob(clusterId, request);
   }
 
+  @GetMapping
+  public GetTargetVersionResponse getTargetVersionInfo(@PathVariable String clusterId) {
+    return clusterUpgradeJobService.getTargetVersionInfo(clusterId);
+  }
+
   @PutMapping("/stop")
-  public StopClusterUpgradeResponse stopClusterUpgrade(@PathVariable String clusterId){
+  public StopClusterUpgradeResponse stopClusterUpgrade(@PathVariable String clusterId) {
     return clusterUpgradeJobService.stopClusterUpgrade(clusterId);
   }
 
