@@ -7,7 +7,7 @@ import { useLocalStore } from "~/store/common"
 import useRefreshStore from "~/store/refresh"
 import DetailBox from "./widgets/DetailBox"
 import { useRealtimeEventListener } from "~/lib/hooks/useRealtimeEventListener"
-import TargetVersionDropdown from "~/components/common/TargetVersionDropdown"
+import TargetVersionDropdown from "~/components/utilities/TargetVersionDropdown"
 
 const CLUSTER_STATUS_COLOR: { [key: string]: string } = {
 	yellow: "#E0B517",
