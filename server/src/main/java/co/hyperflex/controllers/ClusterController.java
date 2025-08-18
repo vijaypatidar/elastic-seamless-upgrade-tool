@@ -67,7 +67,7 @@ public class ClusterController {
     return clusterService.getNodes(clusterId, type);
   }
 
-  @GetMapping("/{clusterId}/nodes/{nodeId}")
+  @GetMapping("/{clusterId}/nodes/{nodeId}/configuration")
   public GetElasticNodeConfigurationResponse getElasticNodeConfiguration(@PathVariable String clusterId, @PathVariable String nodeId) {
     return clusterService.getElasticNodeConfiguration(clusterId, nodeId);
   }
