@@ -1,7 +1,7 @@
 import { Spinner, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from "@heroui/react"
 import { Box, Typography } from "@mui/material"
 import { useMutation, useQuery } from "@tanstack/react-query"
-import { CloseCircle, Danger, DocumentText, Flash, More, Refresh, TickCircle, Warning2 } from "iconsax-react"
+import { CloseCircle, DocumentText, Flash, More, Refresh, TickCircle, Warning2 } from "iconsax-react"
 import { type Key, useCallback, useState } from "react"
 import { toast } from "sonner"
 import axiosJSON from "~/apis/http"
@@ -11,8 +11,9 @@ import ProgressBar from "./widgets/progress"
 import { cn } from "~/lib/Utils"
 import { useRealtimeEventListener } from "~/lib/hooks/useRealtimeEventListener"
 import UpgradeLogs from "../UpgradeLogs"
-import { AppDropdown } from "~/components/utilities/AppDropdown"
+import { AppDropdown, type DropdownItem } from "~/components/utilities/AppDropdown"
 import { ClusterActions } from "~/components/core/UpgradeCluster/widgets/ClusterActions"
+import NodeConfiguration from "~/components/core/NodeConfiguration"
 
 const UPGRADE_ENUM = {
 	completed: (
@@ -87,6 +88,7 @@ const columns: TColumn = [
 function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 	const clusterId = useLocalStore((state: any) => state.clusterId)
 	const [showNodeLogs, setShowNodeLogs] = useState<TUpgradeRow | undefined>()
+	const [showNodeConfig, setShowNodeConfig] = useState<TUpgradeRow | undefined>()
 
 	useRealtimeEventListener("UPGRADE_PROGRESS_CHANGE", () => refetch(), true)
 
@@ -188,18 +190,26 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 		}
 	}
 	const getMoreAction = (row: TUpgradeRow) => {
+		const items: DropdownItem[] = [{
+			label: "Logs",
+			onClick: () => {
+				setShowNodeLogs(row)
+			},
+			icon: <Flash size="14px" color="currentColor" />,
+		}]
+		if (clusterType === "ELASTIC"){
+			items.push({
+				label: "Configuration",
+				onClick: () => {
+					setShowNodeConfig(row)
+				},
+				icon: <DocumentText size="14px" color="currentColor" />,
+			})
+		}
 		return (
 			<AppDropdown
 				label={<More size="14px" color="currentColor" style={{ transform: "rotate(90deg)" }} />}
-				items={[
-					{
-						label: "Logs",
-						onClick: () => {
-							setShowNodeLogs(row)
-						},
-						icon: <DocumentText size="14px" color="currentColor" />,
-					},
-				]}
+				items={items}
 				iconOnly={true}
 			/>
 		)
@@ -269,16 +279,18 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 		[data, isPending, isRefetching]
 	)
 
-
 	return (
 		<Box className="flex w-full p-px rounded-2xl" sx={{ background: "radial-gradient(#6E687C, #1D1D1D)" }}>
 			{showNodeLogs && <UpgradeLogs node={showNodeLogs} onOpenChange={() => setShowNodeLogs(undefined)} />}
+			{showNodeConfig && (
+				<NodeConfiguration node={showNodeConfig} onOpenChange={() => setShowNodeConfig(undefined)} />
+			)}
 			<Box className="flex flex-col gap-4 w-full rounded-2xl bg-[#0d0d0d]" padding="16px 24px">
 				<Box className="flex flex-row items-center gap-2 justify-between w-full">
 					<Typography color="#FFF" fontSize="14px" fontWeight="600" lineHeight="22px">
 						Node Details
 					</Typography>
-					<ClusterActions clusterType={clusterType}/>
+					<ClusterActions clusterType={clusterType} />
 				</Box>
 				<Box className="flex">
 					<Table

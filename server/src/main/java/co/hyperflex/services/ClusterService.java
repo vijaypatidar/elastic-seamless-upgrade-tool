@@ -50,7 +50,6 @@ import co.hyperflex.utils.NodeRoleRankerUtils;
 import co.hyperflex.utils.UrlUtils;
 import jakarta.validation.constraints.NotNull;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
@@ -246,11 +245,7 @@ public class ClusterService {
           try (var executor = new SshCommandExecutor(elasticNode.getIp(), 22, sshInfo.username(), sshInfo.keyPath())) {
             CommandResult result = executor.execute("sudo cat /etc/elasticsearch/elasticsearch.yml");
             if (result.isSuccess()) {
-              return new GetElasticNodeConfigurationResponse(
-                  Arrays
-                      .stream(result.stdout().split("\n"))
-                      .filter(line -> !line.startsWith("#"))
-                      .toList());
+              return new GetElasticNodeConfigurationResponse(result.stdout());
             } else {
               throw new RuntimeException(result.stderr());
             }

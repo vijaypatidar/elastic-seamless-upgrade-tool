@@ -86,7 +86,7 @@ public class PrecheckRunService {
 
   public List<GetClusterPrecheckEntry> getClusterPrechecks(String clusterId) {
     ClusterUpgradeJob clusterUpgradeJob = clusterUpgradeJobService.getLatestJobByClusterId(clusterId);
-    List<PrecheckRun> precheckRuns = precheckRunRepository.getAllByJobId(clusterUpgradeJob.getId(), PrecheckType.INDEX);
+    List<PrecheckRun> precheckRuns = precheckRunRepository.getAllByJobId(clusterUpgradeJob.getId(), PrecheckType.CLUSTER);
     return precheckRuns.stream().filter(pr -> pr instanceof ClusterPrecheckRun)
         .map(precheckMapper::toClusterPrecheckEntry).toList();
   }
