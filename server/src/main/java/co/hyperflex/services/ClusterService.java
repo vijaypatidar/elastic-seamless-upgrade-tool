@@ -23,6 +23,7 @@ import co.hyperflex.dtos.clusters.ClusterOverviewResponse;
 import co.hyperflex.dtos.clusters.GetClusterKibanaNodeResponse;
 import co.hyperflex.dtos.clusters.GetClusterNodeResponse;
 import co.hyperflex.dtos.clusters.GetClusterResponse;
+import co.hyperflex.dtos.clusters.GetElasticNodeConfigurationResponse;
 import co.hyperflex.dtos.clusters.UpdateClusterRequest;
 import co.hyperflex.dtos.clusters.UpdateClusterResponse;
 import co.hyperflex.dtos.clusters.UpdateElasticCloudClusterRequest;
@@ -42,11 +43,14 @@ import co.hyperflex.exceptions.NotFoundException;
 import co.hyperflex.mappers.ClusterMapper;
 import co.hyperflex.repositories.ClusterNodeRepository;
 import co.hyperflex.repositories.ClusterRepository;
+import co.hyperflex.ssh.CommandResult;
+import co.hyperflex.ssh.SshCommandExecutor;
 import co.hyperflex.utils.HashUtil;
 import co.hyperflex.utils.NodeRoleRankerUtils;
 import co.hyperflex.utils.UrlUtils;
 import jakarta.validation.constraints.NotNull;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
@@ -229,6 +233,36 @@ public class ClusterService {
       }
     } catch (Exception e) {
       log.error("Failed to sync cluster state for clusterId: {}", clusterId, e);
+    }
+  }
+
+  public GetElasticNodeConfigurationResponse getElasticNodeConfiguration(String clusterId, String nodeId) {
+    try {
+      Cluster cluster = clusterRepository.findById(clusterId).orElseThrow();
+      if (cluster instanceof SelfManagedCluster selfManagedCluster) {
+        ClusterNode clusterNode = clusterNodeRepository.findById(nodeId).orElseThrow();
+        if (clusterNode instanceof ElasticNode elasticNode) {
+          var sshInfo = selfManagedCluster.getSshInfo();
+          try (var executor = new SshCommandExecutor(elasticNode.getIp(), 22, sshInfo.username(), sshInfo.keyPath())) {
+            CommandResult result = executor.execute("sudo cat /etc/elasticsearch/elasticsearch.yml");
+            if (result.isSuccess()) {
+              return new GetElasticNodeConfigurationResponse(
+                  Arrays
+                      .stream(result.stdout().split("\n"))
+                      .filter(line -> !line.startsWith("#"))
+                      .toList());
+            } else {
+              throw new RuntimeException(result.stderr());
+            }
+          }
+        } else {
+          throw new BadRequestException("This operation only works on ElasticNode");
+        }
+      } else {
+        throw new BadRequestException("This operation is not supported for cluster type: " + cluster.getType().getDisplayName());
+      }
+    } catch (Exception e) {
+      throw new BadRequestException("Failed to get elastic node elasticsearch.yml file");
     }
   }
 
