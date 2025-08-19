@@ -119,7 +119,8 @@ public class ClusterUpgradeService {
       GetClusterResponse cluster = clusterService.getClusterById(clusterId);
       PrecheckStatus precheckStatus = null;
       if (activeUpgradeJob != null) {
-        boolean isClusterUpgrading = activeUpgradeJob.getStatus() == ClusterUpgradeStatus.UPGRADING;
+        boolean isClusterUpgrading = activeUpgradeJob.getStatus() == ClusterUpgradeStatus.UPGRADING
+            || activeUpgradeJob.getStatus() == ClusterUpgradeStatus.PARTIALLY_UPDATED;
         if (isClusterUpgrading) {
           precheckStatus = PrecheckStatus.COMPLETED;
         } else {
