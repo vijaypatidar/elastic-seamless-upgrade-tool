@@ -69,10 +69,11 @@ const YamlEditor = ({
 			value={value}
 			options={{
 				minimap: { enabled: false },
-				fontSize: 14,
+				fontSize: 13,
 				scrollBeyondLastLine: false,
 				automaticLayout: true,
 				readOnly: readOnly,
+				contextmenu: false,
 			}}
 			onChange={onChange}
 		/>
