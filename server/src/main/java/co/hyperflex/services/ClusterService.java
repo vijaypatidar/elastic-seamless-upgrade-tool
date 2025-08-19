@@ -240,18 +240,16 @@ public class ClusterService {
       Cluster cluster = clusterRepository.findById(clusterId).orElseThrow();
       if (cluster instanceof SelfManagedCluster selfManagedCluster) {
         ClusterNode clusterNode = clusterNodeRepository.findById(nodeId).orElseThrow();
-        if (clusterNode instanceof ElasticNode elasticNode) {
-          var sshInfo = selfManagedCluster.getSshInfo();
-          try (var executor = new SshCommandExecutor(elasticNode.getIp(), 22, sshInfo.username(), sshInfo.keyPath())) {
-            CommandResult result = executor.execute("sudo cat /etc/elasticsearch/elasticsearch.yml");
-            if (result.isSuccess()) {
-              return new GetElasticNodeConfigurationResponse(result.stdout());
-            } else {
-              throw new RuntimeException(result.stderr());
-            }
+        var configCommand =
+            clusterNode instanceof ElasticNode ? "sudo cat /etc/elasticsearch/elasticsearch.yml" : "sudo cat /etc/kibana/kibana.yml";
+        var sshInfo = selfManagedCluster.getSshInfo();
+        try (var executor = new SshCommandExecutor(clusterNode.getIp(), 22, sshInfo.username(), sshInfo.keyPath())) {
+          CommandResult result = executor.execute(configCommand);
+          if (result.isSuccess()) {
+            return new GetElasticNodeConfigurationResponse(result.stdout());
+          } else {
+            throw new RuntimeException(result.stderr());
           }
-        } else {
-          throw new BadRequestException("This operation only works on ElasticNode");
         }
       } else {
         throw new BadRequestException("This operation is not supported for cluster type: " + cluster.getType().getDisplayName());

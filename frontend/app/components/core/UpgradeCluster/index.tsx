@@ -190,22 +190,22 @@ function UpgradeCluster({ clusterType }: TUpgradeCluster) {
 		}
 	}
 	const getMoreAction = (row: TUpgradeRow) => {
-		const items: DropdownItem[] = [{
-			label: "Logs",
-			onClick: () => {
-				setShowNodeLogs(row)
+		const items: DropdownItem[] = [
+			{
+				label: "Logs",
+				onClick: () => {
+					setShowNodeLogs(row)
+				},
+				icon: <Flash size="14px" color="currentColor" />,
 			},
-			icon: <Flash size="14px" color="currentColor" />,
-		}]
-		if (clusterType === "ELASTIC"){
-			items.push({
+			{
 				label: "Configuration",
 				onClick: () => {
 					setShowNodeConfig(row)
 				},
 				icon: <DocumentText size="14px" color="currentColor" />,
-			})
-		}
+			},
+		]
 		return (
 			<AppDropdown
 				label={<More size="14px" color="currentColor" style={{ transform: "rotate(90deg)" }} />}
