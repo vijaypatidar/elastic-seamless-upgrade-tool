@@ -10,8 +10,8 @@ import org.slf4j.Logger;
 
 public class WaitForGreenClusterStatusTask implements Task {
 
-  private static final int MAX_RETRIES = 30;
-  private static final int RETRY_DELAY_MILLIS = 2000;
+  private static final int MAX_RETRIES = 60;
+  private static final int RETRY_DELAY_MILLIS = 5000;
 
   @Override
   public String getName() {
