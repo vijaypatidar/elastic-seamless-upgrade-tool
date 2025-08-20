@@ -29,11 +29,12 @@ public class SshCommandExecutor implements AutoCloseable {
           .verify(timeoutSeconds, TimeUnit.SECONDS)
           .getSession();
 
-      Iterable<KeyPair> keyPairs = SecurityUtils.loadKeyPairIdentities(session, null, new FileInputStream(privateKeyPath), null);
-      for (KeyPair kp : keyPairs) {
-        session.addPublicKeyIdentity(kp);
+      try (var stream = new FileInputStream(privateKeyPath)) {
+        Iterable<KeyPair> keyPairs = SecurityUtils.loadKeyPairIdentities(session, null, stream, null);
+        for (KeyPair kp : keyPairs) {
+          session.addPublicKeyIdentity(kp);
+        }
       }
-
       session.auth().verify(timeoutSeconds, TimeUnit.SECONDS);
     } catch (Exception e) {
       if (e.getCause() instanceof TimeoutException) {
@@ -61,7 +62,15 @@ public class SshCommandExecutor implements AutoCloseable {
 
   @Override
   public void close() throws IOException {
-    session.close(false);
-    client.stop();
+    try {
+      if (session != null && session.isOpen()) {
+        session.close(false).await();
+      }
+    } finally {
+      if (client != null && client.isOpen()) {
+        client.close();
+      }
+    }
   }
+
 }

@@ -11,6 +11,7 @@ import co.hyperflex.dtos.clusters.GetElasticNodeConfigurationResponse;
 import co.hyperflex.dtos.clusters.UpdateClusterRequest;
 import co.hyperflex.dtos.clusters.UpdateClusterResponse;
 import co.hyperflex.dtos.clusters.UploadCertificateResponse;
+import co.hyperflex.dtos.recovery.GetAllocationExplanationResponse;
 import co.hyperflex.entities.cluster.ClusterNodeType;
 import co.hyperflex.services.CertificatesService;
 import co.hyperflex.services.ClusterService;
@@ -91,5 +92,10 @@ public class ClusterController {
   @GetMapping("/{clusterId}/deprecations/elastic-search")
   public List<GetDeprecationsResponse> getElasticDeprecations(@PathVariable String clusterId) {
     return deprecationService.getElasticDeprecations(clusterId);
+  }
+
+  @GetMapping("/{clusterId}/allocation-explanations")
+  public List<GetAllocationExplanationResponse> getAllocationExplanation(@PathVariable String clusterId) {
+    return clusterService.getAllocationExplanation(clusterId);
   }
 }
