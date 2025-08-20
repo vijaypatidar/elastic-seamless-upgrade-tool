@@ -74,7 +74,7 @@ function LogGroup({
 				/>
 			)
 		} else if (dataFor === "BREAKING_CHANGES") {
-			return <BreakingChangesLogs data={data} isLoading={isLoading} />
+			return <BreakingChangesLogs />
 		}
 	}, [dataFor, data])
 

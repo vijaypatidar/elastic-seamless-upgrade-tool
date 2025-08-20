@@ -62,8 +62,7 @@ public class PrecheckRunService {
     List<GetClusterPrecheckEntry> clusterPrechecks = getClusterPrechecks(clusterId);
     List<GetNodePrecheckGroup> nodeGroups = getNodePrecheckGroups(clusterId);
     List<GetIndexPrecheckGroup> indexGroups = getIndexPrecheckGroups(clusterId);
-    List<GetBreakingChangeEntry> breakingChangeEntries = getBreakingChanges(clusterId);
-    return new GetGroupedPrecheckResponse(nodeGroups, clusterPrechecks, indexGroups, breakingChangeEntries);
+    return new GetGroupedPrecheckResponse(nodeGroups, clusterPrechecks, indexGroups);
   }
 
   public List<GetBreakingChangeEntry> getBreakingChanges(final String clusterId) {
