@@ -1,13 +1,15 @@
 import { Box, Typography } from "@mui/material"
 import { useQuery } from "@tanstack/react-query"
 import _ from "lodash"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import axiosJSON from "~/apis/http"
 import { useLocalStore } from "~/store/common"
 import useRefreshStore from "~/store/refresh"
 import DetailBox from "./widgets/DetailBox"
 import { useRealtimeEventListener } from "~/lib/hooks/useRealtimeEventListener"
 import TargetVersionDropdown from "~/components/utilities/TargetVersionDropdown"
+import AllocationExplain from "~/components/core/AllocationExplain"
+import { InfoCircle } from "iconsax-react"
 
 const CLUSTER_STATUS_COLOR: { [key: string]: string } = {
 	yellow: "#E0B517",
@@ -19,6 +21,7 @@ function ClusterInfo() {
 	const clusterId = useLocalStore((state: any) => state.clusterId)
 	const infraType = useLocalStore((state: any) => state.infraType)
 	const refresh = useRefreshStore((state: any) => state.refreshToggle)
+	const [showAllocation, setShowAllocation] = useState(false)
 
 	const getClusterInfo = async () => {
 		const response = await axiosJSON.get(`/clusters/${clusterId}/overview`)
@@ -44,6 +47,7 @@ function ClusterInfo() {
 				background: "radial-gradient(#927CC5, #1D1D1D)",
 			}}
 		>
+			{showAllocation && <AllocationExplain onOpenChange={() => setShowAllocation(false)} />}
 			<Box
 				className="flex flex-col gap-6 rounded-2xl bg-[#0D0D0D] overflow-auto w-full"
 				padding={{ xs: "14px 16px", md: "24px 32px" }}
@@ -175,6 +179,11 @@ function ClusterInfo() {
 							title="Unassigned shards"
 							description={error ? "--" : data?.unassignedShards}
 							isLoading={isLoading || isRefetching}
+							action={
+								data?.unassignedShards ? (
+									<InfoCircle size={14} color="#aabbcc" onClick={() => setShowAllocation(true)} />
+								) : undefined
+							}
 						/>
 					</Box>
 				</Box>

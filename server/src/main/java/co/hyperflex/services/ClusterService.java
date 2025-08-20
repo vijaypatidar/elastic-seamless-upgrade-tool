@@ -28,6 +28,7 @@ import co.hyperflex.dtos.clusters.UpdateClusterRequest;
 import co.hyperflex.dtos.clusters.UpdateClusterResponse;
 import co.hyperflex.dtos.clusters.UpdateElasticCloudClusterRequest;
 import co.hyperflex.dtos.clusters.UpdateSelfManagedClusterRequest;
+import co.hyperflex.dtos.recovery.GetAllocationExplanationResponse;
 import co.hyperflex.entities.cluster.Cluster;
 import co.hyperflex.entities.cluster.ClusterNode;
 import co.hyperflex.entities.cluster.ClusterNodeType;
@@ -365,5 +366,9 @@ public class ClusterService {
       log.warn("Error validating cluster credentials", e);
       throw new BadRequestException("Kibana credentials are invalid");
     }
+  }
+
+  public List<GetAllocationExplanationResponse> getAllocationExplanation(String clusterId) {
+    return elasticsearchClientProvider.getClientByClusterId(clusterId).getAllocationExplanation();
   }
 }

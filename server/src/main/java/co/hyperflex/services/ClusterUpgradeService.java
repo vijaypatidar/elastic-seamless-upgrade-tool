@@ -120,7 +120,8 @@ public class ClusterUpgradeService {
       PrecheckStatus precheckStatus = null;
       if (activeUpgradeJob != null) {
         boolean isClusterUpgrading = activeUpgradeJob.getStatus() == ClusterUpgradeStatus.UPGRADING
-            || activeUpgradeJob.getStatus() == ClusterUpgradeStatus.PARTIALLY_UPDATED;
+            || activeUpgradeJob.getStatus() == ClusterUpgradeStatus.PARTIALLY_UPDATED
+            || activeUpgradeJob.getStatus() == ClusterUpgradeStatus.FAILED;
         if (isClusterUpgrading) {
           precheckStatus = PrecheckStatus.COMPLETED;
         } else {
