@@ -2,6 +2,7 @@ package co.hyperflex.clients.elastic;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch.cat.master.MasterRecord;
+import co.elastic.clients.elasticsearch.cat.shards.ShardsRecord;
 import co.elastic.clients.elasticsearch.cluster.ClusterStatsResponse;
 import co.elastic.clients.elasticsearch.cluster.GetClusterSettingsResponse;
 import co.elastic.clients.elasticsearch.cluster.HealthResponse;
@@ -18,6 +19,7 @@ import co.elastic.clients.util.ApiTypeHelper;
 import co.hyperflex.clients.elastic.dto.GetElasticDeprecationResponse;
 import co.hyperflex.dtos.GetElasticNodeAndIndexCountsResponse;
 import co.hyperflex.dtos.GetElasticsearchSnapshotResponse;
+import co.hyperflex.dtos.recovery.GetAllocationExplanationResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.Collection;
@@ -189,11 +191,37 @@ public class ElasticClient implements AutoCloseable {
 
   public GetElasticDeprecationResponse getDeprecation() {
     Request request = new Request("GET", "/_migration/deprecations");
+    return performRequest(request, GetElasticDeprecationResponse.class);
+  }
+
+
+  public List<GetAllocationExplanationResponse> getAllocationExplanation() {
+    try {
+      String unassigned = "UNASSIGNED";
+      ElasticsearchClient client = getElasticsearchClient();
+      List<ShardsRecord> shards = client.cat().shards().valueBody();
+      return shards.stream().filter(s -> unassigned.equals(s.state())).map(shard -> {
+        boolean isPrimaryShard = "p".equals(shard.prirep());
+        Request request = new Request("POST", "/_cluster/allocation/explain");
+        request.setJsonEntity("{\"index\":\"" + shard.index() + "\",\"shard\":" + shard.shard() + ",\"primary\":" + isPrimaryShard + "}");
+        Map data = performRequest(request, Map.class);
+        return new GetAllocationExplanationResponse(
+            shard.index(),
+            shard.shard() + (isPrimaryShard ? "(primary)" : ""),
+            data.get("allocate_explanation").toString()
+        );
+      }).toList();
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public <T> T performRequest(Request request, Class<T> responseType) {
     try {
       Response response = restClient.performRequest(request);
-      return objectMapper.createParser(response.getEntity().getContent())
-          .readValueAs(GetElasticDeprecationResponse.class);
+      return objectMapper.createParser(response.getEntity().getContent()).readValueAs(responseType);
     } catch (IOException e) {
+      LOG.error("Failed to perform request", e);
       throw new RuntimeException(e);
     }
   }

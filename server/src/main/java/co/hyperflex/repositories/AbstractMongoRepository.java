@@ -68,6 +68,10 @@ public abstract class AbstractMongoRepository<T, I> {
     mongoTemplate.updateFirst(query, update, entityClass, collectionName);
   }
 
+  public List<T> find(Query query) {
+    return mongoTemplate.find(query, entityClass, collectionName);
+  }
+
   public void updateById(I id, Update update) {
     Query query = new Query(Criteria.where(ID).is(id));
     mongoTemplate.updateFirst(query, update, entityClass, collectionName);

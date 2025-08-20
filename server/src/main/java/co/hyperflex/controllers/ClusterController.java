@@ -7,9 +7,11 @@ import co.hyperflex.dtos.clusters.ClusterListItemResponse;
 import co.hyperflex.dtos.clusters.ClusterOverviewResponse;
 import co.hyperflex.dtos.clusters.GetClusterNodeResponse;
 import co.hyperflex.dtos.clusters.GetClusterResponse;
+import co.hyperflex.dtos.clusters.GetElasticNodeConfigurationResponse;
 import co.hyperflex.dtos.clusters.UpdateClusterRequest;
 import co.hyperflex.dtos.clusters.UpdateClusterResponse;
 import co.hyperflex.dtos.clusters.UploadCertificateResponse;
+import co.hyperflex.dtos.recovery.GetAllocationExplanationResponse;
 import co.hyperflex.entities.cluster.ClusterNodeType;
 import co.hyperflex.services.CertificatesService;
 import co.hyperflex.services.ClusterService;
@@ -66,6 +68,11 @@ public class ClusterController {
     return clusterService.getNodes(clusterId, type);
   }
 
+  @GetMapping("/{clusterId}/nodes/{nodeId}/configuration")
+  public GetElasticNodeConfigurationResponse getElasticNodeConfiguration(@PathVariable String clusterId, @PathVariable String nodeId) {
+    return clusterService.getElasticNodeConfiguration(clusterId, nodeId);
+  }
+
   @PostMapping(value = "/certificates/upload", consumes = "multipart/form-data")
   public UploadCertificateResponse uploadCertificate(@RequestParam("files") MultipartFile[] files, @PathVariable String clusterId) {
     return certificatesService.uploadCertificate(files, clusterId);
@@ -85,5 +92,10 @@ public class ClusterController {
   @GetMapping("/{clusterId}/deprecations/elastic-search")
   public List<GetDeprecationsResponse> getElasticDeprecations(@PathVariable String clusterId) {
     return deprecationService.getElasticDeprecations(clusterId);
+  }
+
+  @GetMapping("/{clusterId}/allocation-explanations")
+  public List<GetAllocationExplanationResponse> getAllocationExplanation(@PathVariable String clusterId) {
+    return clusterService.getAllocationExplanation(clusterId);
   }
 }
