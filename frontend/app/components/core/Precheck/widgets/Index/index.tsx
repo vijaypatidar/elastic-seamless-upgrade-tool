@@ -7,6 +7,7 @@ import ListLoader from "../../loading/ListLoader"
 import LogsList from "../LogsList"
 import NoData from "../NoData"
 import NodeListItem from "../NodeListItem"
+import Switch from "~/components/utilities/Switch"
 
 function IndexLogs({
 	data,
@@ -17,7 +18,7 @@ function IndexLogs({
 }: {
 	data: any
 	handleRerun: (payload: any) => void
-	handlePrecheckSkip: (id: string) => void
+	handlePrecheckSkip: (id: string, skip: boolean) => void
 	isPending: boolean
 	isLoading: boolean
 }) {
@@ -203,19 +204,18 @@ function IndexLogs({
 									)}
 								</Box>
 								<Box className="flex flex-row gap-2">
+									<Switch
+										checked={selectedPrecheck?.severity === "SKIPPED"}
+										onChange={(skip) => handlePrecheckSkip(selectedPrecheck.id, skip)}
+										label="Skip"
+										disabled={isPending || isLoading}
+									/>
 									<OutlinedBorderButton
 										onClick={handlePrecheckRerun}
 										disabled={isPending || isLoading || selectedPrecheck === null}
 									>
 										<Refresh color="currentColor" size="14px" />
 										{isPending ? "Running..." : "Rerun"}
-									</OutlinedBorderButton>
-									<OutlinedBorderButton
-										onClick={() => handlePrecheckSkip(selectedPrecheck.id)}
-										disabled={isPending || isLoading || selectedPrecheck === null}
-									>
-										<ArrowCircleRight2 color="currentColor" size="14px" />
-										Skip
 									</OutlinedBorderButton>
 								</Box>
 							</Box>

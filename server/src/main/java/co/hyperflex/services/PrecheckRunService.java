@@ -18,6 +18,8 @@ import co.hyperflex.entities.precheck.PrecheckStatus;
 import co.hyperflex.entities.precheck.PrecheckType;
 import co.hyperflex.entities.upgrade.ClusterUpgradeJob;
 import co.hyperflex.mappers.PrecheckMapper;
+import co.hyperflex.prechecks.core.Precheck;
+import co.hyperflex.prechecks.registry.PrecheckRegistry;
 import co.hyperflex.repositories.BreakingChangeRepository;
 import co.hyperflex.repositories.PrecheckRunRepository;
 import co.hyperflex.repositories.projection.PrecheckStatusAndSeverityView;
@@ -44,16 +46,23 @@ public class PrecheckRunService {
   private final BreakingChangeRepository breakingChangeRepository;
   private final ClusterUpgradeJobService clusterUpgradeJobService;
   private final MongoTemplate mongoTemplate;
+  private final PrecheckRegistry precheckRegistry;
   private final PrecheckMapper precheckMapper;
   private final NotificationService notificationService;
 
-  public PrecheckRunService(PrecheckRunRepository precheckRunRepository,
-                            BreakingChangeRepository breakingChangeRepository, ClusterUpgradeJobService clusterUpgradeJobService,
-                            MongoTemplate mongoTemplate, PrecheckMapper precheckMapper, NotificationService notificationService) {
+  public PrecheckRunService(
+      PrecheckRunRepository precheckRunRepository,
+      BreakingChangeRepository breakingChangeRepository,
+      ClusterUpgradeJobService clusterUpgradeJobService,
+      MongoTemplate mongoTemplate,
+      PrecheckRegistry precheckRegistry,
+      PrecheckMapper precheckMapper,
+      NotificationService notificationService) {
     this.precheckRunRepository = precheckRunRepository;
     this.breakingChangeRepository = breakingChangeRepository;
     this.clusterUpgradeJobService = clusterUpgradeJobService;
     this.mongoTemplate = mongoTemplate;
+    this.precheckRegistry = precheckRegistry;
     this.precheckMapper = precheckMapper;
     this.notificationService = notificationService;
   }
@@ -257,10 +266,17 @@ public class PrecheckRunService {
     );
   }
 
-  public SkipPrecheckResponse skipPrecheck(String id) {
-    Query query = new Query(Criteria.where("_id").in(id));
-    Update update = new Update().set(PrecheckRun.SEVERITY, PrecheckSeverity.SKIPPED);
-    mongoTemplate.updateMulti(query, update, PrecheckRun.class);
+  public SkipPrecheckResponse skipPrecheck(String id, boolean skip) {
+    PrecheckSeverity severity;
+    if (skip) {
+      severity = PrecheckSeverity.SKIPPED;
+    } else {
+      PrecheckRun precheckRun = precheckRunRepository.findById(id).orElseThrow();
+      Precheck<?> precheck = precheckRegistry.getById(precheckRun.getPrecheckId()).orElseThrow();
+      severity = precheck.getSeverity();
+    }
+    Update update = new Update().set(PrecheckRun.SEVERITY, severity);
+    precheckRunRepository.updateById(id, update);
     notificationService.sendNotification(new PrecheckProgressChangeEvent());
     return new SkipPrecheckResponse();
   }
