@@ -1,0 +1,454 @@
+package co.hyperflex.clients.elastic;
+
+import co.elastic.clients.elasticsearch._types.ElasticsearchException;
+import co.elastic.clients.elasticsearch._types.ErrorResponse;
+import co.elastic.clients.json.JsonpDeserializer;
+import co.elastic.clients.json.JsonpMapper;
+import co.elastic.clients.json.NdJsonpSerializable;
+import co.elastic.clients.transport.ElasticsearchTransport;
+import co.elastic.clients.transport.Endpoint;
+import co.elastic.clients.transport.JsonEndpoint;
+import co.elastic.clients.transport.TransportException;
+import co.elastic.clients.transport.TransportOptions;
+import co.elastic.clients.transport.Version;
+import co.elastic.clients.transport.endpoints.BinaryDataResponse;
+import co.elastic.clients.transport.endpoints.BinaryEndpoint;
+import co.elastic.clients.transport.endpoints.BooleanEndpoint;
+import co.elastic.clients.transport.endpoints.BooleanResponse;
+import co.elastic.clients.transport.http.HeaderMap;
+import co.elastic.clients.transport.http.RepeatableBodyResponse;
+import co.elastic.clients.transport.http.TransportHttpClient;
+import co.elastic.clients.transport.instrumentation.Instrumentation;
+import co.elastic.clients.transport.instrumentation.OpenTelemetryForElasticsearch;
+import co.elastic.clients.transport.rest_client.RestClientHttpClient;
+import co.elastic.clients.util.ApiTypeHelper;
+import co.elastic.clients.util.BinaryData;
+import co.elastic.clients.util.ByteArrayBinaryData;
+import co.elastic.clients.util.ContentType;
+import co.elastic.clients.util.LanguageRuntimeVersions;
+import co.elastic.clients.util.MissingRequiredPropertyException;
+import co.elastic.clients.util.NoCopyByteArrayOutputStream;
+import jakarta.json.JsonException;
+import jakarta.json.stream.JsonGenerator;
+import jakarta.json.stream.JsonParser;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import javax.annotation.Nullable;
+import org.elasticsearch.client.RestClient;
+
+public class RestClientTransport implements ElasticsearchTransport {
+
+  private final RestClient restClient;
+
+  public RestClientTransport(RestClient restClient, JsonpMapper jsonpMapper) {
+    this.mapper = jsonpMapper;
+    this.httpClient = new RestClientHttpClient(restClient);
+    this.transportOptions = httpClient.createOptions(null);
+    this.restClient = restClient;
+  }
+
+  public RestClient restClient() {
+    return this.restClient;
+  }
+
+
+  private static final String USER_AGENT_VALUE = getUserAgent();
+  private static final String CLIENT_META_VALUE = getClientMeta();
+  private final Instrumentation instrumentation = OpenTelemetryForElasticsearch.getDefault();
+  public static final String JSON_CONTENT_TYPE;
+  private final TransportHttpClient httpClient;
+
+  static {
+    if (Version.VERSION == null) {
+      JSON_CONTENT_TYPE = ContentType.APPLICATION_JSON;
+    } else {
+      JSON_CONTENT_TYPE =
+          "application/vnd.elasticsearch+json; compatible-with="
+              + Version.VERSION.major();
+    }
+  }
+
+
+  @Override
+  public void close() throws IOException {
+    httpClient.close();
+  }
+
+  private final JsonpMapper mapper;
+  protected final TransportOptions transportOptions;
+
+
+  @Override
+  public final JsonpMapper jsonpMapper() {
+    return mapper;
+  }
+
+  @Override
+  public final TransportOptions options() {
+    return transportOptions;
+  }
+
+  @Override
+  public final <RequestT, ResponseT, ErrorT> ResponseT performRequest(
+      RequestT request,
+      Endpoint<RequestT, ResponseT, ErrorT> endpoint,
+      @Nullable TransportOptions options
+  ) throws IOException {
+    try (Instrumentation.Context ctx = instrumentation.newContext(request, endpoint)) {
+      try (Instrumentation.ThreadScope ts = ctx.makeCurrent()) {
+
+        TransportOptions opts = options == null ? transportOptions : options;
+        TransportHttpClient.Request req = prepareTransportRequest(request, endpoint);
+        ctx.beforeSendingHttpRequest(req, options);
+
+        TransportHttpClient.Response resp = httpClient.performRequest(endpoint.id(), null, req, opts);
+        ctx.afterReceivingHttpResponse(resp);
+
+        ResponseT apiResponse = getApiResponse(resp, endpoint);
+        ctx.afterDecodingApiResponse(apiResponse);
+
+        return apiResponse;
+      } catch (Throwable throwable) {
+        ctx.recordException(throwable);
+        throw throwable;
+      }
+    }
+  }
+
+  @Override
+  public final <RequestT, ResponseT, ErrorT> CompletableFuture<ResponseT> performRequestAsync(
+      RequestT request,
+      Endpoint<RequestT, ResponseT, ErrorT> endpoint,
+      @Nullable TransportOptions options
+  ) {
+    Instrumentation.Context ctx = instrumentation.newContext(request, endpoint);
+
+    TransportOptions opts = options == null ? transportOptions : options;
+    TransportHttpClient.Request clientReq;
+    try (Instrumentation.ThreadScope ss = ctx.makeCurrent()) {
+      clientReq = prepareTransportRequest(request, endpoint);
+      ctx.beforeSendingHttpRequest(clientReq, options);
+    } catch (Exception e) {
+      // Terminate early
+      ctx.recordException(e);
+      ctx.close();
+      CompletableFuture<ResponseT> future = new CompletableFuture<>();
+      future.completeExceptionally(e);
+      return future;
+    }
+
+    // Propagate required property checks to the thread that will decode the response
+    boolean disableRequiredChecks = ApiTypeHelper.requiredPropertiesCheckDisabled();
+
+    CompletableFuture<TransportHttpClient.Response> clientFuture = httpClient.performRequestAsync(
+        endpoint.id(), null, clientReq, opts
+    );
+
+    // Cancelling the result will cancel the upstream future created by the http client, allowing to stop in-flight requests
+    CompletableFuture<ResponseT> future = new CompletableFuture<ResponseT>() {
+      @Override
+      public boolean cancel(boolean mayInterruptIfRunning) {
+        boolean cancelled = super.cancel(mayInterruptIfRunning);
+        if (cancelled) {
+          clientFuture.cancel(mayInterruptIfRunning);
+        }
+        return cancelled;
+      }
+    };
+
+    clientFuture.handle((clientResp, thr) -> {
+      try (Instrumentation.ThreadScope ts = ctx.makeCurrent()) {
+        if (thr != null) {
+          // Exception executing the http request
+          ctx.recordException(thr);
+          ctx.close();
+          future.completeExceptionally(thr);
+
+        } else {
+          try (ApiTypeHelper.DisabledChecksHandle h =
+                   ApiTypeHelper.DANGEROUS_disableRequiredPropertiesCheck(disableRequiredChecks)) {
+            ctx.afterReceivingHttpResponse(clientResp);
+            ResponseT response = getApiResponse(clientResp, endpoint);
+            ctx.afterDecodingApiResponse(response);
+            future.complete(response);
+
+          } catch (Throwable e) {
+            ctx.recordException(e);
+            future.completeExceptionally(e);
+          } finally {
+            ctx.close();
+          }
+        }
+      }
+      return null;
+    });
+
+    return future;
+  }
+
+  private <RequestT, ResponseT, ErrorT> TransportHttpClient.Request prepareTransportRequest(
+      RequestT request,
+      Endpoint<RequestT, ResponseT, ErrorT> endpoint
+  ) throws IOException {
+    String method = endpoint.method(request);
+    String path = endpoint.requestUrl(request);
+    Map<String, String> params = endpoint.queryParameters(request);
+
+    List<ByteBuffer> bodyBuffers = null;
+    HeaderMap headers = DefaultHeaders;
+
+    Object body = endpoint.body(request);
+    if (body != null) {
+      // Request has a body
+      if (body instanceof NdJsonpSerializable) {
+        bodyBuffers = new ArrayList<>();
+        collectNdJsonLines(bodyBuffers, (NdJsonpSerializable) request);
+        headers = JsonContentTypeHeaders;
+
+      } else if (body instanceof BinaryData) {
+        BinaryData data = (BinaryData) body;
+
+        // ES expects the Accept and Content-Type headers to be consistent.
+        String dataContentType = data.contentType();
+        if (ContentType.APPLICATION_JSON.equals(dataContentType)) {
+          // Fast path
+          headers = JsonContentTypeHeaders;
+        } else {
+          headers = new HeaderMap(DefaultHeaders);
+          headers.put(HeaderMap.CONTENT_TYPE, dataContentType);
+        }
+        bodyBuffers = Collections.singletonList(data.asByteBuffer());
+
+      } else {
+        NoCopyByteArrayOutputStream baos = new NoCopyByteArrayOutputStream();
+        JsonGenerator generator = mapper.jsonProvider().createGenerator(baos);
+        mapper.serialize(body, generator);
+
+        // Some generators (e.g. Parsson) throw an exception if we close a generator
+        // that hasn't received any event. In that case, we ignore the exception
+        RuntimeException closeException = null;
+        try {
+          generator.close();
+        } catch (RuntimeException e) {
+          closeException = e;
+        }
+
+        if (baos.size() > 0) {
+          if (closeException != null) {
+            // We got some content and close failed
+            throw closeException;
+          }
+          bodyBuffers = Collections.singletonList(baos.asByteBuffer());
+          headers = JsonContentTypeHeaders;
+        }
+      }
+    }
+
+    return new TransportHttpClient.Request(method, path, params, headers, bodyBuffers);
+  }
+
+  private static final HeaderMap JsonContentTypeHeaders = new HeaderMap();
+  private static final HeaderMap DefaultHeaders = new HeaderMap();
+
+  static {
+    addStandardHeaders(DefaultHeaders);
+    addStandardHeaders(JsonContentTypeHeaders);
+    JsonContentTypeHeaders.put(HeaderMap.CONTENT_TYPE, JSON_CONTENT_TYPE);
+  }
+
+  private static final ByteBuffer NdJsonSeparator = ByteBuffer.wrap("\n".getBytes(StandardCharsets.UTF_8));
+
+  private void collectNdJsonLines(List<ByteBuffer> lines, NdJsonpSerializable value) throws IOException {
+    Iterator<?> values = value._serializables();
+    while (values.hasNext()) {
+      Object item = values.next();
+      if (item == null) {
+        // Skip
+      } else if (item instanceof NdJsonpSerializable && item != value) { // do not recurse on the item itself
+        collectNdJsonLines(lines, (NdJsonpSerializable) item);
+      } else {
+        // TODO: items that aren't already BinaryData could be serialized to ByteBuffers lazily
+        // to reduce the number of buffers to keep in memory
+        lines.add(BinaryData.of(item, this.mapper).asByteBuffer());
+        lines.add(NdJsonSeparator);
+      }
+    }
+  }
+
+  private <ResponseT, ErrorT> ResponseT getApiResponse(
+      TransportHttpClient.Response clientResp,
+      Endpoint<?, ResponseT, ErrorT> endpoint
+  ) throws IOException {
+
+    int statusCode = clientResp.statusCode();
+
+    if (options().keepResponseBodyOnException()) {
+      clientResp = RepeatableBodyResponse.of(clientResp);
+    }
+    try {
+      if (endpoint.isError(statusCode)) {
+
+        JsonpDeserializer<ErrorT> errorDeserializer = endpoint.errorDeserializer(statusCode);
+        if (errorDeserializer == null) {
+          throw new TransportException(
+              clientResp,
+              "Request failed with status code '" + statusCode + "'",
+              endpoint.id()
+          );
+        }
+
+        BinaryData entity = clientResp.body();
+        if (entity == null) {
+          throw new TransportException(
+              clientResp,
+              "Expecting a response body, but none was sent",
+              endpoint.id()
+          );
+        }
+
+        checkJsonContentType(entity.contentType(), clientResp, endpoint);
+
+        // We may have to replay it.
+        if (!entity.isRepeatable()) {
+          entity = new ByteArrayBinaryData(entity);
+        }
+
+        try (InputStream content = entity.asInputStream()) {
+          try (JsonParser parser = mapper.jsonProvider().createParser(content)) {
+            ErrorT error = errorDeserializer.deserialize(parser, mapper);
+            // TODO: have the endpoint provide the exception constructor
+            throw new ElasticsearchException(endpoint.id(), (ErrorResponse) error, clientResp);
+          }
+        } catch (JsonException | MissingRequiredPropertyException errorEx) {
+          // Could not decode exception, try the response type
+          try {
+            ResponseT response = decodeTransportResponse(statusCode, entity, clientResp, endpoint);
+            return response;
+          } catch (Exception respEx) {
+            // No better luck: throw the original error decoding exception
+            throw new TransportException(
+                clientResp,
+                "Failed to decode error response, check exception cause for additional details",
+                endpoint.id(),
+                errorEx
+            );
+          }
+        }
+      } else {
+        return decodeTransportResponse(statusCode, clientResp.body(), clientResp, endpoint);
+      }
+
+
+    } finally {
+      // Consume the entity unless this is a successful binary endpoint, where the user must consume the entity
+      if (!(endpoint instanceof BinaryEndpoint && !endpoint.isError(statusCode))) {
+        clientResp.close();
+      }
+    }
+  }
+
+  private <ResponseT> ResponseT decodeTransportResponse(
+      int statusCode, @Nullable BinaryData entity, TransportHttpClient.Response clientResp, Endpoint<?, ResponseT, ?> endpoint
+  ) throws IOException {
+
+    if (endpoint instanceof JsonEndpoint) {
+
+      @SuppressWarnings("unchecked")
+      JsonEndpoint<?, ResponseT, ?> jsonEndpoint = (JsonEndpoint<?, ResponseT, ?>) endpoint;
+      // Successful response
+      ResponseT response = null;
+      JsonpDeserializer<ResponseT> responseParser = jsonEndpoint.responseDeserializer();
+      if (responseParser != null) {
+        // Expecting a body
+        if (entity == null) {
+          throw new TransportException(
+              clientResp,
+              "Expecting a response body, but none was sent",
+              endpoint.id()
+          );
+        }
+        checkJsonContentType(entity.contentType(), clientResp, endpoint);
+        try (
+            InputStream content = entity.asInputStream();
+            JsonParser parser = mapper.jsonProvider().createParser(content)
+        ) {
+          response = responseParser.deserialize(parser, mapper);
+        } catch (Exception e) {
+          throw new TransportException(
+              clientResp,
+              "Failed to decode response",
+              endpoint.id(),
+              e
+          );
+        }
+      }
+      return response;
+
+    } else if (endpoint instanceof BooleanEndpoint) {
+      BooleanEndpoint<?> bep = (BooleanEndpoint<?>) endpoint;
+
+      @SuppressWarnings("unchecked")
+      ResponseT response = (ResponseT) new BooleanResponse(bep.getResult(statusCode));
+      return response;
+
+
+    } else if (endpoint instanceof BinaryEndpoint) {
+      @SuppressWarnings("unchecked")
+      ResponseT response = (ResponseT) new BinaryDataResponse(entity);
+      return response;
+
+    } else {
+      throw new TransportException(
+          clientResp,
+          "Unhandled endpoint type: '" + endpoint.getClass().getName() + "'", endpoint.id()
+      );
+    }
+  }
+
+  private void checkJsonContentType(
+      String contentType, TransportHttpClient.Response clientResp, Endpoint<?, ?, ?> endpoint
+  ) throws IOException {
+    if (contentType == null) {
+      throw new TransportException(clientResp, "Response has no content-type", endpoint.id());
+    }
+
+    if (contentType.startsWith("application/json") || contentType.startsWith("application/vnd.elasticsearch+json")) {
+      return;
+    }
+
+    throw new TransportException(clientResp, "Expecting JSON data but response content-type is: " + contentType, endpoint.id());
+  }
+
+  private static void addStandardHeaders(HeaderMap headers) {
+    headers.put(HeaderMap.USER_AGENT, USER_AGENT_VALUE);
+    headers.put(HeaderMap.CLIENT_META, CLIENT_META_VALUE);
+    headers.put(HeaderMap.ACCEPT, JSON_CONTENT_TYPE);
+  }
+
+  private static String getUserAgent() {
+    return String.format(
+        Locale.ROOT,
+        "elastic-java/%s (Java/%s)",
+        Version.VERSION == null ? "Unknown" : Version.VERSION.toString(),
+        System.getProperty("java.version")
+    );
+  }
+
+  // visible for testing
+  static String getClientMeta() {
+    // service, language, transport, followed by additional information
+    return "jv="
+        + System.getProperty("java.specification.version")
+        + ",hl=2"
+        + LanguageRuntimeVersions.getRuntimeMetadata();
+  }
+}
