@@ -30,7 +30,7 @@ public class UpdateElasticsearchTask extends AbstractAnsibleTask {
           .sshUsername(context.config().sshUser())
           .sshKeyPath(context.config().sshKeyPath())
           .build();
-      return runAdHocCommand(cmd, context);
+      return runAdHocCommand(cmd);
     } else {
       AnsibleAdHocYumCommand cmd = new AnsibleAdHocYumCommand
           .Builder()
@@ -43,7 +43,7 @@ public class UpdateElasticsearchTask extends AbstractAnsibleTask {
           .sshUsername(context.config().sshUser())
           .sshKeyPath(context.config().sshKeyPath())
           .build();
-      return runAdHocCommand(cmd, context);
+      return runAdHocCommand(cmd);
     }
   }
 }

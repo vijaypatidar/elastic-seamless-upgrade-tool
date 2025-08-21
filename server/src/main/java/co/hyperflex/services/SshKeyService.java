@@ -39,8 +39,7 @@ public class SshKeyService {
       throw new IllegalArgumentException("Invalid SSH key: Key must be a non-empty string.");
     }
 
-    String finalFileName = (fileName != null && !fileName.isBlank()) ? fileName : "SSH_key.pem";
-    Path keyPath = sshKeysDir.resolve(finalFileName);
+    Path keyPath = sshKeysDir.resolve(fileName);
 
     try (FileWriter writer = new FileWriter(keyPath.toFile())) {
       writer.write(privateKey);

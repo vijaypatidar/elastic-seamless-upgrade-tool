@@ -49,7 +49,7 @@ const YamlEditor = ({
 				"editor.lineHighlightBackground": "#0A0A0A",
 				"editorCursor.foreground": "#FFFFFF",
 				"editorLineNumber.foreground": "#FFFFFF",
-				"editor.selectionBackground": "#0A0A0A",
+				"editor.selectionBackground": "#FFFFFF6B",
 			},
 		})
 
@@ -68,7 +68,6 @@ const YamlEditor = ({
 			theme="custom-dark"
 			value={value}
 			options={{
-				minimap: { enabled: false },
 				fontSize: 13,
 				scrollBeyondLastLine: false,
 				automaticLayout: true,

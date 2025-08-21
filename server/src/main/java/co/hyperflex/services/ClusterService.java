@@ -23,10 +23,11 @@ import co.hyperflex.dtos.clusters.ClusterOverviewResponse;
 import co.hyperflex.dtos.clusters.GetClusterKibanaNodeResponse;
 import co.hyperflex.dtos.clusters.GetClusterNodeResponse;
 import co.hyperflex.dtos.clusters.GetClusterResponse;
-import co.hyperflex.dtos.clusters.GetElasticNodeConfigurationResponse;
+import co.hyperflex.dtos.clusters.GetNodeConfigurationResponse;
 import co.hyperflex.dtos.clusters.UpdateClusterRequest;
 import co.hyperflex.dtos.clusters.UpdateClusterResponse;
 import co.hyperflex.dtos.clusters.UpdateElasticCloudClusterRequest;
+import co.hyperflex.dtos.clusters.UpdateNodeConfigurationResponse;
 import co.hyperflex.dtos.clusters.UpdateSelfManagedClusterRequest;
 import co.hyperflex.dtos.recovery.GetAllocationExplanationResponse;
 import co.hyperflex.entities.cluster.Cluster;
@@ -44,8 +45,16 @@ import co.hyperflex.exceptions.NotFoundException;
 import co.hyperflex.mappers.ClusterMapper;
 import co.hyperflex.repositories.ClusterNodeRepository;
 import co.hyperflex.repositories.ClusterRepository;
+import co.hyperflex.services.notifications.GeneralNotificationEvent;
+import co.hyperflex.services.notifications.NotificationService;
+import co.hyperflex.services.notifications.NotificationType;
 import co.hyperflex.ssh.CommandResult;
 import co.hyperflex.ssh.SshCommandExecutor;
+import co.hyperflex.upgrader.tasks.Configuration;
+import co.hyperflex.upgrader.tasks.Context;
+import co.hyperflex.upgrader.tasks.TaskResult;
+import co.hyperflex.upgrader.tasks.elastic.RestartElasticsearchServiceTask;
+import co.hyperflex.upgrader.tasks.kibana.RestartKibanaServiceTask;
 import co.hyperflex.utils.HashUtil;
 import co.hyperflex.utils.NodeRoleRankerUtils;
 import co.hyperflex.utils.UrlUtils;
@@ -71,16 +80,25 @@ public class ClusterService {
   private final ElasticsearchClientProvider elasticsearchClientProvider;
   private final KibanaClientProvider kibanaClientProvider;
   private final SshKeyService sshKeyService;
+  private final ClusterLockService clusterLockService;
+  private final NotificationService notificationService;
 
-  public ClusterService(ClusterRepository clusterRepository, ClusterNodeRepository clusterNodeRepository, ClusterMapper clusterMapper,
-                        ElasticsearchClientProvider elasticsearchClientProvider, KibanaClientProvider kibanaClientProvider,
-                        SshKeyService sshKeyService) {
+  public ClusterService(ClusterRepository clusterRepository,
+                        ClusterNodeRepository clusterNodeRepository,
+                        ClusterMapper clusterMapper,
+                        ElasticsearchClientProvider elasticsearchClientProvider,
+                        KibanaClientProvider kibanaClientProvider,
+                        SshKeyService sshKeyService,
+                        ClusterLockService clusterLockService,
+                        NotificationService notificationService) {
     this.clusterRepository = clusterRepository;
     this.clusterNodeRepository = clusterNodeRepository;
     this.clusterMapper = clusterMapper;
     this.elasticsearchClientProvider = elasticsearchClientProvider;
     this.kibanaClientProvider = kibanaClientProvider;
     this.sshKeyService = sshKeyService;
+    this.clusterLockService = clusterLockService;
+    this.notificationService = notificationService;
   }
 
   public AddClusterResponse add(final AddClusterRequest request) {
@@ -236,27 +254,56 @@ public class ClusterService {
     }
   }
 
-  public GetElasticNodeConfigurationResponse getElasticNodeConfiguration(String clusterId, String nodeId) {
+  public GetNodeConfigurationResponse getNodeConfiguration(String clusterId, String nodeId) {
     try {
       Cluster cluster = clusterRepository.findById(clusterId).orElseThrow();
-      if (cluster instanceof SelfManagedCluster selfManagedCluster) {
-        ClusterNode clusterNode = clusterNodeRepository.findById(nodeId).orElseThrow();
-        var configCommand =
-            clusterNode instanceof ElasticNode ? "sudo cat /etc/elasticsearch/elasticsearch.yml" : "sudo cat /etc/kibana/kibana.yml";
-        var sshInfo = selfManagedCluster.getSshInfo();
-        try (var executor = new SshCommandExecutor(clusterNode.getIp(), 22, sshInfo.username(), sshInfo.keyPath())) {
-          CommandResult result = executor.execute(configCommand);
-          if (result.isSuccess()) {
-            return new GetElasticNodeConfigurationResponse(result.stdout());
-          } else {
-            throw new RuntimeException(result.stderr());
-          }
+      if (!(cluster instanceof SelfManagedCluster selfManagedCluster)) {
+        throw new BadRequestException(
+            "This operation is not supported for cluster type: " + cluster.getType().getDisplayName()
+        );
+      }
+      ClusterNode clusterNode = clusterNodeRepository.findById(nodeId).orElseThrow();
+      String configFilePath = getNodeConfigFilePath(clusterNode);
+      var configCommand = "sudo cat " + configFilePath;
+      var sshInfo = selfManagedCluster.getSshInfo();
+      try (var executor = new SshCommandExecutor(clusterNode.getIp(), 22, sshInfo.username(), sshInfo.keyPath())) {
+        CommandResult result = executor.execute(configCommand);
+        if (result.isSuccess()) {
+          return new GetNodeConfigurationResponse(result.stdout());
+        } else {
+          throw new RuntimeException(result.stderr());
         }
-      } else {
-        throw new BadRequestException("This operation is not supported for cluster type: " + cluster.getType().getDisplayName());
       }
     } catch (Exception e) {
-      throw new BadRequestException("Failed to get elastic node elasticsearch.yml file");
+      throw new BadRequestException("Failed to get node yml config file");
+    }
+  }
+
+  public UpdateNodeConfigurationResponse updateNodeConfiguration(String clusterId, String nodeId, String nodeConfiguration) {
+    try {
+      Cluster cluster = clusterRepository.findById(clusterId).orElseThrow();
+      if (!(cluster instanceof SelfManagedCluster selfManagedCluster)) {
+        throw new BadRequestException(
+            "This operation is not supported for cluster type: " + cluster.getType().getDisplayName()
+        );
+      }
+      ClusterNode clusterNode = clusterNodeRepository.findById(nodeId).orElseThrow();
+      String configFilePath = getNodeConfigFilePath(clusterNode);
+
+      var sshInfo = selfManagedCluster.getSshInfo();
+      try (var executor = new SshCommandExecutor(clusterNode.getIp(), 22, sshInfo.username(), sshInfo.keyPath())) {
+        // Write the new config to the file (overwrites existing)
+        String updateCommand = String.format("echo '%s' | sudo tee %s", escapeSingleQuotes(nodeConfiguration), configFilePath);
+        CommandResult updateResult = executor.execute(updateCommand);
+        if (!updateResult.isSuccess()) {
+          throw new RuntimeException("Failed to update config: " + updateResult.stderr());
+        }
+        new Thread(() -> restartNode(selfManagedCluster, clusterNode)).start();
+        return new UpdateNodeConfigurationResponse("Node configuration updated successfully. Node is restarting...");
+      }
+    } catch (Exception e) {
+      log.error("Failed to update node configuration for clusterId: {}", clusterId, e);
+      throw new BadRequestException("Failed to update node config");
     }
   }
 
@@ -370,5 +417,49 @@ public class ClusterService {
 
   public List<GetAllocationExplanationResponse> getAllocationExplanation(String clusterId) {
     return elasticsearchClientProvider.getClientByClusterId(clusterId).getAllocationExplanation();
+  }
+
+  private void restartNode(SelfManagedCluster cluster, ClusterNode node) {
+    try {
+      clusterLockService.lock(cluster.getId());
+      Configuration config =
+          new Configuration(9300, 9200, cluster.getSshInfo().username(), cluster.getSshInfo().keyPath(), null);
+      Context context = new Context(node, config, log, null, null);
+      TaskResult result;
+      if (node instanceof ElasticNode) {
+        result = new RestartElasticsearchServiceTask().run(context);
+      } else {
+        result = new RestartKibanaServiceTask().run(context);
+      }
+      if (result.isSuccess()) {
+        log.info("Node [NodeId: {}] restarted successfully", node.getId());
+        notificationService.sendNotification(new GeneralNotificationEvent(
+            NotificationType.SUCCESS,
+            "Node restarted",
+            node.getName() + " node restarted successfully",
+            cluster.getId()
+        ));
+      } else {
+        log.warn("Node [NodeId: {}] restart failed", node.getId());
+        notificationService.sendNotification(new GeneralNotificationEvent(
+            NotificationType.ERROR,
+            "Node restart failed",
+            node.getName() + " node failed to restart",
+            cluster.getId()
+        ));
+      }
+    } finally {
+      clusterLockService.unlock(cluster.getId());
+    }
+  }
+
+  private static String getNodeConfigFilePath(ClusterNode clusterNode) {
+    return (clusterNode instanceof ElasticNode)
+        ? "/etc/elasticsearch/elasticsearch.yml"
+        : "/etc/kibana/kibana.yml";
+  }
+
+  private String escapeSingleQuotes(String input) {
+    return input.replace("'", "'\"'\"'");
   }
 }

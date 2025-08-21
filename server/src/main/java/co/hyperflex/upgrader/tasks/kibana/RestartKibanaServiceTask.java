@@ -28,6 +28,6 @@ public class RestartKibanaServiceTask extends AbstractAnsibleTask {
         .sshKeyPath(context.config().sshKeyPath())
         .useBecome(true)
         .build();
-    return runAdHocCommand(cmd, context);
+    return runAdHocCommand(cmd);
   }
 }
