@@ -20,6 +20,7 @@ import co.hyperflex.entities.cluster.SshInfo;
 import co.hyperflex.services.SshKeyService;
 import co.hyperflex.utils.NodeRoleRankerUtils;
 import java.util.List;
+import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -36,7 +37,7 @@ public class ClusterMapper {
       case AddSelfManagedClusterRequest selfManagedRequest -> {
         SelfManagedCluster selfManagedCluster = new SelfManagedCluster();
         String file =
-            sshKeyService.createSSHPrivateKeyFile(selfManagedRequest.getSshKey(), "SSH_key.pem");
+            sshKeyService.createSSHPrivateKeyFile(selfManagedRequest.getSshKey(), UUID.randomUUID().toString());
         selfManagedCluster.setSshInfo(new SshInfo(
             selfManagedRequest.getSshUsername(),
             selfManagedRequest.getSshKey(), file));
