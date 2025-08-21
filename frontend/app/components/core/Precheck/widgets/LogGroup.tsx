@@ -35,14 +35,14 @@ function LogGroup({
 		},
 	})
 
-const handlePrecheckSkip = async (id: string, skip: boolean) => {
-	try {
-		await axiosJSON.put(`/clusters/${clusterId}/prechecks/${id}/skip?skip=${skip}`)
-		toast.success(`Precheck ${skip ? "unskipped" : "skipped"} successfully`)
-	} catch (err) {
-		toast.error(`Failed to ${skip ? "unskip" : "skip"} precheck`)
+	const handlePrecheckSkip = async (id: string, skip: boolean) => {
+		try {
+			await axiosJSON.put(`/clusters/${clusterId}/prechecks/${id}/skip?skip=${skip}`)
+			toast.success(`Precheck ${skip ? "skipped" : "unskipped"} successfully`)
+		} catch (err) {
+			toast.error(`Failed to ${skip ? "skip" : "unskip"} precheck`)
+		}
 	}
-}
 
 	const layout = useMemo(() => {
 		console.log(dataFor)
