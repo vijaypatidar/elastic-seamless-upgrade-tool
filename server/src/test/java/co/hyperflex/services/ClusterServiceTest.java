@@ -20,7 +20,7 @@ import co.hyperflex.dtos.clusters.AddSelfManagedClusterRequest;
 import co.hyperflex.dtos.clusters.GetClusterResponse;
 import co.hyperflex.dtos.clusters.UpdateClusterResponse;
 import co.hyperflex.dtos.clusters.UpdateSelfManagedClusterRequest;
-import co.hyperflex.entities.cluster.SelfManagedCluster;
+import co.hyperflex.entities.cluster.SelfManagedClusterEntity;
 import co.hyperflex.exceptions.BadRequestException;
 import co.hyperflex.exceptions.NotFoundException;
 import co.hyperflex.mappers.ClusterMapper;
@@ -61,7 +61,7 @@ class ClusterServiceTest {
     // Arrange
     AddSelfManagedClusterRequest request = new AddSelfManagedClusterRequest();
     request.setName("test-cluster");
-    SelfManagedCluster cluster = new SelfManagedCluster();
+    SelfManagedClusterEntity cluster = new SelfManagedClusterEntity();
 
     cluster.setName("test-cluster");
     cluster.setElasticUrl(MOCK_ELASTIC_SEARCH_URL);
@@ -104,7 +104,7 @@ class ClusterServiceTest {
     request.setSshUsername("new-user");
 
     String clusterId = "cluster-id";
-    SelfManagedCluster cluster = new SelfManagedCluster();
+    SelfManagedClusterEntity cluster = new SelfManagedClusterEntity();
     cluster.setId(clusterId);
 
     co.hyperflex.clients.elastic.ElasticClient elasticClient = mock(co.hyperflex.clients.elastic.ElasticClient.class);
@@ -139,7 +139,7 @@ class ClusterServiceTest {
   void getClusterById_found() {
     // Arrange
     String clusterId = "cluster-id";
-    SelfManagedCluster cluster = new SelfManagedCluster();
+    SelfManagedClusterEntity cluster = new SelfManagedClusterEntity();
     cluster.setId(clusterId);
     GetClusterResponse getClusterResponse = mock(GetClusterResponse.class);
 
@@ -169,7 +169,7 @@ class ClusterServiceTest {
   void add_invalidCredentials_throwsBadRequest() {
     // Arrange
     AddSelfManagedClusterRequest request = new AddSelfManagedClusterRequest();
-    SelfManagedCluster cluster = new SelfManagedCluster();
+    SelfManagedClusterEntity cluster = new SelfManagedClusterEntity();
     cluster.setElasticUrl(MOCK_ELASTIC_SEARCH_URL);
     cluster.setKibanaUrl(MOCK_KIBANA_URL);
     when(clusterMapper.toEntity(request)).thenReturn(cluster);

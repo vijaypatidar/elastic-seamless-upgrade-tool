@@ -9,17 +9,18 @@ import co.hyperflex.dtos.clusters.GetClusterNodeResponse;
 import co.hyperflex.dtos.clusters.GetClusterResponse;
 import co.hyperflex.dtos.clusters.GetElasticCloudClusterResponse;
 import co.hyperflex.dtos.clusters.GetSelfManagedClusterResponse;
-import co.hyperflex.entities.cluster.Cluster;
-import co.hyperflex.entities.cluster.ClusterNode;
+import co.hyperflex.entities.cluster.ClusterEntity;
+import co.hyperflex.entities.cluster.ClusterNodeEntity;
 import co.hyperflex.entities.cluster.ClusterNodeType;
-import co.hyperflex.entities.cluster.ElasticCloudCluster;
-import co.hyperflex.entities.cluster.ElasticNode;
-import co.hyperflex.entities.cluster.KibanaNode;
-import co.hyperflex.entities.cluster.SelfManagedCluster;
+import co.hyperflex.entities.cluster.ElasticCloudClusterEntity;
+import co.hyperflex.entities.cluster.ElasticNodeEntity;
+import co.hyperflex.entities.cluster.KibanaNodeEntity;
+import co.hyperflex.entities.cluster.SelfManagedClusterEntity;
 import co.hyperflex.entities.cluster.SshInfo;
 import co.hyperflex.services.SshKeyService;
 import co.hyperflex.utils.NodeRoleRankerUtils;
 import java.util.List;
+import java.util.UUID;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -31,19 +32,19 @@ public class ClusterMapper {
     this.sshKeyService = sshKeyService;
   }
 
-  public Cluster toEntity(AddClusterRequest request) {
-    final Cluster cluster = switch (request) {
+  public ClusterEntity toEntity(AddClusterRequest request) {
+    final ClusterEntity cluster = switch (request) {
       case AddSelfManagedClusterRequest selfManagedRequest -> {
-        SelfManagedCluster selfManagedCluster = new SelfManagedCluster();
+        SelfManagedClusterEntity selfManagedCluster = new SelfManagedClusterEntity();
         String file =
-            sshKeyService.createSSHPrivateKeyFile(selfManagedRequest.getSshKey(), "SSH_key.pem");
+            sshKeyService.createSSHPrivateKeyFile(selfManagedRequest.getSshKey(), UUID.randomUUID().toString());
         selfManagedCluster.setSshInfo(new SshInfo(
             selfManagedRequest.getSshUsername(),
             selfManagedRequest.getSshKey(), file));
         yield selfManagedCluster;
       }
       case AddElasticCloudClusterRequest elasticCloudRequest -> {
-        ElasticCloudCluster elasticCloudCluster = new ElasticCloudCluster();
+        ElasticCloudClusterEntity elasticCloudCluster = new ElasticCloudClusterEntity();
         elasticCloudCluster.setDeploymentId(elasticCloudRequest.getDeploymentId());
         yield elasticCloudCluster;
       }
@@ -59,8 +60,8 @@ public class ClusterMapper {
     return cluster;
   }
 
-  public KibanaNode toNodeEntity(AddClusterKibanaNodeRequest request) {
-    KibanaNode node = new KibanaNode();
+  public KibanaNodeEntity toNodeEntity(AddClusterKibanaNodeRequest request) {
+    KibanaNodeEntity node = new KibanaNodeEntity();
     node.setName(request.name());
     node.setIp(request.ip());
     node.setRoles(List.of("kibana"));
@@ -69,10 +70,10 @@ public class ClusterMapper {
     return node;
   }
 
-  public GetClusterResponse toGetClusterResponse(Cluster cluster,
+  public GetClusterResponse toGetClusterResponse(ClusterEntity cluster,
                                                  List<GetClusterKibanaNodeResponse> kibanaNodes) {
     GetClusterResponse response = switch (cluster) {
-      case SelfManagedCluster selfManagedCluster -> {
+      case SelfManagedClusterEntity selfManagedCluster -> {
         GetSelfManagedClusterResponse selfManagedClusterResponse =
             new GetSelfManagedClusterResponse();
         selfManagedClusterResponse.setKibanaNodes(kibanaNodes);
@@ -80,7 +81,7 @@ public class ClusterMapper {
         selfManagedClusterResponse.setSshUsername(selfManagedCluster.getSshInfo().username());
         yield selfManagedClusterResponse;
       }
-      case ElasticCloudCluster elasticCloudCluster -> {
+      case ElasticCloudClusterEntity elasticCloudCluster -> {
         GetElasticCloudClusterResponse elasticCloudClusterResponse =
             new GetElasticCloudClusterResponse();
         elasticCloudClusterResponse.setDeploymentId(elasticCloudCluster.getDeploymentId());
@@ -100,7 +101,7 @@ public class ClusterMapper {
     return response;
   }
 
-  public GetClusterNodeResponse toGetClusterNodeResponse(ClusterNode node) {
+  public GetClusterNodeResponse toGetClusterNodeResponse(ClusterNodeEntity node) {
     return new GetClusterNodeResponse(
         node.getId(),
         node.getName(),
@@ -112,7 +113,7 @@ public class ClusterMapper {
         node.getProgress(),
         node.getStatus(),
         node.getOs(),
-        node instanceof ElasticNode elasticNode && elasticNode.isMaster(),
+        node instanceof ElasticNodeEntity elasticNode && elasticNode.isMaster(),
         node.isUpgradable(),
         node.getRank()
     );

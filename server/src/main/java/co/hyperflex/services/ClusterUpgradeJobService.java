@@ -9,7 +9,7 @@ import co.hyperflex.dtos.upgrades.CreateClusterUpgradeJobResponse;
 import co.hyperflex.dtos.upgrades.GetTargetVersionResponse;
 import co.hyperflex.dtos.upgrades.GetUpgradeJobStatusResponse;
 import co.hyperflex.dtos.upgrades.StopClusterUpgradeResponse;
-import co.hyperflex.entities.upgrade.ClusterUpgradeJob;
+import co.hyperflex.entities.upgrade.ClusterUpgradeJobEntity;
 import co.hyperflex.entities.upgrade.ClusterUpgradeStatus;
 import co.hyperflex.exceptions.ConflictException;
 import co.hyperflex.exceptions.NotFoundException;
@@ -42,21 +42,21 @@ public class ClusterUpgradeJobService {
     this.notificationService = notificationService;
   }
 
-  public @NotNull ClusterUpgradeJob getActiveJobByClusterId(@NotNull String clusterId) {
+  public @NotNull ClusterUpgradeJobEntity getActiveJobByClusterId(@NotNull String clusterId) {
     return clusterUpgradeJobRepository
         .findByClusterId(clusterId)
         .stream()
-        .filter(ClusterUpgradeJob::isActive)
+        .filter(ClusterUpgradeJobEntity::isActive)
         .filter(clusterUpgradeJob -> !ClusterUpgradeStatus.UPDATED.equals(clusterUpgradeJob.getStatus()))
         .findFirst().orElseThrow(
             () -> new NotFoundException("Active upgrade job not found for this cluster."));
   }
 
-  public @NotNull ClusterUpgradeJob getLatestJobByClusterId(@NotNull String clusterId) {
+  public @NotNull ClusterUpgradeJobEntity getLatestJobByClusterId(@NotNull String clusterId) {
     return clusterUpgradeJobRepository
         .findByClusterId(clusterId)
         .stream()
-        .filter(ClusterUpgradeJob::isActive)
+        .filter(ClusterUpgradeJobEntity::isActive)
         .findFirst()
         .orElseThrow(() -> new NotFoundException("Upgrade job not found for this cluster."));
   }
@@ -64,14 +64,14 @@ public class ClusterUpgradeJobService {
   public CreateClusterUpgradeJobResponse createClusterUpgradeJob(
       @NotNull String clusterId, @NotNull CreateClusterUpgradeJobRequest request) {
 
-    List<ClusterUpgradeJob> jobs = clusterUpgradeJobRepository.findByClusterId(clusterId);
+    List<ClusterUpgradeJobEntity> jobs = clusterUpgradeJobRepository.findByClusterId(clusterId);
 
     ElasticClient elasticClient =
         elasticsearchClientProvider.getClientByClusterId(clusterId);
     InfoResponse info = elasticClient.getClusterInfo();
     String currentVersion = info.version().number();
 
-    ClusterUpgradeJob existingJob = jobs.stream().filter(
+    ClusterUpgradeJobEntity existingJob = jobs.stream().filter(
         job -> job.getCurrentVersion().equals(currentVersion)
             && job.getTargetVersion().equals(request.targetVersion())
     ).findFirst().orElse(null);
@@ -88,7 +88,7 @@ public class ClusterUpgradeJobService {
     });
 
     if (existingJob == null) {
-      existingJob = new ClusterUpgradeJob();
+      existingJob = new ClusterUpgradeJobEntity();
       existingJob.setClusterId(clusterId);
       existingJob.setTargetVersion(request.targetVersion());
       existingJob.setCurrentVersion(currentVersion);
@@ -107,20 +107,20 @@ public class ClusterUpgradeJobService {
   }
 
   public StopClusterUpgradeResponse stopClusterUpgrade(@NotNull String clusterId) {
-    final ClusterUpgradeJob job = getActiveJobByClusterId(clusterId);
-    Update update = new Update().set(ClusterUpgradeJob.STOP, true);
+    final ClusterUpgradeJobEntity job = getActiveJobByClusterId(clusterId);
+    Update update = new Update().set(ClusterUpgradeJobEntity.STOP, true);
     clusterUpgradeJobRepository.updateById(job.getId(), update);
     notificationService.sendNotification(new UpgradeProgressChangeEvent());
     return new StopClusterUpgradeResponse();
   }
 
   public void setJobStatus(String id, ClusterUpgradeStatus status) {
-    Update update = new Update().set(ClusterUpgradeJob.STATUS, status);
-    update.set(ClusterUpgradeJob.STOP, false);
+    Update update = new Update().set(ClusterUpgradeJobEntity.STATUS, status);
+    update.set(ClusterUpgradeJobEntity.STOP, false);
     clusterUpgradeJobRepository.updateById(id, update);
   }
 
-  public ClusterUpgradeJob getUpgradeJobById(@NotNull String clusterUpgradeJobId) {
+  public ClusterUpgradeJobEntity getUpgradeJobById(@NotNull String clusterUpgradeJobId) {
     return clusterUpgradeJobRepository.findById(clusterUpgradeJobId).orElseThrow();
   }
 
@@ -138,7 +138,7 @@ public class ClusterUpgradeJobService {
       String targetVersion = null;
       boolean underUpgrade = false;
       try {
-        ClusterUpgradeJob job = getActiveJobByClusterId(clusterId);
+        ClusterUpgradeJobEntity job = getActiveJobByClusterId(clusterId);
         targetVersion = job.getTargetVersion();
         underUpgrade = job.getStatus() != ClusterUpgradeStatus.PENDING;
       } catch (Exception e) {
@@ -160,7 +160,7 @@ public class ClusterUpgradeJobService {
   }
 
   public GetUpgradeJobStatusResponse getUpgradeJobStatus(String clusterId) {
-    final ClusterUpgradeJob upgradeJob = getLatestJobByClusterId(clusterId);
+    final ClusterUpgradeJobEntity upgradeJob = getLatestJobByClusterId(clusterId);
     return new GetUpgradeJobStatusResponse(
         upgradeJob.isStop(),
         upgradeJob.getStatus()

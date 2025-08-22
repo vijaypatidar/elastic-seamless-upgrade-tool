@@ -1,6 +1,6 @@
 package co.hyperflex.prechecks.runner;
 
-import co.hyperflex.entities.precheck.PrecheckRun;
+import co.hyperflex.entities.precheck.PrecheckRunEntity;
 import co.hyperflex.entities.precheck.PrecheckStatus;
 import co.hyperflex.exceptions.NotFoundException;
 import co.hyperflex.prechecks.contexts.ClusterContext;
@@ -43,7 +43,7 @@ public class PrecheckTaskExecutor {
   }
 
   @Async("precheckAsyncExecutor")
-  public CompletableFuture<Void> executeOne(PrecheckRun record) {
+  public CompletableFuture<Void> executeOne(PrecheckRunEntity record) {
     try {
       MDC.put("precheckRunId", record.getId());
       precheckRunService.updatePrecheckStatus(record.getId(), PrecheckStatus.RUNNING);

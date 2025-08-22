@@ -7,9 +7,11 @@ import co.hyperflex.dtos.clusters.ClusterListItemResponse;
 import co.hyperflex.dtos.clusters.ClusterOverviewResponse;
 import co.hyperflex.dtos.clusters.GetClusterNodeResponse;
 import co.hyperflex.dtos.clusters.GetClusterResponse;
-import co.hyperflex.dtos.clusters.GetElasticNodeConfigurationResponse;
+import co.hyperflex.dtos.clusters.GetNodeConfigurationResponse;
 import co.hyperflex.dtos.clusters.UpdateClusterRequest;
 import co.hyperflex.dtos.clusters.UpdateClusterResponse;
+import co.hyperflex.dtos.clusters.UpdateNodeConfigurationRequest;
+import co.hyperflex.dtos.clusters.UpdateNodeConfigurationResponse;
 import co.hyperflex.dtos.clusters.UploadCertificateResponse;
 import co.hyperflex.dtos.recovery.GetAllocationExplanationResponse;
 import co.hyperflex.entities.cluster.ClusterNodeType;
@@ -69,8 +71,16 @@ public class ClusterController {
   }
 
   @GetMapping("/{clusterId}/nodes/{nodeId}/configuration")
-  public GetElasticNodeConfigurationResponse getElasticNodeConfiguration(@PathVariable String clusterId, @PathVariable String nodeId) {
-    return clusterService.getElasticNodeConfiguration(clusterId, nodeId);
+  public GetNodeConfigurationResponse getNodeConfiguration(@PathVariable String clusterId, @PathVariable String nodeId) {
+    return clusterService.getNodeConfiguration(clusterId, nodeId);
+  }
+
+  @PutMapping("/{clusterId}/nodes/{nodeId}/configuration")
+  public UpdateNodeConfigurationResponse updateNodeConfiguration(
+      @PathVariable String clusterId,
+      @PathVariable String nodeId,
+      @Valid @RequestBody UpdateNodeConfigurationRequest request) {
+    return clusterService.updateNodeConfiguration(clusterId, nodeId, request.config());
   }
 
   @PostMapping(value = "/certificates/upload", consumes = "multipart/form-data")

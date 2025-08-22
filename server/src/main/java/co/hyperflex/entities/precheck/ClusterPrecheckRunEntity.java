@@ -3,8 +3,8 @@ package co.hyperflex.entities.precheck;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "prechecks")
-public class ClusterPrecheckRun extends PrecheckRun {
-  public ClusterPrecheckRun() {
+public class ClusterPrecheckRunEntity extends PrecheckRunEntity {
+  public ClusterPrecheckRunEntity() {
     setType(PrecheckType.CLUSTER);
   }
 }

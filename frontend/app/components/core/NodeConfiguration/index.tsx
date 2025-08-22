@@ -6,7 +6,9 @@ import { ArrowLeft } from "iconsax-react"
 import YamlEditor from "~/components/utilities/YamlEditor"
 import { useLocalStore } from "~/store/common"
 import axiosJSON from "~/apis/http"
-import { useQuery } from "@tanstack/react-query"
+import { useMutation, useQuery } from "@tanstack/react-query"
+import { OutlinedBorderButton } from "~/components/utilities/Buttons"
+import { toast } from "sonner"
 
 function NodeConfigurationBreadcrumb({ onBack }: { onBack: () => void }) {
 	return (
@@ -28,25 +30,60 @@ function NodeConfigurationBreadcrumb({ onBack }: { onBack: () => void }) {
 
 function useNodeConfiguration(nodeId: string) {
 	const clusterId = useLocalStore((state: any) => state.clusterId)
+	const [updatedConfig, setUpdatedConfig] = React.useState<string | undefined>()
+
 	const fetchNodeConfig = async () => {
 		const res = await axiosJSON.get(`/clusters/${clusterId}/nodes/${nodeId}/configuration`)
 		return res.data.config ?? ""
 	}
+
+	const updateNodeConfig = async (config: string) => {
+		const res = await axiosJSON.put(`/clusters/${clusterId}/nodes/${nodeId}/configuration`, {
+			config,
+		})
+		return res.data
+	}
+
 	const { refetch, data, isLoading } = useQuery({
 		queryKey: ["getNodeYamlConfig", clusterId, nodeId],
 		queryFn: fetchNodeConfig,
 		staleTime: 0,
 	})
-	return { config: data, isLoading, refetch }
+
+	const { mutate, isPending } = useMutation({
+		mutationKey: ["updateNodeYamlConfig", clusterId, nodeId],
+		mutationFn: updateNodeConfig,
+		onSuccess: (data) => {
+			toast.success(data.message)
+			setUpdatedConfig(undefined)
+			refetch()
+		},
+	})
+
+	return {
+		config: data,
+		isLoading,
+		refetch,
+		isUpdating: isPending,
+		onConfigChange: setUpdatedConfig,
+		updateConfig: () => updatedConfig && mutate(updatedConfig),
+		updatedConfig,
+	}
 }
 
 function NodeConfiguration({ onOpenChange, node }: { node: TUpgradeRow; onOpenChange: () => void }) {
-	const { config, isLoading } = useNodeConfiguration(node.id)
+	const { config, isLoading, isUpdating, onConfigChange, updateConfig, updatedConfig } = useNodeConfiguration(node.id)
 	return (
 		<FullScreenDrawer isOpen={true} onOpenChange={onOpenChange}>
 			<Box minHeight="58px" />
 			<Box className="flex items-center gap-3 justify-between">
 				<NodeConfigurationBreadcrumb onBack={onOpenChange} />
+				<OutlinedBorderButton
+					disabled={isUpdating || isLoading || !updatedConfig}
+					onClick={() => updateConfig()}
+				>
+					{isUpdating ? "Updating" : "Update"}
+				</OutlinedBorderButton>
 			</Box>
 			<Box
 				className="flex p-px rounded-2xl h-[calc(var(--window-height)-120px)]"
@@ -72,9 +109,8 @@ function NodeConfiguration({ onOpenChange, node }: { node: TUpgradeRow; onOpenCh
 							<YamlEditor
 								language="yaml"
 								value={config}
-								readOnly={true}
 								isLoading={isLoading}
-								onChange={() => {}}
+								onChange={onConfigChange}
 							/>
 						</Box>
 					</Box>

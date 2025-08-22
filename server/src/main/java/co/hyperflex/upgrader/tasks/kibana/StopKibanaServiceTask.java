@@ -26,6 +26,6 @@ public class StopKibanaServiceTask extends AbstractAnsibleTask {
         )
         .useBecome(true)
         .build();
-    return runAdHocCommand(cmd, context);
+    return runAdHocCommand(cmd);
   }
 }

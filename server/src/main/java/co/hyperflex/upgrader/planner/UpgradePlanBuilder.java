@@ -1,6 +1,6 @@
 package co.hyperflex.upgrader.planner;
 
-import co.hyperflex.entities.cluster.ClusterNode;
+import co.hyperflex.entities.cluster.ClusterNodeEntity;
 import co.hyperflex.entities.cluster.ClusterNodeType;
 import co.hyperflex.upgrader.tasks.Task;
 import co.hyperflex.upgrader.tasks.elastic.DisableShardAllocationTask;
@@ -25,7 +25,7 @@ import java.util.List;
 
 public class UpgradePlanBuilder {
 
-  public List<Task> buildPlanFor(ClusterNode node) {
+  public List<Task> buildPlanFor(ClusterNodeEntity node) {
     List<Task> tasks = new ArrayList<>();
 
     if (node.getType() == ClusterNodeType.ELASTIC) {

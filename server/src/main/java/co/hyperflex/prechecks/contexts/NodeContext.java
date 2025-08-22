@@ -2,28 +2,28 @@ package co.hyperflex.prechecks.contexts;
 
 import co.hyperflex.clients.elastic.ElasticClient;
 import co.hyperflex.clients.kibana.KibanaClient;
-import co.hyperflex.entities.cluster.Cluster;
-import co.hyperflex.entities.cluster.ClusterNode;
-import co.hyperflex.entities.cluster.SelfManagedCluster;
-import co.hyperflex.entities.upgrade.ClusterUpgradeJob;
+import co.hyperflex.entities.cluster.ClusterEntity;
+import co.hyperflex.entities.cluster.ClusterNodeEntity;
+import co.hyperflex.entities.cluster.SelfManagedClusterEntity;
+import co.hyperflex.entities.upgrade.ClusterUpgradeJobEntity;
 import co.hyperflex.ssh.SshCommandExecutor;
 import org.slf4j.Logger;
 
 public class NodeContext extends PrecheckContext {
-  private final ClusterNode node;
+  private final ClusterNodeEntity node;
 
-  public NodeContext(Cluster cluster, ElasticClient elasticClient, KibanaClient kibanaClient,
-                     ClusterNode node, ClusterUpgradeJob clusterUpgradeJob, Logger logger) {
+  public NodeContext(ClusterEntity cluster, ElasticClient elasticClient, KibanaClient kibanaClient,
+                     ClusterNodeEntity node, ClusterUpgradeJobEntity clusterUpgradeJob, Logger logger) {
     super(cluster, elasticClient, kibanaClient, logger, clusterUpgradeJob);
     this.node = node;
   }
 
-  public ClusterNode getNode() {
+  public ClusterNodeEntity getNode() {
     return node;
   }
 
   public SshCommandExecutor getSshExecutor() {
-    if (getCluster() instanceof SelfManagedCluster selfManagedCluster) {
+    if (getCluster() instanceof SelfManagedClusterEntity selfManagedCluster) {
       return new SshCommandExecutor(
           node.getIp(),
           22,

@@ -3,10 +3,10 @@ package co.hyperflex.entities.cluster;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName("ELASTIC_CLOUD")
-public class ElasticCloudCluster extends Cluster {
+public class ElasticCloudClusterEntity extends ClusterEntity {
   private String deploymentId;
 
-  public ElasticCloudCluster() {
+  public ElasticCloudClusterEntity() {
     setType(ClusterType.ELASTIC_CLOUD);
   }
 

@@ -1,6 +1,6 @@
 package co.hyperflex.clients;
 
-import co.hyperflex.entities.cluster.Cluster;
+import co.hyperflex.entities.cluster.ClusterEntity;
 import java.util.Base64;
 import java.util.Optional;
 import org.apache.http.Header;
@@ -14,7 +14,7 @@ public class ClusterCredentialProvider {
 
   private static final Logger logger = LoggerFactory.getLogger(ClusterCredentialProvider.class);
 
-  public Header getAuthHeader(Cluster cluster) {
+  public Header getAuthHeader(ClusterEntity cluster) {
     if (!Optional.ofNullable(cluster.getApiKey()).orElse("").isEmpty()) {
       return new BasicHeader("Authorization", "ApiKey " + cluster.getApiKey());
     } else if (cluster.getUsername() != null && cluster.getPassword() != null) {

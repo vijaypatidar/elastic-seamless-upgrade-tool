@@ -28,6 +28,6 @@ public class StartKibanaServiceTask extends AbstractAnsibleTask {
         .sshKeyPath(context.config().sshKeyPath())
         .useBecome(true)
         .build();
-    return runAdHocCommand(cmd, context);
+    return runAdHocCommand(cmd);
   }
 }

@@ -11,7 +11,7 @@ public abstract class AbstractAnsibleTask implements Task {
   private static final Logger logger = LoggerFactory.getLogger(AbstractAnsibleTask.class);
   private final AnsibleService ansibleService = new AnsibleService();
 
-  protected TaskResult runAdHocCommand(AnsibleAdHocCommand cmd, Context context) {
+  protected TaskResult runAdHocCommand(AnsibleAdHocCommand cmd) {
     try {
       StringBuilder output = new StringBuilder();
       Consumer<String> consumer = s -> output.append(s).append("\n");
