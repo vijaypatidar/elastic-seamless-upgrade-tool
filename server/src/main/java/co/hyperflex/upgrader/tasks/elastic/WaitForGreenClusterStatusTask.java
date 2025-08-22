@@ -1,11 +1,11 @@
 package co.hyperflex.upgrader.tasks.elastic;
 
-import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch.cat.HealthResponse;
+import co.hyperflex.clients.elastic.ElasticClient;
+import co.hyperflex.clients.elastic.dto.cat.health.HealthRecord;
 import co.hyperflex.upgrader.tasks.Context;
 import co.hyperflex.upgrader.tasks.Task;
 import co.hyperflex.upgrader.tasks.TaskResult;
-import java.io.IOException;
+import java.util.List;
 import org.slf4j.Logger;
 
 public class WaitForGreenClusterStatusTask implements Task {
@@ -20,13 +20,13 @@ public class WaitForGreenClusterStatusTask implements Task {
 
   @Override
   public TaskResult run(Context context) {
-    final ElasticsearchClient client = context.elasticClient().getElasticsearchClient();
+    final ElasticClient client = context.elasticClient();
     final Logger logger = context.logger();
 
     for (int i = 0; i < MAX_RETRIES; i++) {
       try {
-        HealthResponse health = client.cat().health();
-        if (health.valueBody().stream().map(hr -> "green".equals(hr.status()))
+        List<HealthRecord> healthRecords = client.getHealth();
+        if (healthRecords.stream().map(hr -> "green".equals(hr.getStatus()))
             .reduce(Boolean::logicalAnd).orElse(false)) {
           logger.info("Cluster health is green");
           return new TaskResult(true, "Cluster health is green.");
@@ -34,7 +34,7 @@ public class WaitForGreenClusterStatusTask implements Task {
         logger.warn("Attempt {}/{}: Cluster health is not green. Retrying in {}ms...", i + 1,
             MAX_RETRIES, RETRY_DELAY_MILLIS);
         Thread.sleep(RETRY_DELAY_MILLIS);
-      } catch (InterruptedException | IOException e) {
+      } catch (InterruptedException e) {
         logger.error("Failed to check cluster health", e);
         throw new RuntimeException(e);
       }

@@ -2,6 +2,7 @@ package co.hyperflex.prechecks.scheduler;
 
 import co.hyperflex.clients.elastic.ElasticClient;
 import co.hyperflex.clients.elastic.ElasticsearchClientProvider;
+import co.hyperflex.clients.elastic.dto.cat.indices.IndicesRecord;
 import co.hyperflex.dtos.clusters.GetClusterNodeResponse;
 import co.hyperflex.dtos.prechecks.PrecheckRerunRequest;
 import co.hyperflex.dtos.prechecks.PrecheckScheduleResponse;
@@ -99,7 +100,7 @@ public class PrecheckSchedulerService {
   public void scheduleIndexPrechecks(String upgradeJobId, String clusterId) {
     ElasticClient elasticClient =
         elasticsearchClientProvider.getClientByClusterId(clusterId);
-    final List<String> indexes = elasticClient.getIndices();
+    final List<IndicesRecord> indexes = elasticClient.getIndices();
     precheckRegistry.getIndexPrechecks()
         .stream()
         .parallel()
@@ -108,7 +109,7 @@ public class PrecheckSchedulerService {
             .map(index -> {
               IndexPrecheckRunEntity precheckRun = new IndexPrecheckRunEntity();
               precheckRun.setId(HashUtil.generateHash(precheck.getId() + ":" + upgradeJobId + ":" + index));
-              precheckRun.setIndex(new IndexPrecheckRunEntity.IndexInfo(index));
+              precheckRun.setIndex(new IndexPrecheckRunEntity.IndexInfo(index.getIndex()));
               precheckRun.setPrecheckId(precheck.getId());
               precheckRun.setClusterUpgradeJobId(upgradeJobId);
               precheckRun.setSeverity(precheck.getSeverity());

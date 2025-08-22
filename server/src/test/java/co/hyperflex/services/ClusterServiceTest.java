@@ -8,11 +8,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch.nodes.ElasticsearchNodesClient;
-import co.elastic.clients.elasticsearch.nodes.NodesInfoRequest;
-import co.elastic.clients.elasticsearch.nodes.NodesInfoResponse;
+import co.hyperflex.clients.elastic.ElasticClient;
+import co.hyperflex.clients.elastic.ElasticClientImpl;
 import co.hyperflex.clients.elastic.ElasticsearchClientProvider;
+import co.hyperflex.clients.elastic.dto.nodes.NodesInfoResponse;
 import co.hyperflex.clients.kibana.KibanaClient;
 import co.hyperflex.clients.kibana.KibanaClientProvider;
 import co.hyperflex.dtos.clusters.AddClusterResponse;
@@ -67,10 +66,9 @@ class ClusterServiceTest {
     cluster.setElasticUrl(MOCK_ELASTIC_SEARCH_URL);
     cluster.setKibanaUrl(MOCK_KIBANA_URL);
 
-    co.hyperflex.clients.elastic.ElasticClient elasticClient = mock(co.hyperflex.clients.elastic.ElasticClient.class);
+    co.hyperflex.clients.elastic.ElasticClient elasticClient = mock(ElasticClientImpl.class);
     KibanaClient kibanaClient = mock(KibanaClient.class);
-    ElasticsearchClient esClient = mock(ElasticsearchClient.class);
-    ElasticsearchNodesClient nodesClient = mock(ElasticsearchNodesClient.class);
+    ElasticClient esClient = mock(ElasticClient.class);
     NodesInfoResponse nodesInfoResponse = mock(NodesInfoResponse.class);
 
     when(clusterMapper.toEntity(request)).thenReturn(cluster);
@@ -79,10 +77,8 @@ class ClusterServiceTest {
     when(elasticClient.getHealthStatus()).thenReturn("green");
     when(kibanaClient.getKibanaVersion()).thenReturn("8.1.0");
 
-    when(elasticClient.getElasticsearchClient()).thenReturn(esClient);
-    when(esClient.nodes()).thenReturn(nodesClient);
-    when(nodesClient.info(any(NodesInfoRequest.class))).thenReturn(nodesInfoResponse);
-    when(nodesInfoResponse.nodes()).thenReturn(Collections.emptyMap());
+    when(elasticClient.getNodesInfo()).thenReturn(nodesInfoResponse);
+    when(nodesInfoResponse.getNodes()).thenReturn(Collections.emptyMap());
     when(elasticClient.getActiveMasters()).thenReturn(Collections.emptyList());
 
     // Act
@@ -94,7 +90,7 @@ class ClusterServiceTest {
   }
 
   @Test
-  void updateCluster_selfManagedCluster_success() throws IOException {
+  void updateCluster_selfManagedCluster_success() {
     // Arrange
     UpdateSelfManagedClusterRequest request = new UpdateSelfManagedClusterRequest();
     request.setName("updated-cluster");
@@ -107,24 +103,20 @@ class ClusterServiceTest {
     SelfManagedClusterEntity cluster = new SelfManagedClusterEntity();
     cluster.setId(clusterId);
 
-    co.hyperflex.clients.elastic.ElasticClient elasticClient = mock(co.hyperflex.clients.elastic.ElasticClient.class);
     KibanaClient kibanaClient = mock(KibanaClient.class);
-    ElasticsearchClient esClient = mock(ElasticsearchClient.class);
-    ElasticsearchNodesClient nodesClient = mock(ElasticsearchNodesClient.class);
+    ElasticClient esClient = mock(ElasticClient.class);
     NodesInfoResponse nodesInfoResponse = mock(NodesInfoResponse.class);
 
     when(clusterRepository.findById(clusterId)).thenReturn(Optional.of(cluster));
     when(sshKeyService.createSSHPrivateKeyFile(any(), any())).thenReturn("path/to/key");
-    when(elasticsearchClientProvider.buildElasticClient(cluster)).thenReturn(elasticClient);
+    when(elasticsearchClientProvider.buildElasticClient(cluster)).thenReturn(esClient);
     when(kibanaClientProvider.getClient(cluster)).thenReturn(kibanaClient);
-    when(elasticClient.getHealthStatus()).thenReturn("green");
+    when(esClient.getNodesInfo()).thenReturn(nodesInfoResponse);
+    when(esClient.getHealthStatus()).thenReturn("green");
     when(kibanaClient.getKibanaVersion()).thenReturn("8.1.0");
-
-    when(elasticClient.getElasticsearchClient()).thenReturn(esClient);
-    when(esClient.nodes()).thenReturn(nodesClient);
-    when(nodesClient.info(any(NodesInfoRequest.class))).thenReturn(nodesInfoResponse);
-    when(nodesInfoResponse.nodes()).thenReturn(Collections.emptyMap());
-    when(elasticClient.getActiveMasters()).thenReturn(Collections.emptyList());
+    when(esClient.getNodesInfo()).thenReturn(nodesInfoResponse);
+    when(nodesInfoResponse.getNodes()).thenReturn(Collections.emptyMap());
+    when(esClient.getActiveMasters()).thenReturn(Collections.emptyList());
 
     // Act
     UpdateClusterResponse response = clusterService.updateCluster(clusterId, request);

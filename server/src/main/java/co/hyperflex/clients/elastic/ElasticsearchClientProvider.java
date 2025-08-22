@@ -1,24 +1,27 @@
 package co.hyperflex.clients.elastic;
 
-import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.hyperflex.clients.ClusterCredentialProvider;
 import co.hyperflex.entities.cluster.ClusterEntity;
 import co.hyperflex.exceptions.NotFoundException;
 import co.hyperflex.repositories.ClusterRepository;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.validation.constraints.NotNull;
+import java.net.Socket;
+import java.net.http.HttpClient;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.security.cert.X509Certificate;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLEngine;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509ExtendedTrustManager;
 import org.apache.http.Header;
-import org.apache.http.HttpHost;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.ssl.SSLContextBuilder;
-import org.elasticsearch.client.RestClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClient;
 
 
 @Component
@@ -27,14 +30,11 @@ public class ElasticsearchClientProvider {
   private final Logger logger = LoggerFactory.getLogger(ElasticsearchClientProvider.class);
   private final ClusterCredentialProvider credentialProvider;
   private final ClusterRepository clusterRepository;
-  private final ObjectMapper objectMapper;
 
   public ElasticsearchClientProvider(ClusterCredentialProvider credentialProvider,
-                                     ClusterRepository clusterRepository,
-                                     ObjectMapper objectMapper) {
+                                     ClusterRepository clusterRepository) {
     this.credentialProvider = credentialProvider;
     this.clusterRepository = clusterRepository;
-    this.objectMapper = objectMapper;
   }
 
   @Cacheable(value = "elasticClientCache", key = "#clusterId")
@@ -45,23 +45,60 @@ public class ElasticsearchClientProvider {
 
   public ElasticClient buildElasticClient(ClusterEntity cluster) {
     try {
-      SSLContext sslContext = SSLContextBuilder.create()
-          .loadTrustMaterial(null, (X509Certificate[] chain, String authType) -> true)
+      Header authHeader = credentialProvider.getAuthHeader(cluster);
+      HttpClient jdkHttpClient = HttpClient.newBuilder()
+          .sslContext(getSSLContext())
           .build();
-      RestClient restClient = RestClient
-          .builder(HttpHost.create(cluster.getElasticUrl()))
-          .setHttpClientConfigCallback(httpClientBuilder -> httpClientBuilder
-              .setSSLContext(sslContext)
-              .setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE))
-          .setDefaultHeaders(new Header[] {
-              credentialProvider.getAuthHeader(cluster)
-          })
+
+      RestClient genericClient = RestClient.builder()
+          .baseUrl(cluster.getElasticUrl())
+          .defaultHeader(authHeader.getName(), authHeader.getValue())
+          .defaultHeader("Content-Type", "application/json")
+          .requestFactory(new JdkClientHttpRequestFactory(jdkHttpClient))
           .build();
-      RestClientTransport transport = new RestClientTransport(restClient, new JacksonJsonpMapper());
-      return new ElasticClient(new ElasticsearchClient(transport), restClient, objectMapper);
+
+      return new ElasticClientImpl(genericClient);
     } catch (Exception e) {
       logger.error("Failed to create elasticsearch client for cluster {}", cluster.getId(), e);
       throw new RuntimeException(e);
     }
+  }
+
+  private SSLContext getSSLContext() throws NoSuchAlgorithmException, KeyManagementException {
+    var trustManager = new X509ExtendedTrustManager() {
+      @Override
+      public X509Certificate[] getAcceptedIssuers() {
+        return new X509Certificate[] {};
+      }
+
+      @Override
+      public void checkClientTrusted(X509Certificate[] chain, String authType) {
+      }
+
+      @Override
+      public void checkClientTrusted(X509Certificate[] chain, String authType, SSLEngine engine) {
+      }
+
+      @Override
+      public void checkClientTrusted(X509Certificate[] chain, String authType, Socket socket) {
+      }
+
+      @Override
+      public void checkServerTrusted(X509Certificate[] chain, String authType) {
+      }
+
+
+      @Override
+      public void checkServerTrusted(X509Certificate[] chain, String authType, Socket socket) {
+      }
+
+
+      @Override
+      public void checkServerTrusted(X509Certificate[] chain, String authType, SSLEngine engine) {
+      }
+    };
+    var sslContext = SSLContext.getInstance("TLS");
+    sslContext.init(null, new TrustManager[] {trustManager}, new SecureRandom());
+    return sslContext;
   }
 }

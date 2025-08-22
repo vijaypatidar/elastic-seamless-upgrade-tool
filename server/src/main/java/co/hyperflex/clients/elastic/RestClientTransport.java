@@ -47,25 +47,12 @@ import org.elasticsearch.client.RestClient;
 
 public class RestClientTransport implements ElasticsearchTransport {
 
-  private final RestClient restClient;
-
-  public RestClientTransport(RestClient restClient, JsonpMapper jsonpMapper) {
-    this.mapper = jsonpMapper;
-    this.httpClient = new RestClientHttpClient(restClient);
-    this.transportOptions = httpClient.createOptions(null);
-    this.restClient = restClient;
-  }
-
-  public RestClient restClient() {
-    return this.restClient;
-  }
-
-
+  public static final String JSON_CONTENT_TYPE;
   private static final String USER_AGENT_VALUE = getUserAgent();
   private static final String CLIENT_META_VALUE = getClientMeta();
-  private final Instrumentation instrumentation = OpenTelemetryForElasticsearch.getDefault();
-  public static final String JSON_CONTENT_TYPE;
-  private final TransportHttpClient httpClient;
+  private static final HeaderMap JsonContentTypeHeaders = new HeaderMap();
+  private static final HeaderMap DefaultHeaders = new HeaderMap();
+  private static final ByteBuffer NdJsonSeparator = ByteBuffer.wrap("\n".getBytes(StandardCharsets.UTF_8));
 
   static {
     if (Version.VERSION == null) {
@@ -77,15 +64,57 @@ public class RestClientTransport implements ElasticsearchTransport {
     }
   }
 
+  static {
+    addStandardHeaders(DefaultHeaders);
+    addStandardHeaders(JsonContentTypeHeaders);
+    JsonContentTypeHeaders.put(HeaderMap.CONTENT_TYPE, JSON_CONTENT_TYPE);
+  }
+
+  protected final TransportOptions transportOptions;
+  private final RestClient restClient;
+  private final Instrumentation instrumentation = OpenTelemetryForElasticsearch.getDefault();
+  private final TransportHttpClient httpClient;
+  private final JsonpMapper mapper;
+
+  public RestClientTransport(RestClient restClient, JsonpMapper jsonpMapper) {
+    this.mapper = jsonpMapper;
+    this.httpClient = new RestClientHttpClient(restClient);
+    this.transportOptions = httpClient.createOptions(null);
+    this.restClient = restClient;
+  }
+
+  private static void addStandardHeaders(HeaderMap headers) {
+    headers.put(HeaderMap.USER_AGENT, USER_AGENT_VALUE);
+    headers.put(HeaderMap.CLIENT_META, CLIENT_META_VALUE);
+    headers.put(HeaderMap.ACCEPT, JSON_CONTENT_TYPE);
+  }
+
+  private static String getUserAgent() {
+    return String.format(
+        Locale.ROOT,
+        "elastic-java/%s (Java/%s)",
+        Version.VERSION == null ? "Unknown" : Version.VERSION.toString(),
+        System.getProperty("java.version")
+    );
+  }
+
+  // visible for testing
+  static String getClientMeta() {
+    // service, language, transport, followed by additional information
+    return "jv="
+        + System.getProperty("java.specification.version")
+        + ",hl=2"
+        + LanguageRuntimeVersions.getRuntimeMetadata();
+  }
+
+  public RestClient restClient() {
+    return this.restClient;
+  }
 
   @Override
   public void close() throws IOException {
     httpClient.close();
   }
-
-  private final JsonpMapper mapper;
-  protected final TransportOptions transportOptions;
-
 
   @Override
   public final JsonpMapper jsonpMapper() {
@@ -256,17 +285,6 @@ public class RestClientTransport implements ElasticsearchTransport {
     return new TransportHttpClient.Request(method, path, params, headers, bodyBuffers);
   }
 
-  private static final HeaderMap JsonContentTypeHeaders = new HeaderMap();
-  private static final HeaderMap DefaultHeaders = new HeaderMap();
-
-  static {
-    addStandardHeaders(DefaultHeaders);
-    addStandardHeaders(JsonContentTypeHeaders);
-    JsonContentTypeHeaders.put(HeaderMap.CONTENT_TYPE, JSON_CONTENT_TYPE);
-  }
-
-  private static final ByteBuffer NdJsonSeparator = ByteBuffer.wrap("\n".getBytes(StandardCharsets.UTF_8));
-
   private void collectNdJsonLines(List<ByteBuffer> lines, NdJsonpSerializable value) throws IOException {
     Iterator<?> values = value._serializables();
     while (values.hasNext()) {
@@ -426,29 +444,5 @@ public class RestClientTransport implements ElasticsearchTransport {
     }
 
     throw new TransportException(clientResp, "Expecting JSON data but response content-type is: " + contentType, endpoint.id());
-  }
-
-  private static void addStandardHeaders(HeaderMap headers) {
-    headers.put(HeaderMap.USER_AGENT, USER_AGENT_VALUE);
-    headers.put(HeaderMap.CLIENT_META, CLIENT_META_VALUE);
-    headers.put(HeaderMap.ACCEPT, JSON_CONTENT_TYPE);
-  }
-
-  private static String getUserAgent() {
-    return String.format(
-        Locale.ROOT,
-        "elastic-java/%s (Java/%s)",
-        Version.VERSION == null ? "Unknown" : Version.VERSION.toString(),
-        System.getProperty("java.version")
-    );
-  }
-
-  // visible for testing
-  static String getClientMeta() {
-    // service, language, transport, followed by additional information
-    return "jv="
-        + System.getProperty("java.specification.version")
-        + ",hl=2"
-        + LanguageRuntimeVersions.getRuntimeMetadata();
   }
 }

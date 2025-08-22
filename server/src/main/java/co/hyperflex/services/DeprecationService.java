@@ -10,6 +10,7 @@ import co.hyperflex.clients.kibana.KibanaClientProvider;
 import co.hyperflex.clients.kibana.dto.GetKibanaDeprecationResponse;
 import co.hyperflex.dtos.ClusterInfoResponse;
 import co.hyperflex.dtos.GetDeprecationsResponse;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -30,15 +31,19 @@ public class DeprecationService {
   }
 
   public List<GetDeprecationsResponse> getKibanaDeprecations(String clusterId) {
-    KibanaClient kibanaClient = kibanaClientProvider.getKibanaClientByClusterId(clusterId);
-    List<GetKibanaDeprecationResponse.Deprecation> deprecations =
-        Optional.ofNullable(kibanaClient.getDeprecations()).map(GetKibanaDeprecationResponse::deprecations).orElse(new LinkedList<>());
-    return deprecations.stream().map((item) -> new GetDeprecationsResponse(
-        item.title(),
-        item.message(),
-        item.level(),
-        item.correctiveActions().manualSteps()
-    )).toList();
+    try {
+      KibanaClient kibanaClient = kibanaClientProvider.getKibanaClientByClusterId(clusterId);
+      List<GetKibanaDeprecationResponse.Deprecation> deprecations =
+          Optional.ofNullable(kibanaClient.getDeprecations()).map(GetKibanaDeprecationResponse::deprecations).orElse(new LinkedList<>());
+      return deprecations.stream().map((item) -> new GetDeprecationsResponse(
+          item.title(),
+          item.message(),
+          item.level(),
+          item.correctiveActions().manualSteps()
+      )).toList();
+    } catch (Exception e) {
+      return Collections.emptyList();
+    }
   }
 
   public ClusterInfoResponse.DeprecationCounts getKibanaDeprecationCounts(String clusterId) {

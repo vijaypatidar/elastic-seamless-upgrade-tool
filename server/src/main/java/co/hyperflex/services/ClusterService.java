@@ -1,16 +1,10 @@
 package co.hyperflex.services;
 
-import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.ElasticsearchException;
-import co.elastic.clients.elasticsearch.cat.IndicesResponse;
-import co.elastic.clients.elasticsearch.cat.health.HealthRecord;
-import co.elastic.clients.elasticsearch.cat.master.MasterRecord;
-import co.elastic.clients.elasticsearch.core.InfoResponse;
-import co.elastic.clients.elasticsearch.nodes.NodesInfoRequest;
-import co.elastic.clients.elasticsearch.nodes.NodesInfoResponse;
-import co.elastic.clients.elasticsearch.nodes.info.NodeInfo;
 import co.hyperflex.clients.elastic.ElasticClient;
 import co.hyperflex.clients.elastic.ElasticsearchClientProvider;
+import co.hyperflex.clients.elastic.dto.cat.master.MasterRecord;
+import co.hyperflex.clients.elastic.dto.info.InfoResponse;
 import co.hyperflex.clients.kibana.KibanaClient;
 import co.hyperflex.clients.kibana.KibanaClientProvider;
 import co.hyperflex.clients.kibana.dto.GetKibanaStatusResponse;
@@ -63,7 +57,6 @@ import java.io.IOException;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
@@ -211,7 +204,7 @@ public class ClusterService {
       String status = null;
       try {
         ElasticClient client = elasticsearchClientProvider.getClientByClusterId(cluster.getId());
-        version = client.getClusterInfo().version().number();
+        version = client.getInfo().getVersion().getNumber();
         status = client.getHealthStatus();
       } catch (Exception e) {
         log.error("Error getting cluster list from Elasticsearch:", e);
@@ -224,18 +217,17 @@ public class ClusterService {
   public ClusterOverviewResponse getClusterOverview(String clusterId) {
     ClusterEntity cluster = clusterRepository.getCluster(clusterId);
     ElasticClient elasticClient = elasticsearchClientProvider.getClientByClusterId(cluster.getId());
-    ElasticsearchClient client = elasticClient.getElasticsearchClient();
 
     try {
-      InfoResponse info = client.info();
-      HealthRecord health = client.cat().health().valueBody().getFirst();
-      IndicesResponse indices = client.cat().indices();
-      List<MasterRecord> activeMasters = elasticClient.getActiveMasters();
+      InfoResponse info = elasticClient.getInfo();
+      var indicesCount = elasticClient.getIndices().size();
+      var activeMasters = elasticClient.getActiveMasters();
       Boolean adaptiveReplicaEnabled = elasticClient.isAdaptiveReplicaEnabled();
+      String healthStatus = elasticClient.getHealthStatus();
       var counts = elasticClient.getEntitiesCounts();
-      return new ClusterOverviewResponse(info.clusterName(), info.clusterUuid(), health.status(), info.version().number(), false,
+      return new ClusterOverviewResponse(info.getClusterName(), info.getClusterUuid(), healthStatus, info.getVersion().getNumber(), false,
           counts.dataNodes(), counts.totalNodes(), activeMasters.size(),
-          activeMasters.stream().map(MasterRecord::id).collect(Collectors.joining(",")), adaptiveReplicaEnabled, indices.valueBody().size(),
+          activeMasters.stream().map(MasterRecord::getId).collect(Collectors.joining(",")), adaptiveReplicaEnabled, indicesCount,
           counts.activePrimaryShards(), counts.activeShards(), counts.unassignedShards(), counts.initializingShards(),
           counts.relocatingShards(), cluster.getType().getDisplayName());
     } catch (IOException e) {
@@ -347,34 +339,34 @@ public class ClusterService {
   }
 
   private void syncElasticNodes(ClusterEntity cluster) {
-    try (ElasticClient elasticClient = elasticsearchClientProvider.buildElasticClient(cluster)) {
-      ElasticsearchClient client = elasticClient.getElasticsearchClient();
-      NodesInfoRequest request = new NodesInfoRequest.Builder().build();
-      NodesInfoResponse response = client.nodes().info(request);
-      Map<String, NodeInfo> nodes = response.nodes();
+    try {
+      ElasticClient elasticClient = elasticsearchClientProvider.buildElasticClient(cluster);
+      var response = elasticClient.getNodesInfo();
+      var nodes = response.getNodes();
       List<ClusterNodeEntity> clusterNodes = new LinkedList<>();
 
       List<MasterRecord> activeMasters = elasticClient.getActiveMasters();
 
-      for (Map.Entry<String, NodeInfo> entry : nodes.entrySet()) {
+      for (var entry : nodes.entrySet()) {
         String nodeId = entry.getKey();
-        NodeInfo value = entry.getValue();
+        var value = entry.getValue();
 
         ElasticNodeEntity node = new ElasticNodeEntity();
         node.setId(nodeId);
         node.setClusterId(cluster.getId());
-        node.setIp(value.ip());
-        node.setName(value.name());
-        node.setVersion(value.version());
-        node.setRoles(value.roles().stream().map(Enum::name).map(String::toLowerCase).toList());
+        node.setIp(value.getIp());
+        node.setName(value.getName());
+        node.setVersion(value.getVersion());
+        node.setRoles(value.getRoles().stream().map(Enum::name).map(String::toLowerCase).toList());
 
         // Extract OS info
-        if (value.os() != null) {
-          node.setOs(new OperatingSystemInfo(value.os().name(), value.os().version()));
+        if (value.getOs() != null) {
+          var os = value.getOs();
+          node.setOs(new OperatingSystemInfo(os.getName(), os.getVersion()));
         }
 
         node.setProgress(0);
-        boolean isActiveMaster = activeMasters.stream().anyMatch(masterNode -> nodeId.equals(masterNode.id()));
+        boolean isActiveMaster = activeMasters.stream().anyMatch(masterNode -> nodeId.equals(masterNode.getId()));
         node.setMaster(isActiveMaster);
         node.setStatus(NodeUpgradeStatus.AVAILABLE);
         node.setType(ClusterNodeType.ELASTIC);
@@ -403,7 +395,8 @@ public class ClusterService {
   private void validateCluster(ClusterEntity cluster) {
     cluster.setKibanaUrl(UrlUtils.validateAndCleanUrl(cluster.getKibanaUrl()));
     cluster.setElasticUrl(UrlUtils.validateAndCleanUrl(cluster.getElasticUrl()));
-    try (ElasticClient elasticClient = elasticsearchClientProvider.buildElasticClient(cluster)) {
+    try {
+      ElasticClient elasticClient = elasticsearchClientProvider.buildElasticClient(cluster);
       elasticClient.getHealthStatus();
     } catch (Exception e) {
       log.warn("Error validating cluster credentials", e);

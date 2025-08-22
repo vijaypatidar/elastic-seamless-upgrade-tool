@@ -1,234 +1,70 @@
 package co.hyperflex.clients.elastic;
 
-import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch.cat.master.MasterRecord;
-import co.elastic.clients.elasticsearch.cat.shards.ShardsRecord;
-import co.elastic.clients.elasticsearch.cluster.ClusterStatsResponse;
-import co.elastic.clients.elasticsearch.cluster.GetClusterSettingsResponse;
-import co.elastic.clients.elasticsearch.cluster.HealthResponse;
-import co.elastic.clients.elasticsearch.cluster.stats.ClusterNodeCount;
-import co.elastic.clients.elasticsearch.core.InfoResponse;
-import co.elastic.clients.elasticsearch.indices.ElasticsearchIndicesClient;
-import co.elastic.clients.elasticsearch.indices.GetIndexRequest;
-import co.elastic.clients.elasticsearch.indices.GetIndexResponse;
-import co.elastic.clients.elasticsearch.snapshot.GetRepositoryResponse;
-import co.elastic.clients.elasticsearch.snapshot.GetSnapshotResponse;
-import co.elastic.clients.elasticsearch.snapshot.SnapshotInfo;
-import co.elastic.clients.json.JsonData;
-import co.elastic.clients.util.ApiTypeHelper;
 import co.hyperflex.clients.elastic.dto.GetElasticDeprecationResponse;
+import co.hyperflex.clients.elastic.dto.cat.health.HealthRecord;
+import co.hyperflex.clients.elastic.dto.cat.indices.FlushResponse;
+import co.hyperflex.clients.elastic.dto.cat.indices.IndicesRecord;
+import co.hyperflex.clients.elastic.dto.cat.master.MasterRecord;
+import co.hyperflex.clients.elastic.dto.cat.shards.ShardsRecord;
+import co.hyperflex.clients.elastic.dto.cluster.AllocationExplainRequest;
+import co.hyperflex.clients.elastic.dto.cluster.AllocationExplainResponse;
+import co.hyperflex.clients.elastic.dto.cluster.ClusterStatsResponse;
+import co.hyperflex.clients.elastic.dto.cluster.GetClusterSettingsResponse;
+import co.hyperflex.clients.elastic.dto.cluster.PutClusterSettingsResponse;
+import co.hyperflex.clients.elastic.dto.cluster.health.ClusterHealthResponse;
+import co.hyperflex.clients.elastic.dto.nodes.NodesInfoResponse;
+import co.hyperflex.clients.elastic.dto.nodes.NodesStatsResponse;
 import co.hyperflex.dtos.GetElasticNodeAndIndexCountsResponse;
 import co.hyperflex.dtos.GetElasticsearchSnapshotResponse;
 import co.hyperflex.dtos.recovery.GetAllocationExplanationResponse;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Stream;
-import org.elasticsearch.client.Request;
-import org.elasticsearch.client.Response;
-import org.elasticsearch.client.RestClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.web.client.RestClient;
 
-public class ElasticClient implements AutoCloseable {
-  private static final Logger LOG = LoggerFactory.getLogger(ElasticClient.class);
-  private final ElasticsearchClient elasticsearchClient;
-  private final RestClient restClient;
-  private final ObjectMapper objectMapper;
+public interface ElasticClient {
 
-  public ElasticClient(ElasticsearchClient elasticsearchClient, RestClient restClient,
-                       ObjectMapper objectMapper) {
-    this.restClient = restClient;
-    this.elasticsearchClient = elasticsearchClient;
-    this.objectMapper = objectMapper;
-  }
+  RestClient getRestClient();
 
-  public ElasticsearchClient getElasticsearchClient() {
-    ApiTypeHelper.DANGEROUS_disableRequiredPropertiesCheck(true);
-    return elasticsearchClient;
-  }
+  List<HealthRecord> getHealth();
 
-  public String getHealthStatus() {
-    try {
-      return getElasticsearchClient().cat().health().valueBody().get(0).status();
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-  }
+  List<IndicesRecord> getIndices();
 
-  public List<String> getIndices() {
-    ElasticsearchIndicesClient indices = elasticsearchClient.indices();
-    GetIndexRequest request = GetIndexRequest.of(b -> b.index("*"));
+  String getHealthStatus();
 
-    try {
-      GetIndexResponse response = indices.get(request);
-      return response.result().keySet().stream().filter(indexState -> !indexState.startsWith("."))
-          .toList();
-    } catch (IOException e) {
-      LOG.error("Failed to get indices", e);
-      throw new RuntimeException(e);
-    }
-  }
+  List<MasterRecord> getActiveMasters();
 
-  public List<MasterRecord> getActiveMasters() throws IOException {
-    return getElasticsearchClient().cat().master().valueBody();
-  }
+  Boolean isAdaptiveReplicaEnabled() throws IOException;
 
-  public InfoResponse getClusterInfo() {
-    try {
-      return getElasticsearchClient().info();
-    } catch (IOException e) {
-      LOG.error("Failed to get cluster info", e);
-      throw new RuntimeException(e);
-    }
-  }
+  List<GetElasticsearchSnapshotResponse> getValidSnapshots();
 
-  public Boolean isAdaptiveReplicaEnabled() throws IOException {
-    try {
-      GetClusterSettingsResponse settings =
-          getElasticsearchClient().cluster().getSettings(b -> b.includeDefaults(true));
+  GetElasticNodeAndIndexCountsResponse getEntitiesCounts();
 
-      Map<String, JsonData> transientSettings = settings.transient_();
-      Map<String, JsonData> persistentSettings = settings.persistent();
-      Map<String, JsonData> defaultSettings = settings.defaults();
+  GetElasticDeprecationResponse getDeprecation();
 
-      String value = null;
+  List<GetAllocationExplanationResponse> getAllocationExplanation();
 
-      if (transientSettings.containsKey("search.adaptive_replica_selection")) {
-        value = transientSettings.get("search.adaptive_replica_selection").to(String.class);
-      } else if (persistentSettings.containsKey("search.adaptive_replica_selection")) {
-        value = persistentSettings.get("search.adaptive_replica_selection").to(String.class);
-      } else if (defaultSettings.containsKey("search.adaptive_replica_selection")) {
-        value = defaultSettings.get("search.adaptive_replica_selection").to(String.class);
-      }
+  AllocationExplainResponse getAllocationExplanation(AllocationExplainRequest request);
 
-      return Boolean.parseBoolean(value);
-    } catch (IOException e) {
-      LOG.error("Failed to get adaptive replica settings", e);
-      throw e;
-    }
-  }
+  GetClusterSettingsResponse getClusterSettings();
 
-  public List<GetElasticsearchSnapshotResponse> getValidSnapshots() {
-    try {
-      GetRepositoryResponse repositoriesResponse =
-          getElasticsearchClient().snapshot().getRepository(r -> r);
-      Set<String> repositories = repositoriesResponse.result().keySet();
+  PutClusterSettingsResponse updateClusterSettings(Map<String, Object> clusterSettings);
 
-      if (repositories.isEmpty()) {
-        return Collections.emptyList();
-      }
+  List<ShardsRecord> getShards();
 
-      long now = System.currentTimeMillis();
-      long twentyFourHoursAgo = now - 24 * 60 * 60 * 1000;
+  List<ShardsRecord> getShards(String indexName);
 
-      List<GetElasticsearchSnapshotResponse> allValidSnapshots =
-          repositories.stream().parallel().flatMap(repository -> {
-            try {
-              GetSnapshotResponse snapshotResponse = getElasticsearchClient().snapshot()
-                  .get(req -> req.repository(repository).snapshot(List.of("_all")));
+  FlushResponse flushIndices();
 
-              List<SnapshotInfo> snapshots = snapshotResponse.snapshots();
-              return Optional.ofNullable(snapshots).stream().flatMap(Collection::stream);
-            } catch (Exception e) {
-              LOG.error("Error fetching snapshots for repository {}: {}", repository,
-                  e.getMessage(),
-                  e);
-              return Stream.empty();
-            }
-          }).filter(s -> {
-            Long time = s.startTimeInMillis();
-            return time != null && time >= twentyFourHoursAgo && time <= now;
-          }).map(s -> new GetElasticsearchSnapshotResponse(s.snapshot(),
-              new Date(s.startTimeInMillis()))).toList();
+  ClusterHealthResponse getClusterHealth();
 
+  co.hyperflex.clients.elastic.dto.info.InfoResponse getInfo();
 
-      if (allValidSnapshots.isEmpty()) {
-        LOG.info("No valid snapshots found within the last 24 hours.");
-      }
+  NodesInfoResponse getNodesInfo();
 
-      return allValidSnapshots;
+  NodesInfoResponse getNodeInfo(String nodeId);
 
-    } catch (Exception e) {
-      LOG.error("Error checking snapshot details:", e);
-      throw new RuntimeException("Failed to get valid snapshots", e);
-    }
-  }
+  NodesStatsResponse getNodesStats(String nodeId);
 
-  public GetElasticNodeAndIndexCountsResponse getEntitiesCounts() {
-    try {
-      HealthResponse health = getElasticsearchClient().cluster().health();
-      int totalIndices = health.indices().size();
-      int activePrimaryShards = health.activePrimaryShards();
-      int activeShards = health.activeShards();
-      int unassignedShards = health.unassignedShards();
-      int initializingShards = health.initializingShards();
-      int relocatingShards = health.relocatingShards();
-      ClusterStatsResponse stats = getElasticsearchClient().cluster().stats();
-      ClusterNodeCount nodeCount = stats.nodes().count();
-      int totalNodes = nodeCount.total();
-      int dataNodes = nodeCount.data()
-          + nodeCount.dataCold()
-          + nodeCount.dataContent()
-          + nodeCount.dataHot()
-          + nodeCount.dataWarm();
-      int masterNodes = nodeCount.master();
-
-      return new GetElasticNodeAndIndexCountsResponse(dataNodes, totalNodes, masterNodes,
-          totalIndices, activePrimaryShards, activeShards, unassignedShards, initializingShards,
-          relocatingShards);
-    } catch (IOException e) {
-      LOG.error("Failed to get cluster stats", e);
-      throw new RuntimeException("Failed to get cluster stats", e);
-    }
-  }
-
-  public GetElasticDeprecationResponse getDeprecation() {
-    Request request = new Request("GET", "/_migration/deprecations");
-    return performRequest(request, GetElasticDeprecationResponse.class);
-  }
-
-
-  public List<GetAllocationExplanationResponse> getAllocationExplanation() {
-    try {
-      String unassigned = "UNASSIGNED";
-      ElasticsearchClient client = getElasticsearchClient();
-      List<ShardsRecord> shards = client.cat().shards().valueBody();
-      return shards.stream().filter(s -> unassigned.equals(s.state())).map(shard -> {
-        boolean isPrimaryShard = "p".equals(shard.prirep());
-        Request request = new Request("POST", "/_cluster/allocation/explain");
-        request.setJsonEntity("{\"index\":\"" + shard.index() + "\",\"shard\":" + shard.shard() + ",\"primary\":" + isPrimaryShard + "}");
-        Map data = performRequest(request, Map.class);
-        return new GetAllocationExplanationResponse(
-            shard.index(),
-            shard.shard() + (isPrimaryShard ? "(primary)" : ""),
-            data.get("allocate_explanation").toString()
-        );
-      }).toList();
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  public <T> T performRequest(Request request, Class<T> responseType) {
-    try {
-      Response response = restClient.performRequest(request);
-      return objectMapper.createParser(response.getEntity().getContent()).readValueAs(responseType);
-    } catch (IOException e) {
-      LOG.error("Failed to perform request", e);
-      throw new RuntimeException(e);
-    }
-  }
-
-  @Override
-  public void close() throws Exception {
-    getElasticsearchClient().close();
-    restClient.close();
-  }
+  ClusterStatsResponse getClusterStats();
 }
