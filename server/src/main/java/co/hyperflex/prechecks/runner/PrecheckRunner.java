@@ -1,6 +1,6 @@
 package co.hyperflex.prechecks.runner;
 
-import co.hyperflex.entities.precheck.PrecheckRun;
+import co.hyperflex.entities.precheck.PrecheckRunEntity;
 import co.hyperflex.services.PrecheckRunService;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -22,7 +22,7 @@ public class PrecheckRunner {
 
   @Scheduled(fixedDelay = 5000)
   public void runNextBatch() {
-    List<PrecheckRun> pending = precheckRunService.getPendingPrechecks();
+    List<PrecheckRunEntity> pending = precheckRunService.getPendingPrechecks();
     if (pending.isEmpty()) {
       LOG.debug("No pending precheck runs found");
       return;

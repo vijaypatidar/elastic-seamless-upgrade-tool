@@ -1,7 +1,7 @@
 package co.hyperflex.clients.kibana;
 
 import co.hyperflex.clients.ClusterCredentialProvider;
-import co.hyperflex.entities.cluster.Cluster;
+import co.hyperflex.entities.cluster.ClusterEntity;
 import co.hyperflex.exceptions.NotFoundException;
 import co.hyperflex.repositories.ClusterRepository;
 import jakarta.validation.constraints.NotNull;
@@ -26,7 +26,7 @@ public class KibanaClientProvider {
         .orElseThrow(() -> new NotFoundException("Cluster not found"));
   }
 
-  public KibanaClient getClient(@NotNull Cluster cluster) {
+  public KibanaClient getClient(@NotNull ClusterEntity cluster) {
     Header authHeader = credentialProvider.getAuthHeader(cluster);
 
     RestClient client = RestClient.builder()

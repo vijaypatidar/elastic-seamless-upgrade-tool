@@ -6,9 +6,9 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import co.hyperflex.entities.precheck.ClusterPrecheckRun;
-import co.hyperflex.entities.precheck.NodePrecheckRun;
-import co.hyperflex.entities.precheck.PrecheckRun;
+import co.hyperflex.entities.precheck.ClusterPrecheckRunEntity;
+import co.hyperflex.entities.precheck.NodePrecheckRunEntity;
+import co.hyperflex.entities.precheck.PrecheckRunEntity;
 import co.hyperflex.services.PrecheckRunService;
 import java.util.Collections;
 import java.util.List;
@@ -34,12 +34,12 @@ class PrecheckRunnerTest {
   @Test
   void runNextBatch_withPendingPrechecks_executesTasks() {
     // Arrange
-    PrecheckRun run1 = new ClusterPrecheckRun();
-    PrecheckRun run2 = new NodePrecheckRun();
-    List<PrecheckRun> pendingRuns = List.of(run1, run2);
+    PrecheckRunEntity run1 = new ClusterPrecheckRunEntity();
+    PrecheckRunEntity run2 = new NodePrecheckRunEntity();
+    List<PrecheckRunEntity> pendingRuns = List.of(run1, run2);
 
     when(precheckRunService.getPendingPrechecks()).thenReturn(pendingRuns);
-    when(taskExecutor.executeOne(any(PrecheckRun.class)))
+    when(taskExecutor.executeOne(any(PrecheckRunEntity.class)))
         .thenReturn(CompletableFuture.completedFuture(null));
 
     // Act

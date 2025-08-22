@@ -11,7 +11,7 @@ import static org.mockito.Mockito.when;
 import co.hyperflex.dtos.settings.GetSettingResponse;
 import co.hyperflex.dtos.settings.UpdateSettingRequest;
 import co.hyperflex.dtos.settings.UpdateSettingResponse;
-import co.hyperflex.entities.Setting;
+import co.hyperflex.entities.SettingEntity;
 import co.hyperflex.mappers.SettingMapper;
 import co.hyperflex.repositories.SettingRepository;
 import java.util.Optional;
@@ -36,7 +36,7 @@ class SettingServiceTest {
   @Test
   void getSetting_whenSettingExists() {
     // Arrange
-    Setting setting = new Setting();
+    SettingEntity setting = new SettingEntity();
     setting.setNotificationWebhookUrl("http://example.com");
     GetSettingResponse responseDto = new GetSettingResponse("http://example.com");
 
@@ -71,11 +71,11 @@ class SettingServiceTest {
   @Test
   void updateSetting_whenSettingExists() {
     // Arrange
-    Setting existingSetting = new Setting();
+    SettingEntity existingSetting = new SettingEntity();
     existingSetting.setNotificationWebhookUrl("http://old-url.com");
 
     when(settingRepository.findById("settings")).thenReturn(Optional.of(existingSetting));
-    when(settingRepository.save(any(Setting.class))).thenAnswer(invocation -> invocation.getArgument(0));
+    when(settingRepository.save(any(SettingEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
     UpdateSettingRequest request = new UpdateSettingRequest("http://new-url.com");
 
     // Act
@@ -96,7 +96,7 @@ class SettingServiceTest {
     UpdateSettingRequest request = new UpdateSettingRequest("http://new-url.com");
 
     when(settingRepository.findById("settings")).thenReturn(Optional.empty());
-    when(settingRepository.save(any(Setting.class))).thenAnswer(invocation -> invocation.getArgument(0));
+    when(settingRepository.save(any(SettingEntity.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
     // Act
     UpdateSettingResponse result = settingService.updateSetting(request);

@@ -3,10 +3,10 @@ package co.hyperflex.entities.precheck;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "prechecks")
-public class IndexPrecheckRun extends PrecheckRun {
+public class IndexPrecheckRunEntity extends PrecheckRunEntity {
   private IndexInfo index;
 
-  public IndexPrecheckRun() {
+  public IndexPrecheckRunEntity() {
     setType(PrecheckType.INDEX);
   }
 

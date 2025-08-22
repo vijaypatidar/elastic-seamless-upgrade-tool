@@ -12,10 +12,10 @@ import org.springframework.data.mongodb.core.mapping.Field;
 @Document(collection = "cluster-nodes")
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type", visible = true)
 @JsonSubTypes({
-    @JsonSubTypes.Type(value = ElasticNode.class, name = "ELASTIC"),
-    @JsonSubTypes.Type(value = KibanaNode.class, name = "KIBANA")
+    @JsonSubTypes.Type(value = ElasticNodeEntity.class, name = "ELASTIC"),
+    @JsonSubTypes.Type(value = KibanaNodeEntity.class, name = "KIBANA")
 })
-public abstract class ClusterNode {
+public abstract class ClusterNodeEntity {
 
   @Id
   private String id;

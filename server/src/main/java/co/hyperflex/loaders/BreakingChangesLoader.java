@@ -1,6 +1,6 @@
 package co.hyperflex.loaders;
 
-import co.hyperflex.entities.BreakingChange;
+import co.hyperflex.entities.BreakingChangeEntity;
 import co.hyperflex.repositories.BreakingChangeRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -42,7 +42,7 @@ public class BreakingChangesLoader {
               String title = getFirstMatchingField(change, "setting", "issue", "requirement", "name", "change", "field");
               String description = getFirstMatchingField(change, "description", "details");
 
-              BreakingChange breakingChange = new BreakingChange();
+              BreakingChangeEntity breakingChange = new BreakingChangeEntity();
               breakingChange.setTitle(title);
               breakingChange.setDescription(description);
               breakingChange.setUrl(url);

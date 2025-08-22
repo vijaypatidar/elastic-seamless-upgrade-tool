@@ -5,7 +5,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "upgrade-logs")
-public class UpgradeLog {
+public class UpgradeLogEntity {
   public static final String CLUSTER_UPGRADE_JOB_ID = "clusterUpgradeJobId";
   public static final String NODE_ID = "nodeId";
   public static final String LOGS = "logs";
@@ -16,7 +16,7 @@ public class UpgradeLog {
   private String clusterUpgradeJobId;
   private String nodeId;
 
-  public UpgradeLog() {
+  public UpgradeLogEntity() {
   }
 
   public List<String> getLogs() {

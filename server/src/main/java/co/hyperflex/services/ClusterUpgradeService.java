@@ -12,15 +12,15 @@ import co.hyperflex.dtos.clusters.GetElasticCloudClusterResponse;
 import co.hyperflex.dtos.upgrades.ClusterNodeUpgradeRequest;
 import co.hyperflex.dtos.upgrades.ClusterNodeUpgradeResponse;
 import co.hyperflex.dtos.upgrades.ClusterUpgradeResponse;
-import co.hyperflex.entities.cluster.Cluster;
-import co.hyperflex.entities.cluster.ClusterNode;
+import co.hyperflex.entities.cluster.ClusterEntity;
+import co.hyperflex.entities.cluster.ClusterNodeEntity;
 import co.hyperflex.entities.cluster.ClusterNodeType;
-import co.hyperflex.entities.cluster.SelfManagedCluster;
+import co.hyperflex.entities.cluster.SelfManagedClusterEntity;
 import co.hyperflex.entities.precheck.PrecheckStatus;
-import co.hyperflex.entities.upgrade.ClusterUpgradeJob;
+import co.hyperflex.entities.upgrade.ClusterUpgradeJobEntity;
 import co.hyperflex.entities.upgrade.ClusterUpgradeStatus;
 import co.hyperflex.entities.upgrade.NodeUpgradeStatus;
-import co.hyperflex.entities.upgrade.UpgradeLog;
+import co.hyperflex.entities.upgrade.UpgradeLogEntity;
 import co.hyperflex.exceptions.BadRequestException;
 import co.hyperflex.prechecks.scheduler.PrecheckSchedulerService;
 import co.hyperflex.repositories.ClusterNodeRepository;
@@ -81,10 +81,10 @@ public class ClusterUpgradeService {
 
   public ClusterNodeUpgradeResponse upgradeNode(ClusterNodeUpgradeRequest request) {
 
-    Cluster cluster = clusterRepository.findById(request.clusterId()).orElseThrow();
-    if (cluster instanceof SelfManagedCluster selfManagedCluster) {
-      ClusterUpgradeJob clusterUpgradeJob = clusterUpgradeJobService.getActiveJobByClusterId(request.clusterId());
-      ClusterNode clusterNode = clusterNodeRepository.findById(request.nodeId()).orElseThrow();
+    ClusterEntity cluster = clusterRepository.findById(request.clusterId()).orElseThrow();
+    if (cluster instanceof SelfManagedClusterEntity selfManagedCluster) {
+      ClusterUpgradeJobEntity clusterUpgradeJob = clusterUpgradeJobService.getActiveJobByClusterId(request.clusterId());
+      ClusterNodeEntity clusterNode = clusterNodeRepository.findById(request.nodeId()).orElseThrow();
       upgradeNodes(selfManagedCluster, List.of(clusterNode), clusterUpgradeJob.getId());
     } else {
       throw new BadRequestException("Upgrade not supported for cluster");
@@ -93,11 +93,12 @@ public class ClusterUpgradeService {
   }
 
   public ClusterUpgradeResponse upgrade(String clusterId, ClusterNodeType nodeType) {
-    Cluster cluster = clusterRepository.findById(clusterId).orElseThrow();
-    if (cluster instanceof SelfManagedCluster selfManagedCluster) {
-      ClusterUpgradeJob clusterUpgradeJob = clusterUpgradeJobService.getActiveJobByClusterId(clusterId);
-      List<ClusterNode> clusterNodes = clusterNodeRepository.findByClusterId(clusterId).stream().filter(node -> node.getType() == nodeType)
-          .sorted(Comparator.comparingInt(ClusterNode::getRank)).toList();
+    ClusterEntity cluster = clusterRepository.findById(clusterId).orElseThrow();
+    if (cluster instanceof SelfManagedClusterEntity selfManagedCluster) {
+      ClusterUpgradeJobEntity clusterUpgradeJob = clusterUpgradeJobService.getActiveJobByClusterId(clusterId);
+      List<ClusterNodeEntity> clusterNodes =
+          clusterNodeRepository.findByClusterId(clusterId).stream().filter(node -> node.getType() == nodeType)
+              .sorted(Comparator.comparingInt(ClusterNodeEntity::getRank)).toList();
 
       upgradeNodes(selfManagedCluster, clusterNodes, clusterUpgradeJob.getId());
     } else {
@@ -107,7 +108,7 @@ public class ClusterUpgradeService {
   }
 
   public ClusterInfoResponse upgradeInfo(String clusterId) {
-    ClusterUpgradeJob activeUpgradeJob = null;
+    ClusterUpgradeJobEntity activeUpgradeJob = null;
     try {
       activeUpgradeJob = clusterUpgradeJobService.getActiveJobByClusterId(clusterId);
     } catch (Exception e) {
@@ -165,21 +166,21 @@ public class ClusterUpgradeService {
     }
   }
 
-  private void upgradeNodes(SelfManagedCluster cluster, List<ClusterNode> nodes, String clusterUpgradeJobId) {
+  private void upgradeNodes(SelfManagedClusterEntity cluster, List<ClusterNodeEntity> nodes, String clusterUpgradeJobId) {
 
     executorService.submit(() -> {
       try {
         clusterLockService.lock(cluster.getId());
 
         clusterUpgradeJobService.setJobStatus(clusterUpgradeJobId, ClusterUpgradeStatus.UPGRADING);
-        MDC.put(UpgradeLog.CLUSTER_UPGRADE_JOB_ID, clusterUpgradeJobId);
+        MDC.put(UpgradeLogEntity.CLUSTER_UPGRADE_JOB_ID, clusterUpgradeJobId);
 
         ElasticClient elasticClient = elasticsearchClientProvider.getClientByClusterId(cluster.getId());
         KibanaClient kibanaClient = kibanaClientProvider.getClient(cluster);
 
         final String targetVersion = clusterUpgradeJobService.getUpgradeJobById(clusterUpgradeJobId).getTargetVersion();
 
-        for (ClusterNode node : nodes.stream().sorted(Comparator.comparingInt(ClusterNode::getRank)).toList()) {
+        for (ClusterNodeEntity node : nodes.stream().sorted(Comparator.comparingInt(ClusterNodeEntity::getRank)).toList()) {
 
           if (clusterUpgradeJobService.getUpgradeJobById(clusterUpgradeJobId).isStop()) {
             clusterUpgradeJobService.setJobStatus(clusterUpgradeJobId, ClusterUpgradeStatus.STOPPED);
@@ -187,7 +188,7 @@ public class ClusterUpgradeService {
             break;
           }
 
-          MDC.put(UpgradeLog.NODE_ID, node.getId());
+          MDC.put(UpgradeLogEntity.NODE_ID, node.getId());
           if (NodeUpgradeStatus.UPGRADED == node.getStatus()) {
             log.info("Skipping node with [NodeId: {}] as its already updated", node.getId());
             continue;
@@ -273,8 +274,8 @@ public class ClusterUpgradeService {
     });
   }
 
-  private void syncUpgradeJobStatus(SelfManagedCluster cluster, String clusterUpgradeJobId) {
-    final ClusterUpgradeJob clusterUpgradeJob = clusterUpgradeJobService.getUpgradeJobById(clusterUpgradeJobId);
+  private void syncUpgradeJobStatus(SelfManagedClusterEntity cluster, String clusterUpgradeJobId) {
+    final ClusterUpgradeJobEntity clusterUpgradeJob = clusterUpgradeJobService.getUpgradeJobById(clusterUpgradeJobId);
     List<GetClusterNodeResponse> nodes = clusterService.getNodes(cluster.getId(), null).stream()
         .filter(node -> node.status() != NodeUpgradeStatus.UPGRADED && !clusterUpgradeJob.getTargetVersion().equals(node.version()))
         .toList();
@@ -291,7 +292,7 @@ public class ClusterUpgradeService {
     }
   }
 
-  private void notifyClusterUpgradedSuccessFully(SelfManagedCluster cluster) {
+  private void notifyClusterUpgradedSuccessFully(SelfManagedClusterEntity cluster) {
     String clusterName = cluster.getName();
 
     String message = String.format("Cluster '%s' has been successfully upgraded to the target version.", clusterName);
@@ -301,7 +302,7 @@ public class ClusterUpgradeService {
     notificationService.sendNotification(new UpgradeProgressChangeEvent());
   }
 
-  private void notifyClusterUpgradedStopped(SelfManagedCluster cluster) {
+  private void notifyClusterUpgradedStopped(SelfManagedClusterEntity cluster) {
     String clusterName = cluster.getName();
 
     String message = String.format("Cluster '%s' has been successfully stopped.", clusterName);
@@ -311,7 +312,7 @@ public class ClusterUpgradeService {
     notificationService.sendNotification(new UpgradeProgressChangeEvent());
   }
 
-  private void notifyClusterUpgradeFailed(SelfManagedCluster cluster) {
+  private void notifyClusterUpgradeFailed(SelfManagedClusterEntity cluster) {
     String clusterName = cluster.getName();
 
     String message = String.format("Cluster '%s' failed to upgrade to the target version. Please investigate the issue.", clusterName);
@@ -321,7 +322,7 @@ public class ClusterUpgradeService {
     notificationService.sendNotification(new UpgradeProgressChangeEvent());
   }
 
-  private void notifyNodeUpgradeFailed(ClusterNode node) {
+  private void notifyNodeUpgradeFailed(ClusterNodeEntity node) {
     String message = String.format("Failed to upgrade node '%s' to the target version. Please check logs for details.", node.getName());
 
     notificationService.sendNotification(
@@ -330,7 +331,7 @@ public class ClusterUpgradeService {
     notificationService.sendNotification(new UpgradeProgressChangeEvent());
   }
 
-  private void notifyNodeUpgradedSuccessfully(SelfManagedCluster cluster, ClusterNode node) {
+  private void notifyNodeUpgradedSuccessfully(SelfManagedClusterEntity cluster, ClusterNodeEntity node) {
     notificationService.sendNotification(new UpgradeProgressChangeEvent());
     String message = String.format("Node '%s' has been successfully upgraded to the target version.", node.getName());
     notificationService.sendNotification(
@@ -338,7 +339,7 @@ public class ClusterUpgradeService {
             cluster.getId()));
   }
 
-  private void updateNodeProgress(ClusterNode node, int progress) {
+  private void updateNodeProgress(ClusterNodeEntity node, int progress) {
     node.setProgress(progress);
     clusterNodeRepository.save(node);
     notificationService.sendNotification(new UpgradeProgressChangeEvent());

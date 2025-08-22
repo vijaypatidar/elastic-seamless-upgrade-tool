@@ -4,7 +4,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "breaking-changes")
-public class BreakingChange {
+public class BreakingChangeEntity {
   @Id
   private String id;
 
@@ -14,7 +14,7 @@ public class BreakingChange {
   private String version;
   private String category;
 
-  public BreakingChange() {
+  public BreakingChangeEntity() {
   }
 
 

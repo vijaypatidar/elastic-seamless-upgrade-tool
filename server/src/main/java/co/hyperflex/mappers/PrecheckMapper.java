@@ -2,7 +2,7 @@ package co.hyperflex.mappers;
 
 import co.hyperflex.dtos.prechecks.GetClusterPrecheckEntry;
 import co.hyperflex.dtos.prechecks.GetPrecheckEntry;
-import co.hyperflex.entities.precheck.PrecheckRun;
+import co.hyperflex.entities.precheck.PrecheckRunEntity;
 import java.util.Date;
 import java.util.Optional;
 import org.springframework.stereotype.Service;
@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 public class PrecheckMapper {
 
   public GetPrecheckEntry toPrecheckEntry(
-      PrecheckRun precheckRun) {
+      PrecheckRunEntity precheckRun) {
 
     return new GetPrecheckEntry(
         precheckRun.getId(),
@@ -24,7 +24,7 @@ public class PrecheckMapper {
   }
 
   public GetClusterPrecheckEntry toClusterPrecheckEntry(
-      PrecheckRun precheckRun) {
+      PrecheckRunEntity precheckRun) {
 
     return new GetClusterPrecheckEntry(
         precheckRun.getId(),

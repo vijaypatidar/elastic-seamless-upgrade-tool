@@ -1,6 +1,6 @@
 package co.hyperflex.upgrader.tasks.elastic;
 
-import co.hyperflex.entities.cluster.ClusterNode;
+import co.hyperflex.entities.cluster.ClusterNodeEntity;
 import co.hyperflex.upgrader.tasks.Context;
 import co.hyperflex.upgrader.tasks.Task;
 import co.hyperflex.upgrader.tasks.TaskResult;
@@ -22,7 +22,7 @@ public class WaitForElasticsearchHttpPortTask implements Task {
 
   @Override
   public TaskResult run(Context context) {
-    final ClusterNode node = context.node();
+    final ClusterNodeEntity node = context.node();
     final Logger logger = context.logger();
     final String host = node.getIp();
     final int port = context.config().esHttpPort();

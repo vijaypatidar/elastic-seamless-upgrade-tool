@@ -4,13 +4,13 @@ import co.hyperflex.clients.elastic.ElasticClient;
 import co.hyperflex.clients.elastic.ElasticsearchClientProvider;
 import co.hyperflex.clients.kibana.KibanaClient;
 import co.hyperflex.clients.kibana.KibanaClientProvider;
-import co.hyperflex.entities.cluster.Cluster;
-import co.hyperflex.entities.cluster.ClusterNode;
-import co.hyperflex.entities.precheck.ClusterPrecheckRun;
-import co.hyperflex.entities.precheck.IndexPrecheckRun;
-import co.hyperflex.entities.precheck.NodePrecheckRun;
-import co.hyperflex.entities.precheck.PrecheckRun;
-import co.hyperflex.entities.upgrade.ClusterUpgradeJob;
+import co.hyperflex.entities.cluster.ClusterEntity;
+import co.hyperflex.entities.cluster.ClusterNodeEntity;
+import co.hyperflex.entities.precheck.ClusterPrecheckRunEntity;
+import co.hyperflex.entities.precheck.IndexPrecheckRunEntity;
+import co.hyperflex.entities.precheck.NodePrecheckRunEntity;
+import co.hyperflex.entities.precheck.PrecheckRunEntity;
+import co.hyperflex.entities.upgrade.ClusterUpgradeJobEntity;
 import co.hyperflex.exceptions.NotFoundException;
 import co.hyperflex.prechecks.contexts.ClusterContext;
 import co.hyperflex.prechecks.contexts.IndexContext;
@@ -46,11 +46,11 @@ public class PrecheckContextResolver {
   }
 
 
-  public PrecheckContext resolveContext(PrecheckRun precheckRun) {
+  public PrecheckContext resolveContext(PrecheckRunEntity precheckRun) {
     String clusterId = precheckRun.getClusterId();
-    ClusterUpgradeJob clusterUpgradeJob =
+    ClusterUpgradeJobEntity clusterUpgradeJob =
         clusterUpgradeJobService.getActiveJobByClusterId(clusterId);
-    Cluster cluster = clusterRepository.findById(precheckRun.getClusterId()).orElseThrow(
+    ClusterEntity cluster = clusterRepository.findById(precheckRun.getClusterId()).orElseThrow(
         () -> new NotFoundException("Cluster not found: " + precheckRun.getClusterId()));
 
     ElasticClient elasticClient =
@@ -60,7 +60,7 @@ public class PrecheckContextResolver {
 
 
     switch (precheckRun) {
-      case IndexPrecheckRun indexPrecheckRun -> {
+      case IndexPrecheckRunEntity indexPrecheckRun -> {
         return new IndexContext(
             cluster,
             elasticClient,
@@ -70,8 +70,8 @@ public class PrecheckContextResolver {
             LOG
         );
       }
-      case NodePrecheckRun nodePrecheckRun -> {
-        ClusterNode clusterNode = clusterNodeRepository.findById(nodePrecheckRun.getNode().id())
+      case NodePrecheckRunEntity nodePrecheckRun -> {
+        ClusterNodeEntity clusterNode = clusterNodeRepository.findById(nodePrecheckRun.getNode().id())
             .orElseThrow(() -> new NotFoundException(
                 "Cluster node not found: " + nodePrecheckRun.getClusterId()));
         return new NodeContext(
@@ -83,7 +83,7 @@ public class PrecheckContextResolver {
             LOG
         );
       }
-      case ClusterPrecheckRun clusterPrecheckRun -> {
+      case ClusterPrecheckRunEntity clusterPrecheckRun -> {
         return new ClusterContext(
             cluster,
             elasticClient,

@@ -8,7 +8,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "settings")
-public class Setting {
+public class SettingEntity {
   @Id
   private String id = "settings";
 

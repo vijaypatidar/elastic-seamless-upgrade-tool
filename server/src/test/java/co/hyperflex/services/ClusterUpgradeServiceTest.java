@@ -17,7 +17,7 @@ import co.hyperflex.dtos.ClusterInfoResponse;
 import co.hyperflex.dtos.GetElasticsearchSnapshotResponse;
 import co.hyperflex.entities.cluster.ClusterNodeType;
 import co.hyperflex.entities.precheck.PrecheckStatus;
-import co.hyperflex.entities.upgrade.ClusterUpgradeJob;
+import co.hyperflex.entities.upgrade.ClusterUpgradeJobEntity;
 import co.hyperflex.entities.upgrade.ClusterUpgradeStatus;
 import co.hyperflex.prechecks.scheduler.PrecheckSchedulerService;
 import co.hyperflex.repositories.ClusterNodeRepository;
@@ -68,12 +68,12 @@ class ClusterUpgradeServiceTest {
   private KibanaClient kibanaClient;
   @InjectMocks
   private ClusterUpgradeService clusterUpgradeService;
-  private ClusterUpgradeJob clusterUpgradeJob;
+  private ClusterUpgradeJobEntity clusterUpgradeJob;
   private ClusterInfoResponse.DeprecationCounts deprecationCounts;
 
   @BeforeEach
   void setUp() {
-    clusterUpgradeJob = new ClusterUpgradeJob();
+    clusterUpgradeJob = new ClusterUpgradeJobEntity();
     clusterUpgradeJob.setId("jobId");
     clusterUpgradeJob.setStatus(ClusterUpgradeStatus.PENDING);
 
