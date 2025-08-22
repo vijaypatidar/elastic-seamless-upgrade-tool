@@ -2,19 +2,19 @@ package co.hyperflex.prechecks.contexts;
 
 import co.hyperflex.clients.elastic.ElasticClient;
 import co.hyperflex.clients.kibana.KibanaClient;
-import co.hyperflex.entities.cluster.Cluster;
-import co.hyperflex.entities.upgrade.ClusterUpgradeJob;
+import co.hyperflex.entities.cluster.ClusterEntity;
+import co.hyperflex.entities.upgrade.ClusterUpgradeJobEntity;
 import org.slf4j.Logger;
 
 public abstract class PrecheckContext {
-  private final Cluster cluster;
+  private final ClusterEntity cluster;
   private final ElasticClient elasticClient;
   private final KibanaClient kibanaClient;
   private final Logger logger;
-  private final ClusterUpgradeJob clusterUpgradeJob;
+  private final ClusterUpgradeJobEntity clusterUpgradeJob;
 
-  protected PrecheckContext(Cluster cluster, ElasticClient elasticClient, KibanaClient kibanaClient,
-                            Logger logger, ClusterUpgradeJob clusterUpgradeJob) {
+  protected PrecheckContext(ClusterEntity cluster, ElasticClient elasticClient, KibanaClient kibanaClient,
+                            Logger logger, ClusterUpgradeJobEntity clusterUpgradeJob) {
     this.cluster = cluster;
     this.elasticClient = elasticClient;
     this.kibanaClient = kibanaClient;
@@ -22,7 +22,7 @@ public abstract class PrecheckContext {
     this.clusterUpgradeJob = clusterUpgradeJob;
   }
 
-  public Cluster getCluster() {
+  public ClusterEntity getCluster() {
     return cluster;
   }
 
@@ -38,7 +38,7 @@ public abstract class PrecheckContext {
     return logger;
   }
 
-  public ClusterUpgradeJob getClusterUpgradeJob() {
+  public ClusterUpgradeJobEntity getClusterUpgradeJob() {
     return clusterUpgradeJob;
   }
 }

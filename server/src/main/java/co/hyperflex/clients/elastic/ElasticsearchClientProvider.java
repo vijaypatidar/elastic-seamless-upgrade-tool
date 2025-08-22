@@ -4,7 +4,7 @@ import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
 import co.hyperflex.clients.ClusterCredentialProvider;
-import co.hyperflex.entities.cluster.Cluster;
+import co.hyperflex.entities.cluster.ClusterEntity;
 import co.hyperflex.exceptions.NotFoundException;
 import co.hyperflex.repositories.ClusterRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -44,7 +44,7 @@ public class ElasticsearchClientProvider {
         .orElseThrow(() -> new NotFoundException("Cluster not found"));
   }
 
-  public ElasticClient buildElasticClient(Cluster cluster) {
+  public ElasticClient buildElasticClient(ClusterEntity cluster) {
     try {
       SSLContext sslContext = SSLContextBuilder.create()
           .loadTrustMaterial(null, (X509Certificate[] chain, String authType) -> true)

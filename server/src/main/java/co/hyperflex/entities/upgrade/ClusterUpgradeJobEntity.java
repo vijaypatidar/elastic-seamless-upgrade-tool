@@ -6,7 +6,7 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "cluster-upgrade-jobs")
-public class ClusterUpgradeJob {
+public class ClusterUpgradeJobEntity {
   public static final String CLUSTER_ID = "clusterId";
   public static final String ACTIVE = "isActive";
   public static final String STOP = "stop";
@@ -59,16 +59,16 @@ public class ClusterUpgradeJob {
     return status;
   }
 
+  public void setStatus(ClusterUpgradeStatus status) {
+    this.status = status;
+  }
+
   public boolean isActive() {
     return isActive;
   }
 
   public void setActive(boolean active) {
     isActive = active;
-  }
-
-  public void setStatus(ClusterUpgradeStatus status) {
-    this.status = status;
   }
 
   public Map<String, Integer> getNodeCheckPoints() {

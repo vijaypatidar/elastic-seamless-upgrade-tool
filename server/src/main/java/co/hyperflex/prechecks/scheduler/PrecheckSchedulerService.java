@@ -5,10 +5,10 @@ import co.hyperflex.clients.elastic.ElasticsearchClientProvider;
 import co.hyperflex.dtos.clusters.GetClusterNodeResponse;
 import co.hyperflex.dtos.prechecks.PrecheckRerunRequest;
 import co.hyperflex.dtos.prechecks.PrecheckScheduleResponse;
-import co.hyperflex.entities.precheck.ClusterPrecheckRun;
-import co.hyperflex.entities.precheck.IndexPrecheckRun;
-import co.hyperflex.entities.precheck.NodePrecheckRun;
-import co.hyperflex.entities.upgrade.ClusterUpgradeJob;
+import co.hyperflex.entities.precheck.ClusterPrecheckRunEntity;
+import co.hyperflex.entities.precheck.IndexPrecheckRunEntity;
+import co.hyperflex.entities.precheck.NodePrecheckRunEntity;
+import co.hyperflex.entities.upgrade.ClusterUpgradeJobEntity;
 import co.hyperflex.prechecks.contexts.IndexContext;
 import co.hyperflex.prechecks.contexts.NodeContext;
 import co.hyperflex.prechecks.contexts.PrecheckContext;
@@ -51,7 +51,7 @@ public class PrecheckSchedulerService {
   }
 
   public PrecheckScheduleResponse schedule(String clusterId) {
-    final ClusterUpgradeJob clusterUpgradeJob = clusterUpgradeJobService.getActiveJobByClusterId(clusterId);
+    final ClusterUpgradeJobEntity clusterUpgradeJob = clusterUpgradeJobService.getActiveJobByClusterId(clusterId);
     final String upgradeJobId = clusterUpgradeJob.getId();
     scheduleNodePrechecks(upgradeJobId, clusterId);
     scheduleClusterPrechecks(upgradeJobId, clusterId);
@@ -65,11 +65,11 @@ public class PrecheckSchedulerService {
         .stream()
         .parallel()
         .flatMap(precheck -> nodes.stream().map(node -> {
-          NodePrecheckRun precheckRun = new NodePrecheckRun();
+          NodePrecheckRunEntity precheckRun = new NodePrecheckRunEntity();
           precheckRun.setId(HashUtil.generateHash(precheck.getId() + ":" + upgradeJobId + ":" + node.id()));
           precheckRun.setPrecheckId(precheck.getId());
           precheckRun.setNode(
-              new NodePrecheckRun.NodeInfo(node.id(), node.name(), node.ip(), node.rank())
+              new NodePrecheckRunEntity.NodeInfo(node.id(), node.name(), node.ip(), node.rank())
           );
           precheckRun.setClusterUpgradeJobId(upgradeJobId);
           precheckRun.setSeverity(precheck.getSeverity());
@@ -85,7 +85,7 @@ public class PrecheckSchedulerService {
 
   public void scheduleClusterPrechecks(String upgradeJobId, String clusterId) {
     precheckRegistry.getClusterPrechecks().stream().parallel().map(precheck -> {
-      ClusterPrecheckRun precheckRun = new ClusterPrecheckRun();
+      ClusterPrecheckRunEntity precheckRun = new ClusterPrecheckRunEntity();
       precheckRun.setId(HashUtil.generateHash(precheck.getId() + ":" + upgradeJobId));
       precheckRun.setPrecheckId(precheck.getId());
       precheckRun.setClusterUpgradeJobId(upgradeJobId);
@@ -106,9 +106,9 @@ public class PrecheckSchedulerService {
         .flatMap(precheck -> indexes
             .stream()
             .map(index -> {
-              IndexPrecheckRun precheckRun = new IndexPrecheckRun();
+              IndexPrecheckRunEntity precheckRun = new IndexPrecheckRunEntity();
               precheckRun.setId(HashUtil.generateHash(precheck.getId() + ":" + upgradeJobId + ":" + index));
-              precheckRun.setIndex(new IndexPrecheckRun.IndexInfo(index));
+              precheckRun.setIndex(new IndexPrecheckRunEntity.IndexInfo(index));
               precheckRun.setPrecheckId(precheck.getId());
               precheckRun.setClusterUpgradeJobId(upgradeJobId);
               precheckRun.setSeverity(precheck.getSeverity());
@@ -123,7 +123,7 @@ public class PrecheckSchedulerService {
 
   public PrecheckScheduleResponse rerunPrechecks(String clusterId,
                                                  PrecheckRerunRequest request) {
-    ClusterUpgradeJob upgradeJob = clusterUpgradeJobService.getActiveJobByClusterId(clusterId);
+    ClusterUpgradeJobEntity upgradeJob = clusterUpgradeJobService.getActiveJobByClusterId(clusterId);
     precheckRunService.rerunPrechecks(upgradeJob.getId(), request);
     return new PrecheckScheduleResponse(upgradeJob.getId());
   }

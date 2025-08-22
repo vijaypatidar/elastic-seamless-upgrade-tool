@@ -10,8 +10,8 @@ import co.hyperflex.clients.kibana.KibanaClientProvider;
 import co.hyperflex.clients.kibana.dto.GetKibanaDeprecationResponse;
 import co.hyperflex.dtos.prechecks.GetGroupedPrecheckResponse;
 import co.hyperflex.dtos.prechecks.GetPrecheckEntry;
-import co.hyperflex.entities.BreakingChange;
-import co.hyperflex.entities.upgrade.ClusterUpgradeJob;
+import co.hyperflex.entities.BreakingChangeEntity;
+import co.hyperflex.entities.upgrade.ClusterUpgradeJobEntity;
 import co.hyperflex.repositories.BreakingChangeRepository;
 import java.time.Instant;
 import java.util.List;
@@ -57,7 +57,7 @@ public class PrecheckReportService {
   }
 
   public String generatePrecheckReportMdContent(String clusterId) {
-    ClusterUpgradeJob job = clusterUpgradeJobService.getActiveJobByClusterId(clusterId);
+    ClusterUpgradeJobEntity job = clusterUpgradeJobService.getActiveJobByClusterId(clusterId);
     final String currentVersion = job.getCurrentVersion();
     final String targetVersion = job.getTargetVersion();
 
@@ -129,7 +129,7 @@ public class PrecheckReportService {
 
   private StringBuilder getBreakingChangesMdReport(String currentVersion, String targetVersion) {
     StringBuilder md = new StringBuilder();
-    List<BreakingChange> breakingChanges = breakingChangeRepository.getBreakingChanges(currentVersion, targetVersion);
+    List<BreakingChangeEntity> breakingChanges = breakingChangeRepository.getBreakingChanges(currentVersion, targetVersion);
 
     md.append("# Breaking Changes Report\n\n").append("From version: **").append(currentVersion).append("** to **").append(targetVersion)
         .append("**\n\n");
@@ -140,21 +140,21 @@ public class PrecheckReportService {
     }
 
     // Group by version first
-    Map<String, List<BreakingChange>> groupedByVersion =
-        breakingChanges.stream().collect(Collectors.groupingBy(BreakingChange::getVersion, TreeMap::new, Collectors.toList()));
+    Map<String, List<BreakingChangeEntity>> groupedByVersion =
+        breakingChanges.stream().collect(Collectors.groupingBy(BreakingChangeEntity::getVersion, TreeMap::new, Collectors.toList()));
 
 
     groupedByVersion.forEach((version, changes) -> {
       md.append("## Version ").append(version).append("\n\n");
 
       // Group within version by category
-      Map<String, List<BreakingChange>> groupedByCategory =
-          changes.stream().collect(Collectors.groupingBy(BreakingChange::getCategory, TreeMap::new, Collectors.toList()));
+      Map<String, List<BreakingChangeEntity>> groupedByCategory =
+          changes.stream().collect(Collectors.groupingBy(BreakingChangeEntity::getCategory, TreeMap::new, Collectors.toList()));
 
       groupedByCategory.forEach((category, categoryChanges) -> {
         md.append("### ").append(category).append("\n\n");
 
-        for (BreakingChange change : categoryChanges) {
+        for (BreakingChangeEntity change : categoryChanges) {
           md.append("- **").append(change.getTitle()).append("**: ").append(change.getDescription()).append("\n");
         }
 

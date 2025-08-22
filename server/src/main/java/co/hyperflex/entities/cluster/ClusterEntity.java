@@ -8,10 +8,10 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @Document(collection = "clusters")
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type", visible = true)
 @JsonSubTypes({
-    @JsonSubTypes.Type(value = SelfManagedCluster.class, name = "SELF_MANAGED"),
-    @JsonSubTypes.Type(value = ElasticCloudCluster.class, name = "ELASTIC_CLOUD")
+    @JsonSubTypes.Type(value = SelfManagedClusterEntity.class, name = "SELF_MANAGED"),
+    @JsonSubTypes.Type(value = ElasticCloudClusterEntity.class, name = "ELASTIC_CLOUD")
 })
-public abstract class Cluster {
+public abstract class ClusterEntity {
 
   @Id
   private String id;

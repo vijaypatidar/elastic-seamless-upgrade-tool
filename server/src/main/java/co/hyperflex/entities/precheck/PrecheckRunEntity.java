@@ -16,10 +16,10 @@ import org.springframework.data.mongodb.core.mapping.Document;
     property = "type",
     visible = true
 )
-@JsonSubTypes({@JsonSubTypes.Type(value = ClusterPrecheckRun.class, name = "CLUSTER"),
-    @JsonSubTypes.Type(value = NodePrecheckRun.class, name = "NODE"),
-    @JsonSubTypes.Type(value = IndexPrecheckRun.class, name = "INDEX")})
-public abstract class PrecheckRun {
+@JsonSubTypes({@JsonSubTypes.Type(value = ClusterPrecheckRunEntity.class, name = "CLUSTER"),
+    @JsonSubTypes.Type(value = NodePrecheckRunEntity.class, name = "NODE"),
+    @JsonSubTypes.Type(value = IndexPrecheckRunEntity.class, name = "INDEX")})
+public abstract class PrecheckRunEntity {
 
   public static final String STATUS = "status";
   public static final String CLUSTER_UPGRADE_JOB_ID = "clusterUpgradeJobId";

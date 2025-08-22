@@ -3,8 +3,8 @@ package co.hyperflex.clients;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import co.hyperflex.entities.cluster.Cluster;
-import co.hyperflex.entities.cluster.SelfManagedCluster;
+import co.hyperflex.entities.cluster.ClusterEntity;
+import co.hyperflex.entities.cluster.SelfManagedClusterEntity;
 import org.apache.http.Header;
 import org.junit.jupiter.api.Test;
 
@@ -15,7 +15,7 @@ class ClusterCredentialProviderTest {
   @Test
   void getAuthHeader_withApiKey() {
     // Arrange
-    Cluster cluster = new SelfManagedCluster();
+    ClusterEntity cluster = new SelfManagedClusterEntity();
     cluster.setApiKey("my-api-key");
 
     // Act
@@ -29,7 +29,7 @@ class ClusterCredentialProviderTest {
   @Test
   void getAuthHeader_withUsernamePassword() {
     // Arrange
-    Cluster cluster = new SelfManagedCluster();
+    ClusterEntity cluster = new SelfManagedClusterEntity();
     cluster.setUsername("user");
     cluster.setPassword("pass");
 
@@ -44,7 +44,7 @@ class ClusterCredentialProviderTest {
   @Test
   void getAuthHeader_noCredentials_throwsException() {
     // Arrange
-    Cluster cluster = new SelfManagedCluster();
+    ClusterEntity cluster = new SelfManagedClusterEntity();
 
     // Act & Assert
     assertThrows(IllegalArgumentException.class, () -> {
