@@ -64,7 +64,9 @@ public interface ElasticClient {
 
   NodesInfoResponse getNodeInfo(String nodeId);
 
-  NodesStatsResponse getNodesStats(String nodeId);
+  NodesStatsResponse getNodesMetric(String nodeId);
+
+  NodesStatsResponse getNodesMetric(String nodeId, String metric);
 
   ClusterStatsResponse getClusterStats();
 }

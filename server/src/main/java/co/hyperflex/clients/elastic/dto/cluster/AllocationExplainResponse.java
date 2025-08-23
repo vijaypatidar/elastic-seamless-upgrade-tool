@@ -1,7 +1,7 @@
 package co.hyperflex.clients.elastic.dto.cluster;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 
 public class AllocationExplainResponse {
   @Nullable

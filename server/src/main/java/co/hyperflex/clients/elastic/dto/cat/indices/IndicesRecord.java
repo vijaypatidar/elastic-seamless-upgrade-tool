@@ -1,6 +1,7 @@
 package co.hyperflex.clients.elastic.dto.cat.indices;
 
-import javax.annotation.Nullable;
+
+import jakarta.annotation.Nullable;
 
 public class IndicesRecord {
   @Nullable

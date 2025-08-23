@@ -24,7 +24,7 @@ public class ElasticNodeMemoryHealthPrecheck extends BaseElasticNodePrecheck {
     Logger logger = context.getLogger();
     ElasticClient elasticClient = context.getElasticClient();
     String nodeId = context.getNode().getId();
-    var stats = elasticClient.getNodesStats(nodeId);
+    var stats = elasticClient.getNodesMetric(nodeId);
     var nodeStats = stats.getNodes().get(nodeId);
     if (nodeStats == null) {
       logger.warn("No stats found for node: {}", nodeId);

@@ -1,6 +1,7 @@
 package co.hyperflex.clients.elastic.dto.cat.health;
 
-import javax.annotation.Nullable;
+
+import jakarta.annotation.Nullable;
 
 public class HealthRecord {
   @Nullable

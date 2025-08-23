@@ -31,7 +31,7 @@ public class JvmHeapUsagePrecheck extends BaseElasticNodePrecheck {
     String nodeId = context.getNode().getId();
     Logger logger = context.getLogger();
 
-    NodesStatsResponse response = context.getElasticClient().getNodesStats(nodeId);
+    NodesStatsResponse response = context.getElasticClient().getNodesMetric(nodeId, "jvm");
 
     Map<String, Stats> nodes = response.getNodes();
     Stats node = nodes.get(nodeId);

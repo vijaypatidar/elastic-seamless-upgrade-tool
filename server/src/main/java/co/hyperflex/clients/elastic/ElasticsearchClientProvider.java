@@ -15,7 +15,6 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509ExtendedTrustManager;
-import org.apache.http.Header;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.annotation.Cacheable;
@@ -45,14 +44,14 @@ public class ElasticsearchClientProvider {
 
   public ElasticClient buildElasticClient(ClusterEntity cluster) {
     try {
-      Header authHeader = credentialProvider.getAuthHeader(cluster);
+      var authHeader = credentialProvider.getAuthHeader(cluster);
       HttpClient jdkHttpClient = HttpClient.newBuilder()
           .sslContext(getSSLContext())
           .build();
 
       RestClient genericClient = RestClient.builder()
           .baseUrl(cluster.getElasticUrl())
-          .defaultHeader(authHeader.getName(), authHeader.getValue())
+          .defaultHeader(authHeader.key(), authHeader.value())
           .defaultHeader("Content-Type", "application/json")
           .requestFactory(new JdkClientHttpRequestFactory(jdkHttpClient))
           .build();

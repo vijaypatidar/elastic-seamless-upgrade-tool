@@ -1,9 +1,9 @@
 package co.hyperflex.clients.elastic.dto.nodes;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
-import javax.annotation.Nullable;
 
 public class NodeInfo {
   private Map<String, String> attributes;

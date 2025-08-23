@@ -12,6 +12,7 @@ import co.hyperflex.clients.elastic.dto.cluster.ClusterStatsResponse;
 import co.hyperflex.clients.elastic.dto.cluster.GetClusterSettingsResponse;
 import co.hyperflex.clients.elastic.dto.cluster.PutClusterSettingsResponse;
 import co.hyperflex.clients.elastic.dto.cluster.health.ClusterHealthResponse;
+import co.hyperflex.clients.elastic.dto.info.InfoResponse;
 import co.hyperflex.clients.elastic.dto.nodes.NodesInfoResponse;
 import co.hyperflex.clients.elastic.dto.nodes.NodesStatsResponse;
 import co.hyperflex.dtos.GetElasticNodeAndIndexCountsResponse;
@@ -230,12 +231,12 @@ public class ElasticClientImpl implements ElasticClient {
   }
 
   @Override
-  public List<co.hyperflex.clients.elastic.dto.cat.shards.ShardsRecord> getShards() {
+  public List<ShardsRecord> getShards() {
     return getShards("");
   }
 
   @Override
-  public List<co.hyperflex.clients.elastic.dto.cat.shards.ShardsRecord> getShards(String indexName) {
+  public List<ShardsRecord> getShards(String indexName) {
     String uri = "/_cat/shards/" + indexName + "?format=json";
     return restClient.get().uri(uri).retrieve().body(new ParameterizedTypeReference<>() {
     });
@@ -248,18 +249,18 @@ public class ElasticClientImpl implements ElasticClient {
 
   @Override
   public ClusterHealthResponse getClusterHealth() {
-    return restClient.get().uri("/_cluster/health").retrieve().body(ClusterHealthResponse.class);
+    return performGet("/_cluster/health", ClusterHealthResponse.class);
   }
 
   @Override
-  public co.hyperflex.clients.elastic.dto.info.InfoResponse getInfo() {
-    return restClient.get().uri("/").retrieve().body(co.hyperflex.clients.elastic.dto.info.InfoResponse.class);
+  public InfoResponse getInfo() {
+    return performGet("/", InfoResponse.class);
   }
 
   @Override
   public NodesInfoResponse getNodeInfo(String nodeId) {
     String uri = "/_nodes/" + nodeId;
-    return restClient.get().uri(uri).retrieve().body(NodesInfoResponse.class);
+    return performGet(uri, NodesInfoResponse.class);
   }
 
   @Override
@@ -270,12 +271,21 @@ public class ElasticClientImpl implements ElasticClient {
   @Override
   public ClusterStatsResponse getClusterStats() {
     var uri = "/_cluster/stats?format=json";
-    return restClient.get().uri(uri).retrieve().body(ClusterStatsResponse.class);
+    return performGet(uri, ClusterStatsResponse.class);
   }
 
   @Override
-  public NodesStatsResponse getNodesStats(String nodeId) {
-    String uri = "/_nodes/" + nodeId + "/stats";
-    return restClient.get().uri(uri).retrieve().body(NodesStatsResponse.class);
+  public NodesStatsResponse getNodesMetric(String nodeId) {
+    return getNodesMetric(nodeId, "stats");
+  }
+
+  @Override
+  public NodesStatsResponse getNodesMetric(String nodeId, String metric) {
+    String uri = "/_nodes/" + nodeId + "/" + metric;
+    return performGet(uri, NodesStatsResponse.class);
+  }
+
+  public <T> T performGet(String uri, Class<T> responseType) {
+    return restClient.get().uri(uri).retrieve().body(responseType);
   }
 }

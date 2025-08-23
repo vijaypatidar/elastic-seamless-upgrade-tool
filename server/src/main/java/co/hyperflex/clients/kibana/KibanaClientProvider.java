@@ -5,7 +5,6 @@ import co.hyperflex.entities.cluster.ClusterEntity;
 import co.hyperflex.exceptions.NotFoundException;
 import co.hyperflex.repositories.ClusterRepository;
 import jakarta.validation.constraints.NotNull;
-import org.apache.http.Header;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -27,11 +26,11 @@ public class KibanaClientProvider {
   }
 
   public KibanaClient getClient(@NotNull ClusterEntity cluster) {
-    Header authHeader = credentialProvider.getAuthHeader(cluster);
+    var authHeader = credentialProvider.getAuthHeader(cluster);
 
     RestClient client = RestClient.builder()
         .baseUrl(cluster.getKibanaUrl())
-        .defaultHeader(authHeader.getName(), authHeader.getValue())
+        .defaultHeader(authHeader.key(), authHeader.value())
         .defaultHeader("Content-Type", "application/json")
         .defaultHeader("kbn-xsrf", "true")
         .build();

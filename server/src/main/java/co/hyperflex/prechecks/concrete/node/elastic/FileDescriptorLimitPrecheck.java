@@ -31,7 +31,7 @@ public class FileDescriptorLimitPrecheck extends BaseElasticNodePrecheck {
     var client = context.getElasticClient();
     Logger logger = context.getLogger();
 
-    NodesStatsResponse response = client.getNodesStats(nodeId);
+    NodesStatsResponse response = client.getNodesMetric(nodeId, "stats/process");
 
     Map<String, Stats> nodes = response.getNodes();
     Stats node = nodes.get(nodeId);

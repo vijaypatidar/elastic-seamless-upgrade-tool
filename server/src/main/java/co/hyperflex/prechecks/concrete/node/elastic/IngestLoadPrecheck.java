@@ -33,7 +33,7 @@ public class IngestLoadPrecheck extends BaseElasticNodePrecheck {
     ElasticClient client = context.getElasticClient();
     Logger logger = context.getLogger();
 
-    NodesStatsResponse statsResponse = client.getNodesStats(nodeId);
+    NodesStatsResponse statsResponse = client.getNodesMetric(nodeId, "stats/ingest");
 
     Map<String, Stats> nodes = statsResponse.getNodes();
     Stats nodeStats = nodes.get(nodeId);

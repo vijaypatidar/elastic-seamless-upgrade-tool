@@ -1,6 +1,7 @@
 package co.hyperflex.clients.elastic.dto.cluster;
 
-import javax.annotation.Nullable;
+
+import jakarta.annotation.Nullable;
 
 public class ClusterNodeCount {
   private int coordinatingOnly;
