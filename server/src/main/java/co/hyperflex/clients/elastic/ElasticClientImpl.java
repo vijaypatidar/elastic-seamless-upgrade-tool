@@ -1,6 +1,9 @@
 package co.hyperflex.clients.elastic;
 
+import co.hyperflex.clients.elastic.dto.GetAllocationExplanationResponse;
 import co.hyperflex.clients.elastic.dto.GetElasticDeprecationResponse;
+import co.hyperflex.clients.elastic.dto.GetElasticNodeAndIndexCountsResponse;
+import co.hyperflex.clients.elastic.dto.GetElasticsearchSnapshotResponse;
 import co.hyperflex.clients.elastic.dto.cat.health.HealthRecord;
 import co.hyperflex.clients.elastic.dto.cat.indices.FlushResponse;
 import co.hyperflex.clients.elastic.dto.cat.indices.IndicesRecord;
@@ -15,9 +18,6 @@ import co.hyperflex.clients.elastic.dto.cluster.health.ClusterHealthResponse;
 import co.hyperflex.clients.elastic.dto.info.InfoResponse;
 import co.hyperflex.clients.elastic.dto.nodes.NodesInfoResponse;
 import co.hyperflex.clients.elastic.dto.nodes.NodesStatsResponse;
-import co.hyperflex.dtos.GetElasticNodeAndIndexCountsResponse;
-import co.hyperflex.dtos.GetElasticsearchSnapshotResponse;
-import co.hyperflex.dtos.recovery.GetAllocationExplanationResponse;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.util.Collections;
 import java.util.Date;
@@ -39,11 +39,6 @@ public class ElasticClientImpl implements ElasticClient {
 
   public ElasticClientImpl(RestClient restClient) {
     this.restClient = restClient;
-  }
-
-  @Override
-  public RestClient getRestClient() {
-    return restClient;
   }
 
   @Override
@@ -287,5 +282,34 @@ public class ElasticClientImpl implements ElasticClient {
 
   public <T> T performGet(String uri, Class<T> responseType) {
     return restClient.get().uri(uri).retrieve().body(responseType);
+  }
+
+  @Override
+  public <T> T execute(ElasticRequest<T> request) {
+    ResponseEntity<T> response = switch (request.getMethod()) {
+      case GET -> restClient.get()
+          .uri(request.getUri())
+          .retrieve()
+          .toEntity(request.getResponseType());
+
+      case POST -> restClient.post()
+          .uri(request.getUri())
+          .body(request.getBody())
+          .retrieve()
+          .toEntity(request.getResponseType());
+
+      case PUT -> restClient.put()
+          .uri(request.getUri())
+          .body(request.getBody())
+          .retrieve()
+          .toEntity(request.getResponseType());
+
+      case DELETE -> restClient.delete()
+          .uri(request.getUri())
+          .retrieve()
+          .toEntity(request.getResponseType());
+    };
+
+    return response.getBody();
   }
 }

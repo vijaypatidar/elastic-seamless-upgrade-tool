@@ -1,4 +1,4 @@
-package co.hyperflex.dtos;
+package co.hyperflex.clients.elastic.dto;
 
 public record GetElasticNodeAndIndexCountsResponse(
     int dataNodes,

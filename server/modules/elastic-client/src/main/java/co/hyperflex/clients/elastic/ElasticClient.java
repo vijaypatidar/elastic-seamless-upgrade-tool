@@ -1,6 +1,9 @@
 package co.hyperflex.clients.elastic;
 
+import co.hyperflex.clients.elastic.dto.GetAllocationExplanationResponse;
 import co.hyperflex.clients.elastic.dto.GetElasticDeprecationResponse;
+import co.hyperflex.clients.elastic.dto.GetElasticNodeAndIndexCountsResponse;
+import co.hyperflex.clients.elastic.dto.GetElasticsearchSnapshotResponse;
 import co.hyperflex.clients.elastic.dto.cat.health.HealthRecord;
 import co.hyperflex.clients.elastic.dto.cat.indices.FlushResponse;
 import co.hyperflex.clients.elastic.dto.cat.indices.IndicesRecord;
@@ -14,17 +17,11 @@ import co.hyperflex.clients.elastic.dto.cluster.PutClusterSettingsResponse;
 import co.hyperflex.clients.elastic.dto.cluster.health.ClusterHealthResponse;
 import co.hyperflex.clients.elastic.dto.nodes.NodesInfoResponse;
 import co.hyperflex.clients.elastic.dto.nodes.NodesStatsResponse;
-import co.hyperflex.dtos.GetElasticNodeAndIndexCountsResponse;
-import co.hyperflex.dtos.GetElasticsearchSnapshotResponse;
-import co.hyperflex.dtos.recovery.GetAllocationExplanationResponse;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import org.springframework.web.client.RestClient;
 
 public interface ElasticClient {
-
-  RestClient getRestClient();
 
   List<HealthRecord> getHealth();
 
@@ -69,4 +66,6 @@ public interface ElasticClient {
   NodesStatsResponse getNodesMetric(String nodeId, String metric);
 
   ClusterStatsResponse getClusterStats();
+
+  <T> T execute(ElasticRequest<T> request);
 }

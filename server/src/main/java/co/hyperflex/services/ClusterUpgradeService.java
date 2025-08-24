@@ -2,10 +2,10 @@ package co.hyperflex.services;
 
 import co.hyperflex.clients.elastic.ElasticClient;
 import co.hyperflex.clients.elastic.ElasticsearchClientProvider;
+import co.hyperflex.clients.elastic.dto.GetElasticsearchSnapshotResponse;
 import co.hyperflex.clients.kibana.KibanaClient;
 import co.hyperflex.clients.kibana.KibanaClientProvider;
 import co.hyperflex.dtos.ClusterInfoResponse;
-import co.hyperflex.dtos.GetElasticsearchSnapshotResponse;
 import co.hyperflex.dtos.clusters.GetClusterNodeResponse;
 import co.hyperflex.dtos.clusters.GetClusterResponse;
 import co.hyperflex.dtos.clusters.GetElasticCloudClusterResponse;

@@ -2,3 +2,4 @@ rootProject.name = 'elastic-seamless-upgrade-tool'
 
 include 'frontend'
 include 'server'
+include ':server:modules:elastic-client'

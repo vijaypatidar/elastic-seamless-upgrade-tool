@@ -1,4 +1,4 @@
-package co.hyperflex.dtos;
+package co.hyperflex.clients.elastic.dto;
 
 import java.util.Date;
 

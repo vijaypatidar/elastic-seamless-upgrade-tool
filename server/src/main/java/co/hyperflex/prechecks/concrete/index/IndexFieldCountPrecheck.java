@@ -1,5 +1,6 @@
 package co.hyperflex.prechecks.concrete.index;
 
+import co.hyperflex.clients.elastic.ElasticRequest;
 import co.hyperflex.entities.precheck.PrecheckSeverity;
 import co.hyperflex.prechecks.contexts.IndexContext;
 import co.hyperflex.prechecks.core.BaseIndexPrecheck;
@@ -24,10 +25,16 @@ public class IndexFieldCountPrecheck extends BaseIndexPrecheck {
   public void run(IndexContext context) {
     String indexName = context.getIndexName();
     Logger logger = context.getLogger();
+    var uri = "/" + indexName + "/_mapping";
 
-    JsonNode root = context.getElasticClient().getRestClient().get().uri("/" + indexName + "/_mapping")
-        .retrieve()
-        .body(JsonNode.class);
+    ElasticRequest<JsonNode> request = new ElasticRequest<>(
+        uri,
+        null,
+        JsonNode.class,
+        ElasticRequest.HttpMethod.GET
+    );
+
+    JsonNode root = context.getElasticClient().execute(request);
     JsonNode propertiesNode = root.path(indexName).path("mappings").path("properties");
     if (propertiesNode.isMissingNode() || propertiesNode.isEmpty()) {
       logger.info("Index [{}] has no properties defined.", indexName);

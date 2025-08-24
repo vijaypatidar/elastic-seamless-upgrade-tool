@@ -2,6 +2,7 @@ package co.hyperflex.services;
 
 import co.hyperflex.clients.elastic.ElasticClient;
 import co.hyperflex.clients.elastic.ElasticsearchClientProvider;
+import co.hyperflex.clients.elastic.dto.GetAllocationExplanationResponse;
 import co.hyperflex.clients.elastic.dto.cat.master.MasterRecord;
 import co.hyperflex.clients.elastic.dto.info.InfoResponse;
 import co.hyperflex.clients.kibana.KibanaClient;
@@ -22,7 +23,6 @@ import co.hyperflex.dtos.clusters.UpdateClusterResponse;
 import co.hyperflex.dtos.clusters.UpdateElasticCloudClusterRequest;
 import co.hyperflex.dtos.clusters.UpdateNodeConfigurationResponse;
 import co.hyperflex.dtos.clusters.UpdateSelfManagedClusterRequest;
-import co.hyperflex.dtos.recovery.GetAllocationExplanationResponse;
 import co.hyperflex.entities.cluster.ClusterEntity;
 import co.hyperflex.entities.cluster.ClusterNodeEntity;
 import co.hyperflex.entities.cluster.ClusterNodeType;

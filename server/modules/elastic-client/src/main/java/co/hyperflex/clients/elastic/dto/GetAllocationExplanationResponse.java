@@ -1,4 +1,4 @@
-package co.hyperflex.dtos.recovery;
+package co.hyperflex.clients.elastic.dto;
 
 public record GetAllocationExplanationResponse(
     String index,
