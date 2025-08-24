@@ -1,6 +1,5 @@
-package co.hyperflex.exceptions;
+package co.hyperflex.common.exceptions;
 
-import org.springframework.http.HttpStatus;
 
 public class ForbiddenException extends AppException {
 

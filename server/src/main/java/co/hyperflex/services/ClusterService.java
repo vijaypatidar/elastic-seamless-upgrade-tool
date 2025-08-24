@@ -9,6 +9,8 @@ import co.hyperflex.clients.kibana.KibanaClient;
 import co.hyperflex.clients.kibana.KibanaClientProvider;
 import co.hyperflex.clients.kibana.dto.GetKibanaStatusResponse;
 import co.hyperflex.clients.kibana.dto.OsStats;
+import co.hyperflex.common.exceptions.BadRequestException;
+import co.hyperflex.common.exceptions.NotFoundException;
 import co.hyperflex.dtos.clusters.AddClusterRequest;
 import co.hyperflex.dtos.clusters.AddClusterResponse;
 import co.hyperflex.dtos.clusters.AddSelfManagedClusterRequest;
@@ -33,8 +35,6 @@ import co.hyperflex.entities.cluster.OperatingSystemInfo;
 import co.hyperflex.entities.cluster.SelfManagedClusterEntity;
 import co.hyperflex.entities.cluster.SshInfo;
 import co.hyperflex.entities.upgrade.NodeUpgradeStatus;
-import co.hyperflex.exceptions.BadRequestException;
-import co.hyperflex.exceptions.NotFoundException;
 import co.hyperflex.mappers.ClusterMapper;
 import co.hyperflex.repositories.ClusterNodeRepository;
 import co.hyperflex.repositories.ClusterRepository;
@@ -121,7 +121,7 @@ public class ClusterService {
   @CacheEvict(value = "elasticClientCache", key = "#clusterId")
   public UpdateClusterResponse updateCluster(String clusterId, UpdateClusterRequest request) {
     ClusterEntity cluster = clusterRepository.findById(clusterId)
-        .orElseThrow(() -> new co.hyperflex.exceptions.NotFoundException("Cluster not found with id: " + clusterId));
+        .orElseThrow(() -> new NotFoundException("Cluster not found with id: " + clusterId));
 
     cluster.setName(request.getName());
     cluster.setElasticUrl(request.getElasticUrl());

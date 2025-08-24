@@ -13,6 +13,7 @@
             <option value="$PROJECT_DIR$/server" />
             <option value="$PROJECT_DIR$/server/modules" />
             <option value="$PROJECT_DIR$/server/modules/ansible" />
+            <option value="$PROJECT_DIR$/server/modules/common" />
             <option value="$PROJECT_DIR$/server/modules/elastic-client" />
             <option value="$PROJECT_DIR$/server/modules/ssh-client" />
           </set>

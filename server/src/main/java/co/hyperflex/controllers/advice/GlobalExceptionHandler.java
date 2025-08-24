@@ -1,10 +1,12 @@
-package co.hyperflex.exceptions;
+package co.hyperflex.controllers.advice;
 
+import co.hyperflex.common.exceptions.AppException;
 import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -19,7 +21,7 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ErrorResponse> handleAppException(AppException ex) {
     logger.error("Application exception: {}", ex.getMessage(), ex);
     ErrorResponse errorResponse = new ErrorResponse(ex.getMessage());
-    return new ResponseEntity<>(errorResponse, ex.getStatusCode());
+    return new ResponseEntity<>(errorResponse, HttpStatusCode.valueOf(ex.getStatusCode().getCode()));
   }
 
   @ExceptionHandler(MethodArgumentNotValidException.class)

@@ -1,20 +1,20 @@
 package co.hyperflex.prechecks.concrete.index;
 
 import co.hyperflex.clients.elastic.ElasticRequest;
+import co.hyperflex.clients.elastic.HttpMethod;
 import co.hyperflex.entities.precheck.PrecheckSeverity;
 import co.hyperflex.prechecks.contexts.IndexContext;
 import co.hyperflex.prechecks.core.BaseIndexPrecheck;
 import com.fasterxml.jackson.databind.JsonNode;
-import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Component;
 
 @Component
 public class IndexFieldCountPrecheck extends BaseIndexPrecheck {
 
-  private static final int FIELD_LIMIT = 1000; // Example threshold
-
+  private static final int FIELD_LIMIT = 1000;
 
   @Override
   public String getName() {
@@ -27,12 +27,12 @@ public class IndexFieldCountPrecheck extends BaseIndexPrecheck {
     Logger logger = context.getLogger();
     var uri = "/" + indexName + "/_mapping";
 
-    ElasticRequest<JsonNode> request = new ElasticRequest<>(
-        uri,
-        null,
-        JsonNode.class,
-        ElasticRequest.HttpMethod.GET
-    );
+    var request = ElasticRequest
+        .builder(JsonNode.class)
+        .method(HttpMethod.GET)
+        .uri(uri)
+        .build();
+
 
     JsonNode root = context.getElasticClient().execute(request);
     JsonNode propertiesNode = root.path(indexName).path("mappings").path("properties");
@@ -60,10 +60,8 @@ public class IndexFieldCountPrecheck extends BaseIndexPrecheck {
 
   private int countFields(JsonNode propertiesNode) {
     int count = 0;
-    Iterator<Map.Entry<String, JsonNode>> fields = propertiesNode.fields();
-
-    while (fields.hasNext()) {
-      Map.Entry<String, JsonNode> entry = fields.next();
+    Set<Map.Entry<String, JsonNode>> fields = propertiesNode.properties();
+    for (Map.Entry<String, JsonNode> entry : fields) {
       count++;
 
       JsonNode propNode = entry.getValue();

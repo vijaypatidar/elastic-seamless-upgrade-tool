@@ -1,8 +1,8 @@
 package co.hyperflex.clients.elastic;
 
 import co.hyperflex.clients.ClusterCredentialProvider;
+import co.hyperflex.common.exceptions.NotFoundException;
 import co.hyperflex.entities.cluster.ClusterEntity;
-import co.hyperflex.exceptions.NotFoundException;
 import co.hyperflex.repositories.ClusterRepository;
 import jakarta.validation.constraints.NotNull;
 import java.net.Socket;
