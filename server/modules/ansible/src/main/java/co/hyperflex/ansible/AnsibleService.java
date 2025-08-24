@@ -15,9 +15,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
 
-@Service
 public class AnsibleService {
 
   private static final Logger logger = LoggerFactory.getLogger(AnsibleService.class);
