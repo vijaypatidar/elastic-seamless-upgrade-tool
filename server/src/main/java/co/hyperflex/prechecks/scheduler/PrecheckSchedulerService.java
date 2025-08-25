@@ -99,7 +99,7 @@ public class PrecheckSchedulerService {
 
   public void scheduleIndexPrechecks(String upgradeJobId, String clusterId) {
     ElasticClient elasticClient =
-        elasticsearchClientProvider.getClientByClusterId(clusterId);
+        elasticsearchClientProvider.getClient(clusterId);
     final List<IndicesRecord> indexes = elasticClient.getIndices();
     precheckRegistry.getIndexPrechecks()
         .stream()

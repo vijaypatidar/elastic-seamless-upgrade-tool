@@ -69,7 +69,7 @@ public class DeprecationService {
 
   public List<GetDeprecationsResponse> getElasticDeprecations(String clusterId) {
     ElasticClient elasticClient =
-        elasticsearchClientProvider.getClientByClusterId(clusterId);
+        elasticsearchClientProvider.getClient(clusterId);
 
     GetElasticDeprecationResponse deprecation = elasticClient.getDeprecation();
     List<GetDeprecationsResponse> responses = new LinkedList<>();

@@ -202,7 +202,7 @@ public class ClusterService {
       String version = "N/A";
       String status = null;
       try {
-        ElasticClient client = elasticsearchClientProvider.getClientByClusterId(cluster.getId());
+        ElasticClient client = elasticsearchClientProvider.getClient(cluster.getId());
         version = client.getInfo().getVersion().getNumber();
         status = client.getHealthStatus();
       } catch (Exception e) {
@@ -215,7 +215,7 @@ public class ClusterService {
 
   public ClusterOverviewResponse getClusterOverview(String clusterId) {
     ClusterEntity cluster = clusterRepository.getCluster(clusterId);
-    ElasticClient elasticClient = elasticsearchClientProvider.getClientByClusterId(cluster.getId());
+    ElasticClient elasticClient = elasticsearchClientProvider.getClient(cluster.getId());
 
     try {
       InfoResponse info = elasticClient.getInfo();
@@ -339,7 +339,7 @@ public class ClusterService {
 
   private void syncElasticNodes(ClusterEntity cluster) {
     try {
-      ElasticClient elasticClient = elasticsearchClientProvider.buildElasticClient(cluster);
+      ElasticClient elasticClient = elasticsearchClientProvider.getClient(cluster);
       var response = elasticClient.getNodesInfo();
       var nodes = response.getNodes();
       List<ClusterNodeEntity> clusterNodes = new LinkedList<>();
@@ -392,7 +392,7 @@ public class ClusterService {
     cluster.setKibanaUrl(UrlUtils.validateAndCleanUrl(cluster.getKibanaUrl()));
     cluster.setElasticUrl(UrlUtils.validateAndCleanUrl(cluster.getElasticUrl()));
     try {
-      ElasticClient elasticClient = elasticsearchClientProvider.buildElasticClient(cluster);
+      ElasticClient elasticClient = elasticsearchClientProvider.getClient(cluster);
       elasticClient.getHealthStatus();
     } catch (Exception e) {
       log.warn("Error validating cluster credentials", e);
@@ -409,7 +409,7 @@ public class ClusterService {
   }
 
   public List<GetAllocationExplanationResponse> getAllocationExplanation(String clusterId) {
-    return elasticsearchClientProvider.getClientByClusterId(clusterId).getAllocationExplanation();
+    return elasticsearchClientProvider.getClient(clusterId).getAllocationExplanation();
   }
 
   private void restartNode(SelfManagedClusterEntity cluster, ClusterNodeEntity node) {

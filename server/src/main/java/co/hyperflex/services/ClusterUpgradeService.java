@@ -115,7 +115,7 @@ public class ClusterUpgradeService {
       log.error("Failed to retrieve active job for clusterId: {}", clusterId, e);
     }
     try {
-      ElasticClient client = elasticsearchClientProvider.getClientByClusterId(clusterId);
+      ElasticClient client = elasticsearchClientProvider.getClient(clusterId);
       KibanaClient kibanaClient = kibanaClientProvider.getKibanaClientByClusterId(clusterId);
       GetClusterResponse cluster = clusterService.getClusterById(clusterId);
       PrecheckStatus precheckStatus = null;
@@ -175,7 +175,7 @@ public class ClusterUpgradeService {
         clusterUpgradeJobService.setJobStatus(clusterUpgradeJobId, ClusterUpgradeStatus.UPGRADING);
         MDC.put(UpgradeLogEntity.CLUSTER_UPGRADE_JOB_ID, clusterUpgradeJobId);
 
-        ElasticClient elasticClient = elasticsearchClientProvider.getClientByClusterId(cluster.getId());
+        ElasticClient elasticClient = elasticsearchClientProvider.getClient(cluster.getId());
         KibanaClient kibanaClient = kibanaClientProvider.getClient(cluster);
 
         final String targetVersion = clusterUpgradeJobService.getUpgradeJobById(clusterUpgradeJobId).getTargetVersion();

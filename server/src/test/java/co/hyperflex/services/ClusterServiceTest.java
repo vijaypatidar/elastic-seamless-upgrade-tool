@@ -72,7 +72,7 @@ class ClusterServiceTest {
     NodesInfoResponse nodesInfoResponse = mock(NodesInfoResponse.class);
 
     when(clusterMapper.toEntity(request)).thenReturn(cluster);
-    when(elasticsearchClientProvider.buildElasticClient(cluster)).thenReturn(elasticClient);
+    when(elasticsearchClientProvider.getClient(cluster)).thenReturn(elasticClient);
     when(kibanaClientProvider.getClient(cluster)).thenReturn(kibanaClient);
     when(elasticClient.getHealthStatus()).thenReturn("green");
     when(kibanaClient.getKibanaVersion()).thenReturn("8.1.0");
@@ -109,7 +109,7 @@ class ClusterServiceTest {
 
     when(clusterRepository.findById(clusterId)).thenReturn(Optional.of(cluster));
     when(sshKeyService.createSSHPrivateKeyFile(any(), any())).thenReturn("path/to/key");
-    when(elasticsearchClientProvider.buildElasticClient(cluster)).thenReturn(esClient);
+    when(elasticsearchClientProvider.getClient(cluster)).thenReturn(esClient);
     when(kibanaClientProvider.getClient(cluster)).thenReturn(kibanaClient);
     when(esClient.getNodesInfo()).thenReturn(nodesInfoResponse);
     when(esClient.getHealthStatus()).thenReturn("green");
@@ -165,7 +165,7 @@ class ClusterServiceTest {
     cluster.setElasticUrl(MOCK_ELASTIC_SEARCH_URL);
     cluster.setKibanaUrl(MOCK_KIBANA_URL);
     when(clusterMapper.toEntity(request)).thenReturn(cluster);
-    when(elasticsearchClientProvider.buildElasticClient(cluster)).thenThrow(new RuntimeException("Invalid credentials"));
+    when(elasticsearchClientProvider.getClient(cluster)).thenThrow(new RuntimeException("Invalid credentials"));
 
     // Act & Assert
     assertThrows(BadRequestException.class, () -> clusterService.add(request));

@@ -54,7 +54,7 @@ public class PrecheckContextResolver {
         () -> new NotFoundException("Cluster not found: " + precheckRun.getClusterId()));
 
     ElasticClient elasticClient =
-        elasticsearchClientProvider.getClientByClusterId(clusterId);
+        elasticsearchClientProvider.getClient(clusterId);
     KibanaClient kibanaClient =
         kibanaClientProvider.getKibanaClientByClusterId(clusterId);
 

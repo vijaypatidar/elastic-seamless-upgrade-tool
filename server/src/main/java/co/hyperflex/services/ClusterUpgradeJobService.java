@@ -65,7 +65,7 @@ public class ClusterUpgradeJobService {
     List<ClusterUpgradeJobEntity> jobs = clusterUpgradeJobRepository.findByClusterId(clusterId);
 
     ElasticClient elasticClient =
-        elasticsearchClientProvider.getClientByClusterId(clusterId);
+        elasticsearchClientProvider.getClient(clusterId);
     InfoResponse info = elasticClient.getInfo();
     String currentVersion = info.getVersion().getNumber();
 
@@ -145,7 +145,7 @@ public class ClusterUpgradeJobService {
     if (underUpgrade) {
       possibleUpgrades = List.of();
     } else {
-      ElasticClient elasticClient = elasticsearchClientProvider.getClientByClusterId(clusterId);
+      ElasticClient elasticClient = elasticsearchClientProvider.getClient(clusterId);
       var info = elasticClient.getInfo();
       possibleUpgrades = UpgradePathUtils.getPossibleUpgrades(info.getVersion().getNumber());
     }

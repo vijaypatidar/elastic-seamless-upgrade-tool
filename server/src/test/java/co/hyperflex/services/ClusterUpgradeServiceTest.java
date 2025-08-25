@@ -80,7 +80,7 @@ class ClusterUpgradeServiceTest {
     deprecationCounts = new ClusterInfoResponse.DeprecationCounts(0, 0);
 
     // Common mocks for most tests
-    when(elasticsearchClientProvider.getClientByClusterId(CLUSTER_ID)).thenReturn(elasticClient);
+    when(elasticsearchClientProvider.getClient(CLUSTER_ID)).thenReturn(elasticClient);
     when(kibanaClientProvider.getKibanaClientByClusterId(CLUSTER_ID)).thenReturn(kibanaClient);
     when(deprecationService.getKibanaDeprecationCounts(CLUSTER_ID)).thenReturn(deprecationCounts);
     when(deprecationService.getElasticDeprecationCounts(CLUSTER_ID)).thenReturn(deprecationCounts);

@@ -38,13 +38,13 @@ public class ElasticsearchClientProviderImpl implements ElasticsearchClientProvi
 
   @Cacheable(value = "elasticClientCache", key = "#clusterId")
   @Override
-  public ElasticClient getClientByClusterId(@NotNull String clusterId) {
-    return clusterRepository.findById(clusterId).map(ElasticsearchClientProviderImpl.this::buildElasticClient)
+  public ElasticClient getClient(@NotNull String clusterId) {
+    return clusterRepository.findById(clusterId).map(ElasticsearchClientProviderImpl.this::getClient)
         .orElseThrow(() -> new NotFoundException("Cluster not found"));
   }
 
   @Override
-  public ElasticClient buildElasticClient(ClusterEntity cluster) {
+  public ElasticClient getClient(ClusterEntity cluster) {
     try {
       var authHeader = credentialProvider.getAuthHeader(cluster);
       HttpClient jdkHttpClient = HttpClient.newBuilder()
