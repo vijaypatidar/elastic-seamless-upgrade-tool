@@ -38,7 +38,7 @@ class DeprecationServiceTest {
   @Test
   void getKibanaDeprecations_returnsCorrectly() {
     // Arrange
-    when(kibanaClientProvider.getKibanaClientByClusterId(CLUSTER_ID)).thenReturn(kibanaClient);
+    when(kibanaClientProvider.getClient(CLUSTER_ID)).thenReturn(kibanaClient);
     GetKibanaDeprecationResponse.Deprecation deprecation = new GetKibanaDeprecationResponse.Deprecation(
         "config.path", "Title", "warning", "Message",
         new GetKibanaDeprecationResponse.CorrectiveActions(List.of("Step 1")),
@@ -60,7 +60,7 @@ class DeprecationServiceTest {
   @Test
   void getElasticDeprecations_returnsCorrectly() {
     // Arrange
-    when(elasticsearchClientProvider.getClientByClusterId(CLUSTER_ID)).thenReturn(elasticClient);
+    when(elasticsearchClientProvider.getClient(CLUSTER_ID)).thenReturn(elasticClient);
     ElasticDeprecation deprecation = new ElasticDeprecation("Details", "critical", "Message", "URL");
     GetElasticDeprecationResponse elasticResponse = new GetElasticDeprecationResponse(
         List.of(deprecation), Collections.emptyMap(), Collections.emptyMap(), Collections.emptyList(),
@@ -81,7 +81,7 @@ class DeprecationServiceTest {
   @Test
   void getKibanaDeprecationCounts_returnsCorrectCounts() {
     // Arrange
-    when(kibanaClientProvider.getKibanaClientByClusterId(CLUSTER_ID)).thenReturn(kibanaClient);
+    when(kibanaClientProvider.getClient(CLUSTER_ID)).thenReturn(kibanaClient);
     GetKibanaDeprecationResponse.Deprecation critical = new GetKibanaDeprecationResponse.Deprecation(
         null, null, "critical", null, new GetKibanaDeprecationResponse.CorrectiveActions(List.of()), "critical", false, null);
     GetKibanaDeprecationResponse.Deprecation warning = new GetKibanaDeprecationResponse.Deprecation(
@@ -100,7 +100,7 @@ class DeprecationServiceTest {
   @Test
   void getElasticDeprecationCounts_returnsCorrectCounts() {
     // Arrange
-    when(elasticsearchClientProvider.getClientByClusterId(CLUSTER_ID)).thenReturn(elasticClient);
+    when(elasticsearchClientProvider.getClient(CLUSTER_ID)).thenReturn(elasticClient);
     ElasticDeprecation critical = new ElasticDeprecation(null, "critical", null, null);
     ElasticDeprecation warning = new ElasticDeprecation(null, "warning", null, null);
     GetElasticDeprecationResponse elasticResponse = new GetElasticDeprecationResponse(

@@ -18,16 +18,6 @@ import org.springframework.context.annotation.Configuration;
 public class CacheConfig {
   private static final Logger log = LoggerFactory.getLogger(CacheConfig.class);
 
-  @Bean
-  public CacheManager cacheManager() {
-    SimpleCacheManager manager = new SimpleCacheManager();
-    manager.setCaches(List.of(
-        getElasticClientCache(),
-        getSettingCache()
-    ));
-    return manager;
-  }
-
   private static CaffeineCache getElasticClientCache() {
     return new CaffeineCache("elasticClientCache",
         Caffeine.newBuilder().expireAfterAccess(20, TimeUnit.MINUTES).removalListener((Object key, Object value, RemovalCause cause) -> {
@@ -45,6 +35,16 @@ public class CacheConfig {
   private static CaffeineCache getSettingCache() {
     return new CaffeineCache("settingCache",
         Caffeine.newBuilder().expireAfterAccess(10, TimeUnit.MINUTES).build());
+  }
+
+  @Bean
+  public CacheManager cacheManager() {
+    SimpleCacheManager manager = new SimpleCacheManager();
+    manager.setCaches(List.of(
+        getElasticClientCache(),
+        getSettingCache()
+    ));
+    return manager;
   }
 
 }

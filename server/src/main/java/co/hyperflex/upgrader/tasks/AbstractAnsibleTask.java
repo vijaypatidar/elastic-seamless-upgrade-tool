@@ -1,6 +1,6 @@
 package co.hyperflex.upgrader.tasks;
 
-import co.hyperflex.ansible.AnsibleService;
+import co.hyperflex.ansible.AnsibleCommandExecutor;
 import co.hyperflex.ansible.commands.AnsibleAdHocCommand;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
@@ -9,14 +9,14 @@ import org.slf4j.LoggerFactory;
 public abstract class AbstractAnsibleTask implements Task {
 
   private static final Logger logger = LoggerFactory.getLogger(AbstractAnsibleTask.class);
-  private final AnsibleService ansibleService = new AnsibleService();
+  private final AnsibleCommandExecutor ansibleCommandExecutor = new AnsibleCommandExecutor();
 
-  protected TaskResult runAdHocCommand(AnsibleAdHocCommand cmd, Context context) {
+  protected TaskResult runAdHocCommand(AnsibleAdHocCommand cmd) {
     try {
       StringBuilder output = new StringBuilder();
       Consumer<String> consumer = s -> output.append(s).append("\n");
 
-      int exitCode = ansibleService.run(cmd, consumer, consumer);
+      int exitCode = ansibleCommandExecutor.run(cmd, consumer, consumer);
 
       if (exitCode == 0) {
         return TaskResult.success(output.toString());

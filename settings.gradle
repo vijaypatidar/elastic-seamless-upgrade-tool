@@ -2,3 +2,8 @@ rootProject.name = 'elastic-seamless-upgrade-tool'
 
 include 'frontend'
 include 'server'
+include ':server:modules:elastic-client'
+include 'server:modules:ansible'
+include 'server:modules:ssh-client'
+include ':server:modules:common'
+include 'server:modules:kibana-client'

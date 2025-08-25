@@ -1,13 +1,9 @@
 package co.hyperflex.prechecks.concrete.cluster;
 
-import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch.cluster.GetClusterSettingsRequest;
-import co.elastic.clients.elasticsearch.cluster.GetClusterSettingsResponse;
-import co.elastic.clients.json.JsonData;
+import co.hyperflex.clients.elastic.dto.cluster.GetClusterSettingsResponse;
 import co.hyperflex.entities.precheck.PrecheckSeverity;
 import co.hyperflex.prechecks.contexts.ClusterContext;
 import co.hyperflex.prechecks.core.BaseClusterPrecheck;
-import java.io.IOException;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Component;
@@ -27,50 +23,39 @@ public class ClusterAllocationSettingPrecheck extends BaseClusterPrecheck {
 
   @Override
   public void run(ClusterContext context) {
-    ElasticsearchClient client = context.getElasticClient().getElasticsearchClient();
     Logger logger = context.getLogger();
 
-    try {
-      GetClusterSettingsResponse settings = client.cluster().getSettings(
-          GetClusterSettingsRequest.of(req -> req
-              .flatSettings(true)
-              .includeDefaults(false)
-          )
-      );
+    GetClusterSettingsResponse settings = context.getElasticClient().getClusterSettings();
 
-      Map<String, JsonData> transientSettings = settings.transient_();
-      Map<String, JsonData> persistentSettings = settings.persistent();
+    Map<String, Object> transientSettings = settings.getTransient();
+    Map<String, Object> persistentSettings = settings.getPersistent();
 
-      String allocationSetting = "all";
+    String allocationSetting = "all";
 
-      String clusterRoutingAllocationEnable = "cluster.routing.allocation.enable";
-      if (transientSettings.containsKey(allocationSetting)) {
-        allocationSetting =
-            persistentSettings.get(clusterRoutingAllocationEnable).toJson().toString();
-      } else if (persistentSettings.containsKey(allocationSetting)) {
-        allocationSetting =
-            transientSettings.get(clusterRoutingAllocationEnable).toJson().toString();
-      }
-
-
-      String message = String.format(
-          "Current setting 'cluster.routing.allocation.enable' is '%s'.", allocationSetting);
-
-
-      if ("primaries".equalsIgnoreCase(allocationSetting)
-          || "none".equalsIgnoreCase(allocationSetting)) {
-        logger.warn(message);
-        logger.warn(
-            "This setting may prevent shard allocation and lead to red cluster status."
-                + " Set it to 'all' before upgrade.");
-        throw new RuntimeException();
-      } else {
-        logger.info(message);
-      }
-
-    } catch (IOException e) {
-      logger.error("Failed to fetch cluster settings", e);
-      throw new RuntimeException("Failed to fetch cluster settings", e);
+    String clusterRoutingAllocationEnable = "cluster.routing.allocation.enable";
+    if (transientSettings.containsKey(allocationSetting)) {
+      allocationSetting =
+          persistentSettings.get(clusterRoutingAllocationEnable).toString();
+    } else if (persistentSettings.containsKey(allocationSetting)) {
+      allocationSetting =
+          transientSettings.get(clusterRoutingAllocationEnable).toString();
     }
+
+
+    String message = String.format(
+        "Current setting 'cluster.routing.allocation.enable' is '%s'.", allocationSetting);
+
+
+    if ("primaries".equalsIgnoreCase(allocationSetting)
+        || "none".equalsIgnoreCase(allocationSetting)) {
+      logger.warn(message);
+      logger.warn(
+          "This setting may prevent shard allocation and lead to red cluster status."
+              + " Set it to 'all' before upgrade.");
+      throw new RuntimeException();
+    } else {
+      logger.info(message);
+    }
+
   }
 }

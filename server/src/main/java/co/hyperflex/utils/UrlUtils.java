@@ -1,6 +1,6 @@
 package co.hyperflex.utils;
 
-import co.hyperflex.exceptions.BadRequestException;
+import co.hyperflex.common.exceptions.BadRequestException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
