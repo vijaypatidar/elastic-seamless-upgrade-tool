@@ -20,7 +20,7 @@ public class KibanaClientProvider {
     this.clusterRepository = clusterRepository;
   }
 
-  public KibanaClient getKibanaClientByClusterId(String clusterId) {
+  public KibanaClient getClient(String clusterId) {
     return clusterRepository.findById(clusterId).map(this::getClient)
         .orElseThrow(() -> new NotFoundException("Cluster not found"));
   }
@@ -35,6 +35,6 @@ public class KibanaClientProvider {
         .defaultHeader("kbn-xsrf", "true")
         .build();
 
-    return new KibanaClient(client, cluster.getKibanaUrl());
+    return new KibanaClientImpl(client, cluster.getKibanaUrl());
   }
 }

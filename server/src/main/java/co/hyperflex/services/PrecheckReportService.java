@@ -256,7 +256,7 @@ public class PrecheckReportService {
   }
 
   private String getKibanaDeprecationsMdReport(String clusterId) {
-    KibanaClient client = kibanaClientProvider.getKibanaClientByClusterId(clusterId);
+    KibanaClient client = kibanaClientProvider.getClient(clusterId);
     List<GetKibanaDeprecationResponse.Deprecation> deprecations = client.getDeprecations().deprecations();
 
     StringBuilder md = new StringBuilder("## ⚠️ Kibana Deprecations\n\n");

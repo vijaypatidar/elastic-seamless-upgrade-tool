@@ -18,6 +18,7 @@ repositories {
 
 dependencies {
     implementation project(':server:modules:elastic-client')
+    implementation project(':server:modules:kibana-client')
     implementation project(':server:modules:ansible')
     implementation project(':server:modules:ssh-client')
     implementation project(':server:modules:common')

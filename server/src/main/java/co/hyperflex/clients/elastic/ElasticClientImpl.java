@@ -25,11 +25,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClient;
 
@@ -286,26 +288,36 @@ public class ElasticClientImpl implements ElasticClient {
 
   @Override
   public <T> T execute(ElasticRequest<T> request) {
+    Consumer<HttpHeaders> httpHeadersConsumer = httpHeaders -> {
+      Map<String, Object> headers = request.getHeaders();
+      if (headers != null) {
+        headers.forEach((name, value) -> httpHeaders.add(name, String.valueOf(value)));
+      }
+    };
     ResponseEntity<T> response = switch (request.getMethod()) {
       case GET -> restClient.get()
           .uri(request.getUri())
+          .headers(httpHeadersConsumer)
           .retrieve()
           .toEntity(request.getResponseType());
 
       case POST -> restClient.post()
           .uri(request.getUri())
+          .headers(httpHeadersConsumer)
           .body(request.getBody())
           .retrieve()
           .toEntity(request.getResponseType());
 
       case PUT -> restClient.put()
           .uri(request.getUri())
+          .headers(httpHeadersConsumer)
           .body(request.getBody())
           .retrieve()
           .toEntity(request.getResponseType());
 
       case DELETE -> restClient.delete()
           .uri(request.getUri())
+          .headers(httpHeadersConsumer)
           .retrieve()
           .toEntity(request.getResponseType());
     };

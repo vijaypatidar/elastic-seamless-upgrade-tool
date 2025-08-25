@@ -38,7 +38,7 @@ class DeprecationServiceTest {
   @Test
   void getKibanaDeprecations_returnsCorrectly() {
     // Arrange
-    when(kibanaClientProvider.getKibanaClientByClusterId(CLUSTER_ID)).thenReturn(kibanaClient);
+    when(kibanaClientProvider.getClient(CLUSTER_ID)).thenReturn(kibanaClient);
     GetKibanaDeprecationResponse.Deprecation deprecation = new GetKibanaDeprecationResponse.Deprecation(
         "config.path", "Title", "warning", "Message",
         new GetKibanaDeprecationResponse.CorrectiveActions(List.of("Step 1")),
@@ -81,7 +81,7 @@ class DeprecationServiceTest {
   @Test
   void getKibanaDeprecationCounts_returnsCorrectCounts() {
     // Arrange
-    when(kibanaClientProvider.getKibanaClientByClusterId(CLUSTER_ID)).thenReturn(kibanaClient);
+    when(kibanaClientProvider.getClient(CLUSTER_ID)).thenReturn(kibanaClient);
     GetKibanaDeprecationResponse.Deprecation critical = new GetKibanaDeprecationResponse.Deprecation(
         null, null, "critical", null, new GetKibanaDeprecationResponse.CorrectiveActions(List.of()), "critical", false, null);
     GetKibanaDeprecationResponse.Deprecation warning = new GetKibanaDeprecationResponse.Deprecation(

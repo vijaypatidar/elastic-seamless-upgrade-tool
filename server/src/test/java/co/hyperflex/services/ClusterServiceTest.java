@@ -13,6 +13,7 @@ import co.hyperflex.clients.elastic.ElasticClientImpl;
 import co.hyperflex.clients.elastic.ElasticsearchClientProvider;
 import co.hyperflex.clients.elastic.dto.nodes.NodesInfoResponse;
 import co.hyperflex.clients.kibana.KibanaClient;
+import co.hyperflex.clients.kibana.KibanaClientImpl;
 import co.hyperflex.clients.kibana.KibanaClientProvider;
 import co.hyperflex.common.exceptions.BadRequestException;
 import co.hyperflex.common.exceptions.NotFoundException;
@@ -67,7 +68,7 @@ class ClusterServiceTest {
     cluster.setKibanaUrl(MOCK_KIBANA_URL);
 
     co.hyperflex.clients.elastic.ElasticClient elasticClient = mock(ElasticClientImpl.class);
-    KibanaClient kibanaClient = mock(KibanaClient.class);
+    KibanaClient kibanaClient = mock(KibanaClientImpl.class);
     ElasticClient esClient = mock(ElasticClient.class);
     NodesInfoResponse nodesInfoResponse = mock(NodesInfoResponse.class);
 
@@ -103,7 +104,7 @@ class ClusterServiceTest {
     SelfManagedClusterEntity cluster = new SelfManagedClusterEntity();
     cluster.setId(clusterId);
 
-    KibanaClient kibanaClient = mock(KibanaClient.class);
+    KibanaClient kibanaClient = mock(KibanaClientImpl.class);
     ElasticClient esClient = mock(ElasticClient.class);
     NodesInfoResponse nodesInfoResponse = mock(NodesInfoResponse.class);
 

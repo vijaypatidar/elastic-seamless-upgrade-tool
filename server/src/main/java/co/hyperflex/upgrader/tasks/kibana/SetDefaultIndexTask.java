@@ -1,12 +1,13 @@
 package co.hyperflex.upgrader.tasks.kibana;
 
 import co.hyperflex.clients.kibana.KibanaClient;
+import co.hyperflex.clients.kibana.KibanaRequest;
+import co.hyperflex.common.http.HttpMethod;
 import co.hyperflex.upgrader.tasks.Context;
 import co.hyperflex.upgrader.tasks.Task;
 import co.hyperflex.upgrader.tasks.TaskResult;
 import java.util.Map;
 import org.slf4j.Logger;
-import org.springframework.core.ParameterizedTypeReference;
 
 public class SetDefaultIndexTask implements Task {
 
@@ -27,14 +28,14 @@ public class SetDefaultIndexTask implements Task {
     try {
       String requestBody = "{\"changes\":{\"defaultIndex\":\"syslog\"}}";
 
-      Map<String, Object> response = kibanaClient.getRestClient()
-          .post()
+      var request = KibanaRequest.builder(Map.class)
           .uri(url)
-          .header("kbn-version", context.config().targetVersion())
+          .method(HttpMethod.POST)
+          .addHeader("kbn-version", context.config().targetVersion())
           .body(requestBody)
-          .retrieve()
-          .body(new ParameterizedTypeReference<>() {
-          });
+          .build();
+
+      var response = kibanaClient.execute(request);
       logger.info("Successfully set default index.");
       return TaskResult.success("Default index set.");
     } catch (Exception e) {

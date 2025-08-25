@@ -116,7 +116,7 @@ public class ClusterUpgradeService {
     }
     try {
       ElasticClient client = elasticsearchClientProvider.getClient(clusterId);
-      KibanaClient kibanaClient = kibanaClientProvider.getKibanaClientByClusterId(clusterId);
+      KibanaClient kibanaClient = kibanaClientProvider.getClient(clusterId);
       GetClusterResponse cluster = clusterService.getClusterById(clusterId);
       PrecheckStatus precheckStatus = null;
       if (activeUpgradeJob != null) {

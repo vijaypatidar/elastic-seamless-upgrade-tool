@@ -81,7 +81,7 @@ class ClusterUpgradeServiceTest {
 
     // Common mocks for most tests
     when(elasticsearchClientProvider.getClient(CLUSTER_ID)).thenReturn(elasticClient);
-    when(kibanaClientProvider.getKibanaClientByClusterId(CLUSTER_ID)).thenReturn(kibanaClient);
+    when(kibanaClientProvider.getClient(CLUSTER_ID)).thenReturn(kibanaClient);
     when(deprecationService.getKibanaDeprecationCounts(CLUSTER_ID)).thenReturn(deprecationCounts);
     when(deprecationService.getElasticDeprecationCounts(CLUSTER_ID)).thenReturn(deprecationCounts);
     when(kibanaClient.getSnapshotCreationPageUrl()).thenReturn("some-url");

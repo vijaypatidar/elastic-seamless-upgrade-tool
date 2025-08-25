@@ -1,17 +1,17 @@
-package co.hyperflex.clients.elastic;
+package co.hyperflex.clients.kibana;
 
 import co.hyperflex.common.http.HttpMethod;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ElasticRequest<T> {
+public class KibanaRequest<T> {
   private final String uri;
   private final Object body;
   private final Class<T> responseType;
   private final HttpMethod method;
   private final Map<String, Object> headers;
 
-  private ElasticRequest(Builder<T> builder) {
+  private KibanaRequest(Builder<T> builder) {
     this.uri = builder.uri;
     this.body = builder.body;
     this.responseType = builder.responseType;
@@ -87,11 +87,11 @@ public class ElasticRequest<T> {
       return this;
     }
 
-    public ElasticRequest<T> build() {
+    public KibanaRequest<T> build() {
       if (uri == null || method == null) {
         throw new IllegalStateException("uri and method are required");
       }
-      return new ElasticRequest<>(this);
+      return new KibanaRequest<>(this);
     }
   }
 }

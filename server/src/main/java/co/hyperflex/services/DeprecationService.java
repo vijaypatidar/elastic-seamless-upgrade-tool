@@ -32,7 +32,7 @@ public class DeprecationService {
 
   public List<GetDeprecationsResponse> getKibanaDeprecations(String clusterId) {
     try {
-      KibanaClient kibanaClient = kibanaClientProvider.getKibanaClientByClusterId(clusterId);
+      KibanaClient kibanaClient = kibanaClientProvider.getClient(clusterId);
       List<GetKibanaDeprecationResponse.Deprecation> deprecations =
           Optional.ofNullable(kibanaClient.getDeprecations()).map(GetKibanaDeprecationResponse::deprecations).orElse(new LinkedList<>());
       return deprecations.stream().map((item) -> new GetDeprecationsResponse(

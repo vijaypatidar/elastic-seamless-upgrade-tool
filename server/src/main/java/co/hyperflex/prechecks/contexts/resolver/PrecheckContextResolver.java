@@ -56,7 +56,7 @@ public class PrecheckContextResolver {
     ElasticClient elasticClient =
         elasticsearchClientProvider.getClient(clusterId);
     KibanaClient kibanaClient =
-        kibanaClientProvider.getKibanaClientByClusterId(clusterId);
+        kibanaClientProvider.getClient(clusterId);
 
 
     switch (precheckRun) {
