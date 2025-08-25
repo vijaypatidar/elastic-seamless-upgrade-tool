@@ -12,9 +12,11 @@ import org.apache.sshd.client.channel.ClientChannel;
 import org.apache.sshd.client.channel.ClientChannelEvent;
 import org.apache.sshd.client.session.ClientSession;
 import org.apache.sshd.common.util.security.SecurityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SshCommandExecutor implements AutoCloseable {
-
+  private final Logger logger = LoggerFactory.getLogger(getClass());
   private final SshClient client;
   private final ClientSession session;
   private final long timeoutSeconds = 15;
@@ -38,8 +40,10 @@ public class SshCommandExecutor implements AutoCloseable {
       session.auth().verify(timeoutSeconds, TimeUnit.SECONDS);
     } catch (Exception e) {
       if (e.getCause() instanceof TimeoutException) {
+        logger.warn("Timeout waiting for private key verification");
         throw new RuntimeException("Unable to establish SSH connection to host (IP: " + host + ").");
       }
+      logger.warn("Unable to establish SSH connection to host", e);
       throw new RuntimeException("SSH authentication failed for host (IP: " + host + ").");
     }
   }
