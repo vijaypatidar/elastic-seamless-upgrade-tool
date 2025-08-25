@@ -1,10 +1,10 @@
 package co.hyperflex.ansible.commands;
 
+import java.util.List;
 import java.util.Map;
 
 public class AnsibleAdHocYumCommand extends AnsibleAdHocCommand {
   private final String hostIp;
-  private final String module = "ansible.builtin.yum";
   private final Map<String, Object> args;
   private final boolean useBecome;
   private final String sshUser;
@@ -18,29 +18,38 @@ public class AnsibleAdHocYumCommand extends AnsibleAdHocCommand {
     this.sshKeyPath = builder.sshKeyPath;
   }
 
+  @Override
   public String getHostIp() {
     return hostIp;
   }
 
-
+  @Override
   public String getModule() {
-    return module;
+    return "ansible.builtin.yum";
   }
 
-  public Map<String, Object> getArgs() {
-    return args;
-  }
-
+  @Override
   public boolean isUseBecome() {
     return useBecome;
   }
 
+  @Override
   public String getSshUser() {
     return sshUser;
   }
 
+  @Override
   public String getSshKeyPath() {
     return sshKeyPath;
+  }
+
+  @Override
+  public List<String> getArguments() {
+    return List.of();
+  }
+
+  public Map<String, Object> getArgs() {
+    return args;
   }
 
   public static class Builder {

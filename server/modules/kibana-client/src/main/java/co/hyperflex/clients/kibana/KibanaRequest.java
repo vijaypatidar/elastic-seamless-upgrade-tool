@@ -19,6 +19,14 @@ public class KibanaRequest<T> {
     this.headers = builder.headers;
   }
 
+  public static Object builder(HttpMethod method) {
+    return builder(Object.class);
+  }
+
+  public static <T> Builder<T> builder(Class<T> responseType) {
+    return new Builder<>(responseType);
+  }
+
   public String getUri() {
     return uri;
   }
@@ -39,20 +47,12 @@ public class KibanaRequest<T> {
     return headers;
   }
 
-  public static Object builder(HttpMethod method) {
-    return builder(Object.class);
-  }
-
-  public static <T> Builder<T> builder(Class<T> responseType) {
-    return new Builder<>(responseType);
-  }
-
   public static class Builder<T> {
+    private final Class<T> responseType;
     private String uri;
     private Object body;
     private HttpMethod method;
     private Map<String, Object> headers;
-    private final Class<T> responseType;
 
     public Builder(Class<T> responseType) {
       this.responseType = responseType;

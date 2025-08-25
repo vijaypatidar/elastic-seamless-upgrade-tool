@@ -22,11 +22,11 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-class AnsibleServiceTest {
+class AnsibleCommandExecutorTest {
 
   @Spy
   @InjectMocks
-  private AnsibleService ansibleService;
+  private AnsibleCommandExecutor ansibleCommandExecutor;
 
   @Test
   void run_aptCommand_success() throws Exception {
@@ -45,13 +45,13 @@ class AnsibleServiceTest {
     when(process.getInputStream()).thenReturn(inputStream);
     when(process.getErrorStream()).thenReturn(errorStream);
     when(process.waitFor()).thenReturn(0);
-    doReturn(process).when(ansibleService).getProcess(cmd);
+    doReturn(process).when(ansibleCommandExecutor).getProcess(cmd);
 
     Consumer<String> stdLogsConsumer = mock(Consumer.class);
     Consumer<String> errLogsConsumer = mock(Consumer.class);
 
     // Act
-    int exitCode = ansibleService.run(cmd, stdLogsConsumer, errLogsConsumer);
+    int exitCode = ansibleCommandExecutor.run(cmd, stdLogsConsumer, errLogsConsumer);
 
     // Assert
     assertEquals(0, exitCode);
@@ -76,13 +76,13 @@ class AnsibleServiceTest {
     when(process.getInputStream()).thenReturn(inputStream);
     when(process.getErrorStream()).thenReturn(errorStream);
     when(process.waitFor()).thenReturn(0);
-    doReturn(process).when(ansibleService).getProcess(cmd);
+    doReturn(process).when(ansibleCommandExecutor).getProcess(cmd);
 
     Consumer<String> stdLogsConsumer = mock(Consumer.class);
     Consumer<String> errLogsConsumer = mock(Consumer.class);
 
     // Act
-    int exitCode = ansibleService.run(cmd, stdLogsConsumer, errLogsConsumer);
+    int exitCode = ansibleCommandExecutor.run(cmd, stdLogsConsumer, errLogsConsumer);
 
     // Assert
     assertEquals(0, exitCode);
@@ -107,13 +107,13 @@ class AnsibleServiceTest {
     when(process.getInputStream()).thenReturn(inputStream);
     when(process.getErrorStream()).thenReturn(errorStream);
     when(process.waitFor()).thenReturn(0);
-    doReturn(process).when(ansibleService).getProcess(cmd);
+    doReturn(process).when(ansibleCommandExecutor).getProcess(cmd);
 
     Consumer<String> stdLogsConsumer = mock(Consumer.class);
     Consumer<String> errLogsConsumer = mock(Consumer.class);
 
     // Act
-    int exitCode = ansibleService.run(cmd, stdLogsConsumer, errLogsConsumer);
+    int exitCode = ansibleCommandExecutor.run(cmd, stdLogsConsumer, errLogsConsumer);
 
     // Assert
     assertEquals(0, exitCode);

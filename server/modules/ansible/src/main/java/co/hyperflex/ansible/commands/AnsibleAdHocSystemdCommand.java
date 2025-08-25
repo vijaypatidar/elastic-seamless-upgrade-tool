@@ -1,10 +1,11 @@
 package co.hyperflex.ansible.commands;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 public class AnsibleAdHocSystemdCommand extends AnsibleAdHocCommand {
   private final String hostIp;
-  private final String module = "ansible.builtin.systemd";
   private final Map<String, Object> args;
   private final boolean useBecome;
   private final String sshUser;
@@ -24,7 +25,7 @@ public class AnsibleAdHocSystemdCommand extends AnsibleAdHocCommand {
 
 
   public String getModule() {
-    return module;
+    return "ansible.builtin.systemd";
   }
 
   public Map<String, Object> getArgs() {
@@ -41,6 +42,14 @@ public class AnsibleAdHocSystemdCommand extends AnsibleAdHocCommand {
 
   public String getSshKeyPath() {
     return sshKeyPath;
+  }
+
+  @Override
+  public List<String> getArguments() {
+    if (getArgs() == null) {
+      return Collections.emptyList();
+    }
+    return getArgs().entrySet().stream().map(entry -> entry.getKey() + "=" + entry.getValue()).toList();
   }
 
   public static class Builder {

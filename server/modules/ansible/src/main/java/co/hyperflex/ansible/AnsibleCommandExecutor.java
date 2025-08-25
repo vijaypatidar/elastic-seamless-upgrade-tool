@@ -1,9 +1,6 @@
 package co.hyperflex.ansible;
 
-import co.hyperflex.ansible.commands.AnsibleAdHocAptCommand;
 import co.hyperflex.ansible.commands.AnsibleAdHocCommand;
-import co.hyperflex.ansible.commands.AnsibleAdHocShellCommand;
-import co.hyperflex.ansible.commands.AnsibleAdHocSystemdCommand;
 import jakarta.validation.constraints.NotNull;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -12,13 +9,12 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class AnsibleService {
+public class AnsibleCommandExecutor {
 
-  private static final Logger logger = LoggerFactory.getLogger(AnsibleService.class);
+  private static final Logger logger = LoggerFactory.getLogger(AnsibleCommandExecutor.class);
 
   public int run(@NotNull AnsibleAdHocCommand cmd,
                  @NotNull Consumer<String> stdLogsConsumer,
@@ -41,7 +37,7 @@ public class AnsibleService {
       return process.waitFor();
     } catch (Exception e) {
       logger.error("Failed to run ansible command", e);
-      throw new RuntimeException(e);
+      throw new AnsibleExecutionException("Failed to run ansible command", e);
     }
   }
 
@@ -64,23 +60,10 @@ public class AnsibleService {
     command.add("-m");
     command.add(cmd.getModule());
 
-    if (cmd instanceof AnsibleAdHocAptCommand aptCommand && aptCommand.getArgs() != null) {
+    List<String> args = cmd.getArguments();
+    if (!args.isEmpty()) {
       command.add("-a");
-      String args =
-          aptCommand.getArgs().entrySet().stream().map(entry -> entry.getKey() + "=" + entry.getValue())
-              .collect(Collectors.joining(" "));
-      command.add(args);
-    } else if (cmd instanceof AnsibleAdHocSystemdCommand systemdCommand && systemdCommand.getArgs() != null) {
-      command.add("-a");
-      String args =
-          systemdCommand.getArgs().entrySet().stream().map(entry -> entry.getKey() + "=" + entry.getValue())
-              .collect(Collectors.joining(" "));
-      command.add(args);
-    } else if (cmd instanceof AnsibleAdHocShellCommand shellCommand && shellCommand.getArgs() != null) {
-      command.add("-a");
-      command.add(shellCommand.getArgs());
-    } else {
-      throw new IllegalArgumentException("Unknown command: " + cmd);
+      command.add(String.join(" ", args));
     }
 
     command.add("-u");

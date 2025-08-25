@@ -6,35 +6,35 @@ public class IngestTotal {
   private long failed;
   private long timeInMillis;
 
-  public void setCount(long count) {
-    this.count = count;
-  }
-
-  public void setCurrent(long current) {
-    this.current = current;
-  }
-
-  public void setFailed(long failed) {
-    this.failed = failed;
-  }
-
-  public void setTimeInMillis(long timeInMillis) {
-    this.timeInMillis = timeInMillis;
-  }
-
   public long getCount() {
     return count;
+  }
+
+  public void setCount(long count) {
+    this.count = count;
   }
 
   public long getCurrent() {
     return current;
   }
 
+  public void setCurrent(long current) {
+    this.current = current;
+  }
+
   public long getFailed() {
     return failed;
   }
 
+  public void setFailed(long failed) {
+    this.failed = failed;
+  }
+
   public long getTimeInMillis() {
     return timeInMillis;
+  }
+
+  public void setTimeInMillis(long timeInMillis) {
+    this.timeInMillis = timeInMillis;
   }
 }

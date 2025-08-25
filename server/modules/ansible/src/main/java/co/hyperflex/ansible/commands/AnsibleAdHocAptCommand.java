@@ -1,10 +1,11 @@
 package co.hyperflex.ansible.commands;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 public class AnsibleAdHocAptCommand extends AnsibleAdHocCommand {
   private final String hostIp;
-  private final String module = "ansible.builtin.apt";
   private final Map<String, Object> args;
   private final boolean useBecome;
   private final String sshUser;
@@ -22,9 +23,8 @@ public class AnsibleAdHocAptCommand extends AnsibleAdHocCommand {
     return hostIp;
   }
 
-
   public String getModule() {
-    return module;
+    return "ansible.builtin.apt";
   }
 
   public Map<String, Object> getArgs() {
@@ -43,11 +43,18 @@ public class AnsibleAdHocAptCommand extends AnsibleAdHocCommand {
     return sshKeyPath;
   }
 
+  @Override
+  public List<String> getArguments() {
+    if (getArgs() == null) {
+      return Collections.emptyList();
+    }
+    return getArgs().entrySet().stream().map(entry -> entry.getKey() + "=" + entry.getValue()).toList();
+  }
+
   public static class Builder {
     public String sshKeyPath;
     public String sshUser;
     private String hostIp;
-    private String module;
     private Map<String, Object> args;
     private boolean useBecome = true;
 

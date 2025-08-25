@@ -1,8 +1,10 @@
 package co.hyperflex.ansible.commands;
 
+import java.util.Collections;
+import java.util.List;
+
 public class AnsibleAdHocShellCommand extends AnsibleAdHocCommand {
   private final String hostIp;
-  private final String module = "ansible.builtin.shell";
   private final String args;
   private final boolean useBecome;
   private final String sshUser;
@@ -21,7 +23,7 @@ public class AnsibleAdHocShellCommand extends AnsibleAdHocCommand {
   }
 
   public String getModule() {
-    return module;
+    return "ansible.builtin.shell";
   }
 
   public String getArgs() {
@@ -38,6 +40,14 @@ public class AnsibleAdHocShellCommand extends AnsibleAdHocCommand {
 
   public String getSshKeyPath() {
     return sshKeyPath;
+  }
+
+  @Override
+  public List<String> getArguments() {
+    if (getArgs() == null) {
+      return Collections.emptyList();
+    }
+    return List.of(getArgs());
   }
 
   public static class Builder {
