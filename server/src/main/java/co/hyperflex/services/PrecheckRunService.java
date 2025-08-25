@@ -26,6 +26,7 @@ import co.hyperflex.repositories.projection.PrecheckStatusAndSeverityView;
 import co.hyperflex.services.notifications.NotificationService;
 import co.hyperflex.services.notifications.PrecheckProgressChangeEvent;
 import jakarta.validation.constraints.NotNull;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.LinkedList;
@@ -78,17 +79,19 @@ public class PrecheckRunService {
     var clusterUpgradeJob = clusterUpgradeJobService.getLatestJobByClusterId(clusterId);
     return breakingChangeRepository.getBreakingChanges(clusterUpgradeJob.getCurrentVersion(), clusterUpgradeJob.getTargetVersion())
         .stream()
-        .map(breakingChange -> new GetBreakingChangeEntry(
-            breakingChange.getId(),
-            breakingChange.getTitle() + "(" + breakingChange.getVersion() + ")",
-            List.of(
-                "Category: " + breakingChange.getCategory(),
-                breakingChange.getDescription(),
-                breakingChange.getUrl()
-            ),
-            PrecheckSeverity.WARNING,
-            PrecheckStatus.FAILED
-        ))
+        .map(breakingChange -> {
+          List<String> logs = new LinkedList<>();
+          logs.add("Category: " + breakingChange.getCategory());
+          logs.addAll(Arrays.asList(breakingChange.getDescription().split("\n")));
+          logs.add(breakingChange.getUrl());
+          return new GetBreakingChangeEntry(
+              breakingChange.getId(),
+              breakingChange.getTitle() + "(" + breakingChange.getVersion() + ")",
+              logs,
+              PrecheckSeverity.WARNING,
+              PrecheckStatus.FAILED
+          );
+        })
         .toList();
   }
 
