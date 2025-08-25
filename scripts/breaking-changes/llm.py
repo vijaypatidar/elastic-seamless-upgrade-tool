@@ -1,12 +1,11 @@
 import os
 import json
-import re
 import requests
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
 from prompts import BREAKING_CHANGES_PROMPT
-from utils import append_to_json_file
+from utils import extract_json_content_from_markdown
 
 # Load API key from .env
 load_dotenv()
@@ -33,18 +32,6 @@ def build_prompt(html_text: str, url: str, version: str) -> str:
         version=version
     )
 
-def extract_json_content_from_markdown(text: str):
-    """
-    Extract JSON string from Markdown code block or raw text.
-    Returns a Python dict or None if parsing fails.
-    """
-    # Remove triple backticks and optional language (json)
-    text = re.sub(r"```(?:json)?\n?", "", text)
-    text = text.replace("```", "").strip()
-    
-    # Replace single quotes with double quotes (if any)
-    return text.replace("'", '"')
-    
 def analyze_url(url: str, version: str):
     """Analyze Elasticsearch breaking changes page with Gemini."""
     html_text = fetch_webpage_text(url)

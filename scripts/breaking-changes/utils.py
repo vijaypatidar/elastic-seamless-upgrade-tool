@@ -1,5 +1,20 @@
 import json
 import os
+import re
+
+
+def extract_json_content_from_markdown(text: str):
+    """
+    Extract JSON string from Markdown code block or raw text.
+    Returns a Python dict or None if parsing fails.
+    """
+    # Remove triple backticks and optional language (json)
+    text = re.sub(r"```(?:json)?\n?", "", text)
+    text = text.replace("```", "").strip()
+
+    # Replace single quotes with double quotes (if any)
+    return text
+
 
 def append_to_json_file(new_data: dict, file_path: str = "breaking.json"):
     """

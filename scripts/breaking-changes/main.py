@@ -4,6 +4,25 @@ from llm import analyze_url
 from utils import append_to_json_file
 
 elastic_version_urls = {
+    "7.0":"https://www.elastic.co/guide/en/elasticsearch/reference/7.17/breaking-changes-7.0.html",
+    "7.1":"https://www.elastic.co/guide/en/elasticsearch/reference/7.17/breaking-changes-7.1.html",
+    "7.2":"https://www.elastic.co/guide/en/elasticsearch/reference/7.17/breaking-changes-7.2.html",
+    "7.3":"https://www.elastic.co/guide/en/elasticsearch/reference/7.17/breaking-changes-7.3.html",
+    "7.4":"https://www.elastic.co/guide/en/elasticsearch/reference/7.17/breaking-changes-7.4.html",
+    "7.5":"https://www.elastic.co/guide/en/elasticsearch/reference/7.17/breaking-changes-7.5.html",
+    "7.6":"https://www.elastic.co/guide/en/elasticsearch/reference/7.17/breaking-changes-7.6.html",
+    "7.7":"https://www.elastic.co/guide/en/elasticsearch/reference/7.17/breaking-changes-7.7.html",
+    "7.8":"https://www.elastic.co/guide/en/elasticsearch/reference/7.17/breaking-changes-7.8.html",
+    "7.9":"https://www.elastic.co/guide/en/elasticsearch/reference/7.17/breaking-changes-7.9.html",
+    "7.10":"https://www.elastic.co/guide/en/elasticsearch/reference/7.17/migrating-7.10.html",
+    "7.11":"https://www.elastic.co/guide/en/elasticsearch/reference/7.17/migrating-7.11.html",
+    "7.12":"https://www.elastic.co/guide/en/elasticsearch/reference/7.17/migrating-7.12.html",
+    "7.13":"https://www.elastic.co/guide/en/elasticsearch/reference/7.17/migrating-7.13.html",
+    "7.14":"https://www.elastic.co/guide/en/elasticsearch/reference/7.17/migrating-7.14.html",
+    "7.15":"https://www.elastic.co/guide/en/elasticsearch/reference/7.17/migrating-7.15.html",
+    "7.16":"https://www.elastic.co/guide/en/elasticsearch/reference/7.17/migrating-7.16.html",
+    "7.17":"https://www.elastic.co/guide/en/elasticsearch/reference/7.17/migrating-7.17.html",
+
     "8.0": "https://www.elastic.co/guide/en/elasticsearch/reference/8.19/migrating-8.0.html",
     "8.1": "https://www.elastic.co/guide/en/elasticsearch/reference/8.19/migrating-8.1.html",
     "8.2": "https://www.elastic.co/guide/en/elasticsearch/reference/8.19/migrating-8.2.html",
@@ -22,7 +41,8 @@ elastic_version_urls = {
     "8.15": "https://www.elastic.co/guide/en/elasticsearch/reference/8.19/migrating-8.15.html",
     "8.16": "https://www.elastic.co/guide/en/elasticsearch/reference/8.19/migrating-8.16.html",
     "8.17": "https://www.elastic.co/guide/en/elasticsearch/reference/8.19/migrating-8.17.html",
-    "8.18": "https://www.elastic.co/guide/en/elasticsearch/reference/8.19/migrating-8.19.html"
+    "8.18": "https://www.elastic.co/guide/en/elasticsearch/reference/8.19/migrating-8.18.html",
+    "8.19": "https://www.elastic.co/guide/en/elasticsearch/reference/8.19/migrating-8.19.html"
 }
 
 
