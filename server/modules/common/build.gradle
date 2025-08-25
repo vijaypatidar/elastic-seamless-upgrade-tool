@@ -1,0 +1,12 @@
+plugins {
+    id 'java'
+}
+
+group = 'co.hyperflex'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+}

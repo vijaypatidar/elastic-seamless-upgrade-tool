@@ -2,10 +2,11 @@ package co.hyperflex.services;
 
 import co.hyperflex.clients.elastic.ElasticClient;
 import co.hyperflex.clients.elastic.ElasticsearchClientProvider;
+import co.hyperflex.clients.elastic.dto.GetElasticsearchSnapshotResponse;
 import co.hyperflex.clients.kibana.KibanaClient;
 import co.hyperflex.clients.kibana.KibanaClientProvider;
+import co.hyperflex.common.exceptions.BadRequestException;
 import co.hyperflex.dtos.ClusterInfoResponse;
-import co.hyperflex.dtos.GetElasticsearchSnapshotResponse;
 import co.hyperflex.dtos.clusters.GetClusterNodeResponse;
 import co.hyperflex.dtos.clusters.GetClusterResponse;
 import co.hyperflex.dtos.clusters.GetElasticCloudClusterResponse;
@@ -21,7 +22,6 @@ import co.hyperflex.entities.upgrade.ClusterUpgradeJobEntity;
 import co.hyperflex.entities.upgrade.ClusterUpgradeStatus;
 import co.hyperflex.entities.upgrade.NodeUpgradeStatus;
 import co.hyperflex.entities.upgrade.UpgradeLogEntity;
-import co.hyperflex.exceptions.BadRequestException;
 import co.hyperflex.prechecks.scheduler.PrecheckSchedulerService;
 import co.hyperflex.repositories.ClusterNodeRepository;
 import co.hyperflex.repositories.ClusterRepository;
@@ -115,8 +115,8 @@ public class ClusterUpgradeService {
       log.error("Failed to retrieve active job for clusterId: {}", clusterId, e);
     }
     try {
-      ElasticClient client = elasticsearchClientProvider.getClientByClusterId(clusterId);
-      KibanaClient kibanaClient = kibanaClientProvider.getKibanaClientByClusterId(clusterId);
+      ElasticClient client = elasticsearchClientProvider.getClient(clusterId);
+      KibanaClient kibanaClient = kibanaClientProvider.getClient(clusterId);
       GetClusterResponse cluster = clusterService.getClusterById(clusterId);
       PrecheckStatus precheckStatus = null;
       if (activeUpgradeJob != null) {
@@ -175,7 +175,7 @@ public class ClusterUpgradeService {
         clusterUpgradeJobService.setJobStatus(clusterUpgradeJobId, ClusterUpgradeStatus.UPGRADING);
         MDC.put(UpgradeLogEntity.CLUSTER_UPGRADE_JOB_ID, clusterUpgradeJobId);
 
-        ElasticClient elasticClient = elasticsearchClientProvider.getClientByClusterId(cluster.getId());
+        ElasticClient elasticClient = elasticsearchClientProvider.getClient(cluster.getId());
         KibanaClient kibanaClient = kibanaClientProvider.getClient(cluster);
 
         final String targetVersion = clusterUpgradeJobService.getUpgradeJobById(clusterUpgradeJobId).getTargetVersion();

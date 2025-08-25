@@ -1,14 +1,12 @@
 package co.hyperflex.prechecks.concrete.node.elastic;
 
-import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch.nodes.Ingest;
-import co.elastic.clients.elasticsearch.nodes.NodesInfoResponse;
-import co.elastic.clients.elasticsearch.nodes.NodesStatsResponse;
-import co.elastic.clients.elasticsearch.nodes.Stats;
+import co.hyperflex.clients.elastic.ElasticClient;
+import co.hyperflex.clients.elastic.dto.nodes.Ingest;
+import co.hyperflex.clients.elastic.dto.nodes.NodesStatsResponse;
+import co.hyperflex.clients.elastic.dto.nodes.Stats;
 import co.hyperflex.entities.precheck.PrecheckSeverity;
 import co.hyperflex.prechecks.contexts.NodeContext;
 import co.hyperflex.prechecks.core.BaseElasticNodePrecheck;
-import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
 import org.slf4j.Logger;
@@ -32,44 +30,37 @@ public class IngestLoadPrecheck extends BaseElasticNodePrecheck {
   @Override
   public void run(NodeContext context) {
     String nodeId = context.getNode().getId();
-    ElasticsearchClient client = context.getElasticClient().getElasticsearchClient();
+    ElasticClient client = context.getElasticClient();
     Logger logger = context.getLogger();
 
-    try {
-      NodesInfoResponse stats = client.nodes().info(r -> r.nodeId(nodeId));
-      NodesStatsResponse statsResponse =
-          client.nodes().stats(r -> r.nodeId(nodeId).metric("ingest"));
+    NodesStatsResponse statsResponse = client.getNodesMetric(nodeId, "stats/ingest");
 
-      Map<String, Stats> nodes = statsResponse.nodes();
-      Stats nodeStats = nodes.get(nodeId);
+    Map<String, Stats> nodes = statsResponse.getNodes();
+    Stats nodeStats = nodes.get(nodeId);
 
-      if (nodeStats == null) {
-        throw new RuntimeException("Node with ID [" + nodeId + "] not found.");
-      }
-
-      String nodeName = nodeStats.name();
-
-      var ingestTotal = Optional.ofNullable(nodeStats.ingest()).map(Ingest::total).orElse(null);
-
-      if (ingestTotal == null || ingestTotal.count() == 0 || ingestTotal.timeInMillis() == 0) {
-        logger.info("{}: Skipping ingest load check — no activity data.", nodeName);
-        return;
-      }
-
-      double docsPerSec = ingestTotal.count() / (ingestTotal.timeInMillis() / 1000.0);
-      String docsPerSecRounded = String.format("%.2f", docsPerSec);
-
-      logger.info("{}: Ingested {} docs in {} ms → ~{} docs/sec", nodeName, ingestTotal.count(),
-          ingestTotal.timeInMillis(), docsPerSecRounded);
-
-      if (docsPerSec > THROUGHPUT_THRESHOLD) {
-        logger.warn("{}: Ingest load is high ({} docs/sec). Threshold: {} docs/sec.", nodeName,
-            docsPerSecRounded, THROUGHPUT_THRESHOLD);
-      }
-
-    } catch (IOException e) {
-      logger.error("Failed to check ingest load for node: {}", nodeId, e);
-      throw new RuntimeException("Failed to check ingest load for node: " + nodeId, e);
+    if (nodeStats == null) {
+      throw new RuntimeException("Node with ID [" + nodeId + "] not found.");
     }
+
+    String nodeName = nodeStats.getName();
+
+    var ingestTotal = Optional.ofNullable(nodeStats.getIngest()).map(Ingest::getTotal).orElse(null);
+
+    if (ingestTotal == null || ingestTotal.getCount() == 0 || ingestTotal.getTimeInMillis() == 0) {
+      logger.info("{}: Skipping ingest load check — no activity data.", nodeName);
+      return;
+    }
+
+    double docsPerSec = ingestTotal.getCount() / (ingestTotal.getTimeInMillis() / 1000.0);
+    String docsPerSecRounded = String.format("%.2f", docsPerSec);
+
+    logger.info("{}: Ingested {} docs in {} ms → ~{} docs/sec", nodeName, ingestTotal.getCount(),
+        ingestTotal.getTimeInMillis(), docsPerSecRounded);
+
+    if (docsPerSec > THROUGHPUT_THRESHOLD) {
+      logger.warn("{}: Ingest load is high ({} docs/sec). Threshold: {} docs/sec.", nodeName,
+          docsPerSecRounded, THROUGHPUT_THRESHOLD);
+    }
+
   }
 }

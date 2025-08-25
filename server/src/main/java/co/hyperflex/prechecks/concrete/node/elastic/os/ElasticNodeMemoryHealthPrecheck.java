@@ -1,12 +1,9 @@
 package co.hyperflex.prechecks.concrete.node.elastic.os;
 
-import co.elastic.clients.elasticsearch.nodes.NodesStatsResponse;
-import co.elastic.clients.elasticsearch.nodes.Stats;
 import co.hyperflex.clients.elastic.ElasticClient;
 import co.hyperflex.entities.precheck.PrecheckSeverity;
 import co.hyperflex.prechecks.contexts.NodeContext;
 import co.hyperflex.prechecks.core.BaseElasticNodePrecheck;
-import java.io.IOException;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Component;
 
@@ -24,36 +21,30 @@ public class ElasticNodeMemoryHealthPrecheck extends BaseElasticNodePrecheck {
 
   @Override
   public void run(NodeContext context) {
-    try {
-      Logger logger = context.getLogger();
-      ElasticClient elasticClient = context.getElasticClient();
-      String nodeId = context.getNode().getId();
-      NodesStatsResponse stats =
-          elasticClient.getElasticsearchClient().nodes().stats(r -> r.metric("os").nodeId(nodeId));
+    Logger logger = context.getLogger();
+    ElasticClient elasticClient = context.getElasticClient();
+    String nodeId = context.getNode().getId();
+    var stats = elasticClient.getNodesMetric(nodeId);
+    var nodeStats = stats.getNodes().get(nodeId);
+    if (nodeStats == null) {
+      logger.warn("No stats found for node: {}", nodeId);
+      return;
+    }
+    var mem = nodeStats.getOs().getMem();
+    long totalMemory = mem.getTotalInBytes();
+    long freeMemory = mem.getFreeInBytes();
+    long usedMemory = totalMemory - freeMemory;
 
-      Stats nodeStats = stats.nodes().get(nodeId);
-      if (nodeStats == null) {
-        logger.warn("No stats found for node: {}", nodeId);
-        return;
-      }
+    int memoryPercent = (int) ((usedMemory * 100.0) / totalMemory);
 
-      long totalMemory = nodeStats.os().mem().totalInBytes();
-      long freeMemory = nodeStats.os().mem().freeInBytes();
-      long usedMemory = totalMemory - freeMemory;
+    long bitsInMB = 1024 * 1024;
+    logger.info("Memory - Total: {} MB, Free: {} MB, Utilised: {}", totalMemory / bitsInMB,
+        freeMemory / bitsInMB, memoryPercent);
 
-      int memoryPercent = (int) ((usedMemory * 100.0) / totalMemory);
-
-      long bitsInMB = 1024 * 1024;
-      logger.info("Memory - Total: {} MB, Free: {} MB, Utilised: {}", totalMemory / bitsInMB,
-          freeMemory / bitsInMB, memoryPercent);
-
-      if (memoryPercent > 90) {
-        logger.warn("Memory usage on node is {}", memoryPercent);
-        logger.error("Memory usage check failed: current usage is {}, which exceeds the threshold of 90%", memoryPercent);
-        throw new RuntimeException();
-      }
-    } catch (IOException e) {
-      throw new RuntimeException(e);
+    if (memoryPercent > 90) {
+      logger.warn("Memory usage on node is {}", memoryPercent);
+      logger.error("Memory usage check failed: current usage is {}, which exceeds the threshold of 90%", memoryPercent);
+      throw new RuntimeException();
     }
   }
 }

@@ -1,16 +1,12 @@
 package co.hyperflex.prechecks.concrete.node.elastic;
 
 
-import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch._types.PluginStats;
-import co.elastic.clients.elasticsearch.nodes.NodesInfoResponse;
-import co.elastic.clients.elasticsearch.nodes.info.NodeInfo;
+import co.hyperflex.clients.elastic.ElasticClient;
+import co.hyperflex.clients.elastic.dto.nodes.PluginStats;
 import co.hyperflex.entities.precheck.PrecheckSeverity;
 import co.hyperflex.prechecks.contexts.NodeContext;
 import co.hyperflex.prechecks.core.BaseElasticNodePrecheck;
-import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import org.slf4j.Logger;
@@ -51,48 +47,40 @@ public class CustomPluginsListPrecheck extends BaseElasticNodePrecheck {
   @Override
   public void run(NodeContext context) {
     String nodeId = context.getNode().getId();
-    ElasticsearchClient client = context.getElasticClient().getElasticsearchClient();
+    ElasticClient client = context.getElasticClient();
     Logger logger = context.getLogger();
 
-    try {
-      NodesInfoResponse nodeInfoResponse = client.nodes().info(r -> r
-          .nodeId(nodeId)
-          .metric("plugins")
+    var nodeInfoResponse = client.getNodeInfo(nodeId);
+
+    var nodes = nodeInfoResponse.getNodes();
+    var nodeInfo = nodes.get(nodeId);
+
+    if (nodeInfo == null) {
+      throw new RuntimeException("Node with ID [" + nodeId + "] not found.");
+    }
+
+    if (nodeInfo.getPlugins() == null || nodeInfo.getPlugins().isEmpty()) {
+      logger.info("No plugins found for node with ID [{}].", nodeId);
+      return;
+    }
+
+    List<String> installedPlugins = nodeInfo.getPlugins().stream()
+        .map(PluginStats::getName)
+        .filter(Objects::nonNull)
+        .toList();
+
+    List<String> customPlugins = installedPlugins.stream()
+        .filter(name -> !BUNDLED_PLUGINS.contains(name))
+        .toList();
+
+    if (customPlugins.isEmpty()) {
+      logger.info("Node [{}] has no manually installed plugins.", nodeInfo.getName());
+    } else {
+      logger.info(
+          "Node [{}] has manually installed plugins: {}",
+          nodeInfo.getName(),
+          String.join(", ", customPlugins)
       );
-
-      Map<String, NodeInfo> nodes = nodeInfoResponse.nodes();
-      NodeInfo nodeInfo = nodes.get(nodeId);
-
-      if (nodeInfo == null) {
-        throw new RuntimeException("Node with ID [" + nodeId + "] not found.");
-      }
-
-      if (nodeInfo.plugins() == null || nodeInfo.plugins().isEmpty()) {
-        logger.info("No plugins found for node with ID [{}].", nodeId);
-        return;
-      }
-
-      List<String> installedPlugins = nodeInfo.plugins().stream()
-          .map(PluginStats::name)
-          .filter(Objects::nonNull)
-          .toList();
-
-      List<String> customPlugins = installedPlugins.stream()
-          .filter(name -> !BUNDLED_PLUGINS.contains(name))
-          .toList();
-
-      if (customPlugins.isEmpty()) {
-        logger.info("Node [{}] has no manually installed plugins.", nodeInfo.name());
-      } else {
-        logger.info(
-            "Node [{}] has manually installed plugins: {}",
-            nodeInfo.name(),
-            String.join(", ", customPlugins)
-        );
-      }
-    } catch (IOException e) {
-      logger.error("Failed to check installed plugins for node: {}", nodeId, e);
-      throw new RuntimeException(e);
     }
   }
 }

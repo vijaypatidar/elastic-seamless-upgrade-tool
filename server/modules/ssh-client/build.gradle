@@ -1,0 +1,14 @@
+plugins {
+    id 'java'
+}
+
+group = 'co.hyperflex'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.apache.sshd:sshd-core:2.15.0'
+
+}

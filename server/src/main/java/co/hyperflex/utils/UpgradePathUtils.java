@@ -6,6 +6,9 @@ import java.util.Map;
 public class UpgradePathUtils {
 
   private static final Map<String, List<String>> POSSIBLE_UPGRADES = Map.ofEntries(
+      Map.entry("7.9",
+          List.of("7.10.0", "7.11.0", "7.11.1", "7.12.1", "7.13.3", "7.13.4", "7.14.0", "7.14.1", "7.14.2",
+              "7.15.0", "7.15.1", "7.15.2", "7.16.0", "7.16.1", "7.16.2", "7.16.3", "7.17.28")),
       Map.entry("7.10",
           List.of("7.11.0", "7.11.1", "7.12.1", "7.13.3", "7.13.4", "7.14.0", "7.14.1", "7.14.2",
               "7.15.0", "7.15.1", "7.15.2", "7.16.0", "7.16.1", "7.16.2", "7.16.3", "7.17.28")),
@@ -69,7 +72,7 @@ public class UpgradePathUtils {
     }
     var possibleUpgrades = POSSIBLE_UPGRADES.keySet().stream()
         .sorted(VersionUtils.VERSION_COMPARATOR)
-        .filter(v -> VersionUtils.isVersionGt(version, v))
+        .filter(v -> VersionUtils.isVersionGte(version, v))
         .reduce((first, second) -> second)
         .map(POSSIBLE_UPGRADES::get)
         .orElse(List.of());
