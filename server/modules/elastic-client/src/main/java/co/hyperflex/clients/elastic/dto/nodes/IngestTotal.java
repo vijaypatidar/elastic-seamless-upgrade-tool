@@ -1,15 +1,24 @@
 package co.hyperflex.clients.elastic.dto.nodes;
 
 public class IngestTotal {
-  private final long count;
-  private final long current;
-  private final long failed;
-  private final long timeInMillis;
+  private long count;
+  private long current;
+  private long failed;
+  private long timeInMillis;
 
-  public IngestTotal(long count, long current, long failed, long timeInMillis) {
+  public void setCount(long count) {
     this.count = count;
+  }
+
+  public void setCurrent(long current) {
     this.current = current;
+  }
+
+  public void setFailed(long failed) {
     this.failed = failed;
+  }
+
+  public void setTimeInMillis(long timeInMillis) {
     this.timeInMillis = timeInMillis;
   }
 

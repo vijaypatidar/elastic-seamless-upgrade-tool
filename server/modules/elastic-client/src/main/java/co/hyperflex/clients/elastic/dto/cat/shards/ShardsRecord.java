@@ -2,19 +2,34 @@ package co.hyperflex.clients.elastic.dto.cat.shards;
 
 
 public class ShardsRecord {
-  private final String index;
-  private final String shard;
-  private final String prirep;
-  private final String state;
-  private final String mergesCurrent;
-  private final String node;
+  private String index;
+  private String shard;
+  private String prirep;
+  private String state;
+  private String mergesCurrent;
+  private String node;
 
-  public ShardsRecord(String index, String shard, String prirep, String state, String mergesCurrent, String node) {
+  public void setIndex(String index) {
     this.index = index;
+  }
+
+  public void setShard(String shard) {
     this.shard = shard;
+  }
+
+  public void setPrirep(String prirep) {
     this.prirep = prirep;
+  }
+
+  public void setState(String state) {
     this.state = state;
+  }
+
+  public void setMergesCurrent(String mergesCurrent) {
     this.mergesCurrent = mergesCurrent;
+  }
+
+  public void setNode(String node) {
     this.node = node;
   }
 
