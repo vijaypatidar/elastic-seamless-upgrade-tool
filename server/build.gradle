@@ -2,11 +2,9 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.5.3'
     id 'io.spring.dependency-management' version '1.1.7'
-    id 'checkstyle'
 }
 
 group = 'com.hyperflex'
-version = '1.0-SNAPSHOT'
 
 java {
     toolchain {
@@ -18,14 +16,13 @@ repositories {
     mavenCentral()
 }
 
-checkstyle {
-    ignoreFailures = false
-    maxErrors = 0
-    toolVersion = "10.26.1"
-    configFile = rootProject.file("checkstyle/checkstyle.xml")
-}
-
 dependencies {
+    implementation project(':server:modules:elastic-client')
+    implementation project(':server:modules:kibana-client')
+    implementation project(':server:modules:ansible')
+    implementation project(':server:modules:ssh-client')
+    implementation project(':server:modules:common')
+
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.9'
     implementation 'org.springframework.boot:spring-boot-starter-web'
@@ -33,15 +30,56 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-websocket'
     implementation 'org.springframework.boot:spring-boot-starter-cache'
     implementation 'com.github.ben-manes.caffeine:caffeine'
-    implementation 'org.apache.sshd:sshd-core:2.15.0'
     //Dev dependencies
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
 
-    //elastic
-    implementation 'co.elastic.clients:elasticsearch-java:8.18.0'
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.0'
+allprojects {
+    version = rootProject.version
+
+    apply plugin: 'checkstyle'
+
+    repositories {
+        mavenCentral()
+    }
+
+    checkstyle {
+        ignoreFailures = false
+        maxErrors = 0
+        toolVersion = "10.26.1"
+        configFile = rootProject.file("checkstyle/checkstyle.xml")
+    }
+
+    tasks.withType(Checkstyle).configureEach {
+        reports {
+            xml.required = false
+            html.required = true
+        }
+    }
+
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(21)
+        }
+    }
+
+}
+subprojects {
+    apply plugin: 'java'
+
+    group = 'co.hyperflex'
+
+    dependencies {
+        testImplementation 'org.mockito:mockito-core:5.13.0'
+        testImplementation 'org.mockito:mockito-junit-jupiter:5.13.0'
+        testImplementation 'org.junit.jupiter:junit-jupiter:5.11.0'
+        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    }
+    test {
+        useJUnitPlatform()
+    }
 }
 
 bootJar {

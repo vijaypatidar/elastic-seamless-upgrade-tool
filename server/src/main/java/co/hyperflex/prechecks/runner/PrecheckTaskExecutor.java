@@ -1,8 +1,8 @@
 package co.hyperflex.prechecks.runner;
 
+import co.hyperflex.common.exceptions.NotFoundException;
 import co.hyperflex.entities.precheck.PrecheckRunEntity;
 import co.hyperflex.entities.precheck.PrecheckStatus;
-import co.hyperflex.exceptions.NotFoundException;
 import co.hyperflex.prechecks.contexts.ClusterContext;
 import co.hyperflex.prechecks.contexts.IndexContext;
 import co.hyperflex.prechecks.contexts.NodeContext;

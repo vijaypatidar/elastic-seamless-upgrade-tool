@@ -1,5 +1,6 @@
 package co.hyperflex.dtos;
 
+import co.hyperflex.clients.elastic.dto.GetElasticsearchSnapshotResponse;
 import co.hyperflex.entities.precheck.PrecheckStatus;
 import com.mongodb.lang.Nullable;
 import jakarta.validation.constraints.NotNull;

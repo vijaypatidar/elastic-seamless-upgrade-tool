@@ -11,10 +11,10 @@ import static org.mockito.Mockito.when;
 
 import co.hyperflex.clients.elastic.ElasticClient;
 import co.hyperflex.clients.elastic.ElasticsearchClientProvider;
+import co.hyperflex.clients.elastic.dto.GetElasticsearchSnapshotResponse;
 import co.hyperflex.clients.kibana.KibanaClient;
 import co.hyperflex.clients.kibana.KibanaClientProvider;
 import co.hyperflex.dtos.ClusterInfoResponse;
-import co.hyperflex.dtos.GetElasticsearchSnapshotResponse;
 import co.hyperflex.entities.cluster.ClusterNodeType;
 import co.hyperflex.entities.precheck.PrecheckStatus;
 import co.hyperflex.entities.upgrade.ClusterUpgradeJobEntity;
@@ -80,8 +80,8 @@ class ClusterUpgradeServiceTest {
     deprecationCounts = new ClusterInfoResponse.DeprecationCounts(0, 0);
 
     // Common mocks for most tests
-    when(elasticsearchClientProvider.getClientByClusterId(CLUSTER_ID)).thenReturn(elasticClient);
-    when(kibanaClientProvider.getKibanaClientByClusterId(CLUSTER_ID)).thenReturn(kibanaClient);
+    when(elasticsearchClientProvider.getClient(CLUSTER_ID)).thenReturn(elasticClient);
+    when(kibanaClientProvider.getClient(CLUSTER_ID)).thenReturn(kibanaClient);
     when(deprecationService.getKibanaDeprecationCounts(CLUSTER_ID)).thenReturn(deprecationCounts);
     when(deprecationService.getElasticDeprecationCounts(CLUSTER_ID)).thenReturn(deprecationCounts);
     when(kibanaClient.getSnapshotCreationPageUrl()).thenReturn("some-url");

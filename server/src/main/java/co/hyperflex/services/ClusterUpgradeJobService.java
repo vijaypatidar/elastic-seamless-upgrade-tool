@@ -1,9 +1,10 @@
 package co.hyperflex.services;
 
-import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch.core.InfoResponse;
 import co.hyperflex.clients.elastic.ElasticClient;
 import co.hyperflex.clients.elastic.ElasticsearchClientProvider;
+import co.hyperflex.clients.elastic.dto.info.InfoResponse;
+import co.hyperflex.common.exceptions.ConflictException;
+import co.hyperflex.common.exceptions.NotFoundException;
 import co.hyperflex.dtos.upgrades.CreateClusterUpgradeJobRequest;
 import co.hyperflex.dtos.upgrades.CreateClusterUpgradeJobResponse;
 import co.hyperflex.dtos.upgrades.GetTargetVersionResponse;
@@ -11,14 +12,11 @@ import co.hyperflex.dtos.upgrades.GetUpgradeJobStatusResponse;
 import co.hyperflex.dtos.upgrades.StopClusterUpgradeResponse;
 import co.hyperflex.entities.upgrade.ClusterUpgradeJobEntity;
 import co.hyperflex.entities.upgrade.ClusterUpgradeStatus;
-import co.hyperflex.exceptions.ConflictException;
-import co.hyperflex.exceptions.NotFoundException;
 import co.hyperflex.repositories.ClusterUpgradeJobRepository;
 import co.hyperflex.services.notifications.NotificationService;
 import co.hyperflex.services.notifications.UpgradeProgressChangeEvent;
 import co.hyperflex.utils.UpgradePathUtils;
 import jakarta.validation.constraints.NotNull;
-import java.io.IOException;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,9 +65,9 @@ public class ClusterUpgradeJobService {
     List<ClusterUpgradeJobEntity> jobs = clusterUpgradeJobRepository.findByClusterId(clusterId);
 
     ElasticClient elasticClient =
-        elasticsearchClientProvider.getClientByClusterId(clusterId);
-    InfoResponse info = elasticClient.getClusterInfo();
-    String currentVersion = info.version().number();
+        elasticsearchClientProvider.getClient(clusterId);
+    InfoResponse info = elasticClient.getInfo();
+    String currentVersion = info.getVersion().getNumber();
 
     ClusterUpgradeJobEntity existingJob = jobs.stream().filter(
         job -> job.getCurrentVersion().equals(currentVersion)
@@ -134,29 +132,24 @@ public class ClusterUpgradeJobService {
   }
 
   public GetTargetVersionResponse getTargetVersionInfo(String clusterId) {
+    String targetVersion = null;
+    boolean underUpgrade = false;
     try {
-      String targetVersion = null;
-      boolean underUpgrade = false;
-      try {
-        ClusterUpgradeJobEntity job = getActiveJobByClusterId(clusterId);
-        targetVersion = job.getTargetVersion();
-        underUpgrade = job.getStatus() != ClusterUpgradeStatus.PENDING;
-      } catch (Exception e) {
-        logger.debug("Cluster upgrade job not found for [cluster: {}].", clusterId);
-      }
-      List<String> possibleUpgrades;
-      if (underUpgrade) {
-        possibleUpgrades = List.of();
-      } else {
-        ElasticClient elasticClient = elasticsearchClientProvider.getClientByClusterId(clusterId);
-        ElasticsearchClient client = elasticClient.getElasticsearchClient();
-        var info = client.info();
-        possibleUpgrades = UpgradePathUtils.getPossibleUpgrades(info.version().number());
-      }
-      return new GetTargetVersionResponse(targetVersion, underUpgrade, possibleUpgrades);
-    } catch (IOException e) {
-      throw new RuntimeException(e);
+      ClusterUpgradeJobEntity job = getActiveJobByClusterId(clusterId);
+      targetVersion = job.getTargetVersion();
+      underUpgrade = job.getStatus() != ClusterUpgradeStatus.PENDING;
+    } catch (Exception e) {
+      logger.debug("Cluster upgrade job not found for [cluster: {}].", clusterId);
     }
+    List<String> possibleUpgrades;
+    if (underUpgrade) {
+      possibleUpgrades = List.of();
+    } else {
+      ElasticClient elasticClient = elasticsearchClientProvider.getClient(clusterId);
+      var info = elasticClient.getInfo();
+      possibleUpgrades = UpgradePathUtils.getPossibleUpgrades(info.getVersion().getNumber());
+    }
+    return new GetTargetVersionResponse(targetVersion, underUpgrade, possibleUpgrades);
   }
 
   public GetUpgradeJobStatusResponse getUpgradeJobStatus(String clusterId) {
