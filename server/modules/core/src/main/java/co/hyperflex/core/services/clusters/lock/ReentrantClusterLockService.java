@@ -1,6 +1,5 @@
-package co.hyperflex.services;
+package co.hyperflex.core.services.clusters.lock;
 
-import co.hyperflex.core.services.clusters.lock.ClusterLockService;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;

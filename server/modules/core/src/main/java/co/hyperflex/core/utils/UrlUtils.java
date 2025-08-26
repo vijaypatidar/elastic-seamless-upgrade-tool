@@ -1,4 +1,4 @@
-package co.hyperflex.utils;
+package co.hyperflex.core.utils;
 
 import co.hyperflex.common.exceptions.BadRequestException;
 import java.net.MalformedURLException;

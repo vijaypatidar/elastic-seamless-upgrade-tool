@@ -1,4 +1,4 @@
-package co.hyperflex.repositories;
+package co.hyperflex.core.repositories;
 
 import co.hyperflex.core.entites.settings.SettingEntity;
 import org.springframework.data.mongodb.core.MongoTemplate;

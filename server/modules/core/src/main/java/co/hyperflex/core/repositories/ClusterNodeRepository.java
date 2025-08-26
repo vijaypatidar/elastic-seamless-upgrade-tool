@@ -1,4 +1,4 @@
-package co.hyperflex.repositories;
+package co.hyperflex.core.repositories;
 
 import co.hyperflex.core.entites.clusters.nodes.ClusterNodeEntity;
 import co.hyperflex.core.models.enums.ClusterNodeType;

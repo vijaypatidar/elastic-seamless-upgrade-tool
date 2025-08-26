@@ -1,12 +1,12 @@
 package co.hyperflex.services;
 
 import co.hyperflex.core.entites.settings.SettingEntity;
+import co.hyperflex.core.mappers.SettingMapper;
+import co.hyperflex.core.repositories.SettingRepository;
 import co.hyperflex.core.services.settings.SettingService;
 import co.hyperflex.core.services.settings.dtos.GetSettingResponse;
 import co.hyperflex.core.services.settings.dtos.UpdateSettingRequest;
 import co.hyperflex.core.services.settings.dtos.UpdateSettingResponse;
-import co.hyperflex.mappers.SettingMapper;
-import co.hyperflex.repositories.SettingRepository;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;

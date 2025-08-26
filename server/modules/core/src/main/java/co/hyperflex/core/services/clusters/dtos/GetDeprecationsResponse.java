@@ -1,4 +1,4 @@
-package co.hyperflex.dtos;
+package co.hyperflex.core.services.clusters.dtos;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package co.hyperflex.mappers;
+package co.hyperflex.core.mappers;
 
 import co.hyperflex.core.entites.clusters.ClusterEntity;
 import co.hyperflex.core.entites.clusters.ElasticCloudClusterEntity;
@@ -18,7 +18,7 @@ import co.hyperflex.core.services.clusters.dtos.GetClusterResponse;
 import co.hyperflex.core.services.clusters.dtos.GetElasticCloudClusterResponse;
 import co.hyperflex.core.services.clusters.dtos.GetSelfManagedClusterResponse;
 import co.hyperflex.core.services.ssh.SshKeyService;
-import co.hyperflex.utils.NodeRoleRankerUtils;
+import co.hyperflex.core.utils.NodeRoleRankerUtils;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Component;

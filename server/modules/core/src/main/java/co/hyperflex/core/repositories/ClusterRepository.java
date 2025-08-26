@@ -1,4 +1,4 @@
-package co.hyperflex.repositories;
+package co.hyperflex.core.repositories;
 
 import co.hyperflex.common.exceptions.NotFoundException;
 import co.hyperflex.core.entites.clusters.ClusterEntity;

@@ -3,7 +3,7 @@ package co.hyperflex.clients.kibana;
 import co.hyperflex.clients.ClusterCredentialProvider;
 import co.hyperflex.common.exceptions.NotFoundException;
 import co.hyperflex.core.entites.clusters.ClusterEntity;
-import co.hyperflex.repositories.ClusterRepository;
+import co.hyperflex.core.repositories.ClusterRepository;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;

@@ -1,4 +1,4 @@
-package co.hyperflex.mappers;
+package co.hyperflex.core.mappers;
 
 import co.hyperflex.core.entites.settings.SettingEntity;
 import co.hyperflex.core.services.settings.dtos.GetSettingResponse;

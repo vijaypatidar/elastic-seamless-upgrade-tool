@@ -1,9 +1,9 @@
 package co.hyperflex.services;
 
+import co.hyperflex.core.repositories.BreakingChangeRepository;
 import co.hyperflex.core.services.notifications.NotificationService;
 import co.hyperflex.core.services.notifications.PrecheckProgressChangeEvent;
 import co.hyperflex.core.upgrade.ClusterUpgradeJobEntity;
-import co.hyperflex.mappers.PrecheckMapper;
 import co.hyperflex.precheck.entities.ClusterPrecheckRunEntity;
 import co.hyperflex.precheck.entities.IndexPrecheckRunEntity;
 import co.hyperflex.precheck.entities.NodePrecheckRunEntity;
@@ -21,10 +21,10 @@ import co.hyperflex.precheck.services.dtos.GetPrecheckSummaryResponse;
 import co.hyperflex.precheck.services.dtos.PrecheckRerunRequest;
 import co.hyperflex.precheck.services.dtos.SkipPrecheckResponse;
 import co.hyperflex.prechecks.core.Precheck;
+import co.hyperflex.prechecks.mappers.PrecheckMapper;
 import co.hyperflex.prechecks.registry.PrecheckRegistry;
-import co.hyperflex.repositories.BreakingChangeRepository;
-import co.hyperflex.repositories.PrecheckRunRepository;
-import co.hyperflex.repositories.projection.PrecheckStatusAndSeverityView;
+import co.hyperflex.prechecks.repositories.PrecheckRunRepository;
+import co.hyperflex.prechecks.repositories.projection.PrecheckStatusAndSeverityView;
 import jakarta.validation.constraints.NotNull;
 import java.util.Arrays;
 import java.util.Comparator;

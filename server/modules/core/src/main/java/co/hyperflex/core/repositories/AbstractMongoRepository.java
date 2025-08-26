@@ -1,4 +1,4 @@
-package co.hyperflex.repositories;
+package co.hyperflex.core.repositories;
 
 import java.util.List;
 import java.util.Map;

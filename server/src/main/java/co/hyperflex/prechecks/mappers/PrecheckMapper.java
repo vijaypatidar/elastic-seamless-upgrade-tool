@@ -1,4 +1,4 @@
-package co.hyperflex.mappers;
+package co.hyperflex.prechecks.mappers;
 
 import co.hyperflex.precheck.entities.PrecheckRunEntity;
 import co.hyperflex.precheck.services.dtos.GetClusterPrecheckEntry;

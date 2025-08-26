@@ -1,4 +1,4 @@
-package co.hyperflex.repositories;
+package co.hyperflex.core.repositories;
 
 import co.hyperflex.core.upgrade.ClusterUpgradeJobEntity;
 import java.util.List;

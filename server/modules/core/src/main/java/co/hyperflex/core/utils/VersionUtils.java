@@ -1,4 +1,4 @@
-package co.hyperflex.utils;
+package co.hyperflex.core.utils;
 
 import java.util.Comparator;
 
