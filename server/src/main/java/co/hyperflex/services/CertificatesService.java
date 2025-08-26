@@ -1,7 +1,7 @@
 package co.hyperflex.services;
 
 import co.hyperflex.common.exceptions.BadRequestException;
-import co.hyperflex.dtos.clusters.UploadCertificateResponse;
+import co.hyperflex.core.services.clusters.dtos.UploadCertificateResponse;
 import jakarta.annotation.PostConstruct;
 import java.io.IOException;
 import java.nio.file.Files;

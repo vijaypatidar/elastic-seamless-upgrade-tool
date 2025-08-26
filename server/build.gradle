@@ -109,6 +109,14 @@ project(":server:modules:ssh-client") {
     }
 }
 
+project(":server:modules:core") {
+    dependencies {
+        implementation project(":server:modules:common")
+        implementation project(":server:modules:elastic-client")
+        implementation project(":server:modules:kibana-client")
+    }
+}
+
 bootJar {
     // Include Vite build output in the final Spring Boot JAR
     dependsOn ':frontend:build'

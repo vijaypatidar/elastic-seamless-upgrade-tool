@@ -20,7 +20,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class DeprecationService {
-  private static final Logger log = LoggerFactory.getLogger(ClusterService.class);
+  private static final Logger log = LoggerFactory.getLogger(ClusterServiceImpl.class);
   private final ElasticsearchClientProvider elasticsearchClientProvider;
   private final KibanaClientProvider kibanaClientProvider;
 

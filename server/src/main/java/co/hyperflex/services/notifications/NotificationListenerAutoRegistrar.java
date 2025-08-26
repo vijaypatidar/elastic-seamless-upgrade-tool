@@ -1,6 +1,6 @@
 package co.hyperflex.services.notifications;
 
-import co.hyperflex.services.SettingService;
+import co.hyperflex.core.services.settings.SettingService;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

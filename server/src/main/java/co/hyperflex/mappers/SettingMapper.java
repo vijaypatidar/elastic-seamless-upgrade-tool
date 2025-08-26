@@ -1,6 +1,6 @@
 package co.hyperflex.mappers;
 
-import co.hyperflex.dtos.settings.GetSettingResponse;
+import co.hyperflex.core.services.settings.dtos.GetSettingResponse;
 import co.hyperflex.entities.SettingEntity;
 import org.springframework.stereotype.Component;
 

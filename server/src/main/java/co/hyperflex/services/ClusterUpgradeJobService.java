@@ -6,6 +6,7 @@ import co.hyperflex.clients.elastic.dto.info.InfoResponse;
 import co.hyperflex.common.exceptions.ConflictException;
 import co.hyperflex.common.exceptions.NotFoundException;
 import co.hyperflex.core.models.enums.ClusterUpgradeStatus;
+import co.hyperflex.core.services.clusters.ClusterService;
 import co.hyperflex.dtos.upgrades.CreateClusterUpgradeJobRequest;
 import co.hyperflex.dtos.upgrades.CreateClusterUpgradeJobResponse;
 import co.hyperflex.dtos.upgrades.GetTargetVersionResponse;

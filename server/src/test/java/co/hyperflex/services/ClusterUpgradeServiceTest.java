@@ -16,6 +16,7 @@ import co.hyperflex.clients.kibana.KibanaClient;
 import co.hyperflex.clients.kibana.KibanaClientProvider;
 import co.hyperflex.core.models.enums.ClusterNodeType;
 import co.hyperflex.core.models.enums.ClusterUpgradeStatus;
+import co.hyperflex.core.services.clusters.ClusterService;
 import co.hyperflex.dtos.ClusterInfoResponse;
 import co.hyperflex.entities.precheck.PrecheckStatus;
 import co.hyperflex.entities.upgrade.ClusterUpgradeJobEntity;
