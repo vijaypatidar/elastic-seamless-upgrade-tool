@@ -19,18 +19,21 @@ import co.hyperflex.core.services.clusters.dtos.GetClusterNodeResponse;
 import co.hyperflex.core.services.clusters.dtos.GetClusterResponse;
 import co.hyperflex.core.services.clusters.dtos.GetElasticCloudClusterResponse;
 import co.hyperflex.core.services.clusters.lock.ClusterLockService;
+import co.hyperflex.core.services.deprecations.DeprecationService;
+import co.hyperflex.core.services.deprecations.dtos.DeprecationCounts;
 import co.hyperflex.core.services.notifications.GeneralNotificationEvent;
 import co.hyperflex.core.services.notifications.NotificationService;
 import co.hyperflex.core.services.notifications.NotificationType;
 import co.hyperflex.core.services.notifications.UpgradeProgressChangeEvent;
+import co.hyperflex.core.services.upgrade.ClusterUpgradeJobService;
+import co.hyperflex.core.services.upgrade.dtos.ClusterNodeUpgradeRequest;
+import co.hyperflex.core.services.upgrade.dtos.ClusterNodeUpgradeResponse;
+import co.hyperflex.core.services.upgrade.dtos.ClusterUpgradeResponse;
 import co.hyperflex.core.upgrade.ClusterUpgradeJobEntity;
 import co.hyperflex.core.utils.VersionUtils;
-import co.hyperflex.dtos.ClusterInfoResponse;
-import co.hyperflex.precheck.enums.PrecheckStatus;
-import co.hyperflex.prechecks.scheduler.PrecheckSchedulerService;
-import co.hyperflex.upgrade.dtos.ClusterNodeUpgradeRequest;
-import co.hyperflex.upgrade.dtos.ClusterNodeUpgradeResponse;
-import co.hyperflex.upgrade.dtos.ClusterUpgradeResponse;
+import co.hyperflex.precheck.core.enums.PrecheckStatus;
+import co.hyperflex.precheck.services.PrecheckRunService;
+import co.hyperflex.services.deprecations.dtos.ClusterInfoResponse;
 import co.hyperflex.upgrade.entities.UpgradeLogEntity;
 import co.hyperflex.upgrade.planner.UpgradePlanBuilder;
 import co.hyperflex.upgrade.services.UpgradeLogService;
@@ -57,17 +60,19 @@ public class ClusterUpgradeService {
   private final KibanaClientProvider kibanaClientProvider;
   private final ClusterUpgradeJobService clusterUpgradeJobService;
   private final NotificationService notificationService;
-  private final PrecheckSchedulerService precheckSchedulerService;
   private final DeprecationService deprecationService;
   private final ExecutorService executorService = Executors.newFixedThreadPool(1);
   private final PrecheckRunService precheckRunService;
   private final ClusterLockService clusterLockService;
 
-  public ClusterUpgradeService(ElasticsearchClientProvider elasticsearchClientProvider, ClusterNodeRepository clusterNodeRepository,
+  public ClusterUpgradeService(ElasticsearchClientProvider elasticsearchClientProvider,
+                               ClusterNodeRepository clusterNodeRepository,
                                ClusterService clusterService, ClusterRepository clusterRepository,
-                               KibanaClientProvider kibanaClientProvider, ClusterUpgradeJobService clusterUpgradeJobService,
-                               NotificationService notificationService, PrecheckSchedulerService precheckSchedulerService,
-                               DeprecationService deprecationService, PrecheckRunService precheckRunService,
+                               KibanaClientProvider kibanaClientProvider,
+                               ClusterUpgradeJobService clusterUpgradeJobService,
+                               NotificationService notificationService,
+                               DeprecationService deprecationService,
+                               PrecheckRunService precheckRunService,
                                ClusterLockService clusterLockService) {
     this.elasticsearchClientProvider = elasticsearchClientProvider;
     this.clusterNodeRepository = clusterNodeRepository;
@@ -76,7 +81,6 @@ public class ClusterUpgradeService {
     this.kibanaClientProvider = kibanaClientProvider;
     this.clusterUpgradeJobService = clusterUpgradeJobService;
     this.notificationService = notificationService;
-    this.precheckSchedulerService = precheckSchedulerService;
     this.deprecationService = deprecationService;
     this.precheckRunService = precheckRunService;
     this.clusterLockService = clusterLockService;
@@ -129,13 +133,7 @@ public class ClusterUpgradeService {
         if (isClusterUpgrading) {
           precheckStatus = PrecheckStatus.COMPLETED;
         } else {
-          boolean precheckExists = precheckRunService.precheckExistsForJob(activeUpgradeJob.getId());
-          if (!precheckExists) {
-            precheckSchedulerService.schedule(clusterId);
-            precheckStatus = PrecheckStatus.RUNNING;
-          } else {
-            precheckStatus = precheckRunService.getStatusByUpgradeJobId(activeUpgradeJob.getId());
-          }
+          precheckStatus = precheckRunService.getStatusByUpgradeJobId(activeUpgradeJob.getId());
         }
       } else {
         precheckStatus = PrecheckStatus.COMPLETED;
@@ -143,8 +141,8 @@ public class ClusterUpgradeService {
 
       List<GetElasticsearchSnapshotResponse> snapshots = client.getValidSnapshots();
 
-      ClusterInfoResponse.DeprecationCounts kibanaDeprecationCounts = deprecationService.getKibanaDeprecationCounts(clusterId);
-      ClusterInfoResponse.DeprecationCounts elasticDeprecationCounts = deprecationService.getElasticDeprecationCounts(clusterId);
+      DeprecationCounts kibanaDeprecationCounts = deprecationService.getKibanaDeprecationCounts(clusterId);
+      DeprecationCounts elasticDeprecationCounts = deprecationService.getElasticDeprecationCounts(clusterId);
 
       boolean isClusterUpgraded = activeUpgradeJob != null && activeUpgradeJob.getStatus() == ClusterUpgradeStatus.UPDATED;
       // Evaluate upgrade status

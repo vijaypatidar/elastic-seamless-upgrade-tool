@@ -3,10 +3,8 @@ package co.hyperflex.services;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import co.hyperflex.clients.elastic.ElasticClient;
@@ -18,13 +16,15 @@ import co.hyperflex.core.models.enums.ClusterNodeType;
 import co.hyperflex.core.models.enums.ClusterUpgradeStatus;
 import co.hyperflex.core.repositories.ClusterNodeRepository;
 import co.hyperflex.core.repositories.ClusterRepository;
-import co.hyperflex.core.repositories.ClusterUpgradeJobRepository;
 import co.hyperflex.core.services.clusters.ClusterService;
+import co.hyperflex.core.services.deprecations.DeprecationService;
+import co.hyperflex.core.services.deprecations.dtos.DeprecationCounts;
 import co.hyperflex.core.services.notifications.NotificationService;
+import co.hyperflex.core.services.upgrade.ClusterUpgradeJobService;
 import co.hyperflex.core.upgrade.ClusterUpgradeJobEntity;
-import co.hyperflex.dtos.ClusterInfoResponse;
-import co.hyperflex.precheck.enums.PrecheckStatus;
-import co.hyperflex.prechecks.scheduler.PrecheckSchedulerService;
+import co.hyperflex.precheck.core.enums.PrecheckStatus;
+import co.hyperflex.precheck.services.PrecheckRunService;
+import co.hyperflex.services.deprecations.dtos.ClusterInfoResponse;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -56,13 +56,9 @@ class ClusterUpgradeServiceTest {
   @Mock
   private NotificationService notificationService;
   @Mock
-  private PrecheckSchedulerService precheckSchedulerService;
-  @Mock
   private DeprecationService deprecationService;
   @Mock
   private PrecheckRunService precheckRunService;
-  @Mock
-  private ClusterUpgradeJobRepository clusterUpgradeJobRepository;
   @Mock
   private ElasticClient elasticClient;
   @Mock
@@ -70,7 +66,7 @@ class ClusterUpgradeServiceTest {
   @InjectMocks
   private ClusterUpgradeService clusterUpgradeService;
   private ClusterUpgradeJobEntity clusterUpgradeJob;
-  private ClusterInfoResponse.DeprecationCounts deprecationCounts;
+  private DeprecationCounts deprecationCounts;
 
   @BeforeEach
   void setUp() {
@@ -78,7 +74,7 @@ class ClusterUpgradeServiceTest {
     clusterUpgradeJob.setId("jobId");
     clusterUpgradeJob.setStatus(ClusterUpgradeStatus.PENDING);
 
-    deprecationCounts = new ClusterInfoResponse.DeprecationCounts(0, 0);
+    deprecationCounts = new DeprecationCounts(0, 0);
 
     // Common mocks for most tests
     when(elasticsearchClientProvider.getClient(CLUSTER_ID)).thenReturn(elasticClient);
@@ -97,7 +93,6 @@ class ClusterUpgradeServiceTest {
     void upgradeInfo_when_prechecksCompleteAndNoNodesUpgraded_then_elasticIsUpgradable() {
       // Arrange
       when(clusterUpgradeJobService.getActiveJobByClusterId(CLUSTER_ID)).thenReturn(clusterUpgradeJob);
-      when(precheckRunService.precheckExistsForJob(anyString())).thenReturn(true);
       when(precheckRunService.getStatusByUpgradeJobId(anyString())).thenReturn(PrecheckStatus.COMPLETED);
       when(elasticClient.getValidSnapshots()).thenReturn(List.of(new GetElasticsearchSnapshotResponse("snapshot", new Date())));
       when(clusterService.isNodesUpgraded(CLUSTER_ID, ClusterNodeType.ELASTIC)).thenReturn(false);
@@ -115,27 +110,10 @@ class ClusterUpgradeServiceTest {
     }
 
     @Test
-    @DisplayName("Should trigger prechecks if they have not run yet")
-    void upgradeInfo_when_noPrecheckExists_then_triggerPrechecks() {
-      // Arrange
-      when(clusterUpgradeJobService.getActiveJobByClusterId(CLUSTER_ID)).thenReturn(clusterUpgradeJob);
-      when(elasticClient.getValidSnapshots()).thenReturn(Collections.emptyList());
-
-      // Act
-      ClusterInfoResponse response = clusterUpgradeService.upgradeInfo(CLUSTER_ID);
-
-      // Assert
-      verify(precheckSchedulerService).schedule(CLUSTER_ID);
-      assertEquals(PrecheckStatus.RUNNING, response.precheck().status());
-      assertNull(response.elastic().snapshot().snapshot());
-    }
-
-    @Test
     @DisplayName("Should show failed precheck status correctly")
     void upgradeInfo_when_prechecksFailed_then_showFailedStatus() {
       // Arrange
       when(clusterUpgradeJobService.getActiveJobByClusterId(CLUSTER_ID)).thenReturn(clusterUpgradeJob);
-      when(precheckRunService.precheckExistsForJob(anyString())).thenReturn(true);
       when(precheckRunService.getStatusByUpgradeJobId(anyString())).thenReturn(PrecheckStatus.FAILED);
       when(elasticClient.getValidSnapshots()).thenReturn(Collections.emptyList());
 
@@ -156,7 +134,6 @@ class ClusterUpgradeServiceTest {
     void upgradeInfo_when_elasticNodesAreUpgraded_then_kibanaIsUpgradable() {
       // Arrange
       when(clusterUpgradeJobService.getActiveJobByClusterId(CLUSTER_ID)).thenReturn(clusterUpgradeJob);
-      when(precheckRunService.precheckExistsForJob(anyString())).thenReturn(true);
       when(precheckRunService.getStatusByUpgradeJobId(anyString())).thenReturn(PrecheckStatus.COMPLETED);
       when(elasticClient.getValidSnapshots()).thenReturn(Collections.emptyList());
       when(clusterService.isNodesUpgraded(CLUSTER_ID, ClusterNodeType.ELASTIC)).thenReturn(true);
@@ -175,7 +152,6 @@ class ClusterUpgradeServiceTest {
     void upgradeInfo_when_allNodesAreUpgraded_then_nothingIsUpgradable() {
       // Arrange
       when(clusterUpgradeJobService.getActiveJobByClusterId(CLUSTER_ID)).thenReturn(clusterUpgradeJob);
-      when(precheckRunService.precheckExistsForJob(anyString())).thenReturn(true);
       when(precheckRunService.getStatusByUpgradeJobId(anyString())).thenReturn(PrecheckStatus.COMPLETED);
       when(elasticClient.getValidSnapshots()).thenReturn(Collections.emptyList());
       when(clusterService.isNodesUpgraded(CLUSTER_ID, ClusterNodeType.ELASTIC)).thenReturn(true);
@@ -194,7 +170,6 @@ class ClusterUpgradeServiceTest {
     void upgradeInfo_when_jobStatusIsUpdated_then_nothingIsUpgradable() {
       // Arrange
       clusterUpgradeJob.setStatus(ClusterUpgradeStatus.UPDATED);
-      when(precheckRunService.precheckExistsForJob(anyString())).thenReturn(true);
       when(clusterUpgradeJobService.getActiveJobByClusterId(CLUSTER_ID)).thenReturn(clusterUpgradeJob);
       when(precheckRunService.getStatusByUpgradeJobId(anyString())).thenReturn(PrecheckStatus.COMPLETED);
       when(elasticClient.getValidSnapshots()).thenReturn(Collections.emptyList());

@@ -8,7 +8,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import co.hyperflex.clients.ClusterCredentialProvider;
 import co.hyperflex.clients.elastic.ElasticClient;
 import co.hyperflex.clients.elastic.ElasticClientImpl;
 import co.hyperflex.clients.elastic.ElasticsearchClientProvider;
@@ -43,6 +42,7 @@ class ClusterServiceImplTest {
 
   public static final String MOCK_ELASTIC_SEARCH_URL = "http://localhost.com:9200";
   public static final String MOCK_KIBANA_URL = "http://localhost.com:5601";
+  public static final String MOCK_API_KEY = "x-api-key";
   @Mock
   private ClusterRepository clusterRepository;
   @Mock
@@ -55,8 +55,6 @@ class ClusterServiceImplTest {
   private KibanaClientProvider kibanaClientProvider;
   @Mock
   private SshKeyService sshKeyService;
-  @Mock
-  private ClusterCredentialProvider clusterCredentialProvider;
 
   @InjectMocks
   private ClusterServiceImpl clusterService;
@@ -72,6 +70,7 @@ class ClusterServiceImplTest {
     cluster.setName("test-cluster");
     cluster.setElasticUrl(MOCK_ELASTIC_SEARCH_URL);
     cluster.setKibanaUrl(MOCK_KIBANA_URL);
+    cluster.setApiKey(MOCK_API_KEY);
 
     co.hyperflex.clients.elastic.ElasticClient elasticClient = mock(ElasticClientImpl.class);
     KibanaClient kibanaClient = mock(KibanaClientImpl.class);
@@ -97,13 +96,6 @@ class ClusterServiceImplTest {
 
   @Test
   void updateCluster_selfManagedCluster_success() {
-    // Arrange
-    UpdateSelfManagedClusterRequest request = new UpdateSelfManagedClusterRequest();
-    request.setName("updated-cluster");
-    request.setElasticUrl(MOCK_ELASTIC_SEARCH_URL);
-    request.setKibanaUrl(MOCK_KIBANA_URL);
-    request.setSshKey("new-key");
-    request.setSshUsername("new-user");
 
     String clusterId = "cluster-id";
     SelfManagedClusterEntity cluster = new SelfManagedClusterEntity();
@@ -113,13 +105,11 @@ class ClusterServiceImplTest {
     ElasticClient esClient = mock(ElasticClient.class);
     NodesInfoResponse nodesInfoResponse = mock(NodesInfoResponse.class);
 
+
     when(clusterRepository.findById(clusterId)).thenReturn(Optional.of(cluster));
     when(sshKeyService.createSSHPrivateKeyFile(any(), any())).thenReturn("path/to/key");
-    var esConnectionDetail = new ClientConnectionDetail(MOCK_ELASTIC_SEARCH_URL, null);
-    var kbConnectionDetail = new ClientConnectionDetail(MOCK_KIBANA_URL, null);
-
-    when(elasticsearchClientProvider.getClient(esConnectionDetail)).thenReturn(esClient);
-    when(kibanaClientProvider.getClient(kbConnectionDetail)).thenReturn(kibanaClient);
+    when(elasticsearchClientProvider.getClient(any(ClientConnectionDetail.class))).thenReturn(esClient);
+    when(kibanaClientProvider.getClient(any(ClientConnectionDetail.class))).thenReturn(kibanaClient);
     when(esClient.getNodesInfo()).thenReturn(nodesInfoResponse);
     when(esClient.getHealthStatus()).thenReturn("green");
     when(kibanaClient.getKibanaVersion()).thenReturn("8.1.0");
@@ -127,6 +117,14 @@ class ClusterServiceImplTest {
     when(nodesInfoResponse.getNodes()).thenReturn(Collections.emptyMap());
     when(esClient.getActiveMasters()).thenReturn(Collections.emptyList());
 
+
+    UpdateSelfManagedClusterRequest request = new UpdateSelfManagedClusterRequest();
+    request.setName("updated-cluster");
+    request.setElasticUrl(MOCK_ELASTIC_SEARCH_URL);
+    request.setKibanaUrl(MOCK_KIBANA_URL);
+    request.setApiKey(MOCK_API_KEY);
+    request.setSshKey("new-key");
+    request.setSshUsername("new-user");
     // Act
     UpdateClusterResponse response = clusterService.updateCluster(clusterId, request);
 
@@ -169,11 +167,12 @@ class ClusterServiceImplTest {
   @Test
   void add_invalidCredentials_throwsBadRequest() {
     // Arrange
-    AddSelfManagedClusterRequest request = new AddSelfManagedClusterRequest();
     SelfManagedClusterEntity cluster = new SelfManagedClusterEntity();
     cluster.setElasticUrl(MOCK_ELASTIC_SEARCH_URL);
     cluster.setKibanaUrl(MOCK_KIBANA_URL);
+    cluster.setApiKey(MOCK_API_KEY);
     var connectionDetail = new ClientConnectionDetail(MOCK_ELASTIC_SEARCH_URL, null);
+    AddSelfManagedClusterRequest request = new AddSelfManagedClusterRequest();
     when(clusterMapper.toEntity(request)).thenReturn(cluster);
     when(elasticsearchClientProvider.getClient(connectionDetail)).thenThrow(new RuntimeException("Invalid credentials"));
 

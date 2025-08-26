@@ -1,11 +1,10 @@
 package co.hyperflex.clients.elastic;
 
-import co.hyperflex.clients.ClusterCredentialProvider;
 import co.hyperflex.common.client.ClientConnectionDetail;
 import co.hyperflex.common.client.ClientConnectionDetailProvider;
 import co.hyperflex.common.exceptions.NotFoundException;
-import co.hyperflex.core.entites.clusters.ClusterEntity;
 import co.hyperflex.core.repositories.ClusterRepository;
+import co.hyperflex.core.utils.ClusterAuthUtils;
 import jakarta.validation.constraints.NotNull;
 import java.net.Socket;
 import java.net.http.HttpClient;
@@ -29,19 +28,16 @@ import org.springframework.web.client.RestClient;
 public class ElasticsearchClientProviderImpl implements ElasticsearchClientProvider, ClientConnectionDetailProvider {
 
   private final Logger logger = LoggerFactory.getLogger(ElasticsearchClientProviderImpl.class);
-  private final ClusterCredentialProvider credentialProvider;
   private final ClusterRepository clusterRepository;
 
-  public ElasticsearchClientProviderImpl(ClusterCredentialProvider credentialProvider,
-                                         ClusterRepository clusterRepository) {
-    this.credentialProvider = credentialProvider;
+  public ElasticsearchClientProviderImpl(ClusterRepository clusterRepository) {
     this.clusterRepository = clusterRepository;
   }
 
   @Cacheable(value = "elasticClientCache", key = "#clusterId")
   @Override
   public ElasticClient getClient(@NotNull String clusterId) {
-    return clusterRepository.findById(clusterId).map(this::buildClientConnectionDetail)
+    return clusterRepository.findById(clusterId).map(ClusterAuthUtils::getElasticConnectionDetail)
         .map(this::getClient)
         .orElseThrow(() -> new NotFoundException("Cluster not found"));
   }
@@ -108,14 +104,8 @@ public class ElasticsearchClientProviderImpl implements ElasticsearchClientProvi
 
   @Override
   public ClientConnectionDetail getDetail(String clusterId) {
-    return clusterRepository.findById(clusterId).map(this::buildClientConnectionDetail)
+    return clusterRepository.findById(clusterId).map(ClusterAuthUtils::getElasticConnectionDetail)
         .orElseThrow(() -> new NotFoundException("Cluster not found"));
   }
 
-  private ClientConnectionDetail buildClientConnectionDetail(ClusterEntity clusterEntity) {
-    return new ClientConnectionDetail(
-        clusterEntity.getElasticUrl(),
-        credentialProvider.getAuthHeader(clusterEntity)
-    );
-  }
 }

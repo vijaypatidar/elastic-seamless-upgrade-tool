@@ -1,6 +1,6 @@
 package co.hyperflex.precheck.entities;
 
-import co.hyperflex.precheck.enums.PrecheckType;
+import co.hyperflex.precheck.core.enums.PrecheckType;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "prechecks")

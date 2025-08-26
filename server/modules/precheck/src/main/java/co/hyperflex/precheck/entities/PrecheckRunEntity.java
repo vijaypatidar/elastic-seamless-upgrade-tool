@@ -1,8 +1,8 @@
 package co.hyperflex.precheck.entities;
 
-import co.hyperflex.precheck.enums.PrecheckSeverity;
-import co.hyperflex.precheck.enums.PrecheckStatus;
-import co.hyperflex.precheck.enums.PrecheckType;
+import co.hyperflex.precheck.core.enums.PrecheckSeverity;
+import co.hyperflex.precheck.core.enums.PrecheckStatus;
+import co.hyperflex.precheck.core.enums.PrecheckType;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import java.util.Date;
