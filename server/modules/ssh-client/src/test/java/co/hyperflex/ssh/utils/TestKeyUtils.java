@@ -7,7 +7,7 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.util.Base64;
 
-public class KeyUtils {
+public class TestKeyUtils {
 
   public static KeyPair generateRsaKeyPair() throws Exception {
     KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
