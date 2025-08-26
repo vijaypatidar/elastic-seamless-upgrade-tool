@@ -1,4 +1,4 @@
-package co.hyperflex.services;
+package co.hyperflex.core.services.certificates;
 
 import co.hyperflex.common.exceptions.BadRequestException;
 import co.hyperflex.core.services.clusters.dtos.UploadCertificateResponse;
@@ -15,7 +15,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class CertificatesService {
@@ -34,36 +33,38 @@ public class CertificatesService {
       Files.createDirectories(certsDir);
       logger.info("Certificates directory initialized at {}", certsDir.toAbsolutePath());
     } catch (IOException e) {
-      logger.error("Failed to create certificates directory: {}", certsDir, e);
-      throw new IllegalStateException("Failed to create certificated keys directory: " + certsDir,
-          e);
+      throw new IllegalStateException(
+          "Failed to create certificates directory: " + certsDir, e);
     }
   }
 
-  public UploadCertificateResponse uploadCertificate(MultipartFile[] files, String clusterId) {
-    List<String> ids = new ArrayList<>(files.length);
-    for (MultipartFile file : files) {
-      if (file.isEmpty()) {
-        throw new BadRequestException("No SSH key file was provided.");
+  public UploadCertificateResponse uploadCertificates(List<CertificateFile> files) {
+    if (files == null || files.isEmpty()) {
+      throw new BadRequestException("No certificate files were provided.");
+    }
+
+    List<String> ids = new ArrayList<>(files.size());
+
+    for (CertificateFile file : files) {
+      if (file.empty()) {
+        throw new BadRequestException("Empty certificate file was provided.");
       }
 
-      try {
+      String filename = UUID.randomUUID() + "-" + file.originalFilename();
+      if (!filename.matches(".*\\.(crt|pem|cer|p12|pfx)$")) {
+        throw new BadRequestException("Invalid certificate file type: " + filename);
+      }
 
-        String filename = UUID.randomUUID() + "-" + file.getOriginalFilename();
-        if (!filename.matches(".*\\.(crt|pem|cer|p12|pfx)$")) {
-          throw new BadRequestException("Invalid certificate file type");
-        }
-
-        Path targetLocation = certsDir.resolve(filename);
-        Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
-
+      Path targetLocation = certsDir.resolve(filename);
+      try { // auto-close stream
+        Files.copy(file.content(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
         ids.add(filename);
       } catch (IOException e) {
-        logger.error("Failed to upload certificate", e);
-        throw new RuntimeException(e);
+        logger.error("Failed to upload certificate {}", file.originalFilename(), e);
+        throw new RuntimeException("Upload failed for " + file.originalFilename(), e);
       }
     }
+
     return new UploadCertificateResponse(ids);
   }
-
 }

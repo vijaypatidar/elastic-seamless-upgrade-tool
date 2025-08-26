@@ -147,4 +147,5 @@ For detailed documentation, visit our official [docs page](https://coda.io/d/_dV
 
 ## License
 
-This project is licensed under the [MIT](https://raw.githubusercontent.com/ConsultaddHQ/elastic-seamless-upgrade-tool/refs/heads/main/License.txt) License
+This project is licensed under the [Business Source License 1.1](./LICENSE) provided by [Hyperflex](https://hyperflex.co/) (a subsidiary of Consultadd Inc.).  
+Production use is restricted until the Change Date, after which it will convert to GPL v3.0 or later.
