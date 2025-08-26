@@ -1,7 +1,6 @@
 package co.hyperflex.prechecks.concrete.index;
 
-import co.hyperflex.clients.elastic.ElasticRequest;
-import co.hyperflex.common.http.HttpMethod;
+import co.hyperflex.common.client.ApiRequest;
 import co.hyperflex.entities.precheck.PrecheckSeverity;
 import co.hyperflex.prechecks.contexts.IndexContext;
 import co.hyperflex.prechecks.core.BaseIndexPrecheck;
@@ -27,9 +26,9 @@ public class IndexFieldCountPrecheck extends BaseIndexPrecheck {
     Logger logger = context.getLogger();
     var uri = "/" + indexName + "/_mapping";
 
-    var request = ElasticRequest
+    var request = ApiRequest
         .builder(JsonNode.class)
-        .method(HttpMethod.GET)
+        .get()
         .uri(uri)
         .build();
 

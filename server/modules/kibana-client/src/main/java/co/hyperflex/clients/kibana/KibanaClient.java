@@ -2,8 +2,9 @@ package co.hyperflex.clients.kibana;
 
 import co.hyperflex.clients.kibana.dto.GetKibanaDeprecationResponse;
 import co.hyperflex.clients.kibana.dto.GetKibanaStatusResponse;
+import co.hyperflex.common.client.ApiClient;
 
-public interface KibanaClient {
+public interface KibanaClient extends ApiClient {
   boolean isKibanaReady(String host);
 
   String getKibanaVersion(String nodeIp);
@@ -15,6 +16,4 @@ public interface KibanaClient {
   GetKibanaDeprecationResponse getDeprecations();
 
   String getSnapshotCreationPageUrl();
-
-  <T> T execute(KibanaRequest<T> request);
 }

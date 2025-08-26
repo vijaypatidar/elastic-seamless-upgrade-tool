@@ -19,13 +19,22 @@ public class SshCommandExecutor implements AutoCloseable {
   private final Logger logger = LoggerFactory.getLogger(getClass());
   private final SshClient client;
   private final ClientSession session;
-  private final long timeoutSeconds = 15;
+  private final long timeoutSeconds;
 
   public SshCommandExecutor(String host, int port, String username, String privateKeyPath) {
+    this(host, port, username, privateKeyPath, 15);
+  }
 
+  public SshCommandExecutor(String host, int port, String username, String privateKeyPath, long timeoutSeconds) {
+    this.timeoutSeconds = timeoutSeconds;
+    this.client = SshClient.setUpDefaultClient();
+    client.start();
+    session = connect(host, port, username, privateKeyPath);
+  }
+
+  private ClientSession connect(String host, int port, String username, String privateKeyPath) {
+    final ClientSession session;
     try {
-      this.client = SshClient.setUpDefaultClient();
-      client.start();
 
       session = client.connect(username, host, port)
           .verify(timeoutSeconds, TimeUnit.SECONDS)
@@ -41,11 +50,12 @@ public class SshCommandExecutor implements AutoCloseable {
     } catch (Exception e) {
       if (e.getCause() instanceof TimeoutException) {
         logger.warn("Timeout waiting for private key verification");
-        throw new RuntimeException("Unable to establish SSH connection to host (IP: " + host + ").");
+        throw new SshConnectionException("Unable to establish SSH connection to host (IP: " + host + ").", e);
       }
       logger.warn("Unable to establish SSH connection to host", e);
-      throw new RuntimeException("SSH authentication failed for host (IP: " + host + ").");
+      throw new SshConnectionException("SSH authentication failed for host (IP: " + host + ").", e);
     }
+    return session;
   }
 
   public CommandResult execute(String command) throws IOException {
@@ -57,8 +67,10 @@ public class SshCommandExecutor implements AutoCloseable {
       channel.setErr(stderr);
 
       channel.open().verify(timeoutSeconds, TimeUnit.SECONDS);
-      channel.waitFor(EnumSet.of(ClientChannelEvent.CLOSED), TimeUnit.SECONDS.toMillis(timeoutSeconds));
-
+      var result = channel.waitFor(EnumSet.of(ClientChannelEvent.CLOSED), TimeUnit.SECONDS.toMillis(timeoutSeconds));
+      if (result.contains(ClientChannelEvent.TIMEOUT)) {
+        throw new SshConnectionException("Command execution timed out: " + command);
+      }
       int exitCode = channel.getExitStatus() != null ? channel.getExitStatus() : -1;
       return new CommandResult(exitCode, stdout.toString().trim(), stderr.toString().trim());
     }

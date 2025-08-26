@@ -1,8 +1,7 @@
 package co.hyperflex.upgrader.tasks.kibana;
 
 import co.hyperflex.clients.kibana.KibanaClient;
-import co.hyperflex.clients.kibana.KibanaRequest;
-import co.hyperflex.common.http.HttpMethod;
+import co.hyperflex.common.client.ApiRequest;
 import co.hyperflex.upgrader.tasks.Context;
 import co.hyperflex.upgrader.tasks.Task;
 import co.hyperflex.upgrader.tasks.TaskResult;
@@ -28,9 +27,9 @@ public class SetDefaultIndexTask implements Task {
     try {
       String requestBody = "{\"changes\":{\"defaultIndex\":\"syslog\"}}";
 
-      var request = KibanaRequest.builder(Map.class)
+      var request = ApiRequest.builder(Map.class)
           .uri(url)
-          .method(HttpMethod.POST)
+          .post()
           .addHeader("kbn-version", context.config().targetVersion())
           .body(requestBody)
           .build();
