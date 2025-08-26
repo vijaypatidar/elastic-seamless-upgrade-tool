@@ -1,7 +1,7 @@
 package co.hyperflex.prechecks.concrete.index;
 
 import co.hyperflex.common.client.ApiRequest;
-import co.hyperflex.entities.precheck.PrecheckSeverity;
+import co.hyperflex.precheck.enums.PrecheckSeverity;
 import co.hyperflex.prechecks.contexts.IndexContext;
 import co.hyperflex.prechecks.core.BaseIndexPrecheck;
 import com.fasterxml.jackson.databind.JsonNode;

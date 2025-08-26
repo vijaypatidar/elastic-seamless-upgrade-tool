@@ -4,7 +4,7 @@ import co.hyperflex.clients.elastic.dto.nodes.Jvm;
 import co.hyperflex.clients.elastic.dto.nodes.JvmMemoryStats;
 import co.hyperflex.clients.elastic.dto.nodes.NodesStatsResponse;
 import co.hyperflex.clients.elastic.dto.nodes.Stats;
-import co.hyperflex.entities.precheck.PrecheckSeverity;
+import co.hyperflex.precheck.enums.PrecheckSeverity;
 import co.hyperflex.prechecks.contexts.NodeContext;
 import co.hyperflex.prechecks.core.BaseElasticNodePrecheck;
 import java.util.Map;

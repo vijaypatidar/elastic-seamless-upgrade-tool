@@ -1,7 +1,7 @@
 package co.hyperflex.upgrader.planner;
 
+import co.hyperflex.core.entites.clusters.nodes.ClusterNodeEntity;
 import co.hyperflex.core.models.enums.ClusterNodeType;
-import co.hyperflex.entities.cluster.ClusterNodeEntity;
 import co.hyperflex.upgrader.tasks.Task;
 import co.hyperflex.upgrader.tasks.elastic.DisableShardAllocationTask;
 import co.hyperflex.upgrader.tasks.elastic.EnableShardAllocationTask;

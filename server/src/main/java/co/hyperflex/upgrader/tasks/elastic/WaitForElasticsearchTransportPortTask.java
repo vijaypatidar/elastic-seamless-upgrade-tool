@@ -1,6 +1,6 @@
 package co.hyperflex.upgrader.tasks.elastic;
 
-import co.hyperflex.entities.cluster.ClusterNodeEntity;
+import co.hyperflex.core.entites.clusters.nodes.ClusterNodeEntity;
 import co.hyperflex.upgrader.tasks.Context;
 import co.hyperflex.upgrader.tasks.Task;
 import co.hyperflex.upgrader.tasks.TaskResult;

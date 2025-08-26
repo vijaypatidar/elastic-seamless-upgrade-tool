@@ -3,7 +3,7 @@ package co.hyperflex.prechecks.concrete.index;
 import co.hyperflex.clients.elastic.dto.cat.shards.ShardsRecord;
 import co.hyperflex.clients.elastic.dto.cluster.AllocationExplainRequest;
 import co.hyperflex.clients.elastic.dto.cluster.AllocationExplainResponse;
-import co.hyperflex.entities.precheck.PrecheckSeverity;
+import co.hyperflex.precheck.enums.PrecheckSeverity;
 import co.hyperflex.prechecks.contexts.IndexContext;
 import co.hyperflex.prechecks.core.BaseIndexPrecheck;
 import java.util.List;

@@ -3,8 +3,8 @@ package co.hyperflex.clients;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import co.hyperflex.entities.cluster.ClusterEntity;
-import co.hyperflex.entities.cluster.SelfManagedClusterEntity;
+import co.hyperflex.core.entites.clusters.ClusterEntity;
+import co.hyperflex.core.entites.clusters.SelfManagedClusterEntity;
 import org.junit.jupiter.api.Test;
 
 class ClusterCredentialProviderTest {

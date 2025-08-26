@@ -1,7 +1,7 @@
 package co.hyperflex.repositories.projection;
 
-import co.hyperflex.entities.precheck.PrecheckSeverity;
-import co.hyperflex.entities.precheck.PrecheckStatus;
+import co.hyperflex.precheck.enums.PrecheckSeverity;
+import co.hyperflex.precheck.enums.PrecheckStatus;
 
 public record PrecheckStatusAndSeverityView(PrecheckStatus status, PrecheckSeverity severity) {
 }

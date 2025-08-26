@@ -1,6 +1,6 @@
 package co.hyperflex.repositories;
 
-import co.hyperflex.entities.upgrade.ClusterUpgradeJobEntity;
+import co.hyperflex.core.upgrade.ClusterUpgradeJobEntity;
 import java.util.List;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;

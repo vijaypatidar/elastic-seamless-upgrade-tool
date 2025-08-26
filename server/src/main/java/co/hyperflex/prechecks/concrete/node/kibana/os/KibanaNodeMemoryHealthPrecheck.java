@@ -3,7 +3,7 @@ package co.hyperflex.prechecks.concrete.node.kibana.os;
 import co.hyperflex.clients.kibana.KibanaClient;
 import co.hyperflex.clients.kibana.dto.GetKibanaStatusResponse;
 import co.hyperflex.clients.kibana.dto.OsStats;
-import co.hyperflex.entities.precheck.PrecheckSeverity;
+import co.hyperflex.precheck.enums.PrecheckSeverity;
 import co.hyperflex.prechecks.contexts.NodeContext;
 import co.hyperflex.prechecks.core.BaseKibanaNodePrecheck;
 import org.slf4j.Logger;

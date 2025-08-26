@@ -1,6 +1,6 @@
 package co.hyperflex.loaders;
 
-import co.hyperflex.entities.BreakingChangeEntity;
+import co.hyperflex.core.entites.BreakingChangeEntity;
 import co.hyperflex.repositories.BreakingChangeRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

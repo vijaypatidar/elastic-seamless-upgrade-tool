@@ -1,8 +1,8 @@
 package co.hyperflex.services;
 
+import co.hyperflex.core.upgrade.ClusterUpgradeJobEntity;
 import co.hyperflex.dtos.upgrades.GetUpgradeLogsRequest;
 import co.hyperflex.dtos.upgrades.GetUpgradeLogsResponse;
-import co.hyperflex.entities.upgrade.ClusterUpgradeJobEntity;
 import co.hyperflex.entities.upgrade.UpgradeLogEntity;
 import java.time.LocalDateTime;
 import java.util.List;

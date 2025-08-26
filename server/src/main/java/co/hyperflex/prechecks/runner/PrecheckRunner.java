@@ -1,6 +1,6 @@
 package co.hyperflex.prechecks.runner;
 
-import co.hyperflex.entities.precheck.PrecheckRunEntity;
+import co.hyperflex.precheck.entities.PrecheckRunEntity;
 import co.hyperflex.services.PrecheckRunService;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;

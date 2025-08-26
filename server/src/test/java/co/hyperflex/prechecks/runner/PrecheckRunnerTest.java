@@ -6,9 +6,9 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import co.hyperflex.entities.precheck.ClusterPrecheckRunEntity;
-import co.hyperflex.entities.precheck.NodePrecheckRunEntity;
-import co.hyperflex.entities.precheck.PrecheckRunEntity;
+import co.hyperflex.precheck.entities.ClusterPrecheckRunEntity;
+import co.hyperflex.precheck.entities.NodePrecheckRunEntity;
+import co.hyperflex.precheck.entities.PrecheckRunEntity;
 import co.hyperflex.services.PrecheckRunService;
 import java.util.Collections;
 import java.util.List;

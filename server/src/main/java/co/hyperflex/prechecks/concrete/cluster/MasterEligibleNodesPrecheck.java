@@ -3,7 +3,7 @@ package co.hyperflex.prechecks.concrete.cluster;
 import co.hyperflex.clients.elastic.ElasticClient;
 import co.hyperflex.clients.elastic.dto.nodes.NodeInfo;
 import co.hyperflex.clients.elastic.dto.nodes.NodeRole;
-import co.hyperflex.entities.precheck.PrecheckSeverity;
+import co.hyperflex.precheck.enums.PrecheckSeverity;
 import co.hyperflex.prechecks.contexts.ClusterContext;
 import co.hyperflex.prechecks.core.BaseClusterPrecheck;
 import java.util.Collection;

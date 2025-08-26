@@ -1,6 +1,6 @@
 package co.hyperflex.prechecks.registry;
 
-import co.hyperflex.entities.precheck.PrecheckType;
+import co.hyperflex.precheck.enums.PrecheckType;
 import co.hyperflex.prechecks.core.Precheck;
 import java.util.ArrayList;
 import java.util.Collection;

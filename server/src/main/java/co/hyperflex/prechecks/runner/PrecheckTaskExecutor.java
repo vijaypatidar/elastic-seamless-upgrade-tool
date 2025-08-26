@@ -1,8 +1,10 @@
 package co.hyperflex.prechecks.runner;
 
 import co.hyperflex.common.exceptions.NotFoundException;
-import co.hyperflex.entities.precheck.PrecheckRunEntity;
-import co.hyperflex.entities.precheck.PrecheckStatus;
+import co.hyperflex.core.services.notifications.NotificationService;
+import co.hyperflex.core.services.notifications.PrecheckProgressChangeEvent;
+import co.hyperflex.precheck.entities.PrecheckRunEntity;
+import co.hyperflex.precheck.enums.PrecheckStatus;
 import co.hyperflex.prechecks.contexts.ClusterContext;
 import co.hyperflex.prechecks.contexts.IndexContext;
 import co.hyperflex.prechecks.contexts.NodeContext;
@@ -14,8 +16,6 @@ import co.hyperflex.prechecks.core.BaseNodePrecheck;
 import co.hyperflex.prechecks.core.Precheck;
 import co.hyperflex.prechecks.registry.PrecheckRegistry;
 import co.hyperflex.services.PrecheckRunService;
-import co.hyperflex.services.notifications.NotificationService;
-import co.hyperflex.services.notifications.PrecheckProgressChangeEvent;
 import java.util.concurrent.CompletableFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

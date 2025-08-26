@@ -1,6 +1,6 @@
 package co.hyperflex.repositories;
 
-import co.hyperflex.entities.BreakingChangeEntity;
+import co.hyperflex.core.entites.BreakingChangeEntity;
 import co.hyperflex.utils.VersionUtils;
 import java.util.List;
 import org.springframework.data.mongodb.core.MongoTemplate;

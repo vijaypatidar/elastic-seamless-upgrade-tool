@@ -1,7 +1,7 @@
 package co.hyperflex.mappers;
 
+import co.hyperflex.core.entites.settings.SettingEntity;
 import co.hyperflex.core.services.settings.dtos.GetSettingResponse;
-import co.hyperflex.entities.SettingEntity;
 import org.springframework.stereotype.Component;
 
 @Component

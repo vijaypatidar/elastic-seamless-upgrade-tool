@@ -1,7 +1,7 @@
 package co.hyperflex.prechecks.core;
 
-import co.hyperflex.entities.precheck.PrecheckSeverity;
-import co.hyperflex.entities.precheck.PrecheckType;
+import co.hyperflex.precheck.enums.PrecheckSeverity;
+import co.hyperflex.precheck.enums.PrecheckType;
 import co.hyperflex.prechecks.contexts.PrecheckContext;
 
 public sealed interface Precheck<T extends PrecheckContext> permits BaseClusterPrecheck, BaseIndexPrecheck, BaseNodePrecheck {

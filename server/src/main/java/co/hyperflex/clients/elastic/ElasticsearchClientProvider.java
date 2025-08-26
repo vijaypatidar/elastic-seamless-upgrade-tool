@@ -1,6 +1,6 @@
 package co.hyperflex.clients.elastic;
 
-import co.hyperflex.entities.cluster.ClusterEntity;
+import co.hyperflex.core.entites.clusters.ClusterEntity;
 import jakarta.validation.constraints.NotNull;
 
 public interface ElasticsearchClientProvider {

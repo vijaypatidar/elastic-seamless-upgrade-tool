@@ -1,7 +1,7 @@
 package co.hyperflex.repositories;
 
 import co.hyperflex.common.exceptions.NotFoundException;
-import co.hyperflex.entities.cluster.ClusterEntity;
+import co.hyperflex.core.entites.clusters.ClusterEntity;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Repository;

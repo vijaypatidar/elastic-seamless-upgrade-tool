@@ -1,8 +1,8 @@
 package co.hyperflex.mappers;
 
-import co.hyperflex.dtos.prechecks.GetClusterPrecheckEntry;
-import co.hyperflex.dtos.prechecks.GetPrecheckEntry;
-import co.hyperflex.entities.precheck.PrecheckRunEntity;
+import co.hyperflex.precheck.entities.PrecheckRunEntity;
+import co.hyperflex.precheck.services.dtos.GetClusterPrecheckEntry;
+import co.hyperflex.precheck.services.dtos.GetPrecheckEntry;
 import java.util.Date;
 import java.util.Optional;
 import org.springframework.stereotype.Service;

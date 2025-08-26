@@ -1,5 +1,11 @@
 package co.hyperflex.mappers;
 
+import co.hyperflex.core.entites.clusters.ClusterEntity;
+import co.hyperflex.core.entites.clusters.ElasticCloudClusterEntity;
+import co.hyperflex.core.entites.clusters.SelfManagedClusterEntity;
+import co.hyperflex.core.entites.clusters.nodes.ClusterNodeEntity;
+import co.hyperflex.core.entites.clusters.nodes.ElasticNodeEntity;
+import co.hyperflex.core.entites.clusters.nodes.KibanaNodeEntity;
 import co.hyperflex.core.models.clusters.SshInfo;
 import co.hyperflex.core.models.enums.ClusterNodeType;
 import co.hyperflex.core.services.clusters.dtos.AddClusterKibanaNodeRequest;
@@ -11,13 +17,7 @@ import co.hyperflex.core.services.clusters.dtos.GetClusterNodeResponse;
 import co.hyperflex.core.services.clusters.dtos.GetClusterResponse;
 import co.hyperflex.core.services.clusters.dtos.GetElasticCloudClusterResponse;
 import co.hyperflex.core.services.clusters.dtos.GetSelfManagedClusterResponse;
-import co.hyperflex.entities.cluster.ClusterEntity;
-import co.hyperflex.entities.cluster.ClusterNodeEntity;
-import co.hyperflex.entities.cluster.ElasticCloudClusterEntity;
-import co.hyperflex.entities.cluster.ElasticNodeEntity;
-import co.hyperflex.entities.cluster.KibanaNodeEntity;
-import co.hyperflex.entities.cluster.SelfManagedClusterEntity;
-import co.hyperflex.services.SshKeyService;
+import co.hyperflex.core.services.ssh.SshKeyService;
 import co.hyperflex.utils.NodeRoleRankerUtils;
 import java.util.List;
 import java.util.UUID;

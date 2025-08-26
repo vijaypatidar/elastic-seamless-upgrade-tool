@@ -8,10 +8,10 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import co.hyperflex.core.entites.settings.SettingEntity;
 import co.hyperflex.core.services.settings.dtos.GetSettingResponse;
 import co.hyperflex.core.services.settings.dtos.UpdateSettingRequest;
 import co.hyperflex.core.services.settings.dtos.UpdateSettingResponse;
-import co.hyperflex.entities.SettingEntity;
 import co.hyperflex.mappers.SettingMapper;
 import co.hyperflex.repositories.SettingRepository;
 import java.util.Optional;

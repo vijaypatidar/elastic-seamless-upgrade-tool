@@ -1,13 +1,13 @@
 package co.hyperflex.repositories;
 
-import static co.hyperflex.entities.precheck.PrecheckRunEntity.CLUSTER_UPGRADE_JOB_ID;
-import static co.hyperflex.entities.precheck.PrecheckRunEntity.LOGS;
-import static co.hyperflex.entities.precheck.PrecheckRunEntity.SEVERITY;
-import static co.hyperflex.entities.precheck.PrecheckRunEntity.STATUS;
+import static co.hyperflex.precheck.entities.PrecheckRunEntity.CLUSTER_UPGRADE_JOB_ID;
+import static co.hyperflex.precheck.entities.PrecheckRunEntity.LOGS;
+import static co.hyperflex.precheck.entities.PrecheckRunEntity.SEVERITY;
+import static co.hyperflex.precheck.entities.PrecheckRunEntity.STATUS;
 
-import co.hyperflex.entities.precheck.PrecheckRunEntity;
-import co.hyperflex.entities.precheck.PrecheckStatus;
-import co.hyperflex.entities.precheck.PrecheckType;
+import co.hyperflex.precheck.entities.PrecheckRunEntity;
+import co.hyperflex.precheck.enums.PrecheckStatus;
+import co.hyperflex.precheck.enums.PrecheckType;
 import co.hyperflex.repositories.projection.PrecheckStatusAndSeverityView;
 import java.util.List;
 import org.springframework.data.mongodb.core.MongoTemplate;

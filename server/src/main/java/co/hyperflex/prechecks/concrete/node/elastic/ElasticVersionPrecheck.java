@@ -2,7 +2,7 @@ package co.hyperflex.prechecks.concrete.node.elastic;
 
 import co.hyperflex.clients.elastic.dto.nodes.NodeInfo;
 import co.hyperflex.clients.elastic.dto.nodes.NodesInfoResponse;
-import co.hyperflex.entities.precheck.PrecheckSeverity;
+import co.hyperflex.precheck.enums.PrecheckSeverity;
 import co.hyperflex.prechecks.contexts.NodeContext;
 import co.hyperflex.prechecks.core.BaseElasticNodePrecheck;
 import java.util.Map;

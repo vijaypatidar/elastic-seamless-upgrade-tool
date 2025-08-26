@@ -1,6 +1,6 @@
 package co.hyperflex.clients;
 
-import co.hyperflex.entities.cluster.ClusterEntity;
+import co.hyperflex.core.entites.clusters.ClusterEntity;
 import java.util.Base64;
 import java.util.Optional;
 import org.slf4j.Logger;
