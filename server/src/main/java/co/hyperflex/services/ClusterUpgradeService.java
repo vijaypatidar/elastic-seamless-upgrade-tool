@@ -23,19 +23,20 @@ import co.hyperflex.core.services.notifications.NotificationType;
 import co.hyperflex.core.services.notifications.UpgradeProgressChangeEvent;
 import co.hyperflex.core.upgrade.ClusterUpgradeJobEntity;
 import co.hyperflex.dtos.ClusterInfoResponse;
-import co.hyperflex.dtos.upgrades.ClusterNodeUpgradeRequest;
-import co.hyperflex.dtos.upgrades.ClusterNodeUpgradeResponse;
-import co.hyperflex.dtos.upgrades.ClusterUpgradeResponse;
-import co.hyperflex.entities.upgrade.UpgradeLogEntity;
 import co.hyperflex.precheck.enums.PrecheckStatus;
 import co.hyperflex.prechecks.scheduler.PrecheckSchedulerService;
 import co.hyperflex.repositories.ClusterNodeRepository;
 import co.hyperflex.repositories.ClusterRepository;
-import co.hyperflex.upgrader.planner.UpgradePlanBuilder;
-import co.hyperflex.upgrader.tasks.Configuration;
-import co.hyperflex.upgrader.tasks.Context;
-import co.hyperflex.upgrader.tasks.Task;
-import co.hyperflex.upgrader.tasks.TaskResult;
+import co.hyperflex.upgrade.dtos.ClusterNodeUpgradeRequest;
+import co.hyperflex.upgrade.dtos.ClusterNodeUpgradeResponse;
+import co.hyperflex.upgrade.dtos.ClusterUpgradeResponse;
+import co.hyperflex.upgrade.entities.UpgradeLogEntity;
+import co.hyperflex.upgrade.planner.UpgradePlanBuilder;
+import co.hyperflex.upgrade.services.UpgradeLogService;
+import co.hyperflex.upgrade.tasks.Configuration;
+import co.hyperflex.upgrade.tasks.Context;
+import co.hyperflex.upgrade.tasks.Task;
+import co.hyperflex.upgrade.tasks.TaskResult;
 import co.hyperflex.utils.VersionUtils;
 import java.util.Comparator;
 import java.util.List;
@@ -172,6 +173,7 @@ public class ClusterUpgradeService {
 
     executorService.submit(() -> {
       try {
+        final Logger log = LoggerFactory.getLogger(UpgradeLogService.class);
         clusterLockService.lock(cluster.getId());
 
         clusterUpgradeJobService.setJobStatus(clusterUpgradeJobId, ClusterUpgradeStatus.UPGRADING);

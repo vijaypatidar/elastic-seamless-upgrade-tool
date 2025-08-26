@@ -1,11 +1,11 @@
 package co.hyperflex.controllers;
 
-import co.hyperflex.dtos.upgrades.CreateClusterUpgradeJobRequest;
-import co.hyperflex.dtos.upgrades.CreateClusterUpgradeJobResponse;
-import co.hyperflex.dtos.upgrades.GetTargetVersionResponse;
-import co.hyperflex.dtos.upgrades.GetUpgradeJobStatusResponse;
-import co.hyperflex.dtos.upgrades.StopClusterUpgradeResponse;
 import co.hyperflex.services.ClusterUpgradeJobService;
+import co.hyperflex.upgrade.dtos.CreateClusterUpgradeJobRequest;
+import co.hyperflex.upgrade.dtos.CreateClusterUpgradeJobResponse;
+import co.hyperflex.upgrade.dtos.GetTargetVersionResponse;
+import co.hyperflex.upgrade.dtos.GetUpgradeJobStatusResponse;
+import co.hyperflex.upgrade.dtos.StopClusterUpgradeResponse;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
