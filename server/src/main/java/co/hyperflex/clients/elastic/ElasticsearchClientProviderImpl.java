@@ -1,5 +1,6 @@
 package co.hyperflex.clients.elastic;
 
+import co.hyperflex.clients.RestApiClient;
 import co.hyperflex.common.client.ClientConnectionDetail;
 import co.hyperflex.common.client.ClientConnectionDetailProvider;
 import co.hyperflex.common.exceptions.NotFoundException;
@@ -57,7 +58,7 @@ public class ElasticsearchClientProviderImpl implements ElasticsearchClientProvi
           .requestFactory(new JdkClientHttpRequestFactory(jdkHttpClient))
           .build();
 
-      return new ElasticClientImpl(genericClient);
+      return new ElasticClientImpl(new RestApiClient(genericClient));
     } catch (Exception e) {
       logger.error("Failed to create elasticsearch client", e);
       throw new RuntimeException(e);

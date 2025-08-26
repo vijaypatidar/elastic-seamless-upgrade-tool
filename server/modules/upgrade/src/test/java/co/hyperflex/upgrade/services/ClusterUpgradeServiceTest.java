@@ -1,4 +1,4 @@
-package co.hyperflex.services;
+package co.hyperflex.upgrade.services;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -24,7 +24,7 @@ import co.hyperflex.core.services.upgrade.ClusterUpgradeJobService;
 import co.hyperflex.core.upgrade.ClusterUpgradeJobEntity;
 import co.hyperflex.precheck.core.enums.PrecheckStatus;
 import co.hyperflex.precheck.services.PrecheckRunService;
-import co.hyperflex.services.deprecations.dtos.ClusterInfoResponse;
+import co.hyperflex.upgrade.services.dtos.ClusterInfoResponse;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;

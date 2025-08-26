@@ -1,4 +1,4 @@
-package co.hyperflex.services;
+package co.hyperflex.upgrade.services;
 
 import co.hyperflex.clients.elastic.ElasticClient;
 import co.hyperflex.clients.elastic.ElasticsearchClientProvider;
@@ -6,6 +6,7 @@ import co.hyperflex.clients.elastic.dto.GetElasticsearchSnapshotResponse;
 import co.hyperflex.clients.kibana.KibanaClient;
 import co.hyperflex.clients.kibana.KibanaClientProvider;
 import co.hyperflex.common.exceptions.BadRequestException;
+import co.hyperflex.common.utils.VersionUtils;
 import co.hyperflex.core.entites.clusters.ClusterEntity;
 import co.hyperflex.core.entites.clusters.SelfManagedClusterEntity;
 import co.hyperflex.core.entites.clusters.nodes.ClusterNodeEntity;
@@ -30,13 +31,11 @@ import co.hyperflex.core.services.upgrade.dtos.ClusterNodeUpgradeRequest;
 import co.hyperflex.core.services.upgrade.dtos.ClusterNodeUpgradeResponse;
 import co.hyperflex.core.services.upgrade.dtos.ClusterUpgradeResponse;
 import co.hyperflex.core.upgrade.ClusterUpgradeJobEntity;
-import co.hyperflex.core.utils.VersionUtils;
 import co.hyperflex.precheck.core.enums.PrecheckStatus;
 import co.hyperflex.precheck.services.PrecheckRunService;
-import co.hyperflex.services.deprecations.dtos.ClusterInfoResponse;
 import co.hyperflex.upgrade.entities.UpgradeLogEntity;
 import co.hyperflex.upgrade.planner.UpgradePlanBuilder;
-import co.hyperflex.upgrade.services.UpgradeLogService;
+import co.hyperflex.upgrade.services.dtos.ClusterInfoResponse;
 import co.hyperflex.upgrade.tasks.Configuration;
 import co.hyperflex.upgrade.tasks.Context;
 import co.hyperflex.upgrade.tasks.Task;

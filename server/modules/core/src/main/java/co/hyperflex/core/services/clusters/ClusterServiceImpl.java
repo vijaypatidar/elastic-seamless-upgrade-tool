@@ -1,4 +1,4 @@
-package co.hyperflex.services;
+package co.hyperflex.core.services.clusters;
 
 import co.hyperflex.clients.elastic.ElasticClient;
 import co.hyperflex.clients.elastic.ElasticsearchClientProvider;
@@ -11,6 +11,8 @@ import co.hyperflex.clients.kibana.dto.GetKibanaStatusResponse;
 import co.hyperflex.clients.kibana.dto.OsStats;
 import co.hyperflex.common.exceptions.BadRequestException;
 import co.hyperflex.common.exceptions.NotFoundException;
+import co.hyperflex.common.utils.HashUtil;
+import co.hyperflex.common.utils.UrlUtils;
 import co.hyperflex.core.entites.clusters.ClusterEntity;
 import co.hyperflex.core.entites.clusters.ElasticCloudClusterEntity;
 import co.hyperflex.core.entites.clusters.SelfManagedClusterEntity;
@@ -24,7 +26,6 @@ import co.hyperflex.core.models.enums.ClusterNodeType;
 import co.hyperflex.core.models.enums.NodeUpgradeStatus;
 import co.hyperflex.core.repositories.ClusterNodeRepository;
 import co.hyperflex.core.repositories.ClusterRepository;
-import co.hyperflex.core.services.clusters.ClusterService;
 import co.hyperflex.core.services.clusters.dtos.AddClusterRequest;
 import co.hyperflex.core.services.clusters.dtos.AddClusterResponse;
 import co.hyperflex.core.services.clusters.dtos.AddSelfManagedClusterRequest;
@@ -40,21 +41,12 @@ import co.hyperflex.core.services.clusters.dtos.UpdateElasticCloudClusterRequest
 import co.hyperflex.core.services.clusters.dtos.UpdateNodeConfigurationResponse;
 import co.hyperflex.core.services.clusters.dtos.UpdateSelfManagedClusterRequest;
 import co.hyperflex.core.services.clusters.lock.ClusterLockService;
-import co.hyperflex.core.services.notifications.GeneralNotificationEvent;
 import co.hyperflex.core.services.notifications.NotificationService;
-import co.hyperflex.core.services.notifications.NotificationType;
 import co.hyperflex.core.services.ssh.SshKeyService;
 import co.hyperflex.core.utils.ClusterAuthUtils;
-import co.hyperflex.core.utils.HashUtil;
 import co.hyperflex.core.utils.NodeRoleRankerUtils;
-import co.hyperflex.core.utils.UrlUtils;
 import co.hyperflex.ssh.CommandResult;
 import co.hyperflex.ssh.SshCommandExecutor;
-import co.hyperflex.upgrade.tasks.Configuration;
-import co.hyperflex.upgrade.tasks.Context;
-import co.hyperflex.upgrade.tasks.TaskResult;
-import co.hyperflex.upgrade.tasks.elastic.RestartElasticsearchServiceTask;
-import co.hyperflex.upgrade.tasks.kibana.RestartKibanaServiceTask;
 import jakarta.validation.constraints.NotNull;
 import java.io.IOException;
 import java.util.Comparator;
@@ -311,7 +303,6 @@ public class ClusterServiceImpl implements ClusterService {
         if (!updateResult.isSuccess()) {
           throw new RuntimeException("Failed to update config: " + updateResult.stderr());
         }
-        new Thread(() -> restartNode(selfManagedCluster, clusterNode)).start();
         return new UpdateNodeConfigurationResponse("Node configuration updated successfully. Node is restarting...");
       }
     } catch (Exception e) {
@@ -427,40 +418,6 @@ public class ClusterServiceImpl implements ClusterService {
   @Override
   public List<GetAllocationExplanationResponse> getAllocationExplanation(String clusterId) {
     return elasticsearchClientProvider.getClient(clusterId).getAllocationExplanation();
-  }
-
-  private void restartNode(SelfManagedClusterEntity cluster, ClusterNodeEntity node) {
-    try {
-      clusterLockService.lock(cluster.getId());
-      Configuration config =
-          new Configuration(9300, 9200, cluster.getSshInfo().username(), cluster.getSshInfo().keyPath(), null);
-      Context context = new Context(node, config, log, null, null);
-      TaskResult result;
-      if (node instanceof ElasticNodeEntity) {
-        result = new RestartElasticsearchServiceTask().run(context);
-      } else {
-        result = new RestartKibanaServiceTask().run(context);
-      }
-      if (result.isSuccess()) {
-        log.info("Node [NodeId: {}] restarted successfully", node.getId());
-        notificationService.sendNotification(new GeneralNotificationEvent(
-            NotificationType.SUCCESS,
-            "Node restarted",
-            node.getName() + " node restarted successfully",
-            cluster.getId()
-        ));
-      } else {
-        log.warn("Node [NodeId: {}] restart failed", node.getId());
-        notificationService.sendNotification(new GeneralNotificationEvent(
-            NotificationType.ERROR,
-            "Node restart failed",
-            node.getName() + " node failed to restart",
-            cluster.getId()
-        ));
-      }
-    } finally {
-      clusterLockService.unlock(cluster.getId());
-    }
   }
 
   private String escapeSingleQuotes(String input) {

@@ -1,7 +1,7 @@
-package co.hyperflex.core.loaders;
+package co.hyperflex.breakingchanges.loaders;
 
-import co.hyperflex.core.entites.BreakingChangeEntity;
-import co.hyperflex.core.repositories.BreakingChangeRepository;
+import co.hyperflex.breakingchanges.BreakingChangeRepository;
+import co.hyperflex.breakingchanges.entities.BreakingChangeEntity;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;

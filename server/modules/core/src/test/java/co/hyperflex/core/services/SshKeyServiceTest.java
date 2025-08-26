@@ -1,4 +1,4 @@
-package co.hyperflex.services;
+package co.hyperflex.core.services;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -13,7 +13,6 @@ import java.nio.file.Path;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
-import org.springframework.test.util.ReflectionTestUtils;
 
 class SshKeyServiceTest {
 
@@ -23,10 +22,9 @@ class SshKeyServiceTest {
 
   @BeforeEach
   void setUp() throws IOException {
-    sshKeyService = new SshKeyService();
     Path sshKeysDir = tempDir.resolve("ssh-keys");
     Files.createDirectories(sshKeysDir);
-    ReflectionTestUtils.setField(sshKeyService, "ansiblePlaybooksPath", tempDir.toString());
+    sshKeyService = new SshKeyService(tempDir.toString());
     sshKeyService.init();
   }
 

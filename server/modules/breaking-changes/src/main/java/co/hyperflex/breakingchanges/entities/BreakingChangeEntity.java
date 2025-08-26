@@ -1,4 +1,4 @@
-package co.hyperflex.core.entites;
+package co.hyperflex.breakingchanges.entities;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;

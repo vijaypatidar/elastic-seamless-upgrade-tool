@@ -18,6 +18,7 @@ import co.hyperflex.core.services.clusters.dtos.UpdateNodeConfigurationResponse;
 import co.hyperflex.core.services.clusters.dtos.UploadCertificateResponse;
 import co.hyperflex.core.services.deprecations.DeprecationService;
 import co.hyperflex.services.CertificatesService;
+import co.hyperflex.upgrade.services.NodeUpgradeService;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -37,11 +38,14 @@ public class ClusterController {
   private final ClusterService clusterService;
   private final CertificatesService certificatesService;
   private final DeprecationService deprecationService;
+  private final NodeUpgradeService nodeUpgradeService;
 
-  public ClusterController(ClusterService clusterService, CertificatesService certificatesService, DeprecationService deprecationService) {
+  public ClusterController(ClusterService clusterService, CertificatesService certificatesService, DeprecationService deprecationService,
+                           NodeUpgradeService nodeUpgradeService) {
     this.clusterService = clusterService;
     this.certificatesService = certificatesService;
     this.deprecationService = deprecationService;
+    this.nodeUpgradeService = nodeUpgradeService;
   }
 
   @PostMapping
@@ -80,7 +84,9 @@ public class ClusterController {
       @PathVariable String clusterId,
       @PathVariable String nodeId,
       @Valid @RequestBody UpdateNodeConfigurationRequest request) {
-    return clusterService.updateNodeConfiguration(clusterId, nodeId, request.config());
+    var response = clusterService.updateNodeConfiguration(clusterId, nodeId, request.config());
+    new Thread(() -> nodeUpgradeService.restartNode(clusterId, nodeId)).start();
+    return response;
   }
 
   @PostMapping(value = "/certificates/upload", consumes = "multipart/form-data")

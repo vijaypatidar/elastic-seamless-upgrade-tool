@@ -16,11 +16,13 @@ import org.springframework.stereotype.Service;
 public class SshKeyService {
 
   private static final Logger logger = LoggerFactory.getLogger(SshKeyService.class);
-
-  @Value("${seamless.output.dir}")
-  private String ansiblePlaybooksPath;
+  private final String ansiblePlaybooksPath;
 
   private Path sshKeysDir;
+
+  public SshKeyService(@Value("${seamless.output.dir}") String ansiblePlaybooksPath) {
+    this.ansiblePlaybooksPath = ansiblePlaybooksPath;
+  }
 
   @PostConstruct
   public void init() {

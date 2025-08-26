@@ -1,6 +1,6 @@
 package co.hyperflex.precheck.services;
 
-import co.hyperflex.core.repositories.BreakingChangeRepository;
+import co.hyperflex.breakingchanges.BreakingChangeRepository;
 import co.hyperflex.core.services.notifications.NotificationService;
 import co.hyperflex.core.services.notifications.PrecheckProgressChangeEvent;
 import co.hyperflex.core.services.upgrade.ClusterUpgradeJobService;

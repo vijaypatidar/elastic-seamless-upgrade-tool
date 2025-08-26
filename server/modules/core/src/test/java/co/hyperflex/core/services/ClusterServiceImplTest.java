@@ -1,4 +1,4 @@
-package co.hyperflex.services;
+package co.hyperflex.core.services;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -9,11 +9,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import co.hyperflex.clients.elastic.ElasticClient;
-import co.hyperflex.clients.elastic.ElasticClientImpl;
 import co.hyperflex.clients.elastic.ElasticsearchClientProvider;
 import co.hyperflex.clients.elastic.dto.nodes.NodesInfoResponse;
 import co.hyperflex.clients.kibana.KibanaClient;
-import co.hyperflex.clients.kibana.KibanaClientImpl;
 import co.hyperflex.clients.kibana.KibanaClientProvider;
 import co.hyperflex.common.client.ClientConnectionDetail;
 import co.hyperflex.common.exceptions.BadRequestException;
@@ -22,6 +20,7 @@ import co.hyperflex.core.entites.clusters.SelfManagedClusterEntity;
 import co.hyperflex.core.mappers.ClusterMapper;
 import co.hyperflex.core.repositories.ClusterNodeRepository;
 import co.hyperflex.core.repositories.ClusterRepository;
+import co.hyperflex.core.services.clusters.ClusterServiceImpl;
 import co.hyperflex.core.services.clusters.dtos.AddClusterResponse;
 import co.hyperflex.core.services.clusters.dtos.AddSelfManagedClusterRequest;
 import co.hyperflex.core.services.clusters.dtos.GetClusterResponse;
@@ -72,8 +71,8 @@ class ClusterServiceImplTest {
     cluster.setKibanaUrl(MOCK_KIBANA_URL);
     cluster.setApiKey(MOCK_API_KEY);
 
-    co.hyperflex.clients.elastic.ElasticClient elasticClient = mock(ElasticClientImpl.class);
-    KibanaClient kibanaClient = mock(KibanaClientImpl.class);
+    ElasticClient elasticClient = mock(ElasticClient.class);
+    KibanaClient kibanaClient = mock(KibanaClient.class);
     NodesInfoResponse nodesInfoResponse = mock(NodesInfoResponse.class);
 
     when(clusterMapper.toEntity(request)).thenReturn(cluster);
@@ -101,7 +100,7 @@ class ClusterServiceImplTest {
     SelfManagedClusterEntity cluster = new SelfManagedClusterEntity();
     cluster.setId(clusterId);
 
-    KibanaClient kibanaClient = mock(KibanaClientImpl.class);
+    KibanaClient kibanaClient = mock(KibanaClient.class);
     ElasticClient esClient = mock(ElasticClient.class);
     NodesInfoResponse nodesInfoResponse = mock(NodesInfoResponse.class);
 

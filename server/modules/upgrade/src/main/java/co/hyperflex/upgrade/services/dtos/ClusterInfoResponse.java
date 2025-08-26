@@ -1,4 +1,4 @@
-package co.hyperflex.services.deprecations.dtos;
+package co.hyperflex.upgrade.services.dtos;
 
 import co.hyperflex.clients.elastic.dto.GetElasticsearchSnapshotResponse;
 import co.hyperflex.core.services.deprecations.dtos.DeprecationCounts;

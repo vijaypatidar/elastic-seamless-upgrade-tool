@@ -8,10 +8,10 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClient;
 
-public class AbstractApiClient implements ApiClient {
+public class RestApiClient implements ApiClient {
   protected final RestClient restClient;
 
-  public AbstractApiClient(RestClient restClient) {
+  public RestApiClient(RestClient restClient) {
     this.restClient = restClient;
   }
 
@@ -52,5 +52,9 @@ public class AbstractApiClient implements ApiClient {
     };
 
     return response.getBody();
+  }
+
+  public RestClient getRestClient() {
+    return restClient;
   }
 }

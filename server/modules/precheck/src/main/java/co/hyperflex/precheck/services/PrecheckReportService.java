@@ -1,6 +1,8 @@
 package co.hyperflex.precheck.services;
 
 
+import co.hyperflex.breakingchanges.BreakingChangeRepository;
+import co.hyperflex.breakingchanges.entities.BreakingChangeEntity;
 import co.hyperflex.clients.elastic.ElasticClient;
 import co.hyperflex.clients.elastic.ElasticsearchClientProvider;
 import co.hyperflex.clients.elastic.dto.ElasticDeprecation;
@@ -8,8 +10,6 @@ import co.hyperflex.clients.elastic.dto.GetElasticDeprecationResponse;
 import co.hyperflex.clients.kibana.KibanaClient;
 import co.hyperflex.clients.kibana.KibanaClientProvider;
 import co.hyperflex.clients.kibana.dto.GetKibanaDeprecationResponse;
-import co.hyperflex.core.entites.BreakingChangeEntity;
-import co.hyperflex.core.repositories.BreakingChangeRepository;
 import co.hyperflex.core.services.upgrade.ClusterUpgradeJobService;
 import co.hyperflex.core.upgrade.ClusterUpgradeJobEntity;
 import co.hyperflex.precheck.services.dtos.GetGroupedPrecheckResponse;

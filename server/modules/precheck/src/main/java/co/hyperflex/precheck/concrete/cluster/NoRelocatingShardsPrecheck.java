@@ -33,6 +33,8 @@ public class NoRelocatingShardsPrecheck extends BaseClusterPrecheck {
     if (!relocatingShards.isEmpty()) {
       logger.error("Relocating shards check failed. {} shard(s) are currently relocating.", relocatingShards.size());
       throw new RuntimeException();
+    } else {
+      logger.info("Relocating shards check succeeded. There is no relocating shards.");
     }
   }
 }

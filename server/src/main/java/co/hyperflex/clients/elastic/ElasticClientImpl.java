@@ -1,25 +1,13 @@
 package co.hyperflex.clients.elastic;
 
-import co.hyperflex.clients.AbstractApiClient;
+import co.hyperflex.clients.RestApiClient;
 import co.hyperflex.clients.elastic.dto.GetAllocationExplanationResponse;
 import co.hyperflex.clients.elastic.dto.GetElasticDeprecationResponse;
-import co.hyperflex.clients.elastic.dto.GetElasticNodeAndIndexCountsResponse;
 import co.hyperflex.clients.elastic.dto.GetElasticsearchSnapshotResponse;
 import co.hyperflex.clients.elastic.dto.cat.health.HealthRecord;
-import co.hyperflex.clients.elastic.dto.cat.indices.FlushResponse;
 import co.hyperflex.clients.elastic.dto.cat.indices.IndicesRecord;
 import co.hyperflex.clients.elastic.dto.cat.master.MasterRecord;
 import co.hyperflex.clients.elastic.dto.cat.shards.ShardsRecord;
-import co.hyperflex.clients.elastic.dto.cluster.AllocationExplainRequest;
-import co.hyperflex.clients.elastic.dto.cluster.AllocationExplainResponse;
-import co.hyperflex.clients.elastic.dto.cluster.ClusterStatsResponse;
-import co.hyperflex.clients.elastic.dto.cluster.GetClusterSettingsResponse;
-import co.hyperflex.clients.elastic.dto.cluster.PutClusterSettingsResponse;
-import co.hyperflex.clients.elastic.dto.cluster.health.ClusterHealthResponse;
-import co.hyperflex.clients.elastic.dto.info.InfoResponse;
-import co.hyperflex.clients.elastic.dto.nodes.NodesInfoResponse;
-import co.hyperflex.clients.elastic.dto.nodes.NodesStatsResponse;
-import co.hyperflex.common.client.ApiRequest;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.util.Collections;
 import java.util.Date;
@@ -35,11 +23,13 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClient;
 
-public class ElasticClientImpl extends AbstractApiClient implements ElasticClient {
+public class ElasticClientImpl extends AbstractElasticClient {
   private static final Logger LOG = LoggerFactory.getLogger(ElasticClientImpl.class);
+  private final RestClient restClient;
 
-  public ElasticClientImpl(RestClient restClient) {
-    super(restClient);
+  public ElasticClientImpl(RestApiClient apiClient) {
+    super(apiClient);
+    this.restClient = apiClient.getRestClient();
   }
 
   @Override
@@ -47,11 +37,6 @@ public class ElasticClientImpl extends AbstractApiClient implements ElasticClien
     String uri = "/_cat/health?format=json";
     return restClient.get().uri(uri).retrieve().body(new ParameterizedTypeReference<>() {
     });
-  }
-
-  @Override
-  public String getHealthStatus() {
-    return getHealth().get(0).getStatus();
   }
 
   @Override
@@ -66,26 +51,6 @@ public class ElasticClientImpl extends AbstractApiClient implements ElasticClien
     var uri = "/_cat/master?v&format=json";
     return restClient.get().uri(uri).retrieve().body(new ParameterizedTypeReference<>() {
     });
-  }
-
-  @Override
-  public Boolean isAdaptiveReplicaEnabled() {
-    GetClusterSettingsResponse settings = getClusterSettings();
-
-    Map<String, Object> transientSettings = settings.getTransient();
-    Map<String, Object> persistentSettings = settings.getPersistent();
-    Map<String, Object> defaultSettings = settings.getDefaults();
-
-    String value = null;
-
-    if (transientSettings.containsKey("search.adaptive_replica_selection")) {
-      value = transientSettings.get("search.adaptive_replica_selection").toString();
-    } else if (persistentSettings.containsKey("search.adaptive_replica_selection")) {
-      value = persistentSettings.get("search.adaptive_replica_selection").toString();
-    } else if (defaultSettings.containsKey("search.adaptive_replica_selection")) {
-      value = defaultSettings.get("search.adaptive_replica_selection").toString();
-    }
-    return Boolean.parseBoolean(value);
   }
 
   @Override
@@ -153,35 +118,11 @@ public class ElasticClientImpl extends AbstractApiClient implements ElasticClien
     }
   }
 
-  @Override
-  public GetElasticNodeAndIndexCountsResponse getEntitiesCounts() {
-    ClusterHealthResponse health = getClusterHealth();
-    int totalIndices = getIndices().size();
-    int activePrimaryShards = health.getActivePrimaryShards();
-    int activeShards = health.getActiveShards();
-    int unassignedShards = health.getUnassignedShards();
-    int initializingShards = health.getInitializingShards();
-    int relocatingShards = health.getRelocatingShards();
-    var stats = getClusterStats();
-    var nodeCount = stats.getNodes().getCount();
-    int totalNodes = nodeCount.getTotal();
-    int dataNodes = nodeCount.getData()
-        + nodeCount.getDataCold()
-        + nodeCount.getDataContent()
-        + nodeCount.getDataHot()
-        + nodeCount.getDataWarm();
-    int masterNodes = nodeCount.getMaster();
-
-    return new GetElasticNodeAndIndexCountsResponse(dataNodes, totalNodes, masterNodes,
-        totalIndices, activePrimaryShards, activeShards, unassignedShards, initializingShards,
-        relocatingShards);
-  }
 
   @Override
   public GetElasticDeprecationResponse getDeprecation() {
     return restClient.get().uri("/_migration/deprecations").retrieve().body(GetElasticDeprecationResponse.class);
   }
-
 
   @Override
   public List<GetAllocationExplanationResponse> getAllocationExplanation() {
@@ -199,37 +140,6 @@ public class ElasticClientImpl extends AbstractApiClient implements ElasticClien
     }).toList();
   }
 
-  @Override
-  public AllocationExplainResponse getAllocationExplanation(AllocationExplainRequest request) {
-    Map<String, Object> requestBody = Map.of(
-        "index", request.index(),
-        "shard", request.shard(),
-        "primary", request.primary()
-    );
-    return restClient
-        .post()
-        .uri("/_cluster/allocation/explain")
-        .body(requestBody)
-        .retrieve()
-        .body(AllocationExplainResponse.class);
-  }
-
-  @Override
-  public GetClusterSettingsResponse getClusterSettings() {
-    String uri = "/_cluster/settings?flat_settings=true&include_defaults=false&format=json";
-    return execute(ApiRequest.builder(GetClusterSettingsResponse.class).uri(uri).get().build());
-  }
-
-  @Override
-  public PutClusterSettingsResponse updateClusterSettings(Map<String, Object> clusterSettings) {
-    String uri = "/_cluster/settings?format=json";
-    return restClient.put().uri(uri).body(clusterSettings).retrieve().body(PutClusterSettingsResponse.class);
-  }
-
-  @Override
-  public List<ShardsRecord> getShards() {
-    return getShards("");
-  }
 
   @Override
   public List<ShardsRecord> getShards(String indexName) {
@@ -237,52 +147,4 @@ public class ElasticClientImpl extends AbstractApiClient implements ElasticClien
     return restClient.get().uri(uri).retrieve().body(new ParameterizedTypeReference<>() {
     });
   }
-
-  @Override
-  public FlushResponse flushIndices() {
-    return restClient.post().uri("/_flush").retrieve().body(FlushResponse.class);
-  }
-
-  @Override
-  public ClusterHealthResponse getClusterHealth() {
-    return performGet("/_cluster/health", ClusterHealthResponse.class);
-  }
-
-  @Override
-  public InfoResponse getInfo() {
-    return performGet("/", InfoResponse.class);
-  }
-
-  @Override
-  public NodesInfoResponse getNodeInfo(String nodeId) {
-    String uri = "/_nodes/" + nodeId;
-    return performGet(uri, NodesInfoResponse.class);
-  }
-
-  @Override
-  public NodesInfoResponse getNodesInfo() {
-    return getNodeInfo("");
-  }
-
-  @Override
-  public ClusterStatsResponse getClusterStats() {
-    var uri = "/_cluster/stats?format=json";
-    return performGet(uri, ClusterStatsResponse.class);
-  }
-
-  @Override
-  public NodesStatsResponse getNodesMetric(String nodeId) {
-    return getNodesMetric(nodeId, "stats");
-  }
-
-  @Override
-  public NodesStatsResponse getNodesMetric(String nodeId, String metric) {
-    String uri = "/_nodes/" + nodeId + "/" + metric;
-    return performGet(uri, NodesStatsResponse.class);
-  }
-
-  public <T> T performGet(String uri, Class<T> responseType) {
-    return restClient.get().uri(uri).retrieve().body(responseType);
-  }
-
 }

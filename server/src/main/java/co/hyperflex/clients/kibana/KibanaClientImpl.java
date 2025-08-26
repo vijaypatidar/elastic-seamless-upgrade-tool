@@ -1,6 +1,6 @@
 package co.hyperflex.clients.kibana;
 
-import co.hyperflex.clients.AbstractApiClient;
+import co.hyperflex.clients.RestApiClient;
 import co.hyperflex.clients.kibana.dto.GetKibanaDeprecationResponse;
 import co.hyperflex.clients.kibana.dto.GetKibanaStatusResponse;
 import java.util.Optional;
@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 
-public class KibanaClientImpl extends AbstractApiClient implements KibanaClient {
+public class KibanaClientImpl extends RestApiClient implements KibanaClient {
 
   private static final Logger logger = LoggerFactory.getLogger(KibanaClientImpl.class);
   private final String kibanaUrl;
