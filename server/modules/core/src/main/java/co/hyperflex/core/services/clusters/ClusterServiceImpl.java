@@ -346,7 +346,7 @@ public class ClusterServiceImpl implements ClusterService {
 
   private void syncElasticNodes(ClusterEntity cluster) {
     try {
-      ElasticClient elasticClient = elasticsearchClientProvider.getClient(ClusterAuthUtils.getKibanaConnectionDetail(cluster));
+      ElasticClient elasticClient = elasticsearchClientProvider.getClient(ClusterAuthUtils.getElasticConnectionDetail(cluster));
       var response = elasticClient.getNodesInfo();
       var nodes = response.getNodes();
       List<ClusterNodeEntity> clusterNodes = new LinkedList<>();
