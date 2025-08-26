@@ -17,11 +17,12 @@ import co.hyperflex.clients.elastic.dto.cluster.PutClusterSettingsResponse;
 import co.hyperflex.clients.elastic.dto.cluster.health.ClusterHealthResponse;
 import co.hyperflex.clients.elastic.dto.nodes.NodesInfoResponse;
 import co.hyperflex.clients.elastic.dto.nodes.NodesStatsResponse;
+import co.hyperflex.common.client.ApiClient;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-public interface ElasticClient {
+public interface ElasticClient extends ApiClient {
 
   List<HealthRecord> getHealth();
 
@@ -66,6 +67,4 @@ public interface ElasticClient {
   NodesStatsResponse getNodesMetric(String nodeId, String metric);
 
   ClusterStatsResponse getClusterStats();
-
-  <T> T execute(ElasticRequest<T> request);
 }
