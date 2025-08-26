@@ -1,4 +1,4 @@
-package co.hyperflex.entities.cluster;
+package co.hyperflex.core.models.enums;
 
 public enum ClusterType {
   ELASTIC_CLOUD,

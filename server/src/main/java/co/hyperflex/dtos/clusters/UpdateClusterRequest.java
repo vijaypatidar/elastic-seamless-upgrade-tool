@@ -1,6 +1,6 @@
 package co.hyperflex.dtos.clusters;
 
-import co.hyperflex.entities.cluster.ClusterType;
+import co.hyperflex.core.models.enums.ClusterType;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import jakarta.annotation.Nullable;

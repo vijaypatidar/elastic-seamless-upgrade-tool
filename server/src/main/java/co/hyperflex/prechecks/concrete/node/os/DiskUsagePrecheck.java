@@ -1,6 +1,6 @@
 package co.hyperflex.prechecks.concrete.node.os;
 
-import co.hyperflex.entities.cluster.ClusterType;
+import co.hyperflex.core.models.enums.ClusterType;
 import co.hyperflex.prechecks.contexts.NodeContext;
 import co.hyperflex.prechecks.core.BaseNodePrecheck;
 import co.hyperflex.ssh.CommandResult;

@@ -1,12 +1,12 @@
 package co.hyperflex.controllers;
 
+import co.hyperflex.core.models.enums.ClusterNodeType;
 import co.hyperflex.dtos.ClusterInfoResponse;
 import co.hyperflex.dtos.upgrades.ClusterNodeUpgradeRequest;
 import co.hyperflex.dtos.upgrades.ClusterNodeUpgradeResponse;
 import co.hyperflex.dtos.upgrades.ClusterUpgradeResponse;
 import co.hyperflex.dtos.upgrades.GetUpgradeLogsRequest;
 import co.hyperflex.dtos.upgrades.GetUpgradeLogsResponse;
-import co.hyperflex.entities.cluster.ClusterNodeType;
 import co.hyperflex.services.ClusterUpgradeService;
 import co.hyperflex.services.UpgradeLogService;
 import org.slf4j.Logger;

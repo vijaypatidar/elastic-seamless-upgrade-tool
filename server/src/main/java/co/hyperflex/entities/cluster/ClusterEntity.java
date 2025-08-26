@@ -1,5 +1,6 @@
 package co.hyperflex.entities.cluster;
 
+import co.hyperflex.core.models.enums.ClusterType;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.springframework.data.annotation.Id;

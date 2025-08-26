@@ -1,6 +1,6 @@
 package co.hyperflex.dtos.clusters;
 
-import co.hyperflex.entities.cluster.ClusterType;
+import co.hyperflex.core.models.enums.ClusterType;
 import jakarta.validation.constraints.NotNull;
 import java.util.Collections;
 import java.util.List;

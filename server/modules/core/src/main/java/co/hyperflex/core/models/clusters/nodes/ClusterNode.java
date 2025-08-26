@@ -1,4 +1,4 @@
-package co.hyperflex.entities.cluster;
+package co.hyperflex.core.models.clusters.nodes;
 
 import co.hyperflex.core.models.clusters.OperatingSystemInfo;
 import co.hyperflex.core.models.enums.ClusterNodeType;
@@ -7,19 +7,14 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import java.time.Instant;
 import java.util.List;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
 
-@Document(collection = "cluster-nodes")
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type", visible = true)
 @JsonSubTypes({
-    @JsonSubTypes.Type(value = ElasticNodeEntity.class, name = "ELASTIC"),
-    @JsonSubTypes.Type(value = KibanaNodeEntity.class, name = "KIBANA")
+    @JsonSubTypes.Type(value = ElasticNode.class, name = "ELASTIC"),
+    @JsonSubTypes.Type(value = KibanaNode.class, name = "KIBANA")
 })
-public abstract class ClusterNodeEntity {
+public abstract class ClusterNode {
 
-  @Id
   private String id;
 
   private String clusterId;
@@ -44,10 +39,8 @@ public abstract class ClusterNodeEntity {
 
   private boolean upgradable = false;
 
-  @Field("createdAt")
   private Instant createdAt;
 
-  @Field("updatedAt")
   private Instant updatedAt;
 
   public String getId() {

@@ -1,15 +1,14 @@
-package co.hyperflex.entities.cluster;
+package co.hyperflex.core.models.clusters;
 
-import co.hyperflex.core.models.clusters.SshInfo;
 import co.hyperflex.core.models.enums.ClusterType;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName("SELF_MANAGED")
-public class SelfManagedClusterEntity extends ClusterEntity {
+public class SelfManagedCluster extends Cluster {
 
   private SshInfo sshInfo;
 
-  public SelfManagedClusterEntity() {
+  public SelfManagedCluster() {
     setType(ClusterType.SELF_MANAGED);
   }
 

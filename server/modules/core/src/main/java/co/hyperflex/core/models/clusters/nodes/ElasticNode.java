@@ -1,14 +1,14 @@
-package co.hyperflex.entities.cluster;
+package co.hyperflex.core.models.clusters.nodes;
 
 
 import co.hyperflex.core.models.enums.ClusterNodeType;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName("ELASTIC")
-public class ElasticNodeEntity extends ClusterNodeEntity {
+public class ElasticNode extends ClusterNode {
   private boolean isMaster;
 
-  public ElasticNodeEntity() {
+  public ElasticNode() {
     setType(ClusterNodeType.ELASTIC);
   }
 

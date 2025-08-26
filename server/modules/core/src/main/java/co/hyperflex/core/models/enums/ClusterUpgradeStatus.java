@@ -1,4 +1,4 @@
-package co.hyperflex.entities.upgrade;
+package co.hyperflex.core.models.enums;
 
 public enum ClusterUpgradeStatus {
   PENDING,

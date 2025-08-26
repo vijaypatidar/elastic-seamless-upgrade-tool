@@ -1,5 +1,7 @@
 package co.hyperflex.mappers;
 
+import co.hyperflex.core.models.clusters.SshInfo;
+import co.hyperflex.core.models.enums.ClusterNodeType;
 import co.hyperflex.dtos.clusters.AddClusterKibanaNodeRequest;
 import co.hyperflex.dtos.clusters.AddClusterRequest;
 import co.hyperflex.dtos.clusters.AddElasticCloudClusterRequest;
@@ -11,12 +13,10 @@ import co.hyperflex.dtos.clusters.GetElasticCloudClusterResponse;
 import co.hyperflex.dtos.clusters.GetSelfManagedClusterResponse;
 import co.hyperflex.entities.cluster.ClusterEntity;
 import co.hyperflex.entities.cluster.ClusterNodeEntity;
-import co.hyperflex.entities.cluster.ClusterNodeType;
 import co.hyperflex.entities.cluster.ElasticCloudClusterEntity;
 import co.hyperflex.entities.cluster.ElasticNodeEntity;
 import co.hyperflex.entities.cluster.KibanaNodeEntity;
 import co.hyperflex.entities.cluster.SelfManagedClusterEntity;
-import co.hyperflex.entities.cluster.SshInfo;
 import co.hyperflex.services.SshKeyService;
 import co.hyperflex.utils.NodeRoleRankerUtils;
 import java.util.List;

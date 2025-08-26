@@ -1,6 +1,7 @@
 package co.hyperflex.controllers;
 
 import co.hyperflex.clients.elastic.dto.GetAllocationExplanationResponse;
+import co.hyperflex.core.models.enums.ClusterNodeType;
 import co.hyperflex.dtos.GetDeprecationsResponse;
 import co.hyperflex.dtos.clusters.AddClusterRequest;
 import co.hyperflex.dtos.clusters.AddClusterResponse;
@@ -14,7 +15,6 @@ import co.hyperflex.dtos.clusters.UpdateClusterResponse;
 import co.hyperflex.dtos.clusters.UpdateNodeConfigurationRequest;
 import co.hyperflex.dtos.clusters.UpdateNodeConfigurationResponse;
 import co.hyperflex.dtos.clusters.UploadCertificateResponse;
-import co.hyperflex.entities.cluster.ClusterNodeType;
 import co.hyperflex.services.CertificatesService;
 import co.hyperflex.services.ClusterService;
 import co.hyperflex.services.DeprecationService;

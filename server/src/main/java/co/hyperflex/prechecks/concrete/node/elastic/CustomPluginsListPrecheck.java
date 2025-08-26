@@ -47,6 +47,6 @@ public class CustomPluginsListPrecheck extends BaseElasticNodePrecheck {
     nodeInfo.getPlugins().stream()
         .map(PluginStats::getName)
         .filter(Objects::nonNull)
-        .forEach(plugin-> logger.info("* {}", plugin));
+        .forEach(plugin -> logger.info("* {}", plugin));
   }
 }

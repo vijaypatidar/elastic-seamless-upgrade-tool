@@ -1,13 +1,13 @@
-package co.hyperflex.entities.cluster;
+package co.hyperflex.core.models.clusters;
 
 import co.hyperflex.core.models.enums.ClusterType;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 
 @JsonTypeName("ELASTIC_CLOUD")
-public class ElasticCloudClusterEntity extends ClusterEntity {
+public class ElasticCloudCluster extends Cluster {
   private String deploymentId;
 
-  public ElasticCloudClusterEntity() {
+  public ElasticCloudCluster() {
     setType(ClusterType.ELASTIC_CLOUD);
   }
 

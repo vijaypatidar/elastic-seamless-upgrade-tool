@@ -1,5 +1,6 @@
 package co.hyperflex.entities.upgrade;
 
+import co.hyperflex.core.models.enums.ClusterUpgradeStatus;
 import java.util.HashMap;
 import java.util.Map;
 import org.springframework.data.annotation.Id;

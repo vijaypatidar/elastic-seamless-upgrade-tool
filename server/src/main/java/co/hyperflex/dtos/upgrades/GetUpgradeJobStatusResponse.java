@@ -1,6 +1,6 @@
 package co.hyperflex.dtos.upgrades;
 
-import co.hyperflex.entities.upgrade.ClusterUpgradeStatus;
+import co.hyperflex.core.models.enums.ClusterUpgradeStatus;
 import jakarta.validation.constraints.NotNull;
 
 public record GetUpgradeJobStatusResponse(

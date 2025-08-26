@@ -1,7 +1,7 @@
 package co.hyperflex.repositories;
 
+import co.hyperflex.core.models.enums.ClusterNodeType;
 import co.hyperflex.entities.cluster.ClusterNodeEntity;
-import co.hyperflex.entities.cluster.ClusterNodeType;
 import java.util.List;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
