@@ -1,23 +1,24 @@
 package co.hyperflex.controllers;
 
 import co.hyperflex.clients.elastic.dto.GetAllocationExplanationResponse;
-import co.hyperflex.dtos.GetDeprecationsResponse;
-import co.hyperflex.dtos.clusters.AddClusterRequest;
-import co.hyperflex.dtos.clusters.AddClusterResponse;
-import co.hyperflex.dtos.clusters.ClusterListItemResponse;
-import co.hyperflex.dtos.clusters.ClusterOverviewResponse;
-import co.hyperflex.dtos.clusters.GetClusterNodeResponse;
-import co.hyperflex.dtos.clusters.GetClusterResponse;
-import co.hyperflex.dtos.clusters.GetNodeConfigurationResponse;
-import co.hyperflex.dtos.clusters.UpdateClusterRequest;
-import co.hyperflex.dtos.clusters.UpdateClusterResponse;
-import co.hyperflex.dtos.clusters.UpdateNodeConfigurationRequest;
-import co.hyperflex.dtos.clusters.UpdateNodeConfigurationResponse;
-import co.hyperflex.dtos.clusters.UploadCertificateResponse;
-import co.hyperflex.entities.cluster.ClusterNodeType;
+import co.hyperflex.core.models.enums.ClusterNodeType;
+import co.hyperflex.core.services.clusters.ClusterService;
+import co.hyperflex.core.services.clusters.dtos.AddClusterRequest;
+import co.hyperflex.core.services.clusters.dtos.AddClusterResponse;
+import co.hyperflex.core.services.clusters.dtos.ClusterListItemResponse;
+import co.hyperflex.core.services.clusters.dtos.ClusterOverviewResponse;
+import co.hyperflex.core.services.clusters.dtos.GetClusterNodeResponse;
+import co.hyperflex.core.services.clusters.dtos.GetClusterResponse;
+import co.hyperflex.core.services.clusters.dtos.GetDeprecationsResponse;
+import co.hyperflex.core.services.clusters.dtos.GetNodeConfigurationResponse;
+import co.hyperflex.core.services.clusters.dtos.UpdateClusterRequest;
+import co.hyperflex.core.services.clusters.dtos.UpdateClusterResponse;
+import co.hyperflex.core.services.clusters.dtos.UpdateNodeConfigurationRequest;
+import co.hyperflex.core.services.clusters.dtos.UpdateNodeConfigurationResponse;
+import co.hyperflex.core.services.clusters.dtos.UploadCertificateResponse;
+import co.hyperflex.core.services.deprecations.DeprecationService;
 import co.hyperflex.services.CertificatesService;
-import co.hyperflex.services.ClusterService;
-import co.hyperflex.services.DeprecationService;
+import co.hyperflex.upgrade.services.NodeUpgradeService;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -37,11 +38,14 @@ public class ClusterController {
   private final ClusterService clusterService;
   private final CertificatesService certificatesService;
   private final DeprecationService deprecationService;
+  private final NodeUpgradeService nodeUpgradeService;
 
-  public ClusterController(ClusterService clusterService, CertificatesService certificatesService, DeprecationService deprecationService) {
+  public ClusterController(ClusterService clusterService, CertificatesService certificatesService, DeprecationService deprecationService,
+                           NodeUpgradeService nodeUpgradeService) {
     this.clusterService = clusterService;
     this.certificatesService = certificatesService;
     this.deprecationService = deprecationService;
+    this.nodeUpgradeService = nodeUpgradeService;
   }
 
   @PostMapping
@@ -80,7 +84,9 @@ public class ClusterController {
       @PathVariable String clusterId,
       @PathVariable String nodeId,
       @Valid @RequestBody UpdateNodeConfigurationRequest request) {
-    return clusterService.updateNodeConfiguration(clusterId, nodeId, request.config());
+    var response = clusterService.updateNodeConfiguration(clusterId, nodeId, request.config());
+    new Thread(() -> nodeUpgradeService.restartNode(clusterId, nodeId)).start();
+    return response;
   }
 
   @PostMapping(value = "/certificates/upload", consumes = "multipart/form-data")
