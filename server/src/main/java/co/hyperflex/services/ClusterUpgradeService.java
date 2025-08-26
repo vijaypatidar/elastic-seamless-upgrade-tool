@@ -180,7 +180,7 @@ public class ClusterUpgradeService {
         MDC.put(UpgradeLogEntity.CLUSTER_UPGRADE_JOB_ID, clusterUpgradeJobId);
 
         ElasticClient elasticClient = elasticsearchClientProvider.getClient(cluster.getId());
-        KibanaClient kibanaClient = kibanaClientProvider.getClient(cluster);
+        KibanaClient kibanaClient = kibanaClientProvider.getClient(cluster.getId());
 
         final String targetVersion = clusterUpgradeJobService.getUpgradeJobById(clusterUpgradeJobId).getTargetVersion();
 

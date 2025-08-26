@@ -8,6 +8,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import co.hyperflex.clients.ClusterCredentialProvider;
 import co.hyperflex.clients.elastic.ElasticClient;
 import co.hyperflex.clients.elastic.ElasticClientImpl;
 import co.hyperflex.clients.elastic.ElasticsearchClientProvider;
@@ -15,6 +16,7 @@ import co.hyperflex.clients.elastic.dto.nodes.NodesInfoResponse;
 import co.hyperflex.clients.kibana.KibanaClient;
 import co.hyperflex.clients.kibana.KibanaClientImpl;
 import co.hyperflex.clients.kibana.KibanaClientProvider;
+import co.hyperflex.common.client.ClientConnectionDetail;
 import co.hyperflex.common.exceptions.BadRequestException;
 import co.hyperflex.common.exceptions.NotFoundException;
 import co.hyperflex.core.entites.clusters.SelfManagedClusterEntity;
@@ -53,9 +55,12 @@ class ClusterServiceImplTest {
   private KibanaClientProvider kibanaClientProvider;
   @Mock
   private SshKeyService sshKeyService;
+  @Mock
+  private ClusterCredentialProvider clusterCredentialProvider;
 
   @InjectMocks
   private ClusterServiceImpl clusterService;
+
 
   @Test
   void add_selfManagedCluster_success() throws IOException {
@@ -70,12 +75,11 @@ class ClusterServiceImplTest {
 
     co.hyperflex.clients.elastic.ElasticClient elasticClient = mock(ElasticClientImpl.class);
     KibanaClient kibanaClient = mock(KibanaClientImpl.class);
-    ElasticClient esClient = mock(ElasticClient.class);
     NodesInfoResponse nodesInfoResponse = mock(NodesInfoResponse.class);
 
     when(clusterMapper.toEntity(request)).thenReturn(cluster);
-    when(elasticsearchClientProvider.getClient(cluster)).thenReturn(elasticClient);
-    when(kibanaClientProvider.getClient(cluster)).thenReturn(kibanaClient);
+    when(elasticsearchClientProvider.getClient(any(ClientConnectionDetail.class))).thenReturn(elasticClient);
+    when(kibanaClientProvider.getClient(any(ClientConnectionDetail.class))).thenReturn(kibanaClient);
     when(elasticClient.getHealthStatus()).thenReturn("green");
     when(kibanaClient.getKibanaVersion()).thenReturn("8.1.0");
 
@@ -111,8 +115,11 @@ class ClusterServiceImplTest {
 
     when(clusterRepository.findById(clusterId)).thenReturn(Optional.of(cluster));
     when(sshKeyService.createSSHPrivateKeyFile(any(), any())).thenReturn("path/to/key");
-    when(elasticsearchClientProvider.getClient(cluster)).thenReturn(esClient);
-    when(kibanaClientProvider.getClient(cluster)).thenReturn(kibanaClient);
+    var esConnectionDetail = new ClientConnectionDetail(MOCK_ELASTIC_SEARCH_URL, null);
+    var kbConnectionDetail = new ClientConnectionDetail(MOCK_KIBANA_URL, null);
+
+    when(elasticsearchClientProvider.getClient(esConnectionDetail)).thenReturn(esClient);
+    when(kibanaClientProvider.getClient(kbConnectionDetail)).thenReturn(kibanaClient);
     when(esClient.getNodesInfo()).thenReturn(nodesInfoResponse);
     when(esClient.getHealthStatus()).thenReturn("green");
     when(kibanaClient.getKibanaVersion()).thenReturn("8.1.0");
@@ -166,10 +173,13 @@ class ClusterServiceImplTest {
     SelfManagedClusterEntity cluster = new SelfManagedClusterEntity();
     cluster.setElasticUrl(MOCK_ELASTIC_SEARCH_URL);
     cluster.setKibanaUrl(MOCK_KIBANA_URL);
+    var connectionDetail = new ClientConnectionDetail(MOCK_ELASTIC_SEARCH_URL, null);
     when(clusterMapper.toEntity(request)).thenReturn(cluster);
-    when(elasticsearchClientProvider.getClient(cluster)).thenThrow(new RuntimeException("Invalid credentials"));
+    when(elasticsearchClientProvider.getClient(connectionDetail)).thenThrow(new RuntimeException("Invalid credentials"));
 
     // Act & Assert
     assertThrows(BadRequestException.class, () -> clusterService.add(request));
+
+    verify(clusterMapper).toEntity(request);
   }
 }

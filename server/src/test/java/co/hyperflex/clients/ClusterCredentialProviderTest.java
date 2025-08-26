@@ -3,6 +3,7 @@ package co.hyperflex.clients;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import co.hyperflex.common.client.ClientAuthHeader;
 import co.hyperflex.core.entites.clusters.ClusterEntity;
 import co.hyperflex.core.entites.clusters.SelfManagedClusterEntity;
 import org.junit.jupiter.api.Test;
@@ -18,11 +19,11 @@ class ClusterCredentialProviderTest {
     cluster.setApiKey("my-api-key");
 
     // Act
-    Header header = provider.getAuthHeader(cluster);
+    ClientAuthHeader authHeader = provider.getAuthHeader(cluster);
 
     // Assert
-    assertEquals("Authorization", header.key());
-    assertEquals("ApiKey my-api-key", header.value());
+    assertEquals("Authorization", authHeader.key());
+    assertEquals("ApiKey my-api-key", authHeader.value());
   }
 
   @Test
@@ -33,11 +34,11 @@ class ClusterCredentialProviderTest {
     cluster.setPassword("pass");
 
     // Act
-    Header header = provider.getAuthHeader(cluster);
+    ClientAuthHeader authHeader = provider.getAuthHeader(cluster);
 
     // Assert
-    assertEquals("Authorization", header.key());
-    assertEquals("Basic dXNlcjpwYXNz", header.value()); // user:pass in base64
+    assertEquals("Authorization", authHeader.key());
+    assertEquals("Basic dXNlcjpwYXNz", authHeader.value()); // user:pass in base64
   }
 
   @Test

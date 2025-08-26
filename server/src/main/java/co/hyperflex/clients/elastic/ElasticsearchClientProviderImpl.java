@@ -1,6 +1,8 @@
 package co.hyperflex.clients.elastic;
 
 import co.hyperflex.clients.ClusterCredentialProvider;
+import co.hyperflex.common.client.ClientConnectionDetail;
+import co.hyperflex.common.client.ClientConnectionDetailProvider;
 import co.hyperflex.common.exceptions.NotFoundException;
 import co.hyperflex.core.entites.clusters.ClusterEntity;
 import co.hyperflex.core.repositories.ClusterRepository;
@@ -24,7 +26,7 @@ import org.springframework.web.client.RestClient;
 
 
 @Component
-public class ElasticsearchClientProviderImpl implements ElasticsearchClientProvider {
+public class ElasticsearchClientProviderImpl implements ElasticsearchClientProvider, ClientConnectionDetailProvider {
 
   private final Logger logger = LoggerFactory.getLogger(ElasticsearchClientProviderImpl.class);
   private final ClusterCredentialProvider credentialProvider;
@@ -39,20 +41,21 @@ public class ElasticsearchClientProviderImpl implements ElasticsearchClientProvi
   @Cacheable(value = "elasticClientCache", key = "#clusterId")
   @Override
   public ElasticClient getClient(@NotNull String clusterId) {
-    return clusterRepository.findById(clusterId).map(ElasticsearchClientProviderImpl.this::getClient)
+    return clusterRepository.findById(clusterId).map(this::buildClientConnectionDetail)
+        .map(this::getClient)
         .orElseThrow(() -> new NotFoundException("Cluster not found"));
   }
 
   @Override
-  public ElasticClient getClient(ClusterEntity cluster) {
+  public ElasticClient getClient(ClientConnectionDetail detail) {
     try {
-      var authHeader = credentialProvider.getAuthHeader(cluster);
+      var authHeader = detail.authHeader();
       HttpClient jdkHttpClient = HttpClient.newBuilder()
           .sslContext(getSSLContext())
           .build();
 
       RestClient genericClient = RestClient.builder()
-          .baseUrl(cluster.getElasticUrl())
+          .baseUrl(detail.baseUrl())
           .defaultHeader(authHeader.key(), authHeader.value())
           .defaultHeader("Content-Type", "application/json")
           .requestFactory(new JdkClientHttpRequestFactory(jdkHttpClient))
@@ -60,7 +63,7 @@ public class ElasticsearchClientProviderImpl implements ElasticsearchClientProvi
 
       return new ElasticClientImpl(genericClient);
     } catch (Exception e) {
-      logger.error("Failed to create elasticsearch client for cluster {}", cluster.getId(), e);
+      logger.error("Failed to create elasticsearch client", e);
       throw new RuntimeException(e);
     }
   }
@@ -101,5 +104,18 @@ public class ElasticsearchClientProviderImpl implements ElasticsearchClientProvi
     var sslContext = SSLContext.getInstance("TLS");
     sslContext.init(null, new TrustManager[] {trustManager}, new SecureRandom());
     return sslContext;
+  }
+
+  @Override
+  public ClientConnectionDetail getDetail(String clusterId) {
+    return clusterRepository.findById(clusterId).map(this::buildClientConnectionDetail)
+        .orElseThrow(() -> new NotFoundException("Cluster not found"));
+  }
+
+  private ClientConnectionDetail buildClientConnectionDetail(ClusterEntity clusterEntity) {
+    return new ClientConnectionDetail(
+        clusterEntity.getElasticUrl(),
+        credentialProvider.getAuthHeader(clusterEntity)
+    );
   }
 }

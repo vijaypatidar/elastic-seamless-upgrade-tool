@@ -1,5 +1,6 @@
 package co.hyperflex.services;
 
+import co.hyperflex.clients.ClusterCredentialProvider;
 import co.hyperflex.clients.elastic.ElasticClient;
 import co.hyperflex.clients.elastic.ElasticsearchClientProvider;
 import co.hyperflex.clients.elastic.dto.GetAllocationExplanationResponse;
@@ -9,6 +10,7 @@ import co.hyperflex.clients.kibana.KibanaClient;
 import co.hyperflex.clients.kibana.KibanaClientProvider;
 import co.hyperflex.clients.kibana.dto.GetKibanaStatusResponse;
 import co.hyperflex.clients.kibana.dto.OsStats;
+import co.hyperflex.common.client.ClientConnectionDetail;
 import co.hyperflex.common.exceptions.BadRequestException;
 import co.hyperflex.common.exceptions.NotFoundException;
 import co.hyperflex.core.entites.clusters.ClusterEntity;
@@ -77,6 +79,7 @@ public class ClusterServiceImpl implements ClusterService {
   private final SshKeyService sshKeyService;
   private final ClusterLockService clusterLockService;
   private final NotificationService notificationService;
+  private final ClusterCredentialProvider credentialProvider;
 
   public ClusterServiceImpl(ClusterRepository clusterRepository,
                             ClusterNodeRepository clusterNodeRepository,
@@ -85,7 +88,7 @@ public class ClusterServiceImpl implements ClusterService {
                             KibanaClientProvider kibanaClientProvider,
                             SshKeyService sshKeyService,
                             ClusterLockService clusterLockService,
-                            NotificationService notificationService) {
+                            NotificationService notificationService, ClusterCredentialProvider credentialProvider) {
     this.clusterRepository = clusterRepository;
     this.clusterNodeRepository = clusterNodeRepository;
     this.clusterMapper = clusterMapper;
@@ -94,6 +97,7 @@ public class ClusterServiceImpl implements ClusterService {
     this.sshKeyService = sshKeyService;
     this.clusterLockService = clusterLockService;
     this.notificationService = notificationService;
+    this.credentialProvider = credentialProvider;
   }
 
   private static String getNodeConfigFilePath(ClusterNodeEntity clusterNode) {
@@ -330,7 +334,10 @@ public class ClusterServiceImpl implements ClusterService {
   }
 
   private void addKibanaNodes(SelfManagedClusterEntity cluster, List<KibanaNodeEntity> nodes) {
-    var kibanaClient = kibanaClientProvider.getClient(cluster);
+    var kibanaClient = kibanaClientProvider.getClient(new ClientConnectionDetail(
+        cluster.getKibanaUrl(),
+        credentialProvider.getAuthHeader(cluster)
+    ));
     nodes.forEach(node -> {
       GetKibanaStatusResponse details = kibanaClient.getKibanaNodeDetails(node.getIp());
       OsStats os = details.metrics().os();
@@ -340,7 +347,10 @@ public class ClusterServiceImpl implements ClusterService {
   }
 
   private void syncKibanaNodes(SelfManagedClusterEntity cluster) {
-    var kibanaClient = kibanaClientProvider.getClient(cluster);
+    var kibanaClient = kibanaClientProvider.getClient(new ClientConnectionDetail(
+        cluster.getKibanaUrl(),
+        credentialProvider.getAuthHeader(cluster)
+    ));
     List<ClusterNodeEntity> clusterNodes =
         clusterNodeRepository.findByClusterId(cluster.getId()).stream().filter(node -> node.getType() == ClusterNodeType.KIBANA).toList();
     clusterNodes.forEach(node -> {
@@ -354,7 +364,10 @@ public class ClusterServiceImpl implements ClusterService {
 
   private void syncElasticNodes(ClusterEntity cluster) {
     try {
-      ElasticClient elasticClient = elasticsearchClientProvider.getClient(cluster);
+      ElasticClient elasticClient = elasticsearchClientProvider.getClient(new ClientConnectionDetail(
+          cluster.getElasticUrl(),
+          credentialProvider.getAuthHeader(cluster)
+      ));
       var response = elasticClient.getNodesInfo();
       var nodes = response.getNodes();
       List<ClusterNodeEntity> clusterNodes = new LinkedList<>();
@@ -407,7 +420,10 @@ public class ClusterServiceImpl implements ClusterService {
     cluster.setKibanaUrl(UrlUtils.validateAndCleanUrl(cluster.getKibanaUrl()));
     cluster.setElasticUrl(UrlUtils.validateAndCleanUrl(cluster.getElasticUrl()));
     try {
-      ElasticClient elasticClient = elasticsearchClientProvider.getClient(cluster);
+      ElasticClient elasticClient = elasticsearchClientProvider.getClient(new ClientConnectionDetail(
+          cluster.getElasticUrl(),
+          credentialProvider.getAuthHeader(cluster)
+      ));
       elasticClient.getHealthStatus();
     } catch (Exception e) {
       log.warn("Error validating cluster credentials", e);
@@ -415,7 +431,10 @@ public class ClusterServiceImpl implements ClusterService {
     }
 
     try {
-      KibanaClient kibanaClient = kibanaClientProvider.getClient(cluster);
+      KibanaClient kibanaClient = kibanaClientProvider.getClient(new ClientConnectionDetail(
+          cluster.getKibanaUrl(),
+          credentialProvider.getAuthHeader(cluster)
+      ));
       kibanaClient.getKibanaVersion();
     } catch (Exception e) {
       log.warn("Error validating cluster credentials", e);

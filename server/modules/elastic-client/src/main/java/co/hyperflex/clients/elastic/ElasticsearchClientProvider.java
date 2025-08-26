@@ -1,10 +1,10 @@
 package co.hyperflex.clients.elastic;
 
-import co.hyperflex.core.entites.clusters.ClusterEntity;
+import co.hyperflex.common.client.ClientConnectionDetail;
 import jakarta.validation.constraints.NotNull;
 
 public interface ElasticsearchClientProvider {
   ElasticClient getClient(@NotNull String clusterId);
 
-  ElasticClient getClient(ClusterEntity cluster);
+  ElasticClient getClient(ClientConnectionDetail detail);
 }
