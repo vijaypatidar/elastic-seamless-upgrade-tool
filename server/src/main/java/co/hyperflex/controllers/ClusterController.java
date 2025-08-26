@@ -1,7 +1,10 @@
 package co.hyperflex.controllers;
 
 import co.hyperflex.clients.elastic.dto.GetAllocationExplanationResponse;
+import co.hyperflex.common.exceptions.BadRequestException;
 import co.hyperflex.core.models.enums.ClusterNodeType;
+import co.hyperflex.core.services.certificates.CertificateFile;
+import co.hyperflex.core.services.certificates.CertificatesService;
 import co.hyperflex.core.services.clusters.ClusterService;
 import co.hyperflex.core.services.clusters.dtos.AddClusterRequest;
 import co.hyperflex.core.services.clusters.dtos.AddClusterResponse;
@@ -17,9 +20,10 @@ import co.hyperflex.core.services.clusters.dtos.UpdateNodeConfigurationRequest;
 import co.hyperflex.core.services.clusters.dtos.UpdateNodeConfigurationResponse;
 import co.hyperflex.core.services.clusters.dtos.UploadCertificateResponse;
 import co.hyperflex.core.services.deprecations.DeprecationService;
-import co.hyperflex.services.CertificatesService;
 import co.hyperflex.upgrade.services.NodeUpgradeService;
 import jakarta.validation.Valid;
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -90,8 +94,18 @@ public class ClusterController {
   }
 
   @PostMapping(value = "/certificates/upload", consumes = "multipart/form-data")
-  public UploadCertificateResponse uploadCertificate(@RequestParam("files") MultipartFile[] files, @PathVariable String clusterId) {
-    return certificatesService.uploadCertificate(files, clusterId);
+  public UploadCertificateResponse uploadCertificate(@RequestParam("files") MultipartFile[] files) {
+    return certificatesService.uploadCertificates(Arrays.stream(files).map(file -> {
+      try {
+        return new CertificateFile(
+            file.getOriginalFilename(),
+            file.getInputStream(),
+            file.isEmpty()
+        );
+      } catch (IOException e) {
+        throw new BadRequestException("Error uploading certificate");
+      }
+    }).toList());
   }
 
   @GetMapping("{clusterId}/overview")

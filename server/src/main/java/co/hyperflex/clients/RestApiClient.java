@@ -30,19 +30,25 @@ public class RestApiClient implements ApiClient {
           .retrieve()
           .toEntity(request.getResponseType());
 
-      case POST -> restClient.post()
-          .uri(request.getUri())
-          .headers(httpHeadersConsumer)
-          .body(request.getBody())
-          .retrieve()
-          .toEntity(request.getResponseType());
+      case POST -> {
+        var builder = restClient.post()
+            .uri(request.getUri())
+            .headers(httpHeadersConsumer);
+        if (request.getBody() != null) {
+          builder = builder.body(request.getBody());
+        }
+        yield builder.retrieve().toEntity(request.getResponseType());
+      }
 
-      case PUT -> restClient.put()
-          .uri(request.getUri())
-          .headers(httpHeadersConsumer)
-          .body(request.getBody())
-          .retrieve()
-          .toEntity(request.getResponseType());
+      case PUT -> {
+        var builder = restClient.put()
+            .uri(request.getUri())
+            .headers(httpHeadersConsumer);
+        if (request.getBody() != null) {
+          builder = builder.body(request.getBody());
+        }
+        yield builder.retrieve().toEntity(request.getResponseType());
+      }
 
       case DELETE -> restClient.delete()
           .uri(request.getUri())
