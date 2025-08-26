@@ -1,7 +1,7 @@
 package co.hyperflex.ssh;
 
 
-import co.hyperflex.ssh.utils.KeyUtils;
+import co.hyperflex.ssh.utils.TestKeyUtils;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.KeyPair;
@@ -32,8 +32,8 @@ class SshCommandExecutorTest {
     sshServer.start();
     port = sshServer.getPort();
 
-    KeyPair keyPair = KeyUtils.generateRsaKeyPair();
-    tempKeyFile = KeyUtils.writePrivateKeyToPem(keyPair, "id_rsa");
+    KeyPair keyPair = TestKeyUtils.generateRsaKeyPair();
+    tempKeyFile = TestKeyUtils.writePrivateKeyToPem(keyPair, "id_rsa");
   }
 
   @AfterAll

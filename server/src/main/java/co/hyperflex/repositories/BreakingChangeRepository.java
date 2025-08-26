@@ -3,13 +3,18 @@ package co.hyperflex.repositories;
 import co.hyperflex.entities.BreakingChangeEntity;
 import co.hyperflex.utils.VersionUtils;
 import java.util.List;
-import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface BreakingChangeRepository extends MongoRepository<BreakingChangeEntity, String> {
+public class BreakingChangeRepository extends AbstractMongoRepository<BreakingChangeEntity, String> {
 
-  default List<BreakingChangeEntity> getBreakingChanges(String currentVersion, String targetVersion) {
+  protected BreakingChangeRepository(MongoTemplate mongoTemplate
+  ) {
+    super(mongoTemplate, BreakingChangeEntity.class);
+  }
+
+  public List<BreakingChangeEntity> getBreakingChanges(String currentVersion, String targetVersion) {
     return findAll()
         .stream()
         .filter(breakingChange -> VersionUtils.isVersionGt(breakingChange.getVersion(), currentVersion)

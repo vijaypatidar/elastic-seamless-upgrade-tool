@@ -77,4 +77,8 @@ public abstract class AbstractMongoRepository<T, I> {
     mongoTemplate.updateFirst(query, update, entityClass, collectionName);
   }
 
+  public void deleteAll() {
+    Query query = new Query();
+    mongoTemplate.remove(query, entityClass, collectionName);
+  }
 }

@@ -103,6 +103,7 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 
 	const getCluster = async () => {
 		try {
+			if (!clusterId) return null
 			const response = await axiosJSON.get(`/clusters/${clusterId}`)
 			const cluster = response.data
 			cluster &&
@@ -119,7 +120,6 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 					pathToSSH: cluster.sshKey,
 					kibanaConfigs: cluster.kibanaNodes,
 					deploymentId: cluster.deploymentId,
-					sshFile: null,
 					certFiles:
 						cluster.certificateIds?.map((certId: string) => ({
 							name: certId,
