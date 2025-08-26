@@ -50,8 +50,8 @@ export function PrecheckSummary() {
 	const precheckSummary = usePrecheckSummary()
 	return (
 		<Box className="flex items-center justify-center gap-[6px]">
-			<PrecheckSummaryItem count={precheckSummary.warning} type="warning" />
 			<PrecheckSummaryItem count={precheckSummary.critical} type="critical" />
+			<PrecheckSummaryItem count={precheckSummary.warning} type="warning" />
 			<PrecheckSummaryItem count={precheckSummary.skipped} type="skipped" />
 		</Box>
 	)
