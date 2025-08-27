@@ -1,7 +1,3 @@
-## License
-
-[MIT](https://choosealicense.com/licenses/mit/)
-
 # Seamless Upgrade Tool
 
 ## Overview
