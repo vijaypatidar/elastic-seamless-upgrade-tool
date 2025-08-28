@@ -17,6 +17,7 @@ import co.hyperflex.upgrade.tasks.elastic.WaitForGreenClusterStatusTask;
 import co.hyperflex.upgrade.tasks.elastic.WaitForYellowOrGreenClusterStatusTask;
 import co.hyperflex.upgrade.tasks.kibana.RestartKibanaServiceTask;
 import co.hyperflex.upgrade.tasks.kibana.SetDefaultIndexTask;
+import co.hyperflex.upgrade.tasks.kibana.UpdateKibanaPluginTask;
 import co.hyperflex.upgrade.tasks.kibana.UpdateKibanaTask;
 import co.hyperflex.upgrade.tasks.kibana.WaitForKibanaPortTask;
 import co.hyperflex.upgrade.tasks.kibana.WaitForKibanaReadyTask;
@@ -46,6 +47,7 @@ public class UpgradePlanBuilder {
     } else if (node.getType() == ClusterNodeType.KIBANA) {
       tasks.add(new UpdateKibanaTask());
       tasks.add(new RestartKibanaServiceTask());
+      tasks.add(new UpdateKibanaPluginTask());
       tasks.add(new WaitForKibanaPortTask());
       tasks.add(new WaitForKibanaReadyTask());
       tasks.add(new SetDefaultIndexTask());

@@ -7,9 +7,10 @@ import java.util.Properties;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-public class PluginVerifier {
+public class ElasticPluginArtifactValidator implements PluginArtifactValidator {
 
-  public static boolean verifyPlugin(String pluginUrl, String targetEsVersion) {
+  @Override
+  public boolean verifyPlugin(String pluginUrl, String targetEsVersion) {
     try (InputStream in = new URL(pluginUrl).openStream();
          ZipInputStream zip = new ZipInputStream(in)) {
 

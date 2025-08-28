@@ -3,8 +3,9 @@ package co.hyperflex.precheck.concrete.node.elastic;
 
 import co.hyperflex.clients.elastic.ElasticClient;
 import co.hyperflex.clients.elastic.dto.nodes.PluginStats;
+import co.hyperflex.core.models.enums.ClusterNodeType;
 import co.hyperflex.core.models.enums.ClusterType;
-import co.hyperflex.pluginmanager.ElasticPluginManager;
+import co.hyperflex.pluginmanager.PluginManagerFactory;
 import co.hyperflex.precheck.contexts.NodeContext;
 import co.hyperflex.precheck.core.BaseElasticNodePrecheck;
 import co.hyperflex.precheck.core.enums.PrecheckSeverity;
@@ -59,7 +60,7 @@ public class CustomPluginsListPrecheck extends BaseElasticNodePrecheck {
 
       for (var plugin : plugins) {
         try {
-          boolean available = new ElasticPluginManager(null)
+          boolean available = PluginManagerFactory.create(null, context.getNode().getType())
               .isPluginAvailable(plugin, targetVersion);
 
           logger.info("* {} : {}", plugin, available ? "available" : "unavailable");
