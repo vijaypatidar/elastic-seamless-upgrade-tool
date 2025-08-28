@@ -4,21 +4,11 @@ import co.hyperflex.pluginmanager.entities.PluginArtifactDescriptor;
 import co.hyperflex.pluginmanager.repositories.PluginArtifactDescriptorRepository;
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.NotNull;
-import java.util.Set;
 import org.springframework.stereotype.Component;
 
 @Component
 public class DefaultPluginRegistry implements PluginRegistry {
   private final PluginArtifactDescriptorRepository artifactDescriptorRepositories;
-  private static final Set<String> OFFICIAL_ELASTICSEARCH_PLUGINS = Set.of(
-      "analysis-icu", "analysis-kuromoji", "analysis-nori",
-      "analysis-phonetic", "analysis-smartcn", "analysis-stempel",
-      "analysis-ukrainian", "discovery-azure-classic", "discovery-ec2",
-      "discovery-gce", "ingest-attachment", "ingest-geoip",
-      "ingest-user-agent", "mapper-annotated-text", "mapper-murmur3",
-      "mapper-size", "repository-azure", "repository-gcs",
-      "repository-hdfs", "repository-s3", "store-smb", "transport-nio"
-  );
 
   public DefaultPluginRegistry(PluginArtifactDescriptorRepository artifactDescriptorRepositories) {
     this.artifactDescriptorRepositories = artifactDescriptorRepositories;
@@ -26,9 +16,6 @@ public class DefaultPluginRegistry implements PluginRegistry {
 
   @Override
   public boolean isOfficial(String pluginName) {
-    if (OFFICIAL_ELASTICSEARCH_PLUGINS.contains(pluginName)) {
-      return true;
-    }
     var pluginArtifactDescriptor = artifactDescriptorRepositories.findByName(pluginName);
     return pluginArtifactDescriptor.map(PluginArtifactDescriptor::isOfficial)
         .orElseThrow();

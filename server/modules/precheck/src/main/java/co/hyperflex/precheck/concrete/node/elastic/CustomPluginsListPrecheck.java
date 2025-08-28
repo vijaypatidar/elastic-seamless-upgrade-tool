@@ -28,7 +28,7 @@ public class CustomPluginsListPrecheck extends BaseElasticNodePrecheck {
 
   @Override
   public PrecheckSeverity getSeverity() {
-    return PrecheckSeverity.INFO;
+    return PrecheckSeverity.WARNING;
   }
 
   @Override
@@ -62,6 +62,7 @@ public class CustomPluginsListPrecheck extends BaseElasticNodePrecheck {
       var targetVersion = context.getClusterUpgradeJob().getTargetVersion();
       logger.info("Checking plugin availability for target version [{}]", targetVersion);
 
+      boolean unavailable = false;
       for (var plugin : plugins) {
         try {
           boolean available = pluginManagerFactory.create(null, context.getNode().getType())
@@ -73,9 +74,12 @@ public class CustomPluginsListPrecheck extends BaseElasticNodePrecheck {
               "* {} : Unable to verify plugin — it may be unavailable or no source is configured",
               plugin
           );
+          unavailable = true;
         }
       }
+      if (unavailable) {
+        throw new RuntimeException();
+      }
     }
-
   }
 }
