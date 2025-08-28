@@ -3,9 +3,12 @@ package co.hyperflex.precheck.concrete.node.elastic;
 
 import co.hyperflex.clients.elastic.ElasticClient;
 import co.hyperflex.clients.elastic.dto.nodes.PluginStats;
+import co.hyperflex.core.models.enums.ClusterType;
+import co.hyperflex.pluginmanager.ElasticPluginManager;
 import co.hyperflex.precheck.contexts.NodeContext;
 import co.hyperflex.precheck.core.BaseElasticNodePrecheck;
 import co.hyperflex.precheck.core.enums.PrecheckSeverity;
+import java.util.List;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Component;
@@ -44,9 +47,30 @@ public class CustomPluginsListPrecheck extends BaseElasticNodePrecheck {
     }
 
     logger.info("Node [{}] has manually installed plugins:", nodeInfo.getName());
-    nodeInfo.getPlugins().stream()
+    List<String> plugins = nodeInfo.getPlugins().stream()
         .map(PluginStats::getName)
-        .filter(Objects::nonNull)
-        .forEach(plugin -> logger.info("* {}", plugin));
+        .filter(Objects::nonNull).toList();
+
+    plugins.forEach(plugin -> logger.info("* {}", plugin));
+
+    if (context.getCluster().getType() == ClusterType.SELF_MANAGED) {
+      var targetVersion = context.getClusterUpgradeJob().getTargetVersion();
+      logger.info("Checking plugin availability for target version [{}]", targetVersion);
+
+      for (var plugin : plugins) {
+        try {
+          boolean available = new ElasticPluginManager(null)
+              .isPluginAvailable(plugin, targetVersion);
+
+          logger.info("* {} : {}", plugin, available ? "available" : "unavailable");
+        } catch (Exception e) {
+          logger.warn(
+              "Unable to verify plugin [{}] — it may be unavailable or no source is configured",
+              plugin
+          );
+        }
+      }
+    }
+
   }
 }

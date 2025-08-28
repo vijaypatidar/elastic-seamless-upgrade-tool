@@ -219,14 +219,11 @@ public class ClusterUpgradeService {
               continue;
             }
             try {
-              log.info("Starting task [name: {}] for node [ip: {}] [progress: {}%]", task.getName(), node.getIp(),
-                  (index * 100) / tasks.size());
-
+              log.info("Starting task [name: {}] for node [ip: {}]", task.getName(), node.getIp());
               TaskResult result = task.run(context);
-
-
-              log.info("Task [name: {}] completed for node [ip: {}] [success: {}] [result: {}]", task.getName(), node.getIp(),
-                  result.isSuccess(), result.getMessage());
+              log.info("Task [name: {}] completed for node [ip: {}] [success: {}] [result: {}] [progress: {}%]", task.getName(),
+                  node.getIp(),
+                  result.isSuccess(), result.getMessage(), (index * 100) / tasks.size());
 
               if (!result.isSuccess()) {
                 log.error("Task [name: {}] failed for node [ip: {}] — {}", task.getName(), node.getIp(), result.getMessage());

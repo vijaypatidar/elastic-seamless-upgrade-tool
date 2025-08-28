@@ -1,16 +1,15 @@
 package co.hyperflex.upgrade.tasks.elastic;
 
-import co.hyperflex.ssh.CommandResult;
+import co.hyperflex.pluginmanager.ElasticPluginManager;
 import co.hyperflex.ssh.SshCommandExecutor;
 import co.hyperflex.upgrade.tasks.Context;
 import co.hyperflex.upgrade.tasks.Task;
 import co.hyperflex.upgrade.tasks.TaskResult;
-import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
 import org.slf4j.Logger;
 
 public class UpdateElasticPluginTask implements Task {
+
 
   @Override
   public String getName() {
@@ -19,49 +18,31 @@ public class UpdateElasticPluginTask implements Task {
 
   @Override
   public TaskResult run(Context context) {
-    var pluginCommand = "sudo /usr/share/elasticsearch/bin/elasticsearch-plugin ";
-    var removePlugin = pluginCommand + "remove ";
-    var installPlugin = pluginCommand + "install --batch ";
-    var listPlugin = pluginCommand + "list";
     Logger logger = context.logger();
     try (SshCommandExecutor executor = context.getSshCommandExecutor()) {
+      var pluginManger = new ElasticPluginManager(executor);
       logger.info("Getting list of installed plugins");
-      CommandResult result = executor.execute(listPlugin);
-      if (result.isSuccess()) {
-        List<String> plugins = Arrays.stream(result.stdout().split("\n")).map(String::trim).filter(p -> !p.isBlank()).toList();
+      List<String> plugins = pluginManger.listPlugins();
 
-        if (plugins.isEmpty()) {
-          context.logger().info("No plugins found");
-          return TaskResult.success("No plugins found");
-        }
-
-        logger.info("Found {} plugins[{}]", plugins.size(), String.join(", ", plugins));
-
-        for (String plugin : plugins) {
-          logger.info("Removing plugin [{}]", plugin);
-          CommandResult removePluginResult = executor.execute(removePlugin + plugin);
-          if (removePluginResult.isSuccess()) {
-            logger.info("Successfully removed plugin [{}]", plugin);
-            logger.info("Installing plugin [{}]", plugin);
-            CommandResult installPluginResult = executor.execute(installPlugin + plugin);
-            if (installPluginResult.isSuccess()) {
-              logger.info("Successfully installed plugin [{}]", plugin);
-            } else {
-              logger.info("Failed to install plugin [{}]", plugin);
-              throw new RuntimeException("Failed to install plugin [" + plugin + "]");
-            }
-          } else {
-            logger.info("Failed to remove plugin [{}]", plugin);
-            throw new RuntimeException("Failed to remove plugin [" + plugin + "]");
-          }
-        }
-
-        return TaskResult.success("Plugins updated successfully");
-      } else {
-        return TaskResult.failure("Failed to list plugins");
+      if (plugins.isEmpty()) {
+        context.logger().info("No plugins found");
+        return TaskResult.success("No plugins found");
       }
-    } catch (IOException e) {
-      logger.error(e.getMessage());
+
+      logger.info("Found {} plugins[{}]", plugins.size(), String.join(", ", plugins));
+
+      for (String plugin : plugins) {
+        logger.info("Removing plugin [{}]", plugin);
+        pluginManger.removePlugin(plugin);
+        logger.info("Successfully removed [plugin: {}]", plugin);
+        logger.info("Installing plugin [{}]", plugin);
+        pluginManger.installPlugin(plugin, context.config().targetVersion());
+        logger.info("Successfully installed plugin [{}]", plugin);
+      }
+      return TaskResult.success("Plugins updated successfully");
+
+    } catch (Exception e) {
+      logger.error("Plugin update failed: {}", e.getMessage(), e);
       return TaskResult.failure(e.getMessage());
     }
   }

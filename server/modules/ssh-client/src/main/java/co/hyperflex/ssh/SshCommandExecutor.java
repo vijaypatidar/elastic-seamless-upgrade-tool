@@ -67,7 +67,7 @@ public class SshCommandExecutor implements AutoCloseable {
       channel.setErr(stderr);
 
       channel.open().verify(timeoutSeconds, TimeUnit.SECONDS);
-      var result = channel.waitFor(EnumSet.of(ClientChannelEvent.CLOSED), TimeUnit.SECONDS.toMillis(timeoutSeconds));
+      var result = channel.waitFor(EnumSet.of(ClientChannelEvent.CLOSED), TimeUnit.MINUTES.toMillis(10));
       if (result.contains(ClientChannelEvent.TIMEOUT)) {
         throw new SshConnectionException("Command execution timed out: " + command);
       }
