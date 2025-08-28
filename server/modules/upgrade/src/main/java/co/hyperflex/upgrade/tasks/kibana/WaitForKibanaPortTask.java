@@ -8,7 +8,9 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import org.slf4j.Logger;
+import org.springframework.stereotype.Component;
 
+@Component
 public class WaitForKibanaPortTask implements Task {
   private static final int TIMEOUT_MILLIS = 2000;
   private static final int MAX_RETRIES = 30;

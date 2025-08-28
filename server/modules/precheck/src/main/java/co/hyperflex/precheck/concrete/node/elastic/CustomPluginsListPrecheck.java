@@ -3,15 +3,23 @@ package co.hyperflex.precheck.concrete.node.elastic;
 
 import co.hyperflex.clients.elastic.ElasticClient;
 import co.hyperflex.clients.elastic.dto.nodes.PluginStats;
+import co.hyperflex.core.models.enums.ClusterType;
+import co.hyperflex.pluginmanager.PluginManagerFactory;
 import co.hyperflex.precheck.contexts.NodeContext;
 import co.hyperflex.precheck.core.BaseElasticNodePrecheck;
 import co.hyperflex.precheck.core.enums.PrecheckSeverity;
+import java.util.List;
 import java.util.Objects;
 import org.slf4j.Logger;
 import org.springframework.stereotype.Component;
 
 @Component
 public class CustomPluginsListPrecheck extends BaseElasticNodePrecheck {
+  private final PluginManagerFactory pluginManagerFactory;
+
+  public CustomPluginsListPrecheck(PluginManagerFactory pluginManagerFactory) {
+    this.pluginManagerFactory = pluginManagerFactory;
+  }
 
   @Override
   public String getName() {
@@ -20,7 +28,7 @@ public class CustomPluginsListPrecheck extends BaseElasticNodePrecheck {
 
   @Override
   public PrecheckSeverity getSeverity() {
-    return PrecheckSeverity.INFO;
+    return PrecheckSeverity.WARNING;
   }
 
   @Override
@@ -44,9 +52,34 @@ public class CustomPluginsListPrecheck extends BaseElasticNodePrecheck {
     }
 
     logger.info("Node [{}] has manually installed plugins:", nodeInfo.getName());
-    nodeInfo.getPlugins().stream()
+    List<String> plugins = nodeInfo.getPlugins().stream()
         .map(PluginStats::getName)
-        .filter(Objects::nonNull)
-        .forEach(plugin -> logger.info("* {}", plugin));
+        .filter(Objects::nonNull).toList();
+
+    plugins.forEach(plugin -> logger.info("* {}", plugin));
+
+    if (context.getCluster().getType() == ClusterType.SELF_MANAGED) {
+      var targetVersion = context.getClusterUpgradeJob().getTargetVersion();
+      logger.info("Checking plugin availability for target version [{}]", targetVersion);
+
+      boolean unavailable = false;
+      for (var plugin : plugins) {
+        try {
+          boolean available = pluginManagerFactory.create(null, context.getNode().getType())
+              .isPluginAvailable(plugin, targetVersion);
+
+          logger.info("* {} : {}", plugin, available ? "available" : "unavailable");
+        } catch (Exception e) {
+          logger.info(
+              "* {} : Unable to verify plugin — it may be unavailable or no source is configured",
+              plugin
+          );
+          unavailable = true;
+        }
+      }
+      if (unavailable) {
+        throw new RuntimeException();
+      }
+    }
   }
 }

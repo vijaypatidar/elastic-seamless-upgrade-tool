@@ -63,6 +63,7 @@ public class ClusterUpgradeService {
   private final ExecutorService executorService = Executors.newFixedThreadPool(1);
   private final PrecheckRunService precheckRunService;
   private final ClusterLockService clusterLockService;
+  private final UpgradePlanBuilder upgradePlanBuilder;
 
   public ClusterUpgradeService(ElasticsearchClientProvider elasticsearchClientProvider,
                                ClusterNodeRepository clusterNodeRepository,
@@ -72,7 +73,8 @@ public class ClusterUpgradeService {
                                NotificationService notificationService,
                                DeprecationService deprecationService,
                                PrecheckRunService precheckRunService,
-                               ClusterLockService clusterLockService) {
+                               ClusterLockService clusterLockService,
+                               UpgradePlanBuilder upgradePlanBuilder) {
     this.elasticsearchClientProvider = elasticsearchClientProvider;
     this.clusterNodeRepository = clusterNodeRepository;
     this.clusterService = clusterService;
@@ -83,6 +85,7 @@ public class ClusterUpgradeService {
     this.deprecationService = deprecationService;
     this.precheckRunService = precheckRunService;
     this.clusterLockService = clusterLockService;
+    this.upgradePlanBuilder = upgradePlanBuilder;
   }
 
   public ClusterNodeUpgradeResponse upgradeNode(ClusterNodeUpgradeRequest request) {
@@ -204,7 +207,6 @@ public class ClusterUpgradeService {
               new Configuration(9300, 9200, cluster.getSshInfo().username(), cluster.getSshInfo().keyPath(), targetVersion);
           Context context = new Context(node, config, log, elasticClient, kibanaClient);
 
-          UpgradePlanBuilder upgradePlanBuilder = new UpgradePlanBuilder();
           List<Task> tasks = upgradePlanBuilder.buildPlanFor(node);
 
           int checkPoint = clusterUpgradeJobService.getCheckPoint(clusterUpgradeJobId, node.getId());
@@ -219,14 +221,11 @@ public class ClusterUpgradeService {
               continue;
             }
             try {
-              log.info("Starting task [name: {}] for node [ip: {}] [progress: {}%]", task.getName(), node.getIp(),
-                  (index * 100) / tasks.size());
-
+              log.info("Starting task [name: {}] for node [ip: {}]", task.getName(), node.getIp());
               TaskResult result = task.run(context);
-
-
-              log.info("Task [name: {}] completed for node [ip: {}] [success: {}] [result: {}]", task.getName(), node.getIp(),
-                  result.isSuccess(), result.getMessage());
+              log.info("Task [name: {}] completed for node [ip: {}] [success: {}] [result: {}] [progress: {}%]", task.getName(),
+                  node.getIp(),
+                  result.isSuccess(), result.getMessage(), (index * 100) / tasks.size());
 
               if (!result.isSuccess()) {
                 log.error("Task [name: {}] failed for node [ip: {}] — {}", task.getName(), node.getIp(), result.getMessage());

@@ -7,7 +7,9 @@ import co.hyperflex.upgrade.tasks.Task;
 import co.hyperflex.upgrade.tasks.TaskResult;
 import java.util.List;
 import org.slf4j.Logger;
+import org.springframework.stereotype.Component;
 
+@Component
 public class WaitForGreenClusterStatusTask implements Task {
 
   private static final int MAX_RETRIES = 60;

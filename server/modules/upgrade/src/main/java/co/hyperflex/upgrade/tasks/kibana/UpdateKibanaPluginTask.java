@@ -1,18 +1,17 @@
-package co.hyperflex.upgrade.tasks.elastic;
+package co.hyperflex.upgrade.tasks.kibana;
 
 import co.hyperflex.pluginmanager.PluginManagerFactory;
 import co.hyperflex.upgrade.tasks.AbstractUpdatePluginTask;
 import org.springframework.stereotype.Component;
 
 @Component
-public class UpdateElasticPluginTask extends AbstractUpdatePluginTask {
-
-  public UpdateElasticPluginTask(PluginManagerFactory pluginManagerFactory) {
+public class UpdateKibanaPluginTask extends AbstractUpdatePluginTask {
+  public UpdateKibanaPluginTask(PluginManagerFactory pluginManagerFactory) {
     super(pluginManagerFactory);
   }
 
   @Override
   public String getName() {
-    return "Update elastic plugins";
+    return "Update kibana plugins";
   }
 }

@@ -16,6 +16,6 @@ FROM hyperflex/jre21ansible:latest
 COPY --from=builder /app/server/build/libs/*.jar /app.jar
 
 # Copy Ansible files
-COPY data/breaking-changes.json data/breaking-changes.json
+COPY data/ data/
 
 ENTRYPOINT ["java", "-Dspring.profiles.active=prod", "-jar", "app.jar"]
