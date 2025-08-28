@@ -50,6 +50,9 @@ public abstract class AbstractPluginManager implements PluginManager {
   @Override
   public boolean isPluginAvailable(String pluginName, String version) {
     String source = pluginSourceResolver.resolve(pluginName, version);
+    if (source != null && source.equals(pluginName)) {
+      return true;
+    }
     return pluginArtifactValidator.verifyPlugin(source, version);
   }
 

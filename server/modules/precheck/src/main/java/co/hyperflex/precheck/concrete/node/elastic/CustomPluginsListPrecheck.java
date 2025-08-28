@@ -69,8 +69,8 @@ public class CustomPluginsListPrecheck extends BaseElasticNodePrecheck {
 
           logger.info("* {} : {}", plugin, available ? "available" : "unavailable");
         } catch (Exception e) {
-          logger.warn(
-              "Unable to verify plugin [{}] — it may be unavailable or no source is configured",
+          logger.info(
+              "* {} : Unable to verify plugin — it may be unavailable or no source is configured",
               plugin
           );
         }

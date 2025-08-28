@@ -16,8 +16,7 @@ public class DefaultPluginSourceResolver implements PluginSourceResolver {
     if (registry.isOfficial(pluginName)) {
       return pluginName; // official plugins use name only
     }
-    return Optional.ofNullable(registry.getPluginSource(pluginName))
-        .map(url -> url + version)
+    return Optional.ofNullable(registry.getPluginSource(pluginName, version))
         .orElseThrow(() -> new IllegalArgumentException("Unknown plugin: " + pluginName));
   }
 }

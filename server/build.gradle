@@ -26,6 +26,7 @@ dependencies {
     implementation project(':server:modules:precheck')
     implementation project(':server:modules:upgrade')
     implementation project(":server:modules:breaking-changes")
+    implementation project(":server:modules:plugin-manager")
 
 
     implementation 'jakarta.annotation:jakarta.annotation-api:3.0.0'
