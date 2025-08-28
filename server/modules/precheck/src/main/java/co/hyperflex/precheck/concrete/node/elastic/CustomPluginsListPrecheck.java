@@ -15,6 +15,11 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class CustomPluginsListPrecheck extends BaseElasticNodePrecheck {
+  private final PluginManagerFactory pluginManagerFactory;
+
+  public CustomPluginsListPrecheck(PluginManagerFactory pluginManagerFactory) {
+    this.pluginManagerFactory = pluginManagerFactory;
+  }
 
   @Override
   public String getName() {
@@ -59,7 +64,7 @@ public class CustomPluginsListPrecheck extends BaseElasticNodePrecheck {
 
       for (var plugin : plugins) {
         try {
-          boolean available = PluginManagerFactory.create(null, context.getNode().getType())
+          boolean available = pluginManagerFactory.create(null, context.getNode().getType())
               .isPluginAvailable(plugin, targetVersion);
 
           logger.info("* {} : {}", plugin, available ? "available" : "unavailable");

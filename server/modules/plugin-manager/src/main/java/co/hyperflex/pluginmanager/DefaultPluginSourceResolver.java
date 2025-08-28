@@ -1,15 +1,14 @@
 package co.hyperflex.pluginmanager;
 
-import java.util.Map;
 import java.util.Optional;
+import org.springframework.stereotype.Component;
 
+@Component
 public class DefaultPluginSourceResolver implements PluginSourceResolver {
   private final PluginRegistry registry;
-  private final Map<String, String> pluginRepo;
 
-  public DefaultPluginSourceResolver(PluginRegistry registry, Map<String, String> pluginRepo) {
+  public DefaultPluginSourceResolver(PluginRegistry registry) {
     this.registry = registry;
-    this.pluginRepo = pluginRepo;
   }
 
   @Override
@@ -17,7 +16,7 @@ public class DefaultPluginSourceResolver implements PluginSourceResolver {
     if (registry.isOfficial(pluginName)) {
       return pluginName; // official plugins use name only
     }
-    return Optional.ofNullable(pluginRepo.get(pluginName))
+    return Optional.ofNullable(registry.getPluginSource(pluginName))
         .map(url -> url + version)
         .orElseThrow(() -> new IllegalArgumentException("Unknown plugin: " + pluginName));
   }

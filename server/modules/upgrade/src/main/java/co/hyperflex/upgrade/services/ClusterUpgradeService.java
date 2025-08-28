@@ -63,6 +63,7 @@ public class ClusterUpgradeService {
   private final ExecutorService executorService = Executors.newFixedThreadPool(1);
   private final PrecheckRunService precheckRunService;
   private final ClusterLockService clusterLockService;
+  private final UpgradePlanBuilder upgradePlanBuilder;
 
   public ClusterUpgradeService(ElasticsearchClientProvider elasticsearchClientProvider,
                                ClusterNodeRepository clusterNodeRepository,
@@ -72,7 +73,8 @@ public class ClusterUpgradeService {
                                NotificationService notificationService,
                                DeprecationService deprecationService,
                                PrecheckRunService precheckRunService,
-                               ClusterLockService clusterLockService) {
+                               ClusterLockService clusterLockService,
+                               UpgradePlanBuilder upgradePlanBuilder) {
     this.elasticsearchClientProvider = elasticsearchClientProvider;
     this.clusterNodeRepository = clusterNodeRepository;
     this.clusterService = clusterService;
@@ -83,6 +85,7 @@ public class ClusterUpgradeService {
     this.deprecationService = deprecationService;
     this.precheckRunService = precheckRunService;
     this.clusterLockService = clusterLockService;
+    this.upgradePlanBuilder = upgradePlanBuilder;
   }
 
   public ClusterNodeUpgradeResponse upgradeNode(ClusterNodeUpgradeRequest request) {
@@ -204,7 +207,6 @@ public class ClusterUpgradeService {
               new Configuration(9300, 9200, cluster.getSshInfo().username(), cluster.getSshInfo().keyPath(), targetVersion);
           Context context = new Context(node, config, log, elasticClient, kibanaClient);
 
-          UpgradePlanBuilder upgradePlanBuilder = new UpgradePlanBuilder();
           List<Task> tasks = upgradePlanBuilder.buildPlanFor(node);
 
           int checkPoint = clusterUpgradeJobService.getCheckPoint(clusterUpgradeJobId, node.getId());

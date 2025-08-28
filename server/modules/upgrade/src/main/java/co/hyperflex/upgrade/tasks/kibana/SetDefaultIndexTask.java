@@ -7,7 +7,9 @@ import co.hyperflex.upgrade.tasks.Task;
 import co.hyperflex.upgrade.tasks.TaskResult;
 import java.util.Map;
 import org.slf4j.Logger;
+import org.springframework.stereotype.Component;
 
+@Component
 public class SetDefaultIndexTask implements Task {
 
   @Override

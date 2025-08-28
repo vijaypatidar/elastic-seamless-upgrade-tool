@@ -2,22 +2,34 @@ package co.hyperflex.pluginmanager;
 
 import co.hyperflex.core.models.enums.ClusterNodeType;
 import co.hyperflex.ssh.SshCommandExecutor;
-import java.util.Map;
+import org.springframework.stereotype.Component;
 
-public interface PluginManagerFactory {
-  static PluginManager create(SshCommandExecutor executor, ClusterNodeType nodeType) {
-    final Map<String, String> pluginRepo = Map.of("analysis-ik", "https://get.infini.cloud/elasticsearch/analysis-ik/");
+@Component
+public class PluginManagerFactory {
+  private final ElasticPluginArtifactValidator elasticPluginArtifactValidator;
+  private final KibanaPluginArtifactValidator kibanaPluginArtifactValidator;
+  private final PluginSourceResolver pluginSourceResolver;
+
+  public PluginManagerFactory(ElasticPluginArtifactValidator elasticPluginArtifactValidator,
+                              KibanaPluginArtifactValidator kibanaPluginArtifactValidator,
+                              PluginSourceResolver pluginSourceResolver) {
+    this.elasticPluginArtifactValidator = elasticPluginArtifactValidator;
+    this.kibanaPluginArtifactValidator = kibanaPluginArtifactValidator;
+    this.pluginSourceResolver = pluginSourceResolver;
+  }
+
+  public PluginManager create(SshCommandExecutor executor, ClusterNodeType nodeType) {
     if (nodeType == ClusterNodeType.ELASTIC) {
       return new ElasticPluginManager(
           executor,
-          new DefaultPluginSourceResolver(new PluginRegistry(), pluginRepo),
-          new ElasticPluginArtifactValidator()
+          pluginSourceResolver,
+          elasticPluginArtifactValidator
       );
     } else if (nodeType == ClusterNodeType.KIBANA) {
       return new KibanaPluginManager(
           executor,
-          new DefaultPluginSourceResolver(new PluginRegistry(), pluginRepo),
-          new KibanaPluginArtifactValidator()
+          pluginSourceResolver,
+          kibanaPluginArtifactValidator
       );
     }
     throw new IllegalArgumentException("Unknown node type: " + nodeType);

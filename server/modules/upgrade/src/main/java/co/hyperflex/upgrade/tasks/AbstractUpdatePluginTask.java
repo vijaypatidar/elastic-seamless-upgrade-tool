@@ -6,11 +6,17 @@ import java.util.List;
 import org.slf4j.Logger;
 
 public abstract class AbstractUpdatePluginTask implements Task {
+  private final PluginManagerFactory pluginManagerFactory;
+
+  protected AbstractUpdatePluginTask(PluginManagerFactory pluginManagerFactory) {
+    this.pluginManagerFactory = pluginManagerFactory;
+  }
+
   @Override
   public TaskResult run(Context context) {
     Logger logger = context.logger();
     try (SshCommandExecutor executor = context.getSshCommandExecutor()) {
-      var pluginManger = PluginManagerFactory.create(executor, context.node().getType());
+      var pluginManger = pluginManagerFactory.create(executor, context.node().getType());
       logger.info("Getting list of installed plugins");
       List<String> plugins = pluginManger.listPlugins();
 

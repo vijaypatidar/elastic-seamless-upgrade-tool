@@ -6,7 +6,9 @@ import java.net.URL;
 import java.util.Properties;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import org.springframework.stereotype.Component;
 
+@Component
 public class ElasticPluginArtifactValidator implements PluginArtifactValidator {
 
   @Override

@@ -23,34 +23,40 @@ import co.hyperflex.upgrade.tasks.kibana.WaitForKibanaPortTask;
 import co.hyperflex.upgrade.tasks.kibana.WaitForKibanaReadyTask;
 import java.util.ArrayList;
 import java.util.List;
+import org.springframework.beans.BeansException;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
+import org.springframework.stereotype.Component;
 
-public class UpgradePlanBuilder {
+@Component
+public class UpgradePlanBuilder implements ApplicationContextAware {
+  private ApplicationContext applicationContext;
 
   public List<Task> buildPlanFor(ClusterNodeEntity node) {
     List<Task> tasks = new ArrayList<>();
 
     if (node.getType() == ClusterNodeType.ELASTIC) {
-      tasks.add(new StartElasticsearchServiceTask());
-      tasks.add(new WaitForElasticsearchTransportPortTask());
-      tasks.add(new WaitForGreenClusterStatusTask());
-      tasks.add(new DisableShardAllocationTask());
-      tasks.add(new SyncedFlushTask());
-      tasks.add(new StopElasticsearchServiceTask());
-      tasks.add(new UpdateElasticsearchTask());
-      tasks.add(new UpdateElasticPluginTask());
-      tasks.add(new RestartElasticsearchServiceTask());
-      tasks.add(new WaitForElasticsearchTransportPortTask());
-      tasks.add(new WaitForElasticsearchHttpPortTask());
-      tasks.add(new WaitForYellowOrGreenClusterStatusTask());
-      tasks.add(new EnableShardAllocationTask());
-      tasks.add(new WaitForGreenClusterStatusTask());
+      tasks.add(applicationContext.getBean(StartElasticsearchServiceTask.class));
+      tasks.add(applicationContext.getBean(WaitForElasticsearchTransportPortTask.class));
+      tasks.add(applicationContext.getBean(WaitForGreenClusterStatusTask.class));
+      tasks.add(applicationContext.getBean(DisableShardAllocationTask.class));
+      tasks.add(applicationContext.getBean(SyncedFlushTask.class));
+      tasks.add(applicationContext.getBean(StopElasticsearchServiceTask.class));
+      tasks.add(applicationContext.getBean(UpdateElasticsearchTask.class));
+      tasks.add(applicationContext.getBean(UpdateElasticPluginTask.class));
+      tasks.add(applicationContext.getBean(RestartElasticsearchServiceTask.class));
+      tasks.add(applicationContext.getBean(WaitForElasticsearchTransportPortTask.class));
+      tasks.add(applicationContext.getBean(WaitForElasticsearchHttpPortTask.class));
+      tasks.add(applicationContext.getBean(WaitForYellowOrGreenClusterStatusTask.class));
+      tasks.add(applicationContext.getBean(EnableShardAllocationTask.class));
+      tasks.add(applicationContext.getBean(WaitForGreenClusterStatusTask.class));
     } else if (node.getType() == ClusterNodeType.KIBANA) {
-      tasks.add(new UpdateKibanaTask());
-      tasks.add(new RestartKibanaServiceTask());
-      tasks.add(new UpdateKibanaPluginTask());
-      tasks.add(new WaitForKibanaPortTask());
-      tasks.add(new WaitForKibanaReadyTask());
-      tasks.add(new SetDefaultIndexTask());
+      tasks.add(applicationContext.getBean(UpdateKibanaTask.class));
+      tasks.add(applicationContext.getBean(RestartKibanaServiceTask.class));
+      tasks.add(applicationContext.getBean(UpdateKibanaPluginTask.class));
+      tasks.add(applicationContext.getBean(WaitForKibanaPortTask.class));
+      tasks.add(applicationContext.getBean(WaitForKibanaReadyTask.class));
+      tasks.add(applicationContext.getBean(SetDefaultIndexTask.class));
     } else {
       throw new UnsupportedOperationException("Unsupported ClusterNodeType: " + node.getType());
     }
@@ -58,4 +64,8 @@ public class UpgradePlanBuilder {
     return tasks;
   }
 
+  @Override
+  public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+    this.applicationContext = applicationContext;
+  }
 }

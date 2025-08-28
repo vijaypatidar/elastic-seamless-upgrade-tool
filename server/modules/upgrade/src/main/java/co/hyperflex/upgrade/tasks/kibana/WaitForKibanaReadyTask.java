@@ -5,7 +5,9 @@ import co.hyperflex.upgrade.tasks.Context;
 import co.hyperflex.upgrade.tasks.Task;
 import co.hyperflex.upgrade.tasks.TaskResult;
 import org.slf4j.Logger;
+import org.springframework.stereotype.Component;
 
+@Component
 public class WaitForKibanaReadyTask implements Task {
   private static final int MAX_RETRIES = 30;
   private static final int RETRY_DELAY_MILLIS = 5000;
