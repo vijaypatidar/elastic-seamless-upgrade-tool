@@ -3,6 +3,7 @@ package co.hyperflex.precheck.concrete.node.elastic;
 
 import co.hyperflex.clients.elastic.ElasticClient;
 import co.hyperflex.clients.elastic.dto.nodes.PluginStats;
+import co.hyperflex.core.models.enums.ClusterNodeType;
 import co.hyperflex.core.models.enums.ClusterType;
 import co.hyperflex.pluginmanager.PluginManagerFactory;
 import co.hyperflex.precheck.contexts.NodeContext;
