@@ -37,7 +37,7 @@ public class PluginArtifactDescriptorService {
 
   public UpdatePluginVersionSourceResponse updatePluginArtifactDescriptor(String name, UpdatePluginVersionSourceRequest request) {
     PluginArtifactDescriptor descriptor = artifactDescriptorRepository.findById(name).orElseThrow();
-    descriptor.getVersionSources().put(request.version(), request.version());
+    descriptor.getVersionSources().put(request.version(), request.source());
     artifactDescriptorRepository.save(descriptor);
     return new UpdatePluginVersionSourceResponse("Plugin source updated successfully");
   }
