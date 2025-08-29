@@ -6,6 +6,7 @@ import co.hyperflex.core.models.enums.ClusterNodeType;
 import co.hyperflex.core.services.certificates.CertificateFile;
 import co.hyperflex.core.services.certificates.CertificatesService;
 import co.hyperflex.core.services.clusters.ClusterService;
+import co.hyperflex.core.services.clusters.NodeConfigurationService;
 import co.hyperflex.core.services.clusters.dtos.AddClusterRequest;
 import co.hyperflex.core.services.clusters.dtos.AddClusterResponse;
 import co.hyperflex.core.services.clusters.dtos.ClusterListItemResponse;
@@ -43,13 +44,18 @@ public class ClusterController {
   private final CertificatesService certificatesService;
   private final DeprecationService deprecationService;
   private final NodeUpgradeService nodeUpgradeService;
+  private final NodeConfigurationService nodeConfigurationService;
 
-  public ClusterController(ClusterService clusterService, CertificatesService certificatesService, DeprecationService deprecationService,
-                           NodeUpgradeService nodeUpgradeService) {
+  public ClusterController(ClusterService clusterService,
+                           CertificatesService certificatesService,
+                           DeprecationService deprecationService,
+                           NodeUpgradeService nodeUpgradeService,
+                           NodeConfigurationService nodeConfigurationService) {
     this.clusterService = clusterService;
     this.certificatesService = certificatesService;
     this.deprecationService = deprecationService;
     this.nodeUpgradeService = nodeUpgradeService;
+    this.nodeConfigurationService = nodeConfigurationService;
   }
 
   @PostMapping
@@ -80,7 +86,7 @@ public class ClusterController {
 
   @GetMapping("/{clusterId}/nodes/{nodeId}/configuration")
   public GetNodeConfigurationResponse getNodeConfiguration(@PathVariable String clusterId, @PathVariable String nodeId) {
-    return clusterService.getNodeConfiguration(clusterId, nodeId);
+    return nodeConfigurationService.getNodeConfiguration(clusterId, nodeId);
   }
 
   @PutMapping("/{clusterId}/nodes/{nodeId}/configuration")
@@ -88,7 +94,7 @@ public class ClusterController {
       @PathVariable String clusterId,
       @PathVariable String nodeId,
       @Valid @RequestBody UpdateNodeConfigurationRequest request) {
-    var response = clusterService.updateNodeConfiguration(clusterId, nodeId, request.config());
+    var response = nodeConfigurationService.updateNodeConfiguration(clusterId, nodeId, request.config());
     new Thread(() -> nodeUpgradeService.restartNode(clusterId, nodeId)).start();
     return response;
   }

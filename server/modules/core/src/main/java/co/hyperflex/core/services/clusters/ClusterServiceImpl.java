@@ -35,19 +35,13 @@ import co.hyperflex.core.services.clusters.dtos.ClusterOverviewResponse;
 import co.hyperflex.core.services.clusters.dtos.GetClusterKibanaNodeResponse;
 import co.hyperflex.core.services.clusters.dtos.GetClusterNodeResponse;
 import co.hyperflex.core.services.clusters.dtos.GetClusterResponse;
-import co.hyperflex.core.services.clusters.dtos.GetNodeConfigurationResponse;
 import co.hyperflex.core.services.clusters.dtos.UpdateClusterRequest;
 import co.hyperflex.core.services.clusters.dtos.UpdateClusterResponse;
 import co.hyperflex.core.services.clusters.dtos.UpdateElasticCloudClusterRequest;
-import co.hyperflex.core.services.clusters.dtos.UpdateNodeConfigurationResponse;
 import co.hyperflex.core.services.clusters.dtos.UpdateSelfManagedClusterRequest;
-import co.hyperflex.core.services.clusters.lock.ClusterLockService;
-import co.hyperflex.core.services.notifications.NotificationService;
 import co.hyperflex.core.services.ssh.SshKeyService;
 import co.hyperflex.core.utils.ClusterAuthUtils;
 import co.hyperflex.core.utils.NodeRoleRankerUtils;
-import co.hyperflex.ssh.CommandResult;
-import co.hyperflex.ssh.SshCommandExecutor;
 import jakarta.validation.constraints.NotNull;
 import java.io.IOException;
 import java.util.Comparator;
@@ -69,31 +63,19 @@ public class ClusterServiceImpl implements ClusterService {
   private final ElasticsearchClientProvider elasticsearchClientProvider;
   private final KibanaClientProvider kibanaClientProvider;
   private final SshKeyService sshKeyService;
-  private final ClusterLockService clusterLockService;
-  private final NotificationService notificationService;
 
   public ClusterServiceImpl(ClusterRepository clusterRepository,
                             ClusterNodeRepository clusterNodeRepository,
                             ClusterMapper clusterMapper,
                             ElasticsearchClientProvider elasticsearchClientProvider,
                             KibanaClientProvider kibanaClientProvider,
-                            SshKeyService sshKeyService,
-                            ClusterLockService clusterLockService,
-                            NotificationService notificationService) {
+                            SshKeyService sshKeyService) {
     this.clusterRepository = clusterRepository;
     this.clusterNodeRepository = clusterNodeRepository;
     this.clusterMapper = clusterMapper;
     this.elasticsearchClientProvider = elasticsearchClientProvider;
     this.kibanaClientProvider = kibanaClientProvider;
     this.sshKeyService = sshKeyService;
-    this.clusterLockService = clusterLockService;
-    this.notificationService = notificationService;
-  }
-
-  private static String getNodeConfigFilePath(ClusterNodeEntity clusterNode) {
-    return (clusterNode instanceof ElasticNodeEntity)
-        ? "/etc/elasticsearch/elasticsearch.yml"
-        : "/etc/kibana/kibana.yml";
   }
 
   @Override
@@ -109,7 +91,7 @@ public class ClusterServiceImpl implements ClusterService {
         node.setClusterId(cluster.getId());
         return node;
       }).toList();
-      addKibanaNodes((SelfManagedClusterEntity) cluster, clusterNodes);
+      syncKibanaNodes((SelfManagedClusterEntity) cluster, clusterNodes);
       clusterNodeRepository.saveAll(clusterNodes);
     }
 
@@ -144,7 +126,7 @@ public class ClusterServiceImpl implements ClusterService {
           node.setId(HashUtil.generateHash(cluster.getId() + ":" + node.getIp()));
           return node;
         }).toList();
-        addKibanaNodes(selfManagedCluster, clusterNodes);
+        syncKibanaNodes(selfManagedCluster, clusterNodes);
         clusterNodeRepository.saveAll(clusterNodes);
       }
 
@@ -259,60 +241,6 @@ public class ClusterServiceImpl implements ClusterService {
   }
 
   @Override
-  public GetNodeConfigurationResponse getNodeConfiguration(String clusterId, String nodeId) {
-    try {
-      ClusterEntity cluster = clusterRepository.findById(clusterId).orElseThrow();
-      if (!(cluster instanceof SelfManagedClusterEntity selfManagedCluster)) {
-        throw new BadRequestException(
-            "This operation is not supported for cluster type: " + cluster.getType().getDisplayName()
-        );
-      }
-      ClusterNodeEntity clusterNode = clusterNodeRepository.findById(nodeId).orElseThrow();
-      String configFilePath = getNodeConfigFilePath(clusterNode);
-      var configCommand = "sudo cat " + configFilePath;
-      var sshInfo = selfManagedCluster.getSshInfo();
-      try (var executor = new SshCommandExecutor(clusterNode.getIp(), 22, sshInfo.username(), sshInfo.keyPath())) {
-        CommandResult result = executor.execute(configCommand);
-        if (result.isSuccess()) {
-          return new GetNodeConfigurationResponse(result.stdout());
-        } else {
-          throw new RuntimeException(result.stderr());
-        }
-      }
-    } catch (Exception e) {
-      throw new BadRequestException("Failed to get node yml config file");
-    }
-  }
-
-  @Override
-  public UpdateNodeConfigurationResponse updateNodeConfiguration(String clusterId, String nodeId, String nodeConfiguration) {
-    try {
-      ClusterEntity cluster = clusterRepository.findById(clusterId).orElseThrow();
-      if (!(cluster instanceof SelfManagedClusterEntity selfManagedCluster)) {
-        throw new BadRequestException(
-            "This operation is not supported for cluster type: " + cluster.getType().getDisplayName()
-        );
-      }
-      ClusterNodeEntity clusterNode = clusterNodeRepository.findById(nodeId).orElseThrow();
-      String configFilePath = getNodeConfigFilePath(clusterNode);
-
-      var sshInfo = selfManagedCluster.getSshInfo();
-      try (var executor = new SshCommandExecutor(clusterNode.getIp(), 22, sshInfo.username(), sshInfo.keyPath())) {
-        // Write the new config to the file (overwrites existing)
-        String updateCommand = String.format("echo '%s' | sudo tee %s", escapeSingleQuotes(nodeConfiguration), configFilePath);
-        CommandResult updateResult = executor.execute(updateCommand);
-        if (!updateResult.isSuccess()) {
-          throw new RuntimeException("Failed to update config: " + updateResult.stderr());
-        }
-        return new UpdateNodeConfigurationResponse("Node configuration updated successfully. Node is restarting...");
-      }
-    } catch (Exception e) {
-      log.error("Failed to update node configuration for clusterId: {}", clusterId, e);
-      throw new BadRequestException("Failed to update node config");
-    }
-  }
-
-  @Override
   public void resetUpgradeStatus(@NotNull String clusterId) {
     List<ClusterNodeEntity> clusterNodes = clusterNodeRepository.findByClusterId(clusterId);
     clusterNodes.forEach(node -> {
@@ -322,26 +250,25 @@ public class ClusterServiceImpl implements ClusterService {
     clusterNodeRepository.saveAll(clusterNodes);
   }
 
-  private void addKibanaNodes(SelfManagedClusterEntity cluster, List<KibanaNodeEntity> nodes) {
+  private void syncKibanaNodes(SelfManagedClusterEntity cluster, List<KibanaNodeEntity> nodes) {
     var kibanaClient = kibanaClientProvider.getClient(ClusterAuthUtils.getKibanaConnectionDetail(cluster));
     nodes.forEach(node -> {
       GetKibanaStatusResponse details = kibanaClient.getKibanaNodeDetails(node.getIp());
       OsStats os = details.metrics().os();
       node.setVersion(details.version().number());
-      node.setOs(new OperatingSystemInfo(os.platform(), os.platformRelease(), PackageManager.APT));
+      if (node.getOs() == null || node.getOs().packageManager() == null) {
+        node.setOs(new OperatingSystemInfo(os.platform(), os.platformRelease(), PackageManager.APT));
+      }
     });
   }
 
   private void syncKibanaNodes(SelfManagedClusterEntity cluster) {
-    var kibanaClient = kibanaClientProvider.getClient(ClusterAuthUtils.getKibanaConnectionDetail(cluster));
-    List<ClusterNodeEntity> clusterNodes =
-        clusterNodeRepository.findByClusterId(cluster.getId()).stream().filter(node -> node.getType() == ClusterNodeType.KIBANA).toList();
-    clusterNodes.forEach(node -> {
-      GetKibanaStatusResponse details = kibanaClient.getKibanaNodeDetails(node.getIp());
-      OsStats os = details.metrics().os();
-      node.setVersion(details.version().number());
-      node.setOs(new OperatingSystemInfo(os.platform(), os.platformRelease(), PackageManager.APT));
-    });
+    List<KibanaNodeEntity> clusterNodes = clusterNodeRepository
+        .findByClusterIdAndType(cluster.getId(), ClusterNodeType.KIBANA)
+        .stream()
+        .map(node -> (KibanaNodeEntity) node)
+        .toList();
+    syncKibanaNodes(cluster, clusterNodes);
     clusterNodeRepository.saveAll(clusterNodes);
   }
 
@@ -421,7 +348,4 @@ public class ClusterServiceImpl implements ClusterService {
     return elasticsearchClientProvider.getClient(clusterId).getAllocationExplanation();
   }
 
-  private String escapeSingleQuotes(String input) {
-    return input.replace("'", "'\"'\"'");
-  }
 }
