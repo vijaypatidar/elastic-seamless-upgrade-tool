@@ -4,14 +4,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-public class AnsibleAdHocDnfCommand extends AnsibleAdHocCommand {
+public class AnsibleAdHocYumCommand extends AnsibleAdHocCommand {
   private final String hostIp;
   private final Map<String, Object> args;
   private final boolean useBecome;
   private final String sshUser;
   private final String sshKeyPath;
 
-  private AnsibleAdHocDnfCommand(Builder builder) {
+  private AnsibleAdHocYumCommand(Builder builder) {
     this.hostIp = builder.hostIp;
     this.args = builder.args;
     this.useBecome = builder.useBecome;
@@ -26,7 +26,7 @@ public class AnsibleAdHocDnfCommand extends AnsibleAdHocCommand {
 
   @Override
   public String getModule() {
-    return "ansible.builtin.dnf";
+    return "ansible.builtin.yum";
   }
 
   @Override
@@ -88,8 +88,8 @@ public class AnsibleAdHocDnfCommand extends AnsibleAdHocCommand {
       return this;
     }
 
-    public AnsibleAdHocDnfCommand build() {
-      return new AnsibleAdHocDnfCommand(this);
+    public AnsibleAdHocYumCommand build() {
+      return new AnsibleAdHocYumCommand(this);
     }
   }
 }
