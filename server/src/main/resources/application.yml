@@ -23,11 +23,6 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
 
-management:
-  health:
-    elasticsearch:
-      enabled: false
-
 seamless:
   output:
     dir: "output"
