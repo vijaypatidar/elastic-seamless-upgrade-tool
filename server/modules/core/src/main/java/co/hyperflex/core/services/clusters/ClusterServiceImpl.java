@@ -24,6 +24,7 @@ import co.hyperflex.core.models.clusters.OperatingSystemInfo;
 import co.hyperflex.core.models.clusters.SshInfo;
 import co.hyperflex.core.models.enums.ClusterNodeType;
 import co.hyperflex.core.models.enums.NodeUpgradeStatus;
+import co.hyperflex.core.models.enums.PackageManager;
 import co.hyperflex.core.repositories.ClusterNodeRepository;
 import co.hyperflex.core.repositories.ClusterRepository;
 import co.hyperflex.core.services.clusters.dtos.AddClusterRequest;
@@ -327,7 +328,7 @@ public class ClusterServiceImpl implements ClusterService {
       GetKibanaStatusResponse details = kibanaClient.getKibanaNodeDetails(node.getIp());
       OsStats os = details.metrics().os();
       node.setVersion(details.version().number());
-      node.setOs(new OperatingSystemInfo(os.platform(), os.platformRelease()));
+      node.setOs(new OperatingSystemInfo(os.platform(), os.platformRelease(), PackageManager.APT));
     });
   }
 
@@ -339,7 +340,7 @@ public class ClusterServiceImpl implements ClusterService {
       GetKibanaStatusResponse details = kibanaClient.getKibanaNodeDetails(node.getIp());
       OsStats os = details.metrics().os();
       node.setVersion(details.version().number());
-      node.setOs(new OperatingSystemInfo(os.platform(), os.platformRelease()));
+      node.setOs(new OperatingSystemInfo(os.platform(), os.platformRelease(), PackageManager.APT));
     });
     clusterNodeRepository.saveAll(clusterNodes);
   }
@@ -368,7 +369,7 @@ public class ClusterServiceImpl implements ClusterService {
         // Extract OS info
         if (value.getOs() != null) {
           var os = value.getOs();
-          node.setOs(new OperatingSystemInfo(os.getName(), os.getVersion()));
+          node.setOs(new OperatingSystemInfo(os.getName(), os.getVersion(), PackageManager.fromBuildType(entry.getValue().getBuildType())));
         }
 
         node.setProgress(0);

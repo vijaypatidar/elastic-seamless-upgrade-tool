@@ -1,16 +1,17 @@
 package co.hyperflex.ansible.commands;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-public class AnsibleAdHocYumCommand extends AnsibleAdHocCommand {
+public class AnsibleAdHocDnfCommand extends AnsibleAdHocCommand {
   private final String hostIp;
   private final Map<String, Object> args;
   private final boolean useBecome;
   private final String sshUser;
   private final String sshKeyPath;
 
-  private AnsibleAdHocYumCommand(Builder builder) {
+  private AnsibleAdHocDnfCommand(Builder builder) {
     this.hostIp = builder.hostIp;
     this.args = builder.args;
     this.useBecome = builder.useBecome;
@@ -25,7 +26,7 @@ public class AnsibleAdHocYumCommand extends AnsibleAdHocCommand {
 
   @Override
   public String getModule() {
-    return "ansible.builtin.yum";
+    return "ansible.builtin.dnf";
   }
 
   @Override
@@ -45,7 +46,10 @@ public class AnsibleAdHocYumCommand extends AnsibleAdHocCommand {
 
   @Override
   public List<String> getArguments() {
-    return List.of();
+    if (getArgs() == null) {
+      return Collections.emptyList();
+    }
+    return getArgs().entrySet().stream().map(entry -> entry.getKey() + "=" + entry.getValue()).toList();
   }
 
   public Map<String, Object> getArgs() {
@@ -85,8 +89,8 @@ public class AnsibleAdHocYumCommand extends AnsibleAdHocCommand {
       return this;
     }
 
-    public AnsibleAdHocYumCommand build() {
-      return new AnsibleAdHocYumCommand(this);
+    public AnsibleAdHocDnfCommand build() {
+      return new AnsibleAdHocDnfCommand(this);
     }
   }
 }
