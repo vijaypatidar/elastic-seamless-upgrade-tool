@@ -27,6 +27,9 @@ public class NodeConfigurationService {
     this.clusterNodeRepository = clusterNodeRepository;
   }
 
+  private static String getNodeConfigFilePath(ClusterNodeEntity clusterNode) {
+    return (clusterNode instanceof ElasticNodeEntity) ? "/etc/elasticsearch/elasticsearch.yml" : "/etc/kibana/kibana.yml";
+  }
 
   public GetNodeConfigurationResponse getNodeConfiguration(String clusterId, String nodeId) {
     try {
@@ -74,10 +77,6 @@ public class NodeConfigurationService {
       log.error("Failed to update node configuration for clusterId: {}", clusterId, e);
       throw new BadRequestException("Failed to update node config");
     }
-  }
-
-  private static String getNodeConfigFilePath(ClusterNodeEntity clusterNode) {
-    return (clusterNode instanceof ElasticNodeEntity) ? "/etc/elasticsearch/elasticsearch.yml" : "/etc/kibana/kibana.yml";
   }
 
   private String escapeSingleQuotes(String input) {
