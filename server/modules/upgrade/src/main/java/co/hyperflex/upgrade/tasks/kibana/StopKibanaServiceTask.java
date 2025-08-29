@@ -5,7 +5,9 @@ import co.hyperflex.upgrade.tasks.AbstractAnsibleTask;
 import co.hyperflex.upgrade.tasks.Context;
 import co.hyperflex.upgrade.tasks.TaskResult;
 import java.util.Map;
+import org.springframework.stereotype.Component;
 
+@Component
 public class StopKibanaServiceTask extends AbstractAnsibleTask {
 
   @Override
