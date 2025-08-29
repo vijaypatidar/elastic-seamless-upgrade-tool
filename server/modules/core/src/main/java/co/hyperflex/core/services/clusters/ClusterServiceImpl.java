@@ -115,7 +115,7 @@ public class ClusterServiceImpl implements ClusterService {
     return new AddClusterResponse(cluster.getId());
   }
 
-  @CacheEvict(value = "elasticClientCache", key = "#clusterId")
+  @CacheEvict(value = "elasticClientCache", key = "#p0")
   @Override
   public UpdateClusterResponse updateCluster(String clusterId, UpdateClusterRequest request) {
     ClusterEntity cluster = clusterRepository.findById(clusterId)

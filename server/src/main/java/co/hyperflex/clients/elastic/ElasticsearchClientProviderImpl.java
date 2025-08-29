@@ -35,7 +35,7 @@ public class ElasticsearchClientProviderImpl implements ElasticsearchClientProvi
     this.clusterRepository = clusterRepository;
   }
 
-  @Cacheable(value = "elasticClientCache", key = "#clusterId")
+  @Cacheable(value = "elasticClientCache", key = "#p0")
   @Override
   public ElasticClient getClient(@NotNull String clusterId) {
     return clusterRepository.findById(clusterId).map(ClusterAuthUtils::getElasticConnectionDetail)
