@@ -41,6 +41,7 @@ dependencies {
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation 'com.tngtech.archunit:archunit:1.4.1'
 }
 
 allprojects {
@@ -89,6 +90,7 @@ subprojects {
         testImplementation 'org.mockito:mockito-junit-jupiter:5.13.0'
         testImplementation 'org.junit.jupiter:junit-jupiter:5.11.0'
         testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+        testImplementation 'com.tngtech.archunit:archunit:1.4.1'
     }
     test {
         useJUnitPlatform()
