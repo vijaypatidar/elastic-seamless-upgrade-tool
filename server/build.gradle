@@ -41,7 +41,7 @@ dependencies {
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    testImplementation 'com.tngtech.archunit:archunit:1.4.1'
+    testImplementation "com.tngtech.archunit:archunit-junit5:1.4.1"
 }
 
 allprojects {
@@ -74,6 +74,12 @@ allprojects {
         }
     }
 
+    tasks.withType(Test).configureEach {
+        useJUnitPlatform()
+        reports {
+            junitXml.required = true
+        }
+    }
 }
 subprojects {
     apply plugin: 'java'
@@ -90,10 +96,7 @@ subprojects {
         testImplementation 'org.mockito:mockito-junit-jupiter:5.13.0'
         testImplementation 'org.junit.jupiter:junit-jupiter:5.11.0'
         testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-        testImplementation 'com.tngtech.archunit:archunit:1.4.1'
-    }
-    test {
-        useJUnitPlatform()
+        testImplementation "com.tngtech.archunit:archunit-junit5:1.4.1"
     }
 }
 
@@ -178,9 +181,15 @@ bootJar {
     }
 }
 
-tasks.named('test') {
-    useJUnitPlatform()
-}
-
 tasks.clean.dependsOn ':frontend:clean'
 tasks.build.dependsOn ':frontend:build'
+
+tasks.register('testReport', TestReport) {
+    destinationDirectory = new File(projectDir, "build/reports/allTests")
+    // Aggregate all test results
+    testResults.from(allprojects.collect { it.tasks.withType(Test) })
+}
+
+tasks.named('check') {
+    dependsOn tasks.named('testReport')
+}
