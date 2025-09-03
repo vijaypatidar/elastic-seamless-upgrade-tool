@@ -6,11 +6,13 @@ import co.hyperflex.pluginmanager.services.dtos.AddPluginArtifactDescriptorReque
 import co.hyperflex.pluginmanager.services.dtos.AddPluginArtifactDescriptorResponse;
 import co.hyperflex.pluginmanager.services.dtos.UpdatePluginVersionSourceRequest;
 import co.hyperflex.pluginmanager.services.dtos.UpdatePluginVersionSourceResponse;
+import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -34,7 +36,7 @@ public class PluginArtifactController {
   }
 
   @PostMapping
-  public AddPluginArtifactDescriptorResponse addPluginArtifactDescriptor(AddPluginArtifactDescriptorRequest request) {
+  public AddPluginArtifactDescriptorResponse addPluginArtifactDescriptor(@RequestBody @Valid AddPluginArtifactDescriptorRequest request) {
     return pluginArtifactDescriptorService.addPluginArtifactDescriptor(request);
   }
 
