@@ -134,7 +134,7 @@ function EditPlugin({
 										<Typography color="#ABA9B1" fontSize="14px" fontWeight="400" lineHeight="20px">
 											Plugin name
 										</Typography>
-										<Box className="flex flex-col gap-[6px]" key={formik.values.name}>
+										<Box className="flex flex-col gap-[6px]">
 											<OneLineSkeleton
 												show={isLoading || isRefetching}
 												height="52px"
