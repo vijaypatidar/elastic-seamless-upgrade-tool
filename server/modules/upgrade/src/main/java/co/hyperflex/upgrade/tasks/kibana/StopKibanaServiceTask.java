@@ -20,14 +20,12 @@ public class StopKibanaServiceTask extends AbstractAnsibleTask {
     context.logger().info("Stopping Kibana service task");
     AnsibleAdHocSystemdCommand cmd = new AnsibleAdHocSystemdCommand
         .Builder()
-        .hostIp(context.node().getIp())
         .args(Map.of(
             "name", "kibana",
             "state", "stopped",
             "daemon_reload", "yes")
         )
-        .useBecome(true)
         .build();
-    return runAdHocCommand(cmd);
+    return runAdHocCommand(cmd, context);
   }
 }

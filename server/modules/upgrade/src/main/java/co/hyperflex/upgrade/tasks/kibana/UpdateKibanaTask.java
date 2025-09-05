@@ -23,39 +23,27 @@ public class UpdateKibanaTask extends AbstractAnsibleTask {
     AnsibleAdHocCommand command = switch (context.node().getOs().packageManager()) {
       case APT -> new AnsibleAdHocAptCommand
           .Builder()
-          .hostIp(context.node().getIp())
           .args(Map.of(
               "name", "kibana=" + context.config().targetVersion(),
               "state", "present")
           )
-          .useBecome(true)
-          .sshUsername(context.config().sshUser())
-          .sshKeyPath(context.config().sshKeyPath())
           .build();
       case DNF -> new AnsibleAdHocDnfCommand
           .Builder()
-          .hostIp(context.node().getIp())
           .args(Map.of(
               "name", "kibana-" + context.config().targetVersion(),
               "state", "present"
           ))
-          .useBecome(true)
-          .sshUsername(context.config().sshUser())
-          .sshKeyPath(context.config().sshKeyPath())
           .build();
       case YUM -> new AnsibleAdHocYumCommand
           .Builder()
-          .hostIp(context.node().getIp())
           .args(Map.of(
               "name", "kibana-" + context.config().targetVersion(),
               "state", "present"
           ))
-          .useBecome(true)
-          .sshUsername(context.config().sshUser())
-          .sshKeyPath(context.config().sshKeyPath())
           .build();
       case null, default -> throw new IllegalStateException("Unsupported package manager " + context.node().getOs().packageManager());
     };
-    return runAdHocCommand(command);
+    return runAdHocCommand(command, context);
   }
 }

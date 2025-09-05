@@ -20,16 +20,12 @@ public class StartKibanaServiceTask extends AbstractAnsibleTask {
     context.logger().info("Starting Kibana service task");
     AnsibleAdHocSystemdCommand cmd = new AnsibleAdHocSystemdCommand
         .Builder()
-        .hostIp(context.node().getIp())
         .args(Map.of(
             "name", "kibana",
             "state", "started",
             "daemon_reload", "yes")
         )
-        .sshUsername(context.config().sshUser())
-        .sshKeyPath(context.config().sshKeyPath())
-        .useBecome(true)
         .build();
-    return runAdHocCommand(cmd);
+    return runAdHocCommand(cmd, context);
   }
 }

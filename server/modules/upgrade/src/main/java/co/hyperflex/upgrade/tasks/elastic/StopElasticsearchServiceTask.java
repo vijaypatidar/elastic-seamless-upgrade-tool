@@ -18,12 +18,8 @@ public class StopElasticsearchServiceTask extends AbstractAnsibleTask {
   @Override
   public TaskResult run(Context context) {
     AnsibleAdHocSystemdCommand cmd = new AnsibleAdHocSystemdCommand.Builder()
-        .hostIp(context.node().getIp())
         .args(Map.of("name", "elasticsearch", "state", "stopped"))
-        .useBecome(true)
-        .sshUsername(context.config().sshUser())
-        .sshKeyPath(context.config().sshKeyPath())
         .build();
-    return runAdHocCommand(cmd);
+    return runAdHocCommand(cmd, context);
   }
 }

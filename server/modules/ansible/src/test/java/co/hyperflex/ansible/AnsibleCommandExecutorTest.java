@@ -9,7 +9,6 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import co.hyperflex.ansible.commands.AnsibleAdHocAptCommand;
-import co.hyperflex.ansible.commands.AnsibleAdHocShellCommand;
 import co.hyperflex.ansible.commands.AnsibleAdHocSystemdCommand;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -32,12 +31,15 @@ class AnsibleCommandExecutorTest {
   void run_aptCommand_success() throws Exception {
     // Arrange
     AnsibleAdHocAptCommand cmd = new AnsibleAdHocAptCommand.Builder()
-        .hostIp("127.0.0.1")
         .args(Map.of("name", "nginx", "state", "present"))
-        .sshUsername("user")
-        .sshKeyPath("/path/to/key")
         .build();
-
+    ExecutionContext executionContext = new ExecutionContext(
+        "127.0.0.1",
+        "user",
+        "/path/to/key",
+        true,
+        "root"
+    );
     Process process = mock(Process.class);
     InputStream inputStream = new ByteArrayInputStream("stdout line".getBytes());
     InputStream errorStream = new ByteArrayInputStream("stderr line".getBytes());
@@ -45,13 +47,13 @@ class AnsibleCommandExecutorTest {
     when(process.getInputStream()).thenReturn(inputStream);
     when(process.getErrorStream()).thenReturn(errorStream);
     when(process.waitFor()).thenReturn(0);
-    doReturn(process).when(ansibleCommandExecutor).getProcess(cmd);
+    doReturn(process).when(ansibleCommandExecutor).getProcess(executionContext, cmd);
 
     Consumer<String> stdLogsConsumer = mock(Consumer.class);
     Consumer<String> errLogsConsumer = mock(Consumer.class);
 
     // Act
-    int exitCode = ansibleCommandExecutor.run(cmd, stdLogsConsumer, errLogsConsumer);
+    int exitCode = ansibleCommandExecutor.run(executionContext, cmd, stdLogsConsumer, errLogsConsumer);
 
     // Assert
     assertEquals(0, exitCode);
@@ -60,44 +62,17 @@ class AnsibleCommandExecutorTest {
   }
 
   @Test
-  void run_shellCommand_success() throws Exception {
-    // Arrange
-    AnsibleAdHocShellCommand cmd = new AnsibleAdHocShellCommand.Builder()
-        .hostIp("127.0.0.1")
-        .args("echo hello")
-        .sshUsername("user")
-        .sshKeyPath("/path/to/key")
-        .build();
-
-    Process process = mock(Process.class);
-    InputStream inputStream = new ByteArrayInputStream("hello".getBytes());
-    InputStream errorStream = new ByteArrayInputStream("".getBytes());
-
-    when(process.getInputStream()).thenReturn(inputStream);
-    when(process.getErrorStream()).thenReturn(errorStream);
-    when(process.waitFor()).thenReturn(0);
-    doReturn(process).when(ansibleCommandExecutor).getProcess(cmd);
-
-    Consumer<String> stdLogsConsumer = mock(Consumer.class);
-    Consumer<String> errLogsConsumer = mock(Consumer.class);
-
-    // Act
-    int exitCode = ansibleCommandExecutor.run(cmd, stdLogsConsumer, errLogsConsumer);
-
-    // Assert
-    assertEquals(0, exitCode);
-    verify(stdLogsConsumer).accept("hello");
-    verify(errLogsConsumer, never()).accept(any());
-  }
-
-  @Test
   void run_systemdCommand_success() throws Exception {
     // Arrange
+    ExecutionContext executionContext = new ExecutionContext(
+        "127.0.0.1",
+        "user",
+        "/path/to/key",
+        true,
+        "root"
+    );
     AnsibleAdHocSystemdCommand cmd = new AnsibleAdHocSystemdCommand.Builder()
-        .hostIp("127.0.0.1")
         .args(Map.of("name", "nginx", "state", "restarted"))
-        .sshUsername("user")
-        .sshKeyPath("/path/to/key")
         .build();
 
     Process process = mock(Process.class);
@@ -107,13 +82,13 @@ class AnsibleCommandExecutorTest {
     when(process.getInputStream()).thenReturn(inputStream);
     when(process.getErrorStream()).thenReturn(errorStream);
     when(process.waitFor()).thenReturn(0);
-    doReturn(process).when(ansibleCommandExecutor).getProcess(cmd);
+    doReturn(process).when(ansibleCommandExecutor).getProcess(executionContext, cmd);
 
     Consumer<String> stdLogsConsumer = mock(Consumer.class);
     Consumer<String> errLogsConsumer = mock(Consumer.class);
 
     // Act
-    int exitCode = ansibleCommandExecutor.run(cmd, stdLogsConsumer, errLogsConsumer);
+    int exitCode = ansibleCommandExecutor.run(executionContext, cmd, stdLogsConsumer, errLogsConsumer);
 
     // Assert
     assertEquals(0, exitCode);
