@@ -1,6 +1,6 @@
 package co.hyperflex.upgrade.tasks.kibana;
 
-import co.hyperflex.ansible.commands.AnsibleAdHocSystemdCommand;
+import co.hyperflex.ansible.commands.AnsibleAdHocCommand;
 import co.hyperflex.upgrade.tasks.AbstractAnsibleTask;
 import co.hyperflex.upgrade.tasks.Context;
 import co.hyperflex.upgrade.tasks.TaskResult;
@@ -18,8 +18,8 @@ public class StopKibanaServiceTask extends AbstractAnsibleTask {
   @Override
   public TaskResult run(Context context) {
     context.logger().info("Stopping Kibana service task");
-    AnsibleAdHocSystemdCommand cmd = new AnsibleAdHocSystemdCommand
-        .Builder()
+    var cmd = AnsibleAdHocCommand.builder()
+        .systemd()
         .args(Map.of(
             "name", "kibana",
             "state", "stopped",

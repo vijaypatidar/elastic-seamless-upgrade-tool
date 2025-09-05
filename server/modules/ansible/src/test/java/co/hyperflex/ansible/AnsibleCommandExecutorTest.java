@@ -8,8 +8,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import co.hyperflex.ansible.commands.AnsibleAdHocAptCommand;
-import co.hyperflex.ansible.commands.AnsibleAdHocSystemdCommand;
+import co.hyperflex.ansible.commands.AnsibleAdHocCommand;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.Map;
@@ -30,7 +29,8 @@ class AnsibleCommandExecutorTest {
   @Test
   void run_aptCommand_success() throws Exception {
     // Arrange
-    AnsibleAdHocAptCommand cmd = new AnsibleAdHocAptCommand.Builder()
+    var cmd = AnsibleAdHocCommand.builder()
+        .apt()
         .args(Map.of("name", "nginx", "state", "present"))
         .build();
     ExecutionContext executionContext = new ExecutionContext(
@@ -71,7 +71,8 @@ class AnsibleCommandExecutorTest {
         true,
         "root"
     );
-    AnsibleAdHocSystemdCommand cmd = new AnsibleAdHocSystemdCommand.Builder()
+    var cmd = AnsibleAdHocCommand.builder()
+        .systemd()
         .args(Map.of("name", "nginx", "state", "restarted"))
         .build();
 

@@ -1,6 +1,6 @@
 package co.hyperflex.upgrade.tasks.elastic;
 
-import co.hyperflex.ansible.commands.AnsibleAdHocSystemdCommand;
+import co.hyperflex.ansible.commands.AnsibleAdHocCommand;
 import co.hyperflex.upgrade.tasks.AbstractAnsibleTask;
 import co.hyperflex.upgrade.tasks.Context;
 import co.hyperflex.upgrade.tasks.TaskResult;
@@ -17,7 +17,8 @@ public class RestartElasticsearchServiceTask extends AbstractAnsibleTask {
 
   @Override
   public TaskResult run(Context context) {
-    AnsibleAdHocSystemdCommand cmd = new AnsibleAdHocSystemdCommand.Builder()
+    var cmd = AnsibleAdHocCommand.builder()
+        .systemd()
         .args(Map.of(
             "name", "elasticsearch",
             "state", "restarted",

@@ -19,8 +19,8 @@ public abstract class AbstractAnsibleTask implements Task {
 
       ExecutionContext executionContext = new ExecutionContext(
           context.node().getIp(),
-          context.config().sshUser(),
-          context.config().sshKeyPath(),
+          context.config().sshInfo().username(),
+          context.config().sshInfo().keyPath(),
           true,
           "root"
       );

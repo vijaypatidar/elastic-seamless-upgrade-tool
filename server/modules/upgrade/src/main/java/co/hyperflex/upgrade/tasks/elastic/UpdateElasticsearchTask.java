@@ -1,9 +1,6 @@
 package co.hyperflex.upgrade.tasks.elastic;
 
-import co.hyperflex.ansible.commands.AnsibleAdHocAptCommand;
 import co.hyperflex.ansible.commands.AnsibleAdHocCommand;
-import co.hyperflex.ansible.commands.AnsibleAdHocDnfCommand;
-import co.hyperflex.ansible.commands.AnsibleAdHocYumCommand;
 import co.hyperflex.upgrade.tasks.AbstractAnsibleTask;
 import co.hyperflex.upgrade.tasks.Context;
 import co.hyperflex.upgrade.tasks.TaskResult;
@@ -21,21 +18,24 @@ public class UpdateElasticsearchTask extends AbstractAnsibleTask {
   @Override
   public TaskResult run(Context context) {
     AnsibleAdHocCommand command = switch (context.node().getOs().packageManager()) {
-      case APT -> new AnsibleAdHocAptCommand.Builder()
+      case APT -> AnsibleAdHocCommand.builder()
+          .apt()
           .args(Map.of(
               "name", "elasticsearch=" + context.config().targetVersion(),
               "state", "present"
           ))
           .build();
 
-      case DNF -> new AnsibleAdHocDnfCommand.Builder()
+      case DNF -> AnsibleAdHocCommand.builder()
+          .dnf()
           .args(Map.of(
               "name", "elasticsearch-" + context.config().targetVersion(),
               "state", "present"
           ))
           .build();
 
-      case YUM -> new AnsibleAdHocYumCommand.Builder()
+      case YUM -> AnsibleAdHocCommand.builder()
+          .yum()
           .args(Map.of(
               "name", "elasticsearch-" + context.config().targetVersion(),
               "state", "present"
