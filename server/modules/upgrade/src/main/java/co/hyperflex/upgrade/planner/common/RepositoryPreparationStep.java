@@ -32,7 +32,9 @@ public class RepositoryPreparationStep {
     List<Task> tasks = new ArrayList<>();
     var pkg = node.getOs().packageManager();
     if (VersionUtils.isMajorVersionUpgrade(job.getCurrentVersion(), job.getTargetVersion())) {
-      if (pkg == PackageManager.APT) {
+
+      // We need to add this if we are migrating from v7->v8
+      if (pkg == PackageManager.APT && job.getCurrentVersion().startsWith("7")) {
         tasks.add(aptTransportTask);
       }
       tasks.add(addRepoTask);

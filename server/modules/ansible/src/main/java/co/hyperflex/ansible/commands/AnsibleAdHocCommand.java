@@ -72,6 +72,11 @@ public class AnsibleAdHocCommand {
       Objects.requireNonNull(module, "module is required");
       return new AnsibleAdHocCommand(args, module);
     }
+
+    public Builder yumRepository() {
+      this.module = "ansible.builtin.yum_repository";
+      return this;
+    }
   }
 }
 

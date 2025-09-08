@@ -1,5 +1,6 @@
 package co.hyperflex.core.utils;
 
+import co.hyperflex.core.models.enums.NodeRoles;
 import java.util.List;
 
 public class NodeRoleRankerUtils {
@@ -9,19 +10,19 @@ public class NodeRoleRankerUtils {
         .map(String::toLowerCase)
         .toList();
 
-    boolean isMaster = roles.contains("master");
-    boolean isIngest = roles.contains("ingest");
-    boolean isML = roles.contains("ml");
-    boolean isTransform = roles.contains("transform");
-    boolean isRemote = roles.contains("remote_cluster_client");
-    boolean isKibana = roles.contains("kibana");
+    boolean isMaster = roles.contains(NodeRoles.MASTER);
+    boolean isIngest = roles.contains(NodeRoles.INGEST);
+    boolean isML = roles.contains(NodeRoles.ML);
+    boolean isTransform = roles.contains(NodeRoles.TRANSFORM);
+    boolean isRemote = roles.contains(NodeRoles.REMOTE_CLUSTER_CLIENT);
+    boolean isKibana = roles.contains(NodeRoles.KIBANA);
 
-    boolean isDataFrozen = roles.contains("data_frozen");
-    boolean isDataCold = roles.contains("data_cold");
-    boolean isDataWarm = roles.contains("data_warm");
-    boolean isDataHot = roles.contains("data_hot");
-    boolean isDataContent = roles.contains("data_content");
-    boolean isGeneralData = roles.contains("data");
+    boolean isDataFrozen = roles.contains(NodeRoles.DATA_FROZEN);
+    boolean isDataCold = roles.contains(NodeRoles.DATA_COLD);
+    boolean isDataWarm = roles.contains(NodeRoles.DATA_WARM);
+    boolean isDataHot = roles.contains(NodeRoles.DATA_HOT);
+    boolean isDataContent = roles.contains(NodeRoles.DATA_CONTENT);
+    boolean isGeneralData = roles.contains(NodeRoles.DATA);
 
     boolean isAnyData = isDataFrozen || isDataCold || isDataWarm || isDataHot || isDataContent || isGeneralData;
 

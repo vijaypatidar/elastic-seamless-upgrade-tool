@@ -7,6 +7,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class AddRepositoryTask extends AbstractAnsibleTask {
+  public static final String GPG_KEY_URL = "https://artifacts.elastic.co/GPG-KEY-elasticsearch";
   private final AddAptRepositoryTask addAptRepositoryTask;
   private final AddYumRepositoryTask addYumRepositoryTask;
 

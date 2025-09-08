@@ -2,6 +2,7 @@ package co.hyperflex.upgrade.planner.elastic;
 
 import co.hyperflex.core.entites.clusters.nodes.ClusterNodeEntity;
 import co.hyperflex.core.models.enums.ClusterNodeType;
+import co.hyperflex.core.models.enums.NodeRoles;
 import co.hyperflex.core.upgrade.ClusterUpgradeJobEntity;
 import co.hyperflex.upgrade.planner.NodeUpgradePlanBuilder;
 import co.hyperflex.upgrade.planner.common.RepositoryPreparationStep;
@@ -90,7 +91,7 @@ public class ElasticUpgradePlanBuilder implements NodeUpgradePlanBuilder {
     tasks.add(waitGreen);
     tasks.add(disableShardAllocation);
     tasks.add(flush);
-    if (node.getRoles().contains("ml")) {
+    if (node.getRoles().contains(NodeRoles.ML)) {
       tasks.add(enableMlUpgrade);
     }
     tasks.add(stop);
@@ -102,10 +103,9 @@ public class ElasticUpgradePlanBuilder implements NodeUpgradePlanBuilder {
     tasks.add(waitYellowOrGreen);
     tasks.add(enableShardAllocation);
     tasks.add(waitGreen);
-    if (node.getRoles().contains("ml")) {
+    if (node.getRoles().contains(NodeRoles.ML)) {
       tasks.add(disableMlUpgrade);
     }
-
     return tasks;
   }
 }
