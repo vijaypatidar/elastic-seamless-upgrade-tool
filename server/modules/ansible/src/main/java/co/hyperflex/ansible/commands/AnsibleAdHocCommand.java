@@ -14,6 +14,10 @@ public class AnsibleAdHocCommand {
     this.module = module;
   }
 
+  public static Builder builder() {
+    return new Builder();
+  }
+
   public String getModule() {
     return module;
   }
@@ -23,10 +27,6 @@ public class AnsibleAdHocCommand {
       return Collections.emptyList();
     }
     return args.entrySet().stream().map(entry -> entry.getKey() + "=" + entry.getValue()).toList();
-  }
-
-  public static Builder builder() {
-    return new Builder();
   }
 
   public static class Builder {
@@ -58,9 +58,24 @@ public class AnsibleAdHocCommand {
       return this;
     }
 
+    public Builder aptRepository() {
+      this.module = "ansible.builtin.apt_repository";
+      return this;
+    }
+
+    public Builder module(String module) {
+      this.module = module;
+      return this;
+    }
+
     public AnsibleAdHocCommand build() {
       Objects.requireNonNull(module, "module is required");
       return new AnsibleAdHocCommand(args, module);
+    }
+
+    public Builder yumRepository() {
+      this.module = "ansible.builtin.yum_repository";
+      return this;
     }
   }
 }

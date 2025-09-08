@@ -1,16 +1,12 @@
 package co.hyperflex.precheck.concrete.node.elastic;
 
 
-import co.hyperflex.clients.elastic.ElasticClient;
 import co.hyperflex.clients.elastic.dto.nodes.PluginStats;
 import co.hyperflex.core.models.enums.ClusterType;
 import co.hyperflex.pluginmanager.PluginManagerFactory;
 import co.hyperflex.precheck.contexts.NodeContext;
 import co.hyperflex.precheck.core.BaseElasticNodePrecheck;
-import co.hyperflex.precheck.core.enums.PrecheckSeverity;
-import java.util.List;
 import java.util.Objects;
-import org.slf4j.Logger;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -27,15 +23,10 @@ public class CustomPluginsListPrecheck extends BaseElasticNodePrecheck {
   }
 
   @Override
-  public PrecheckSeverity getSeverity() {
-    return PrecheckSeverity.WARNING;
-  }
-
-  @Override
   public void run(NodeContext context) {
-    String nodeId = context.getNode().getId();
-    ElasticClient client = context.getElasticClient();
-    Logger logger = context.getLogger();
+    var nodeId = context.getNode().getId();
+    var client = context.getElasticClient();
+    var logger = context.getLogger();
 
     var nodeInfoResponse = client.getNodeInfo(nodeId);
 
@@ -52,7 +43,7 @@ public class CustomPluginsListPrecheck extends BaseElasticNodePrecheck {
     }
 
     logger.info("Node [{}] has manually installed plugins:", nodeInfo.getName());
-    List<String> plugins = nodeInfo.getPlugins().stream()
+    var plugins = nodeInfo.getPlugins().stream()
         .map(PluginStats::getName)
         .filter(Objects::nonNull).toList();
 

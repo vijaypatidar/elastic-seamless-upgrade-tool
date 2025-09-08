@@ -12,7 +12,7 @@ public class KibanaPluginManager extends AbstractPluginManager {
 
   @Override
   protected String getBaseCommand() {
-    return "sudo /usr/share/kibana/bin/kibana-plugin ";
+    return "/usr/share/kibana/bin/kibana-plugin ";
   }
 
 }

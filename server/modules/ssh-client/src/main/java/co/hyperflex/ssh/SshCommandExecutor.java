@@ -1,5 +1,6 @@
 package co.hyperflex.ssh;
 
+import jakarta.validation.constraints.NotNull;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -20,13 +21,16 @@ public class SshCommandExecutor implements AutoCloseable {
   private final SshClient client;
   private final ClientSession session;
   private final long timeoutSeconds;
+  private final BecomeStrategy becomeStrategy;
 
-  public SshCommandExecutor(String host, int port, String username, String privateKeyPath) {
-    this(host, port, username, privateKeyPath, 15);
+  public SshCommandExecutor(String host, int port, String username, String privateKeyPath, BecomeStrategy becomeStrategy) {
+    this(host, port, username, privateKeyPath, 15, becomeStrategy);
   }
 
-  public SshCommandExecutor(String host, int port, String username, String privateKeyPath, long timeoutSeconds) {
+  public SshCommandExecutor(String host, int port, String username, String privateKeyPath, long timeoutSeconds,
+                            BecomeStrategy becomeStrategy) {
     this.timeoutSeconds = timeoutSeconds;
+    this.becomeStrategy = becomeStrategy;
     this.client = SshClient.setUpDefaultClient();
     client.start();
     session = connect(host, port, username, privateKeyPath);
@@ -58,10 +62,10 @@ public class SshCommandExecutor implements AutoCloseable {
     return session;
   }
 
-  public CommandResult execute(String command) throws IOException {
+  public CommandResult execute(@NotNull String command) throws IOException {
     try (ByteArrayOutputStream stdout = new ByteArrayOutputStream();
          ByteArrayOutputStream stderr = new ByteArrayOutputStream();
-         ClientChannel channel = session.createExecChannel(command)) {
+         ClientChannel channel = session.createExecChannel(becomeStrategy.wrapCommand(command))) {
 
       channel.setOut(stdout);
       channel.setErr(stderr);
