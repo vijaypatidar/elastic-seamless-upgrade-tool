@@ -20,7 +20,7 @@ import co.hyperflex.upgrade.tasks.elastic.WaitForGreenClusterStatusTask;
 import co.hyperflex.upgrade.tasks.elastic.WaitForYellowOrGreenClusterStatusTask;
 import co.hyperflex.upgrade.tasks.elastic.ml.DisableUpgradeModeTask;
 import co.hyperflex.upgrade.tasks.elastic.ml.EnableUpgradeModeTask;
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import org.springframework.stereotype.Component;
 
@@ -31,7 +31,7 @@ public class ElasticUpgradePlanBuilder implements NodeUpgradePlanBuilder {
   private final StartElasticsearchServiceTask start;
   private final WaitForElasticsearchTransportPortTask waitTransport;
   private final WaitForGreenClusterStatusTask waitGreen;
-  private final DisableShardAllocationTask disableAlloc;
+  private final DisableShardAllocationTask disableShardAllocation;
   private final SyncedFlushTask flush;
   private final EnableUpgradeModeTask enableMlUpgrade;
   private final StopElasticsearchServiceTask stop;
@@ -40,7 +40,7 @@ public class ElasticUpgradePlanBuilder implements NodeUpgradePlanBuilder {
   private final RestartElasticsearchServiceTask restart;
   private final WaitForElasticsearchHttpPortTask waitHttp;
   private final WaitForYellowOrGreenClusterStatusTask waitYellowOrGreen;
-  private final EnableShardAllocationTask enableAlloc;
+  private final EnableShardAllocationTask enableShardAllocation;
   private final DisableUpgradeModeTask disableMlUpgrade;
 
   public ElasticUpgradePlanBuilder(
@@ -48,7 +48,7 @@ public class ElasticUpgradePlanBuilder implements NodeUpgradePlanBuilder {
       StartElasticsearchServiceTask start,
       WaitForElasticsearchTransportPortTask waitTransport,
       WaitForGreenClusterStatusTask waitGreen,
-      DisableShardAllocationTask disableAlloc,
+      DisableShardAllocationTask disableShardAllocation,
       SyncedFlushTask flush,
       EnableUpgradeModeTask enableMlUpgrade,
       StopElasticsearchServiceTask stop,
@@ -57,13 +57,13 @@ public class ElasticUpgradePlanBuilder implements NodeUpgradePlanBuilder {
       RestartElasticsearchServiceTask restart,
       WaitForElasticsearchHttpPortTask waitHttp,
       WaitForYellowOrGreenClusterStatusTask waitYellowOrGreen,
-      EnableShardAllocationTask enableAlloc,
+      EnableShardAllocationTask enableShardAllocation,
       DisableUpgradeModeTask disableMlUpgrade) {
     this.repoStep = repoStep;
     this.start = start;
     this.waitTransport = waitTransport;
     this.waitGreen = waitGreen;
-    this.disableAlloc = disableAlloc;
+    this.disableShardAllocation = disableShardAllocation;
     this.flush = flush;
     this.enableMlUpgrade = enableMlUpgrade;
     this.stop = stop;
@@ -72,7 +72,7 @@ public class ElasticUpgradePlanBuilder implements NodeUpgradePlanBuilder {
     this.restart = restart;
     this.waitHttp = waitHttp;
     this.waitYellowOrGreen = waitYellowOrGreen;
-    this.enableAlloc = enableAlloc;
+    this.enableShardAllocation = enableShardAllocation;
     this.disableMlUpgrade = disableMlUpgrade;
   }
 
@@ -83,12 +83,12 @@ public class ElasticUpgradePlanBuilder implements NodeUpgradePlanBuilder {
 
   @Override
   public List<Task> buildPlan(ClusterNodeEntity node, ClusterUpgradeJobEntity job) {
-    List<Task> tasks = new ArrayList<>(repoStep.prepare(node, job));
+    List<Task> tasks = new LinkedList<>(repoStep.prepare(node, job));
 
     tasks.add(start);
     tasks.add(waitTransport);
     tasks.add(waitGreen);
-    tasks.add(disableAlloc);
+    tasks.add(disableShardAllocation);
     tasks.add(flush);
     if (node.getRoles().contains("ml")) {
       tasks.add(enableMlUpgrade);
@@ -100,7 +100,7 @@ public class ElasticUpgradePlanBuilder implements NodeUpgradePlanBuilder {
     tasks.add(waitTransport);
     tasks.add(waitHttp);
     tasks.add(waitYellowOrGreen);
-    tasks.add(enableAlloc);
+    tasks.add(enableShardAllocation);
     tasks.add(waitGreen);
     if (node.getRoles().contains("ml")) {
       tasks.add(disableMlUpgrade);

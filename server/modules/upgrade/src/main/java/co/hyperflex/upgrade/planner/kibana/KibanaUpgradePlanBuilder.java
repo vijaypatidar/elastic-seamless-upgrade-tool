@@ -12,7 +12,7 @@ import co.hyperflex.upgrade.tasks.kibana.UpdateKibanaPluginTask;
 import co.hyperflex.upgrade.tasks.kibana.UpdateKibanaTask;
 import co.hyperflex.upgrade.tasks.kibana.WaitForKibanaPortTask;
 import co.hyperflex.upgrade.tasks.kibana.WaitForKibanaReadyTask;
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import org.springframework.stereotype.Component;
 
@@ -51,7 +51,7 @@ public class KibanaUpgradePlanBuilder implements NodeUpgradePlanBuilder {
 
   @Override
   public List<Task> buildPlan(ClusterNodeEntity node, ClusterUpgradeJobEntity job) {
-    List<Task> tasks = new ArrayList<>(repoStep.prepare(node, job));
+    List<Task> tasks = new LinkedList<>(repoStep.prepare(node, job));
     tasks.add(update);
     tasks.add(updatePlugins);
     tasks.add(restart);

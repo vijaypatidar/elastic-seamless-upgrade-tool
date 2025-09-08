@@ -14,6 +14,10 @@ public class AnsibleAdHocCommand {
     this.module = module;
   }
 
+  public static Builder builder() {
+    return new Builder();
+  }
+
   public String getModule() {
     return module;
   }
@@ -23,10 +27,6 @@ public class AnsibleAdHocCommand {
       return Collections.emptyList();
     }
     return args.entrySet().stream().map(entry -> entry.getKey() + "=" + entry.getValue()).toList();
-  }
-
-  public static Builder builder() {
-    return new Builder();
   }
 
   public static class Builder {

@@ -2,8 +2,6 @@ package co.hyperflex.upgrade.services;
 
 
 import co.hyperflex.core.entites.clusters.SelfManagedClusterEntity;
-import co.hyperflex.core.entites.clusters.nodes.ClusterNodeEntity;
-import co.hyperflex.core.entites.clusters.nodes.ElasticNodeEntity;
 import co.hyperflex.core.repositories.ClusterNodeRepository;
 import co.hyperflex.core.repositories.ClusterRepository;
 import co.hyperflex.core.services.clusters.lock.ClusterLockService;
@@ -12,7 +10,6 @@ import co.hyperflex.core.services.notifications.NotificationService;
 import co.hyperflex.core.services.notifications.NotificationType;
 import co.hyperflex.upgrade.tasks.Configuration;
 import co.hyperflex.upgrade.tasks.Context;
-import co.hyperflex.upgrade.tasks.TaskResult;
 import co.hyperflex.upgrade.tasks.elastic.RestartElasticsearchServiceTask;
 import co.hyperflex.upgrade.tasks.kibana.RestartKibanaServiceTask;
 import org.slf4j.Logger;
@@ -38,17 +35,14 @@ public class NodeUpgradeService {
   public void restartNode(String clusterId, String nodeId) {
     try {
       clusterLockService.lock(clusterId);
-      SelfManagedClusterEntity cluster = (SelfManagedClusterEntity) clusterRepository.getCluster(clusterId);
-      ClusterNodeEntity node = clusterNodeRepository.findById(nodeId).orElseThrow();
-      Configuration config =
-          new Configuration(9300, 9200, cluster.getSshInfo(), null);
-      Context context = new Context(node, config, LOG, null, null);
-      TaskResult result;
-      if (node instanceof ElasticNodeEntity) {
-        result = new RestartElasticsearchServiceTask().run(context);
-      } else {
-        result = new RestartKibanaServiceTask().run(context);
-      }
+      var cluster = (SelfManagedClusterEntity) clusterRepository.getCluster(clusterId);
+      var node = clusterNodeRepository.findById(nodeId).orElseThrow();
+      var config = new Configuration(9300, 9200, cluster.getSshInfo(), null);
+      var context = new Context(node, config, LOG, null, null);
+      var result = switch (node.getType()) {
+        case ELASTIC -> new RestartElasticsearchServiceTask().run(context);
+        case KIBANA -> new RestartKibanaServiceTask().run(context);
+      };
       if (result.success()) {
         LOG.info("Node [NodeId: {}] restarted successfully", node.getId());
         notificationService.sendNotification(new GeneralNotificationEvent(
