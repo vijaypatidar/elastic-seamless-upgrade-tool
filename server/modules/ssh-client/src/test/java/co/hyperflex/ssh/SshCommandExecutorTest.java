@@ -46,7 +46,13 @@ class SshCommandExecutorTest {
 
   @Test
   void testExecuteCommand() throws Exception {
-    try (var executor = new SshCommandExecutor("localhost", port, "testuser", tempKeyFile.toAbsolutePath().toString())) {
+    try (var executor = new SshCommandExecutor(
+        "localhost",
+        port,
+        "testuser",
+        tempKeyFile.toAbsolutePath().toString(),
+        new NoBecome())
+    ) {
       CommandResult result = executor.execute("ls -l");
 
       Assertions.assertEquals(0, result.exitCode());
