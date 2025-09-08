@@ -65,7 +65,7 @@ public class AnsibleCommandExecutor {
     command.add("-e");
     command.add("ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'");
     command.add("-b");
-
+    command.add("--become-user=" + context.getBecomeUser());
     ProcessBuilder builder = new ProcessBuilder(command);
     return builder.start();
   }

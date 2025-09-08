@@ -11,6 +11,7 @@ import co.hyperflex.core.services.clusters.dtos.GetNodeConfigurationResponse;
 import co.hyperflex.core.services.clusters.dtos.UpdateNodeConfigurationResponse;
 import co.hyperflex.ssh.CommandResult;
 import co.hyperflex.ssh.SshCommandExecutor;
+import co.hyperflex.ssh.SudoBecome;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -41,7 +42,11 @@ public class NodeConfigurationService {
       String configFilePath = getNodeConfigFilePath(clusterNode);
       var configCommand = "sudo cat " + configFilePath;
       var sshInfo = selfManagedCluster.getSshInfo();
-      try (var executor = new SshCommandExecutor(clusterNode.getIp(), 22, sshInfo.username(), sshInfo.keyPath())) {
+      try (var executor = new SshCommandExecutor(clusterNode.getIp(),
+          22,
+          sshInfo.username(),
+          sshInfo.keyPath(),
+          new SudoBecome(sshInfo.becomeUser()))) {
         CommandResult result = executor.execute(configCommand);
         if (result.isSuccess()) {
           return new GetNodeConfigurationResponse(result.stdout());
@@ -64,7 +69,11 @@ public class NodeConfigurationService {
       String configFilePath = getNodeConfigFilePath(clusterNode);
 
       var sshInfo = selfManagedCluster.getSshInfo();
-      try (var executor = new SshCommandExecutor(clusterNode.getIp(), 22, sshInfo.username(), sshInfo.keyPath())) {
+      try (var executor = new SshCommandExecutor(clusterNode.getIp(),
+          22,
+          sshInfo.username(),
+          sshInfo.keyPath(),
+          new SudoBecome(sshInfo.becomeUser()))) {
         // Write the new config to the file (overwrites existing)
         String updateCommand = String.format("echo '%s' | sudo tee %s", escapeSingleQuotes(nodeConfiguration), configFilePath);
         CommandResult updateResult = executor.execute(updateCommand);
