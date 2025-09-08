@@ -1,6 +1,5 @@
 package co.hyperflex.pluginmanager;
 
-import co.hyperflex.ssh.CommandResult;
 import co.hyperflex.ssh.SshCommandExecutor;
 import java.io.IOException;
 import java.util.Arrays;
@@ -22,7 +21,7 @@ public abstract class AbstractPluginManager implements PluginManager {
   @Override
   public List<String> listPlugins() {
     try {
-      CommandResult result = executor.execute(getBaseCommand() + "list");
+      var result = executor.execute(getBaseCommand() + "list");
       if (!result.isSuccess()) {
         throw new RuntimeException("Failed to list plugins: " + result.stderr());
       }
@@ -38,7 +37,7 @@ public abstract class AbstractPluginManager implements PluginManager {
   @Override
   public void removePlugin(String pluginName) {
     try {
-      CommandResult result = executor.execute(getBaseCommand() + "remove " + pluginName);
+      var result = executor.execute(getBaseCommand() + "remove " + pluginName);
       if (!result.isSuccess()) {
         throw new RuntimeException("Failed to remove plugin " + pluginName + ": " + result.stderr());
       }
@@ -49,7 +48,7 @@ public abstract class AbstractPluginManager implements PluginManager {
 
   @Override
   public boolean isPluginAvailable(String pluginName, String version) {
-    String source = pluginSourceResolver.resolve(pluginName, version);
+    var source = pluginSourceResolver.resolve(pluginName, version);
     if (source != null && source.equals(pluginName)) {
       return true;
     }
@@ -59,8 +58,8 @@ public abstract class AbstractPluginManager implements PluginManager {
   @Override
   public void installPlugin(String pluginName, String version) {
     try {
-      String source = pluginSourceResolver.resolve(pluginName, version);
-      CommandResult result = executor.execute(getBaseCommand() + "install --batch " + source);
+      var source = pluginSourceResolver.resolve(pluginName, version);
+      var result = executor.execute(getBaseCommand() + "install --batch " + source);
       if (!result.isSuccess()) {
         throw new RuntimeException("Failed to install [plugin: " + pluginName + "] from [source: " + source + "] : " + result.stderr());
       }

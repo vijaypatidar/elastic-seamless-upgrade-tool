@@ -205,10 +205,10 @@ public class ClusterUpgradeService {
           }
 
           Configuration config =
-              new Configuration(9300, 9200, cluster.getSshInfo().username(), cluster.getSshInfo().keyPath(), targetVersion);
+              new Configuration(9300, 9200, cluster.getSshInfo(), targetVersion);
           Context context = new Context(node, config, log, elasticClient, kibanaClient);
 
-          List<Task> tasks = upgradePlanBuilder.buildPlanFor(node);
+          List<Task> tasks = upgradePlanBuilder.buildPlanFor(node, clusterUpgradeJobService.getUpgradeJobById(clusterUpgradeJobId));
 
           int checkPoint = clusterUpgradeJobService.getCheckPoint(clusterUpgradeJobId, node.getId());
 
@@ -226,11 +226,11 @@ public class ClusterUpgradeService {
               TaskResult result = task.run(context);
               log.info("Task [name: {}] completed for node [ip: {}] [success: {}] [result: {}] [progress: {}%]", task.getName(),
                   node.getIp(),
-                  result.isSuccess(), result.getMessage(), (index * 100) / tasks.size());
+                  result.success(), result.message(), (index * 100) / tasks.size());
 
-              if (!result.isSuccess()) {
-                log.error("Task [name: {}] failed for node [ip: {}] — {}", task.getName(), node.getIp(), result.getMessage());
-                throw new RuntimeException(result.getMessage());
+              if (!result.success()) {
+                log.error("Task [name: {}] failed for node [ip: {}] — {}", task.getName(), node.getIp(), result.message());
+                throw new RuntimeException(result.message());
               }
 
               checkPoint++;

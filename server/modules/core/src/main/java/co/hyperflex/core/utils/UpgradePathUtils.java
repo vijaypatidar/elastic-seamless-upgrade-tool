@@ -66,18 +66,33 @@ public class UpgradePathUtils {
       Map.entry("8.16", List.of("8.17.2", "8.17.3", "8.17.4", "8.17.5", "8.17.6", "8.17.7", "8.17.8", "8.17.9", "8.18.2", "8.19.0")),
       Map.entry("8.17", List.of("8.17.2", "8.17.3", "8.17.4", "8.17.5", "8.17.6", "8.17.7", "8.17.8", "8.17.9", "8.18.2", "8.19.0"))
   );
+  // Pre-sort keys once, descending for quick lookup
+  private static final List<String> SORTED_KEYS_DESC = POSSIBLE_UPGRADES.keySet().stream()
+      .sorted((v1, v2) -> VersionUtils.VERSION_COMPARATOR.compare(v2, v1))
+      .toList();
 
   public static List<String> getPossibleUpgrades(String version) {
     if (version == null) {
-      return null;
+      return List.of();
     }
-    var possibleUpgrades = POSSIBLE_UPGRADES.keySet().stream()
-        .sorted(VersionUtils.VERSION_COMPARATOR)
-        .filter(v -> VersionUtils.isVersionGte(version, v))
-        .reduce((first, second) -> second)
-        .map(POSSIBLE_UPGRADES::get)
-        .orElse(List.of());
-    return possibleUpgrades.stream().sorted((v1, v2) -> VersionUtils.VERSION_COMPARATOR.compare(v2, v1)).toList();
-  }
 
+    // Find the latest key <= input version
+    String matchedKey = null;
+    for (String key : SORTED_KEYS_DESC) {
+      if (VersionUtils.isVersionGte(version, key)) {
+        matchedKey = key;
+        break;
+      }
+    }
+
+    if (matchedKey == null) {
+      return List.of();
+    }
+
+    // Get upgrades greater than current version
+    return POSSIBLE_UPGRADES.get(matchedKey).stream()
+        .filter(v -> VersionUtils.isVersionGt(v, version))
+        .sorted(VersionUtils.VERSION_COMPARATOR.reversed()) // newest first
+        .toList();
+  }
 }

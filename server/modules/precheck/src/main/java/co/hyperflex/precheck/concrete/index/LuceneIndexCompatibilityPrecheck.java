@@ -23,7 +23,8 @@ public class LuceneIndexCompatibilityPrecheck extends BaseIndexPrecheck {
 
       var logger = context.getLogger();
       var indexName = context.getIndexName();
-      int targetLucene = mapEsVersionToLucene(context.getClusterUpgradeJob().getCurrentVersion());
+      var clusterUpgradeJob = context.getClusterUpgradeJob();
+      int targetLucene = mapEsVersionToLucene(clusterUpgradeJob.getCurrentVersion());
 
       var request = ApiRequest.builder(JsonNode.class).get().uri("/" + indexName + "/_segments").build();
       JsonNode root = context.getElasticClient().execute(request);
@@ -49,13 +50,15 @@ public class LuceneIndexCompatibilityPrecheck extends BaseIndexPrecheck {
       boolean foundUnsupportedLucene = false;
       for (Integer luceneVersion : luceneVersions) {
         if (luceneVersion < targetLucene - 1) {
-          logger.error("Index [{}] contains Lucene {} segments, too old for target Lucene {}. Please reindex before upgrade.", indexName,
+          logger.error("Index [{}] contains Lucene v{} segments, too old for target Lucene {}. Please reindex before upgrade.", indexName,
               luceneVersion, targetLucene);
           foundUnsupportedLucene = true;
         } else if (luceneVersion == targetLucene - 1) {
-          logger.warn("Index [{}] contains Lucene {} segments. These must be reindexed before upgrading to Lucene {}.", indexName,
-              luceneVersion, targetLucene);
-          foundUnsupportedLucene = true;
+          logger.warn(
+              "Index [{}] contains Lucene v{} segments. Target Elasticsearch [v{}] uses lucene [v{}]."
+                  + " Consider reindexing to avoid future issues",
+              indexName,
+              luceneVersion, clusterUpgradeJob.getTargetVersion(), targetLucene);
         }
       }
       if (foundUnsupportedLucene) {

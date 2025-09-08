@@ -33,7 +33,7 @@ class KibanaPluginManagerTest {
   }
 
   private String getBaseCommand() {
-    return "sudo /usr/share/kibana/bin/kibana-plugin ";
+    return "/usr/share/kibana/bin/kibana-plugin ";
   }
 
   @Test

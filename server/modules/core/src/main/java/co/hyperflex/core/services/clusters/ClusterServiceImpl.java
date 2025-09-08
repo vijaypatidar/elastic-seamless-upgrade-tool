@@ -117,7 +117,7 @@ public class ClusterServiceImpl implements ClusterService {
     if (request instanceof UpdateSelfManagedClusterRequest selfManagedRequest
         && cluster instanceof SelfManagedClusterEntity selfManagedCluster) {
       String file = sshKeyService.createSSHPrivateKeyFile(selfManagedRequest.getSshKey(), selfManagedCluster.getId());
-      selfManagedCluster.setSshInfo(new SshInfo(selfManagedRequest.getSshUsername(), selfManagedRequest.getSshKey(), file));
+      selfManagedCluster.setSshInfo(new SshInfo(selfManagedRequest.getSshUsername(), selfManagedRequest.getSshKey(), file, "root"));
 
       if (selfManagedRequest.getKibanaNodes() != null && !selfManagedRequest.getKibanaNodes().isEmpty()) {
         final List<KibanaNodeEntity> clusterNodes = selfManagedRequest.getKibanaNodes().stream().map(kibanaNodeRequest -> {
