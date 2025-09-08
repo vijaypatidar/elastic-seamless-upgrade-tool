@@ -1,13 +1,6 @@
 package co.hyperflex.upgrade.tasks;
 
-public class TaskResult {
-  private final boolean success;
-  private final String message;
-
-  public TaskResult(boolean success, String message) {
-    this.success = success;
-    this.message = message;
-  }
+public record TaskResult(boolean success, String message) {
 
   public static TaskResult failure(String s) {
     return new TaskResult(false, s);
@@ -21,13 +14,5 @@ public class TaskResult {
   @Override
   public String toString() {
     return "TaskResult{" + "success=" + success + ", message='" + message + '\'' + '}';
-  }
-
-  public String getMessage() {
-    return message;
-  }
-
-  public boolean isSuccess() {
-    return success;
   }
 }

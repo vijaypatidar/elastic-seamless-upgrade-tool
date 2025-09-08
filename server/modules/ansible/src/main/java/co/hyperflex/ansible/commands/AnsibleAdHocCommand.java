@@ -63,6 +63,11 @@ public class AnsibleAdHocCommand {
       return this;
     }
 
+    public Builder module(String module) {
+      this.module = module;
+      return this;
+    }
+
     public AnsibleAdHocCommand build() {
       Objects.requireNonNull(module, "module is required");
       return new AnsibleAdHocCommand(args, module);

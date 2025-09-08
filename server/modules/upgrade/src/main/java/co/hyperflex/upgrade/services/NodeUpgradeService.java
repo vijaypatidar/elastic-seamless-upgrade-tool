@@ -49,7 +49,7 @@ public class NodeUpgradeService {
       } else {
         result = new RestartKibanaServiceTask().run(context);
       }
-      if (result.isSuccess()) {
+      if (result.success()) {
         LOG.info("Node [NodeId: {}] restarted successfully", node.getId());
         notificationService.sendNotification(new GeneralNotificationEvent(
             NotificationType.SUCCESS,
