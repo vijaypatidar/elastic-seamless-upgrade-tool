@@ -97,7 +97,7 @@ function ClusterLogs({
 							{isPending ? "Running..." : "Rerun"}
 						</OutlinedBorderButton>
 					</Box>
-					<Box className="flex flex-col gap-1">
+					<Box className="flex flex-col gap-1 overflow-x-scroll">
 						<Box className="flex flex-col px-3 py-[14px] gap-1">
 							{!isLoading ? (
 								data.cluster.map((change: any, index: number) => {

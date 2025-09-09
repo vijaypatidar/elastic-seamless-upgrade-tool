@@ -102,7 +102,7 @@ function NodesLogs({
 				>
 					Nodes
 				</Typography>
-				<Box className="flex flex-col gap-1">
+				<Box className="flex flex-col gap-1 overflow-x-scroll">
 					{!isLoading ? (
 						data?.node.map((node: any, index: number) => (
 							<NodeListItem

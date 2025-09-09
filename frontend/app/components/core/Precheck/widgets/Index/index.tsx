@@ -107,7 +107,7 @@ function IndexLogs({
 				>
 					Indexes
 				</Typography>
-				<Box className="flex flex-col gap-1">
+				<Box className="flex flex-col gap-1 overflow-x-scroll">
 					{!isLoading ? (
 						data?.index?.map((index: any, idx: number) => (
 							<NodeListItem
