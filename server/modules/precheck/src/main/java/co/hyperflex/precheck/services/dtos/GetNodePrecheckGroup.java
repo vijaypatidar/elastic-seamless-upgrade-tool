@@ -5,7 +5,7 @@ import co.hyperflex.precheck.core.enums.PrecheckStatus;
 import java.util.List;
 
 public record GetNodePrecheckGroup(
-    String nodeId,
+    String id,
     String ip,
     String name,
     PrecheckStatus status,

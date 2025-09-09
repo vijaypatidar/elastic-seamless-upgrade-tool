@@ -5,7 +5,7 @@ import co.hyperflex.precheck.core.enums.PrecheckStatus;
 import java.util.List;
 
 public record GetIndexPrecheckGroup(
-    String index,
+    String id,
     String name,
     PrecheckStatus status,
     PrecheckSeverity severity,
