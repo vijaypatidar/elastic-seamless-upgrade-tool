@@ -4,12 +4,10 @@ import co.hyperflex.breakingchanges.BreakingChangeRepository;
 import co.hyperflex.core.services.notifications.NotificationService;
 import co.hyperflex.core.services.notifications.PrecheckProgressChangeEvent;
 import co.hyperflex.core.services.upgrade.ClusterUpgradeJobService;
-import co.hyperflex.core.upgrade.ClusterUpgradeJobEntity;
 import co.hyperflex.precheck.core.Precheck;
 import co.hyperflex.precheck.core.enums.PrecheckSeverity;
 import co.hyperflex.precheck.core.enums.PrecheckStatus;
 import co.hyperflex.precheck.core.enums.PrecheckType;
-import co.hyperflex.precheck.entities.ClusterPrecheckRunEntity;
 import co.hyperflex.precheck.entities.IndexPrecheckRunEntity;
 import co.hyperflex.precheck.entities.NodePrecheckRunEntity;
 import co.hyperflex.precheck.entities.PrecheckRunEntity;
@@ -18,7 +16,6 @@ import co.hyperflex.precheck.registry.PrecheckRegistry;
 import co.hyperflex.precheck.repositories.PrecheckRunRepository;
 import co.hyperflex.precheck.repositories.projection.PrecheckStatusAndSeverityView;
 import co.hyperflex.precheck.services.dtos.GetBreakingChangeEntry;
-import co.hyperflex.precheck.services.dtos.GetClusterPrecheckEntry;
 import co.hyperflex.precheck.services.dtos.GetGroupedPrecheckResponse;
 import co.hyperflex.precheck.services.dtos.GetIndexPrecheckGroup;
 import co.hyperflex.precheck.services.dtos.GetNodePrecheckGroup;
@@ -30,9 +27,9 @@ import jakarta.validation.constraints.NotNull;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -70,7 +67,7 @@ public class PrecheckRunService {
   }
 
   public GetGroupedPrecheckResponse getGroupedPrecheckByClusterId(String clusterId) {
-    List<GetClusterPrecheckEntry> clusterPrechecks = getClusterPrechecks(clusterId);
+    List<GetPrecheckEntry> clusterPrechecks = getClusterPrechecks(clusterId);
     List<GetNodePrecheckGroup> nodeGroups = getNodePrecheckGroups(clusterId);
     List<GetIndexPrecheckGroup> indexGroups = getIndexPrecheckGroups(clusterId);
     return new GetGroupedPrecheckResponse(nodeGroups, clusterPrechecks, indexGroups);
@@ -96,54 +93,81 @@ public class PrecheckRunService {
         .toList();
   }
 
-  public List<GetClusterPrecheckEntry> getClusterPrechecks(String clusterId) {
-    ClusterUpgradeJobEntity clusterUpgradeJob = clusterUpgradeJobService.getLatestJobByClusterId(clusterId);
-    List<PrecheckRunEntity> precheckRuns = precheckRunRepository.getAllByJobId(clusterUpgradeJob.getId(), PrecheckType.CLUSTER);
-    return precheckRuns.stream().filter(pr -> pr instanceof ClusterPrecheckRunEntity)
-        .map(precheckMapper::toClusterPrecheckEntry).toList();
+  public List<GetPrecheckEntry> getClusterPrechecks(String clusterId) {
+    var clusterUpgradeJob = clusterUpgradeJobService.getLatestJobByClusterId(clusterId);
+    return precheckRunRepository.getAllByJobId(clusterUpgradeJob.getId(), PrecheckType.CLUSTER)
+        .stream()
+        .map(precheckMapper::toPrecheckEntry)
+        .sorted(Comparator.comparing(GetPrecheckEntry::name))
+        .toList();
   }
+
 
   public List<GetIndexPrecheckGroup> getIndexPrecheckGroups(String clusterId) {
-    ClusterUpgradeJobEntity clusterUpgradeJob = clusterUpgradeJobService.getLatestJobByClusterId(clusterId);
-    List<PrecheckRunEntity> precheckRuns = precheckRunRepository.getAllByJobId(clusterUpgradeJob.getId(), PrecheckType.INDEX);
-    Map<String, List<GetPrecheckEntry>> indexPrechecks =
-        precheckRuns.stream().filter(pr -> pr instanceof IndexPrecheckRunEntity)
-            .map(pr -> (IndexPrecheckRunEntity) pr).collect(
-                Collectors.groupingBy(pr -> pr.getIndex().getName(),
-                    Collectors.mapping(precheckMapper::toPrecheckEntry, Collectors.toList())));
-    return indexPrechecks.entrySet().stream().map(entry -> {
-      PrecheckStatus status = getMergedPrecheckStatusFromEntries(entry.getValue());
-      PrecheckSeverity severity = getMergedPrecheckSeverity(entry.getValue());
-      return new GetIndexPrecheckGroup(entry.getKey(), entry.getKey(), status, severity,
-          entry.getValue());
-    }).toList();
+    var clusterUpgradeJob = clusterUpgradeJobService.getLatestJobByClusterId(clusterId);
+    return precheckRunRepository.getAllByJobId(clusterUpgradeJob.getId(), PrecheckType.INDEX)
+        .stream()
+        .map(IndexPrecheckRunEntity.class::cast)
+        .sorted(Comparator.comparing(IndexPrecheckRunEntity::getName))
+        .collect(Collectors.groupingBy(
+            pr -> pr.getIndex().getName(),
+            Collectors.mapping(precheckMapper::toPrecheckEntry, Collectors.toList())
+        ))
+        .entrySet()
+        .stream()
+        .map(entry -> {
+          var entries = entry.getValue();
+          return new GetIndexPrecheckGroup(
+              entry.getKey(),
+              entry.getKey(),
+              getMergedPrecheckStatusFromEntries(entries),
+              getMergedPrecheckSeverity(entries),
+              entries
+          );
+        })
+        .sorted(Comparator.comparing(GetIndexPrecheckGroup::name))
+        .toList();
   }
+
 
   public List<GetNodePrecheckGroup> getNodePrecheckGroups(String clusterId) {
-    ClusterUpgradeJobEntity clusterUpgradeJob = clusterUpgradeJobService.getLatestJobByClusterId(clusterId);
-    List<PrecheckRunEntity> precheckRuns = precheckRunRepository.getAllByJobId(clusterUpgradeJob.getId(), PrecheckType.NODE);
-    Map<String, List<GetPrecheckEntry>> nodePrechecks =
-        precheckRuns.stream().filter(pr -> pr instanceof NodePrecheckRunEntity)
-            .map(pr -> (NodePrecheckRunEntity) pr).collect(
-                Collectors.groupingBy(pr -> pr.getNode().id(),
-                    Collectors.mapping(precheckMapper::toPrecheckEntry, Collectors.toList())));
+    var clusterUpgradeJob = clusterUpgradeJobService.getLatestJobByClusterId(clusterId);
 
-    return nodePrechecks.entrySet().stream().map(entry -> {
+    // Map nodeId -> NodeInfo (first occurrence wins)
+    var nodeInfoMap = new HashMap<String, NodePrecheckRunEntity.NodeInfo>();
 
-      NodePrecheckRunEntity.NodeInfo nodeInfo = ((NodePrecheckRunEntity) precheckRuns.stream().filter(
-              pr -> pr instanceof NodePrecheckRunEntity nodePrecheckRun
-                  && nodePrecheckRun.getNode().id().equals(entry.getKey())).findFirst()
-          .orElseThrow()).getNode();
+    // Group prechecks by nodeId
+    var nodePrechecks =
+        precheckRunRepository.getAllByJobId(clusterUpgradeJob.getId(), PrecheckType.NODE)
+            .stream()
+            .map(NodePrecheckRunEntity.class::cast)
+            .sorted(Comparator.comparing(NodePrecheckRunEntity::getName))
+            .peek(pr -> nodeInfoMap.putIfAbsent(pr.getNode().id(), pr.getNode()))
+            .collect(Collectors.groupingBy(
+                pr -> pr.getNode().id(),
+                Collectors.mapping(precheckMapper::toPrecheckEntry, Collectors.toList())
+            ));
 
-      PrecheckStatus status = getMergedPrecheckStatusFromEntries(entry.getValue());
-      PrecheckSeverity severity = getMergedPrecheckSeverity(entry.getValue());
-      return new GetNodePrecheckGroup(nodeInfo.id(), nodeInfo.ip(), nodeInfo.name(),
-          status, severity, entry.getValue(), nodeInfo.rank());
-    }).sorted(Comparator.comparingInt(GetNodePrecheckGroup::rank)).toList();
+    return nodePrechecks.entrySet().stream()
+        .sorted(Comparator.comparingInt(entry -> nodeInfoMap.get(entry.getKey()).rank()))
+        .map(entry -> {
+          var nodeInfo = nodeInfoMap.get(entry.getKey());
+          var entries = entry.getValue();
+          return new GetNodePrecheckGroup(
+              nodeInfo.id(),
+              nodeInfo.ip(),
+              nodeInfo.name(),
+              getMergedPrecheckStatusFromEntries(entries),
+              getMergedPrecheckSeverity(entries),
+              entries
+          );
+        })
+        .toList();
   }
 
+
   public PrecheckStatus getStatusByUpgradeJobId(@NotNull String upgradeJobId) {
-    List<PrecheckStatus> statuses = precheckRunRepository.findStatusAndSeverityByUpgradeJobId(upgradeJobId)
+    var statuses = precheckRunRepository.findStatusAndSeverityByUpgradeJobId(upgradeJobId)
         .stream()
         .filter(status -> status.severity() == PrecheckSeverity.ERROR)
         .map(PrecheckStatusAndSeverityView::status)

@@ -1,7 +1,6 @@
 package co.hyperflex.precheck.mappers;
 
 import co.hyperflex.precheck.entities.PrecheckRunEntity;
-import co.hyperflex.precheck.services.dtos.GetClusterPrecheckEntry;
 import co.hyperflex.precheck.services.dtos.GetPrecheckEntry;
 import java.util.Date;
 import java.util.Optional;
@@ -14,19 +13,6 @@ public class PrecheckMapper {
       PrecheckRunEntity precheckRun) {
 
     return new GetPrecheckEntry(
-        precheckRun.getId(),
-        precheckRun.getName(),
-        precheckRun.getStatus(),
-        precheckRun.getSeverity(),
-        precheckRun.getLogs(),
-        getDuration(precheckRun.getStartTime(), precheckRun.getEndTime())
-    );
-  }
-
-  public GetClusterPrecheckEntry toClusterPrecheckEntry(
-      PrecheckRunEntity precheckRun) {
-
-    return new GetClusterPrecheckEntry(
         precheckRun.getId(),
         precheckRun.getName(),
         precheckRun.getStatus(),

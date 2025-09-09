@@ -2,6 +2,7 @@ package co.hyperflex.core.services.settings;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.argThat;
 import static org.mockito.Mockito.never;
@@ -63,7 +64,7 @@ class SettingServiceImplTest {
 
     // Assert
     assertNotNull(result);
-    assertEquals(null, result.notificationWebhookUrl());
+    assertNull(result.notificationWebhookUrl());
     verify(settingRepository).findById("settings");
     verify(settingMapper, never()).toResponse(any());
   }

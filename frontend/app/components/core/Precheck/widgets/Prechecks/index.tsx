@@ -1,6 +1,6 @@
 import { Skeleton } from "@heroui/react"
 import { Box, Typography } from "@mui/material"
-import { ArrowCircleRight2, Refresh } from "iconsax-react"
+import { Refresh } from "iconsax-react"
 import { useEffect, useState } from "react"
 import { OutlinedBorderButton } from "~/components/utilities/Buttons"
 import ListLoader from "../../loading/ListLoader"
@@ -9,47 +9,30 @@ import NoData from "../NoData"
 import NodeListItem from "../NodeListItem"
 import Switch from "~/components/utilities/Switch"
 
-function NodesLogs({
-	data,
+function Prechecks({
+	prechecks,
 	handleRerun,
-	handlePrecheckSkip,
 	isPending = false,
 	isLoading = false,
+	handlePrecheckSkip,
+	handleRerunAll,
 }: {
-	data: any
+	prechecks: TPrecheck[]
 	handleRerun: (payload: any) => void
 	handlePrecheckSkip: (id: string, skip: boolean) => void
 	isPending: boolean
 	isLoading: boolean
+	handleRerunAll: () => void
 }) {
-	const [selectedNode, setSelectedNode] = useState<any>(null)
 	const [selectedPrecheck, setSelectedPrecheck] = useState<any>(null)
 
 	useEffect(() => {
-		if (data?.node?.length > 0) {
-			if (selectedNode === null) {
-				setSelectedNode(data?.node?.[0])
-			} else {
-				setSelectedNode(data?.node?.find((node: any) => node.nodeId === selectedNode?.nodeId))
-			}
-		} else {
-			setSelectedNode(null)
-		}
-	}, [data])
-
-	useEffect(() => {
 		if (selectedPrecheck !== null) {
-			setSelectedPrecheck(selectedNode?.prechecks?.find((p: any) => p.id === selectedPrecheck?.id))
+			setSelectedPrecheck(prechecks?.find((p: any) => p.id === selectedPrecheck?.id) ?? prechecks?.[0])
 		} else {
-			setSelectedPrecheck(null)
+			setSelectedPrecheck(prechecks?.[0])
 		}
-	}, [selectedNode])
-
-	const handleNodeRerun = () => {
-		handleRerun({
-			nodeIds: [selectedNode.nodeId],
-		})
-	}
+	}, [prechecks])
 
 	const handlePrecheckRerun = () => {
 		handleRerun({
@@ -57,7 +40,7 @@ function NodesLogs({
 		})
 	}
 
-	if (data?.node?.length === 0 && !isLoading) {
+	if (prechecks?.length === 0 && !isLoading) {
 		return (
 			<Box className="h-full p-px rounded-2xl w-full" sx={{ background: "radial-gradient(#6E687C, #1D1D1D)" }}>
 				<Box className="flex w-full h-full flex-col gap-[6px] p-4 bg-[#0D0D0D] rounded-[15px]">
@@ -72,15 +55,18 @@ function NodesLogs({
 						>
 							Prechecks
 						</Typography>
-						<OutlinedBorderButton onClick={handleNodeRerun} disabled={isPending || isLoading}>
+						<OutlinedBorderButton
+							onClick={() => handleRerun({ cluster: true })}
+							disabled={isPending || isLoading}
+						>
 							<Refresh color="currentColor" size="14px" />
 							{isPending ? "Running..." : "Rerun"}
 						</OutlinedBorderButton>
 					</Box>
 					<Box className="flex flex-col gap-1">
 						<NoData
-							title="No nodes available to display"
-							subtitle="There are no nodes to show at the moment."
+							title="No precheks available to display"
+							subtitle="There are no prechecks to display right now."
 						/>
 					</Box>
 				</Box>
@@ -90,35 +76,6 @@ function NodesLogs({
 
 	return (
 		<>
-			<Box className="h-full flex flex-col w-1/3 gap-[6px]">
-				<Typography
-					marginTop="12px"
-					color="#A9AAB6"
-					fontFamily="Manrope"
-					fontSize="12px"
-					fontWeight="500"
-					lineHeight="normal"
-					letterSpacing="0.12px"
-				>
-					Nodes
-				</Typography>
-				<Box className="flex flex-col gap-1">
-					{!isLoading ? (
-						data?.node.map((node: any, index: number) => (
-							<NodeListItem
-								key={index}
-								status={node?.status}
-								severity={node?.severity}
-								isSelected={selectedNode?.nodeId === node.nodeId}
-								name={node?.name}
-								onClick={() => setSelectedNode(node)}
-							/>
-						))
-					) : (
-						<ListLoader />
-					)}
-				</Box>
-			</Box>
 			<Box className="h-full p-px rounded-2xl w-1/3" sx={{ background: "radial-gradient(#6E687C, #1D1D1D)" }}>
 				<Box className="flex h-full w-full flex-col gap-[6px] p-4 bg-[#0D0D0D] rounded-[15px] ">
 					<Box className="flex flex-row justify-between gap-2">
@@ -132,35 +89,27 @@ function NodesLogs({
 						>
 							Prechecks
 						</Typography>
-						<OutlinedBorderButton
-							onClick={handleNodeRerun}
-							disabled={isPending || isLoading || selectedNode === null}
-						>
+						<OutlinedBorderButton onClick={handleRerunAll} disabled={isPending || isLoading}>
 							<Refresh color="currentColor" size="14px" />
 							{isPending ? "Running..." : "Rerun"}
 						</OutlinedBorderButton>
 					</Box>
-					<Box className="flex flex-col gap-1">
+					<Box className="flex flex-col gap-1 overflow-x-scroll">
 						<Box className="flex flex-col px-3 py-[14px] gap-1">
 							{!isLoading ? (
-								selectedNode?.length !== 0 ? (
-									selectedNode?.prechecks.map((change: any, index: number) => (
+								prechecks.map((change: any, index: number) => {
+									return (
 										<NodeListItem
 											key={index}
 											status={change.status}
-											name={change.name}
 											severity={change.severity}
+											name={change.name}
 											isSelected={change.id === selectedPrecheck?.id}
 											onClick={() => setSelectedPrecheck(change)}
 											duration={`${change.duration}`}
 										/>
-									))
-								) : (
-									<NoData
-										title="No Prechecks available to display"
-										subtitle="There are no prechecks to show right now."
-									/>
-								)
+									)
+								})
 							) : (
 								<ListLoader />
 							)}
@@ -171,7 +120,7 @@ function NodesLogs({
 
 			<Box className="flex p-px rounded-2xl w-2/3" sx={{ background: "radial-gradient(#6E687C, #1D1D1D)" }}>
 				<Box className="flex w-full h-full flex-col gap-4 py-4 px-6 bg-[#0D0D0D] rounded-[15px]">
-					{selectedNode ? (
+					{selectedPrecheck ? (
 						<>
 							<Box className="flex flex-row justify-between gap-2">
 								<Box className="flex flex-col">
@@ -210,7 +159,7 @@ function NodesLogs({
 									/>
 									<OutlinedBorderButton
 										onClick={handlePrecheckRerun}
-										disabled={isPending || isLoading || selectedPrecheck === null}
+										disabled={isPending || isLoading}
 									>
 										<Refresh color="currentColor" size="14px" />
 										{isPending ? "Running..." : "Rerun"}
@@ -233,4 +182,4 @@ function NodesLogs({
 	)
 }
 
-export default NodesLogs
+export default Prechecks

@@ -5,11 +5,10 @@ import co.hyperflex.precheck.core.enums.PrecheckStatus;
 import java.util.List;
 
 public record GetNodePrecheckGroup(
-    String nodeId,
+    String id,
     String ip,
     String name,
     PrecheckStatus status,
     PrecheckSeverity severity,
-    List<GetPrecheckEntry> prechecks,
-    int rank) {
+    List<GetPrecheckEntry> prechecks) {
 }
