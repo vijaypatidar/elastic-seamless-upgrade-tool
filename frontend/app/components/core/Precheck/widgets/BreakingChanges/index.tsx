@@ -139,7 +139,7 @@ function BreakingChangesLogs() {
 							</Skeleton>
 						)}
 					</Box>
-					<Box className="flex flex-col w-full gap-[2px]">
+					<Box className="flex flex-col w-full gap-[2px] overflow-y-scroll">
 						<LogsList logs={selectedCheck?.logs ?? []} isLoading={isLoading} />
 					</Box>
 				</Box>
