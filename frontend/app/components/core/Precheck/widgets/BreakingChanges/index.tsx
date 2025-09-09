@@ -80,7 +80,7 @@ function BreakingChangesLogs() {
 					>
 						Breaking changes
 					</Typography>
-					<Box className="flex flex-col gap-1">
+					<Box className="flex flex-col gap-1 overflow-y-scroll">
 						<Box className="flex flex-col px-3 py-[14px] gap-1">
 							{!isLoading ? (
 								breakingChanges.length !== 0 ? (

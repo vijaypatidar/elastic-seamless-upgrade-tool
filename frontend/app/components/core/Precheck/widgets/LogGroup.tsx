@@ -2,12 +2,11 @@ import { Box } from "@mui/material"
 import { useMutation } from "@tanstack/react-query"
 import { useMemo } from "react"
 import BreakingChangesLogs from "./BreakingChanges"
-import ClusterLogs from "./Cluster"
-import IndexLogs from "./Index"
-import NodesLogs from "./Nodes"
 import axiosJSON from "~/apis/http"
 import { useLocalStore } from "~/store/common"
 import { toast } from "sonner"
+import GroupedPrecheck from "~/components/core/Precheck/widgets/GroupedPrecheck"
+import Prechecks from "~/components/core/Precheck/widgets/Prechecks"
 
 function LogGroup({
 	dataFor,
@@ -48,18 +47,25 @@ function LogGroup({
 		console.log(dataFor)
 		if (dataFor === "CLUSTER") {
 			return (
-				<ClusterLogs
-					data={data}
+				<Prechecks
+					prechecks={data.cluster as TPrecheck[]}
 					handleRerun={(payload) => HandleRerun(payload)}
 					handlePrecheckSkip={handlePrecheckSkip}
 					isPending={isPending}
 					isLoading={isLoading}
+					handleRerunAll={() => HandleRerun({ cluster: true } as any)}
 				/>
 			)
 		} else if (dataFor === "NODES") {
 			return (
-				<NodesLogs
-					data={data}
+				<GroupedPrecheck
+					groupName={"Nodes"}
+					groups={data?.node as TGroupedPrecheck[]}
+					handleGroupRerun={(group) => {
+						HandleRerun({
+							nodeIds: [group.id],
+						} as any)
+					}}
 					handleRerun={(payload) => HandleRerun(payload)}
 					handlePrecheckSkip={handlePrecheckSkip}
 					isPending={isPending}
@@ -68,8 +74,14 @@ function LogGroup({
 			)
 		} else if (dataFor === "INDEX") {
 			return (
-				<IndexLogs
-					data={data}
+				<GroupedPrecheck
+					groupName={"Indexes"}
+					groups={data?.index as TGroupedPrecheck[]}
+					handleGroupRerun={(group) => {
+						HandleRerun({
+							indexNames: [group.id],
+						} as any)
+					}}
 					handleRerun={(payload) => HandleRerun(payload)}
 					handlePrecheckSkip={handlePrecheckSkip}
 					isPending={isPending}
