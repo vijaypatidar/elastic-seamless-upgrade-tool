@@ -10,6 +10,5 @@ public record GetNodePrecheckGroup(
     String name,
     PrecheckStatus status,
     PrecheckSeverity severity,
-    List<GetPrecheckEntry> prechecks,
-    int rank) {
+    List<GetPrecheckEntry> prechecks) {
 }

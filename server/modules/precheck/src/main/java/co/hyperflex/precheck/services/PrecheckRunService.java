@@ -8,7 +8,6 @@ import co.hyperflex.precheck.core.Precheck;
 import co.hyperflex.precheck.core.enums.PrecheckSeverity;
 import co.hyperflex.precheck.core.enums.PrecheckStatus;
 import co.hyperflex.precheck.core.enums.PrecheckType;
-import co.hyperflex.precheck.entities.ClusterPrecheckRunEntity;
 import co.hyperflex.precheck.entities.IndexPrecheckRunEntity;
 import co.hyperflex.precheck.entities.NodePrecheckRunEntity;
 import co.hyperflex.precheck.entities.PrecheckRunEntity;
@@ -17,7 +16,6 @@ import co.hyperflex.precheck.registry.PrecheckRegistry;
 import co.hyperflex.precheck.repositories.PrecheckRunRepository;
 import co.hyperflex.precheck.repositories.projection.PrecheckStatusAndSeverityView;
 import co.hyperflex.precheck.services.dtos.GetBreakingChangeEntry;
-import co.hyperflex.precheck.services.dtos.GetClusterPrecheckEntry;
 import co.hyperflex.precheck.services.dtos.GetGroupedPrecheckResponse;
 import co.hyperflex.precheck.services.dtos.GetIndexPrecheckGroup;
 import co.hyperflex.precheck.services.dtos.GetNodePrecheckGroup;
@@ -69,7 +67,7 @@ public class PrecheckRunService {
   }
 
   public GetGroupedPrecheckResponse getGroupedPrecheckByClusterId(String clusterId) {
-    List<GetClusterPrecheckEntry> clusterPrechecks = getClusterPrechecks(clusterId);
+    List<GetPrecheckEntry> clusterPrechecks = getClusterPrechecks(clusterId);
     List<GetNodePrecheckGroup> nodeGroups = getNodePrecheckGroups(clusterId);
     List<GetIndexPrecheckGroup> indexGroups = getIndexPrecheckGroups(clusterId);
     return new GetGroupedPrecheckResponse(nodeGroups, clusterPrechecks, indexGroups);
@@ -95,13 +93,12 @@ public class PrecheckRunService {
         .toList();
   }
 
-  public List<GetClusterPrecheckEntry> getClusterPrechecks(String clusterId) {
+  public List<GetPrecheckEntry> getClusterPrechecks(String clusterId) {
     var clusterUpgradeJob = clusterUpgradeJobService.getLatestJobByClusterId(clusterId);
     return precheckRunRepository.getAllByJobId(clusterUpgradeJob.getId(), PrecheckType.CLUSTER)
         .stream()
-        .filter(ClusterPrecheckRunEntity.class::isInstance)
-        .map(precheckMapper::toClusterPrecheckEntry)
-        .sorted(Comparator.comparing(GetClusterPrecheckEntry::name))
+        .map(precheckMapper::toPrecheckEntry)
+        .sorted(Comparator.comparing(GetPrecheckEntry::name))
         .toList();
   }
 
@@ -110,7 +107,6 @@ public class PrecheckRunService {
     var clusterUpgradeJob = clusterUpgradeJobService.getLatestJobByClusterId(clusterId);
     return precheckRunRepository.getAllByJobId(clusterUpgradeJob.getId(), PrecheckType.INDEX)
         .stream()
-        .filter(IndexPrecheckRunEntity.class::isInstance)
         .map(IndexPrecheckRunEntity.class::cast)
         .sorted(Comparator.comparing(IndexPrecheckRunEntity::getName))
         .collect(Collectors.groupingBy(
@@ -144,7 +140,6 @@ public class PrecheckRunService {
     var nodePrechecks =
         precheckRunRepository.getAllByJobId(clusterUpgradeJob.getId(), PrecheckType.NODE)
             .stream()
-            .filter(NodePrecheckRunEntity.class::isInstance)
             .map(NodePrecheckRunEntity.class::cast)
             .sorted(Comparator.comparing(NodePrecheckRunEntity::getName))
             .peek(pr -> nodeInfoMap.putIfAbsent(pr.getNode().id(), pr.getNode()))
@@ -154,6 +149,7 @@ public class PrecheckRunService {
             ));
 
     return nodePrechecks.entrySet().stream()
+        .sorted(Comparator.comparingInt(entry -> nodeInfoMap.get(entry.getKey()).rank()))
         .map(entry -> {
           var nodeInfo = nodeInfoMap.get(entry.getKey());
           var entries = entry.getValue();
@@ -163,11 +159,9 @@ public class PrecheckRunService {
               nodeInfo.name(),
               getMergedPrecheckStatusFromEntries(entries),
               getMergedPrecheckSeverity(entries),
-              entries,
-              nodeInfo.rank()
+              entries
           );
         })
-        .sorted(Comparator.comparingInt(GetNodePrecheckGroup::rank))
         .toList();
   }
 

@@ -4,10 +4,10 @@ import co.hyperflex.precheck.services.PrecheckReportService;
 import co.hyperflex.precheck.services.PrecheckRunService;
 import co.hyperflex.precheck.services.PrecheckSchedulerService;
 import co.hyperflex.precheck.services.dtos.GetBreakingChangeEntry;
-import co.hyperflex.precheck.services.dtos.GetClusterPrecheckEntry;
 import co.hyperflex.precheck.services.dtos.GetGroupedPrecheckResponse;
 import co.hyperflex.precheck.services.dtos.GetIndexPrecheckGroup;
 import co.hyperflex.precheck.services.dtos.GetNodePrecheckGroup;
+import co.hyperflex.precheck.services.dtos.GetPrecheckEntry;
 import co.hyperflex.precheck.services.dtos.GetPrecheckSummaryResponse;
 import co.hyperflex.precheck.services.dtos.PrecheckRerunRequest;
 import co.hyperflex.precheck.services.dtos.PrecheckScheduleResponse;
@@ -72,7 +72,7 @@ public class PrecheckController {
   }
 
   @GetMapping("/cluster")
-  public List<GetClusterPrecheckEntry> getClusterPrecheckGroups(@PathVariable String clusterId) {
+  public List<GetPrecheckEntry> getClusterPrecheckGroups(@PathVariable String clusterId) {
     return precheckRunService.getClusterPrechecks(clusterId);
   }
 

@@ -4,7 +4,7 @@ import java.util.List;
 
 public record GetGroupedPrecheckResponse(
     List<GetNodePrecheckGroup> node,
-    List<GetClusterPrecheckEntry> cluster,
+    List<GetPrecheckEntry> cluster,
     List<GetIndexPrecheckGroup> index
 ) {
 }
