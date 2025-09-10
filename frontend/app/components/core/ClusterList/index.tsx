@@ -36,21 +36,6 @@ const columns: TColumn = [
 	},
 ]
 
-const STATUS_COLOR_MAP: TStatusColorMap = {
-	yellow: {
-		background: "#E3C04521",
-		color: "#E0B517",
-	},
-	green: {
-		background: "#52D97F21",
-		color: "#52D97F",
-	},
-	red: {
-		background: "#E7554721",
-		color: "#E75547",
-	},
-}
-
 function ClusterList() {
 	const navigate = useNavigate()
 	const setClusterAdded = useSafeRouteStore((state: any) => state.setClusterAdded)

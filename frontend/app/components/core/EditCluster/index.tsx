@@ -102,36 +102,32 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 	}
 
 	const getCluster = async () => {
-		try {
-			if (!clusterId) return null
-			const response = await axiosJSON.get(`/clusters/${clusterId}`)
-			const cluster = response.data
-			cluster &&
-				setInitialValues({
-					name: cluster.name,
-					type: cluster.type,
-					elasticUrl: cluster.elasticUrl,
-					kibanaUrl: cluster.kibanaUrl,
-					authPref: cluster.username ? "U/P" : "API_KEY",
-					username: cluster.username,
-					password: cluster.password,
-					apiKey: cluster.apiKey,
-					sshUser: cluster.sshUsername,
-					pathToSSH: cluster.sshKey,
-					kibanaConfigs: cluster.kibanaNodes,
-					deploymentId: cluster.deploymentId,
-					certFiles:
-						cluster.certificateIds?.map((certId: string) => ({
-							name: certId,
-							storedOnServer: true,
-						})) || [],
-				})
+		if (!clusterId) return null
+		const response = await axiosJSON.get(`/clusters/${clusterId}`)
+		const cluster = response.data
+		cluster &&
+			setInitialValues({
+				name: cluster.name,
+				type: cluster.type,
+				elasticUrl: cluster.elasticUrl,
+				kibanaUrl: cluster.kibanaUrl,
+				authPref: cluster.username ? "U/P" : "API_KEY",
+				username: cluster.username,
+				password: cluster.password,
+				apiKey: cluster.apiKey,
+				sshUser: cluster.sshUsername,
+				pathToSSH: cluster.sshKey,
+				kibanaConfigs: cluster.kibanaNodes,
+				deploymentId: cluster.deploymentId,
+				certFiles:
+					cluster.certificateIds?.map((certId: string) => ({
+						name: certId,
+						storedOnServer: true,
+					})) || [],
+			})
 
-			formik.resetForm()
-		} catch (err: any) {
-			console.error(err)
-			return null
-		}
+		formik.resetForm()
+		return null
 	}
 
 	const { isLoading, isRefetching, refetch } = useQuery({
