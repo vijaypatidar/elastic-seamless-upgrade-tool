@@ -309,7 +309,6 @@ function Credentials({ initialValues: IV, backStep, onSubmit }: TCredentialsComp
 															onBlur={formik.handleBlur}
 															onChange={(e: any) => {
 																let newOptions = [...formik.values.kibanaConfigs]
-																// @ts-ignore
 																newOptions[index].ip = e.target.value
 																formik.setFieldValue(
 																	"kibanaConfigs",

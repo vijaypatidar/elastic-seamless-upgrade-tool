@@ -242,7 +242,6 @@ function DeprecationLogs({ clusterType }: { clusterType: "ELASTIC" | "KIBANA" })
 							}
 						>
 							{(item) => (
-								// @ts-ignore
 								<TableRow key={item?.key}>
 									{(columnKey) => <TableCell>{renderCell(item, columnKey)}</TableCell>}
 								</TableRow>

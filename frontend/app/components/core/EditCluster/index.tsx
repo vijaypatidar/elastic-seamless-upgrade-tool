@@ -546,7 +546,6 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 																					let newOptions = [
 																						...formik.values.kibanaConfigs,
 																					]
-																					// @ts-ignore
 																					newOptions[index].name =
 																						e.target.value
 																					formik.setFieldValue(
@@ -580,7 +579,6 @@ function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: 
 																					let newOptions = [
 																						...formik.values.kibanaConfigs,
 																					]
-																					// @ts-ignore
 																					newOptions[index].ip =
 																						e.target.value
 																					formik.setFieldValue(
