@@ -19,7 +19,7 @@ function LogGroup({
 	isLoading: boolean
 	refetchData: any
 }) {
-	const clusterId = useLocalStore((state: any) => state.clusterId)
+	const clusterId = useLocalStore((state) => state.clusterId)
 
 	const { mutate: HandleRerun, isPending } = useMutation({
 		mutationKey: ["handle-rerun"],

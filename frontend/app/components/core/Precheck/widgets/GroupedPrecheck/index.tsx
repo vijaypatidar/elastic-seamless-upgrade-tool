@@ -5,7 +5,7 @@ import { OutlinedBorderButton } from "~/components/utilities/Buttons"
 import ListLoader from "../../loading/ListLoader"
 import NoData from "../NoData"
 import NodeListItem from "../NodeListItem"
-import Prechecks from "~/components/core/Precheck/widgets/Prechecks"
+import Prechecks from "../Prechecks"
 import { Input } from "@heroui/react"
 
 function GroupedPrecheck({
@@ -98,7 +98,6 @@ function GroupedPrecheck({
 					onChange={(e) => setSearch(e.target.value)}
 				/>
 				<Box className="flex flex-col gap-1 overflow-y-scroll">
-
 					{!isLoading ? (
 						groups
 							?.filter((g) => g.name.toLowerCase().includes(search.toLowerCase().trim()))

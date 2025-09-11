@@ -2,7 +2,25 @@ import { create } from "zustand"
 import { persist } from "zustand/middleware"
 import { localStorageConfig } from "~/lib/Utils"
 
-const useSafeRouteStore = create()(
+type TSafeRouteStore = {
+	clusterAdded: boolean
+	deprecationChangesAllowed: boolean
+	elasticNodeUpgradeAllowed: boolean
+	kibanaNodeUpgradeAllowed: boolean
+	upgradeAssistAllowed: boolean
+	precheckAllowed: boolean
+
+	setClusterAdded: (payload: boolean) => void
+	setPrecheckAllowed: (payload: boolean) => void
+	setDeprecationChangesAllowed: (payload: boolean) => void
+	setElasticNodeUpgradeAllowed: (payload: boolean) => void
+	setKibanaNodeUpgradeAllowed: (payload: boolean) => void
+	setUpgradeAssistAllowed: (payload: boolean) => void
+	resetForEditCluster: () => void
+	resetSafeRoutes: () => void
+}
+
+const useSafeRouteStore = create<TSafeRouteStore>()(
 	persist(
 		(set) => ({
 			clusterAdded: false,

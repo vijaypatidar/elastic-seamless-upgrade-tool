@@ -1,6 +1,6 @@
 import { Box, IconButton, Typography } from "@mui/material"
 import { useMutation, useQuery } from "@tanstack/react-query"
-import { useFormik } from "formik"
+import { useFormik, type FormikErrors } from "formik"
 import { Add, ArrowLeft, Trash } from "iconsax-react"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
@@ -316,9 +316,14 @@ function EditPlugin({
 																				}}
 																				error={
 																					Boolean(
-																						formik.errors.versionSources?.[
-																							index
-																						]?.version
+																						(
+																							formik.errors
+																								.versionSources?.[
+																								index
+																							] as
+																								| FormikErrors<TPluginVersionSource>
+																								| undefined
+																						)?.version
 																					) && formik.touched.versionSources
 																				}
 																			/>
@@ -345,9 +350,14 @@ function EditPlugin({
 																				}}
 																				error={
 																					Boolean(
-																						formik.errors.versionSources?.[
-																							index
-																						]?.source
+																						(
+																							formik.errors
+																								.versionSources?.[
+																								index
+																							] as
+																								| FormikErrors<TPluginVersionSource>
+																								| undefined
+																						)?.source
 																					) && formik.touched.versionSources
 																				}
 																			/>
@@ -383,10 +393,20 @@ function EditPlugin({
 																			color="#EF4444"
 																			lineHeight="20px"
 																		>
-																			{formik.errors.versionSources?.[index]
-																				?.version ||
-																				formik.errors.versionSources?.[index]
-																					?.source}
+																			{(
+																				formik.errors.versionSources?.[
+																					index
+																				] as
+																					| FormikErrors<TPluginVersionSource>
+																					| undefined
+																			)?.version ||
+																				(
+																					formik.errors.versionSources?.[
+																						index
+																					] as
+																						| FormikErrors<TPluginVersionSource>
+																						| undefined
+																				)?.source}
 																		</Typography>
 																	) : null}
 																</Box>

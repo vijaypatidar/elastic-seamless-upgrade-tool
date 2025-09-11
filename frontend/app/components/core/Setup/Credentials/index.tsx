@@ -1,5 +1,5 @@
 import { Box, IconButton, InputAdornment, Typography } from "@mui/material"
-import { useFormik } from "formik"
+import { useFormik, type FormikErrors } from "formik"
 import { Add, ArrowLeft, ArrowRight, Eye, EyeSlash, Trash } from "iconsax-react"
 import _ from "lodash"
 import { useState } from "react"
@@ -14,7 +14,6 @@ import SshFileInput from "~/components/utilities/SshFileInput"
 function Credentials({ initialValues: IV, backStep, onSubmit }: TCredentialsComp) {
 	const [showPassword, setShowPassword] = useState<boolean>(false)
 	const infraType = useLocalStore((state: any) => state.infraType)
-	// const [initialValues, setInitialValues] = useState<TCreds>(_.cloneDeep(IV))
 
 	const formik = useFormik({
 		initialValues: _.cloneDeep(IV),
@@ -290,8 +289,13 @@ function Credentials({ initialValues: IV, backStep, onSubmit }: TCredentialsComp
 																)
 															}}
 															error={
-																Boolean(formik.errors.kibanaConfigs?.[index]?.name) &&
-																formik.touched.kibanaConfigs
+																Boolean(
+																	(
+																		formik.errors.kibanaConfigs?.[
+																			index
+																		] as FormikErrors<TKibanaConfigs>
+																	)?.name
+																) && formik.touched.kibanaConfigs
 															}
 														/>
 														<Input
@@ -313,8 +317,13 @@ function Credentials({ initialValues: IV, backStep, onSubmit }: TCredentialsComp
 																)
 															}}
 															error={
-																Boolean(formik.errors.kibanaConfigs?.[index]?.ip) &&
-																formik.touched.kibanaConfigs
+																Boolean(
+																	(
+																		formik.errors.kibanaConfigs?.[
+																			index
+																		] as FormikErrors<TKibanaConfigs>
+																	)?.ip
+																) && formik.touched.kibanaConfigs
 															}
 														/>
 													</Box>
@@ -344,8 +353,16 @@ function Credentials({ initialValues: IV, backStep, onSubmit }: TCredentialsComp
 														color="#EF4444"
 														lineHeight="20px"
 													>
-														{formik.errors.kibanaConfigs?.[index]?.name ||
-															formik.errors.kibanaConfigs?.[index]?.ip}
+														{(
+															formik.errors.kibanaConfigs?.[
+																index
+															] as FormikErrors<TKibanaConfigs>
+														)?.name ||
+															(
+																formik.errors.kibanaConfigs?.[
+																	index
+																] as FormikErrors<TKibanaConfigs>
+															)?.ip}
 													</Typography>
 												) : null}
 											</Box>

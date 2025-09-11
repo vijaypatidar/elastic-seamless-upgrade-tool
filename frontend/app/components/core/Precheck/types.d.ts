@@ -2,7 +2,7 @@ type TPrecheckStatus = "PENDING" | "RUNNING" | "FAILED" | "COMPLETED"
 
 type TCheckTab = "CLUSTER" | "NODES" | "INDEX" | "BREAKING_CHANGES"
 
-type SEVERITY = "ERROR" | "WARNING" | "INFO"
+type SEVERITY = "ERROR" | "WARNING" | "INFO" | "SKIPPED"
 
 type TNodeData = {
 	nodeId: string
@@ -24,6 +24,7 @@ type TPrecheck = {
 	id: string
 	name: string
 	status: TPrecheckStatus
+	severity: SEVERITY
 	duration: string
 	logs: string[]
 	startTime: string

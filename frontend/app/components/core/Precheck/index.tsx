@@ -10,7 +10,7 @@ import LogGroup from "./widgets/LogGroup"
 import { useRealtimeEventListener } from "~/lib/hooks/useRealtimeEventListener"
 
 const PrecheckNotTriggered = ({ refetch }: { refetch: () => void }) => {
-	const clusterId = useLocalStore((state: any) => state.clusterId)
+	const clusterId = useLocalStore((state) => state.clusterId)
 
 	const reReunPrecheck = async () => {
 		await axiosJSON

@@ -39,7 +39,7 @@ const STYLES = {
 
 function TargetVersionDropdown() {
 	const clusterId = useLocalStore((state) => state.clusterId)
-	const setUpgradeAssistAllowed = useSafeRouteStore((state: any) => state.setUpgradeAssistAllowed)
+	const setUpgradeAssistAllowed = useSafeRouteStore((state) => state.setUpgradeAssistAllowed)
 	const navigate = useNavigate()
 
 	const { data, isLoading, isRefetching , refetch} = useQuery({
