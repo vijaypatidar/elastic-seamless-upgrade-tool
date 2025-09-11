@@ -58,10 +58,10 @@ function EditClusterBreadcrumb({ onBack }: { onBack: () => void }) {
 }
 
 function EditCluster({ isOpen, onOpenChange }: { isOpen: boolean; onOpenChange: () => void }) {
-	const refresh = useRefreshStore((state: any) => state.refresh)
+	const refresh = useRefreshStore((state) => state.refresh)
 	const resetForEditCluster = useSafeRouteStore((state) => state.resetForEditCluster)
-	const clusterId = useLocalStore((state: any) => state.clusterId)
-	const infraType = useLocalStore((state: any) => state.infraType)
+	const clusterId = useLocalStore((state) => state.clusterId)
+	const infraType = useLocalStore((state) => state.infraType)
 	const { pathname } = useLocation()
 	const [initialValues, setInitialValues] = useState<TClusterValues>(INITIAL_VALUES)
 	const [showPassword, setShowPassword] = useState<boolean>(false)

@@ -13,7 +13,7 @@ import SshFileInput from "~/components/utilities/SshFileInput"
 
 function Credentials({ initialValues: IV, backStep, onSubmit }: TCredentialsComp) {
 	const [showPassword, setShowPassword] = useState<boolean>(false)
-	const infraType = useLocalStore((state: any) => state.infraType)
+	const infraType = useLocalStore((state) => state.infraType)
 
 	const formik = useFormik({
 		initialValues: _.cloneDeep(IV),
