@@ -24,7 +24,7 @@ function Prechecks({
 	isLoading: boolean
 	handleRerunAll: () => void
 }) {
-	const [selectedPrecheck, setSelectedPrecheck] = useState<any>(null)
+	const [selectedPrecheck, setSelectedPrecheck] = useState<TPrecheck | null>(null)
 
 	useEffect(() => {
 		if (selectedPrecheck !== null) {
@@ -35,9 +35,10 @@ function Prechecks({
 	}, [prechecks])
 
 	const handlePrecheckRerun = () => {
-		handleRerun({
-			precheckIds: [selectedPrecheck.id],
-		})
+		selectedPrecheck &&
+			handleRerun({
+				precheckIds: [selectedPrecheck.id],
+			})
 	}
 
 	if (prechecks?.length === 0 && !isLoading) {
@@ -166,7 +167,7 @@ function Prechecks({
 									</OutlinedBorderButton>
 								</Box>
 							</Box>
-							<Box className="flex flex-col w-full gap-[2px] overflow-y-scroll" >
+							<Box className="flex flex-col w-full gap-[2px] overflow-y-scroll">
 								<LogsList logs={selectedPrecheck?.logs || []} isLoading={isLoading} />
 							</Box>
 						</>

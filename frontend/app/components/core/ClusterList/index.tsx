@@ -38,7 +38,7 @@ const columns: TColumn = [
 
 function ClusterList() {
 	const navigate = useNavigate()
-	const setClusterAdded = useSafeRouteStore((state: any) => state.setClusterAdded)
+	const setClusterAdded = useSafeRouteStore((state) => state.setClusterAdded)
 	const setClusterId = useLocalStore((state: any) => state.setClusterId)
 	const setInfraType = useLocalStore((state: any) => state.setInfraType)
 

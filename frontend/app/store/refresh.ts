@@ -1,5 +1,5 @@
-import { create, createStore } from "zustand"
-import { devtools, persist } from "zustand/middleware"
+import { create } from "zustand"
+import { devtools } from "zustand/middleware"
 
 const useRefreshStore = create(devtools((set) => ({
 	refreshToggle: false,

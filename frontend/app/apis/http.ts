@@ -1,8 +1,8 @@
 import axios from "axios"
-import { useLocalStore } from "~/store/common"
+import { useLocalStore } from "../store/common"
 import URLManager from "../constants/URLManager"
 import { toast } from "sonner"
-import StringManager from "~/constants/StringManager"
+import StringManager from "../constants/StringManager"
 
 const axiosJSON = axios.create({
 	baseURL: URLManager.HTTP_BASE_URL,
