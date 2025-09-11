@@ -8,7 +8,6 @@ import AppBreadcrumb from "~/components/utilities/AppBreadcrumb"
 import { ArrowLeft } from "iconsax-react"
 import NoData from "~/components/core/Precheck/widgets/NoData"
 import { Skeleton } from "@heroui/react"
-import React from "react"
 
 function LogsBreadcrumb({ onBack }: { onBack: () => void }) {
 	return (

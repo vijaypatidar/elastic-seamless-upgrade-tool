@@ -332,7 +332,7 @@ function Credentials({ initialValues: IV, backStep, onSubmit }: TCredentialsComp
 															onClick={() => {
 																let newOptions = [...formik.values.kibanaConfigs]
 																newOptions = newOptions.filter(
-																	(option, ind) => ind !== index
+																	(_, ind) => ind !== index
 																)
 																formik.setFieldValue(
 																	"kibanaConfigs",

@@ -1,0 +1,5 @@
+
+dependencies {
+    implementation 'dev.langchain4j:langchain4j:1.4.0'
+    implementation 'dev.langchain4j:langchain4j-ollama:1.4.0'
+}

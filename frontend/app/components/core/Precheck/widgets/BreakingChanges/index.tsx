@@ -10,6 +10,7 @@ import { toast } from "sonner"
 import StringManager from "~/constants/StringManager"
 import { useQuery } from "@tanstack/react-query"
 import { useLocalStore } from "~/store/common"
+import ChatLauncher from "~/components/core/AiAssistantChat/ChatLauncher.tsx"
 
 function useBreakingChanges() {
 	const clusterId = useLocalStore((state) => state.clusterId)
@@ -139,8 +140,12 @@ function BreakingChangesLogs() {
 							</Skeleton>
 						)}
 					</Box>
-					<Box className="flex flex-col w-full gap-[2px] overflow-y-scroll">
+					<Box className="relative flex flex-col w-full gap-[2px] overflow-y-scroll h-[500px]">
 						<LogsList logs={selectedCheck?.logs ?? []} isLoading={isLoading} />
+
+						<Box className="absolute bottom-2 right-2 z-20">
+							<ChatLauncher context={{ precheckId: selectedCheck?.id }} />
+						</Box>
 					</Box>
 				</Box>
 			</Box>
