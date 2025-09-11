@@ -8,7 +8,6 @@ import AppBreadcrumb from "~/components/utilities/AppBreadcrumb"
 import { ArrowLeft } from "iconsax-react"
 import NoData from "~/components/core/Precheck/widgets/NoData"
 import { Skeleton, Spinner, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow } from "@heroui/react"
-import React from "react"
 import type { IAllocationExplain } from "./types"
 
 function AllocationExplainBreadcrumb({ onBack }: { onBack: () => void }) {

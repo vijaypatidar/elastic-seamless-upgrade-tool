@@ -19,18 +19,13 @@ function LogGroup({
 	isLoading: boolean
 	refetchData: any
 }) {
-	const clusterId = useLocalStore((state: any) => state.clusterId)
+	const clusterId = useLocalStore((state) => state.clusterId)
 
 	const { mutate: HandleRerun, isPending } = useMutation({
 		mutationKey: ["handle-rerun"],
-		mutationFn: async (payload: string) => {
-			await axiosJSON
-				.post(`/clusters/${clusterId}/prechecks/rerun`, payload)
-				.then((res: any) => {
-					console.log(res)
-					refetchData()
-				})
-				.catch((err: any) => console.log(err))
+		mutationFn: async (payload: any) => {
+			await axiosJSON.post(`/clusters/${clusterId}/prechecks/rerun`, payload)
+			refetchData()
 		},
 	})
 
@@ -53,7 +48,7 @@ function LogGroup({
 					handlePrecheckSkip={handlePrecheckSkip}
 					isPending={isPending}
 					isLoading={isLoading}
-					handleRerunAll={() => HandleRerun({ cluster: true } as any)}
+					handleRerunAll={() => HandleRerun({ cluster: true })}
 				/>
 			)
 		} else if (dataFor === "NODES") {
@@ -64,7 +59,7 @@ function LogGroup({
 					handleGroupRerun={(group) => {
 						HandleRerun({
 							nodeIds: [group.id],
-						} as any)
+						})
 					}}
 					handleRerun={(payload) => HandleRerun(payload)}
 					handlePrecheckSkip={handlePrecheckSkip}
@@ -80,7 +75,7 @@ function LogGroup({
 					handleGroupRerun={(group) => {
 						HandleRerun({
 							indexNames: [group.id],
-						} as any)
+						})
 					}}
 					handleRerun={(payload) => HandleRerun(payload)}
 					handlePrecheckSkip={handlePrecheckSkip}

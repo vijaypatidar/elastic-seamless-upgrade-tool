@@ -74,18 +74,6 @@ function Common() {
 		false
 	)
 
-	// const [headerIndexChange, setHeaderIndexChange] = useState<boolean>(false)
-
-	// useMemo(() => {
-	// 	const timeout = !(isOpen || isEditOpen) ? 150 : 0
-	// 	const changeState = () => {
-	// 		setHeaderIndexChange(isOpen || isEditOpen)
-	// 	}
-	// 	setTimeout(() => {
-	// 		changeState()
-	// 	}, timeout)
-	// }, [isOpen, isEditOpen])
-
 	return (
 		<Box className="flex flex-col w-full pb-4 bg-[#0A0A0A]" height="var(--window-height)">
 			<ToastProvider placement="bottom-right" />

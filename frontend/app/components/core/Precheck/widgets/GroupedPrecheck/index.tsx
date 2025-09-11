@@ -1,11 +1,12 @@
 import { Box, Typography } from "@mui/material"
-import { Refresh } from "iconsax-react"
+import { Refresh, SearchNormal1 } from "iconsax-react"
 import { useEffect, useState } from "react"
 import { OutlinedBorderButton } from "~/components/utilities/Buttons"
 import ListLoader from "../../loading/ListLoader"
 import NoData from "../NoData"
 import NodeListItem from "../NodeListItem"
-import Prechecks from "~/components/core/Precheck/widgets/Prechecks"
+import Prechecks from "../Prechecks"
+import { Input } from "@heroui/react"
 
 function GroupedPrecheck({
 	groupName,
@@ -25,6 +26,7 @@ function GroupedPrecheck({
 	handleGroupRerun: (group: TGroupedPrecheck) => void
 }) {
 	const [selectedGroup, setSelectedGroup] = useState<TGroupedPrecheck | null>(null)
+	const [search, setSearch] = useState<string>("")
 
 	useEffect(() => {
 		if (groups?.length > 0) {
@@ -36,7 +38,8 @@ function GroupedPrecheck({
 		} else {
 			setSelectedGroup(null)
 		}
-	}, [groups])
+		setSearch("")
+	}, [groups, setSelectedGroup])
 
 	if (groups?.length === 0 && !isLoading) {
 		return (
@@ -83,18 +86,31 @@ function GroupedPrecheck({
 				>
 					{groupName}
 				</Typography>
-				<Box className="flex flex-col gap-1 overflow-x-scroll">
+				<Input
+					classNames={{
+						inputWrapper:
+							"rounded-[10px] border border-solid border-[#2B2B2B] bg-[#161616] group-data-[focus=true]:bg-[#161616] data-[hover=true]:bg-default-50 my-1",
+					}}
+					type="text"
+					placeholder="Search"
+					startContent={<SearchNormal1 size="14px" color="#6A6A6A" />}
+					value={search}
+					onChange={(e) => setSearch(e.target.value)}
+				/>
+				<Box className="flex flex-col gap-1 overflow-y-scroll">
 					{!isLoading ? (
-						groups?.map((group: TGroupedPrecheck, idx: number) => (
-							<NodeListItem
-								key={idx}
-								status={group?.status}
-								severity={group?.severity}
-								isSelected={selectedGroup?.id === group.id}
-								name={group?.name}
-								onClick={() => setSelectedGroup(group)}
-							/>
-						))
+						groups
+							?.filter((g) => g.name.toLowerCase().includes(search.toLowerCase().trim()))
+							.map((group: TGroupedPrecheck, idx: number) => (
+								<NodeListItem
+									key={idx}
+									status={group?.status}
+									severity={group?.severity}
+									isSelected={selectedGroup?.id === group.id}
+									name={group?.name}
+									onClick={() => setSelectedGroup(group)}
+								/>
+							))
 					) : (
 						<ListLoader />
 					)}
