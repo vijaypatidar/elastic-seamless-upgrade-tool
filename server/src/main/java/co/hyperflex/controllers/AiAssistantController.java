@@ -31,7 +31,7 @@ public class AiAssistantController {
       var precheckId = request.context().precheckId();
       if (!contextMap.containsKey(1) || !precheckId.equals(contextMap.get(1))) {
         var change = breakingChangeRepository.findById(precheckId).orElseThrow();
-
+        contextMap.put(1, change.getId());
         message = """
             # Breaking Change Context
             - **Title:** %s

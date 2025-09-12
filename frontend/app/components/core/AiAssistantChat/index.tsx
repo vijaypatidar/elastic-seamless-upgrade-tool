@@ -1,5 +1,5 @@
 import React, { type ChangeEvent, type KeyboardEvent, useEffect, useRef, useState } from "react"
-import { Box, Paper, Typography } from "@mui/material"
+import { Box, LinearProgress, Paper, Typography } from "@mui/material"
 import { CloseCircle, MagicStar } from "iconsax-react"
 import Input from "~/components/utilities/Input"
 import axiosJSON from "~/apis/http.ts"
@@ -32,12 +32,16 @@ const AiAssistantChat: React.FC<AiAssistantChatProps> = ({ onClose, context }) =
 			setMessages((prev) => [...prev, { role: "user", text: input }])
 			setInput("")
 
-			const response = await axiosJSON.post("/ai-assistant/ask", {
-				message: input,
-				context: context,
-			},{
-                timeout: 1000*60*60,
-            })
+			const response = await axiosJSON.post(
+				"/ai-assistant/ask",
+				{
+					message: input,
+					context: context,
+				},
+				{
+					timeout: 1000 * 60 * 60,
+				}
+			)
 			setMessages((prev) => [...prev, { role: "ai", text: response.data }])
 		},
 	})
@@ -108,6 +112,7 @@ const AiAssistantChat: React.FC<AiAssistantChatProps> = ({ onClose, context }) =
 				))}
 				<div ref={messagesEndRef} />
 			</Box>
+			{isPending && <LinearProgress sx={{background:'#BDA0FF'}}  />}
 			<Box className="flex flex-row items-center gap-[6px] px-2 py-2">
 				<Input
 					fullWidth
