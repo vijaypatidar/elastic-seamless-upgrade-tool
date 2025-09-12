@@ -74,7 +74,7 @@ function GroupedPrecheck({
 
 	return (
 		<>
-			<Box className="h-full flex flex-col w-1/3 gap-[6px]">
+			<Box className="h-full flex flex-col w-1/3 gap-[16px]">
 				<Typography
 					marginTop="12px"
 					color="#A9AAB6"
@@ -89,7 +89,7 @@ function GroupedPrecheck({
 				<Input
 					classNames={{
 						inputWrapper:
-							"rounded-[10px] border border-solid border-[#2B2B2B] bg-[#161616] group-data-[focus=true]:bg-[#161616] data-[hover=true]:bg-default-50 my-1",
+							"rounded-[10px] border border-solid border-[#2B2B2B] bg-[#161616] group-data-[focus=true]:bg-[#161616] data-[hover=true]:bg-default-50",
 					}}
 					type="text"
 					placeholder="Search"

@@ -1,5 +1,12 @@
-
 dependencies {
+    implementation project(':server:modules:elastic-client')
+    implementation project(':server:modules:kibana-client')
+    implementation project(':server:modules:ansible')
+    implementation project(':server:modules:common')
+    implementation project(':server:modules:core')
+    implementation project(':server:modules:precheck')
+    implementation project(":server:modules:breaking-changes")
+
     implementation 'dev.langchain4j:langchain4j:1.4.0'
     implementation 'dev.langchain4j:langchain4j-ollama:1.4.0'
 }

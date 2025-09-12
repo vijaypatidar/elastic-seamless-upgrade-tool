@@ -2,6 +2,7 @@ package co.hyperflex.controllers;
 
 import co.hyperflex.ai.AskRequest;
 import co.hyperflex.ai.Assistant;
+import co.hyperflex.ai.SessionContextHolder;
 import co.hyperflex.breakingchanges.BreakingChangeRepository;
 import java.util.HashMap;
 import java.util.Map;
@@ -24,27 +25,22 @@ public class AiAssistantController {
 
   @PostMapping("/ask")
   public String ask(@RequestBody AskRequest request) {
-    var message = request.getMessage().asText();
-    if (request.getContext() != null && request.getContext().has("precheckId")) {
-      var precheckId = request.getContext().get("precheckId").asText();
+    SessionContextHolder.setSessionContext(request.context());
+    var message = request.message().asText();
+    if (request.context() != null && request.context().precheckId() != null) {
+      var precheckId = request.context().precheckId();
       if (!contextMap.containsKey(1) || !precheckId.equals(contextMap.get(1))) {
         var change = breakingChangeRepository.findById(precheckId).orElseThrow();
 
-        message =
-            """
+        message = """
             # Breaking Change Context
             - **Title:** %s
             - **Description:** %s
             - **Source:** %s
-        
+            
             # User Query
             %s
-            """.formatted(
-                change.getTitle(),
-                change.getDescription(),
-                change.getUrl(),
-                message
-            );
+            """.formatted(change.getTitle(), change.getDescription(), change.getUrl(), message);
 
       }
     }

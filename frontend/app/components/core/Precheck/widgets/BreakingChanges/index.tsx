@@ -34,6 +34,7 @@ function useBreakingChanges() {
 
 function BreakingChangesLogs() {
 	const { data: breakingChanges, isLoading } = useBreakingChanges()
+	const clusterId = useLocalStore(state => state.clusterId)
 	const [selectedCheck, setSelectedCheck] = useState<TPrecheck | null>(null)
 
 	useEffect(() => {
@@ -144,7 +145,7 @@ function BreakingChangesLogs() {
 						<LogsList logs={selectedCheck?.logs ?? []} isLoading={isLoading} />
 
 						<Box className="absolute bottom-2 right-2 z-20">
-							<ChatLauncher context={{ precheckId: selectedCheck?.id }} />
+							<ChatLauncher context={{ precheckId: selectedCheck?.id, clusterId }} />
 						</Box>
 					</Box>
 				</Box>

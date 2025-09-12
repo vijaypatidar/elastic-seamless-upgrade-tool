@@ -1,12 +1,12 @@
 import React, { useState } from "react"
 import { Box, Fab } from "@mui/material"
 import AiAssistantChat from "./"
-import { Magicpen } from "iconsax-react" // your chat component
+import { Magicpen } from "iconsax-react"
 
 interface AiAssistantChatProps {
 	context: Context
 }
-const AiChatLauncher: React.FC<AiAssistantChatProps> = ({context}) => {
+const AiChatLauncher: React.FC<AiAssistantChatProps> = ({ context }) => {
 	const [open, setOpen] = useState(false)
 
 	return (
