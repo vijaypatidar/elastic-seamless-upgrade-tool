@@ -4,6 +4,7 @@ import { CloseCircle, MagicStar } from "iconsax-react"
 import Input from "~/components/utilities/Input"
 import axiosJSON from "~/apis/http.ts"
 import ReactMarkdown from "react-markdown"
+import { useMutation } from "@tanstack/react-query"
 
 type Message = {
 	role: "user" | "ai"
@@ -23,18 +24,23 @@ const AiAssistantChat: React.FC<AiAssistantChatProps> = ({ onClose, context }) =
 		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
 	}, [messages])
 
-	const sendMessage = async () => {
-		if (!input.trim()) return
+	const { mutate: sendMessage, isPending } = useMutation({
+		mutationKey: ["get-all-clusters"],
+		mutationFn: async () => {
+			if (!input.trim()) return
 
-		setMessages((prev) => [...prev, { role: "user", text: input }])
-		setInput("")
+			setMessages((prev) => [...prev, { role: "user", text: input }])
+			setInput("")
 
-		const response = await axiosJSON.post("/ai-assistant/ask", {
-			message: input,
-			context: context,
-		})
-		setMessages((prev) => [...prev, { role: "ai", text: response.data }])
-	}
+			const response = await axiosJSON.post("/ai-assistant/ask", {
+				message: input,
+				context: context,
+			},{
+                timeout: 1000*60*60,
+            })
+			setMessages((prev) => [...prev, { role: "ai", text: response.data }])
+		},
+	})
 
 	const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => setInput(e.target.value)
 
@@ -102,13 +108,13 @@ const AiAssistantChat: React.FC<AiAssistantChatProps> = ({ onClose, context }) =
 				))}
 				<div ref={messagesEndRef} />
 			</Box>
-
 			<Box className="flex flex-row items-center gap-[6px] px-2 py-2">
 				<Input
 					fullWidth
 					value={input}
 					onChange={handleInputChange}
 					onKeyDown={handleKeyDown}
+					disabled={isPending}
 					placeholder="Ask AI..."
 					variant="outlined"
 				/>

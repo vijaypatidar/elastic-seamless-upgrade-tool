@@ -12,7 +12,7 @@ public class ChatModelConfig {
   public ChatModel chatModel() {
     return OllamaChatModel.builder()
         .baseUrl("http://localhost:11434")
-        .modelName("llama3:8b")
+        .modelName("llama3.1:8b")
         .logRequests(true)
         .build();
 

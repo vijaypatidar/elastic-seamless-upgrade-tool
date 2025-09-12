@@ -1,6 +1,7 @@
 package co.hyperflex.ai;
 
-import static co.hyperflex.ai.config.AssistantConfig.ELASTIC_UPGRADE_BREAKING_CHANGE_PROMPT;
+
+import static co.hyperflex.ai.Prompts.ELASTIC_UPGRADE_BREAKING_CHANGE_PROMPT;
 
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.SystemMessage;
