@@ -33,10 +33,12 @@ public class AiAssistantController {
         var change = breakingChangeRepository.findById(precheckId).orElseThrow();
         contextMap.put(1, change.getId());
         message = """
+            -----------------Context Start-----------------
             # Breaking Change Context
             - **Title:** %s
             - **Description:** %s
             - **Source:** %s
+            -----------------Context End-----------------
             
             # User Query
             %s

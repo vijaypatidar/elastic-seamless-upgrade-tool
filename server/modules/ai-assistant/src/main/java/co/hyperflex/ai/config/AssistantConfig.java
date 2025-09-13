@@ -6,6 +6,7 @@ import static co.hyperflex.ai.Prompts.ELASTIC_UPGRADE_PROMPT;
 import co.hyperflex.ai.Assistant;
 import co.hyperflex.ai.Tools;
 import dev.langchain4j.data.message.SystemMessage;
+import dev.langchain4j.memory.chat.ChatMemoryProvider;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.service.AiServices;
@@ -22,12 +23,17 @@ public class AssistantConfig {
   }
 
   @Bean
-  public Assistant assistant(ChatModel model, Tools tools) {
+  public Assistant assistant(ChatModel model, Tools tools, ChatMemoryProvider chatMemoryProvider) {
     return AiServices
         .builder(Assistant.class)
         .chatModel(model)
-        .chatMemoryProvider(memoryId -> MessageWindowChatMemory.withMaxMessages(20))
+        .chatMemoryProvider(chatMemoryProvider)
         .tools(tools)
         .build();
+  }
+
+  @Bean
+  public ChatMemoryProvider chatMemoryProvider () {
+    return memoryId -> MessageWindowChatMemory.withMaxMessages(20);
   }
 }
